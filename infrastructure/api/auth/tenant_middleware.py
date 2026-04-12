@@ -50,6 +50,7 @@ PUBLIC_PATH_PREFIXES: tuple[str, ...] = (
     "/api/v1/auth/logout",         # logout (exact -- public so revocation works without valid access)
     "/api/v1/auth/sso/",           # all SSO endpoints
     "/api/v1/auth/password/",      # password reset request + confirm
+    "/api/v1/auth/accept-invitation",  # invitee completes registration
     "/api/docs",                   # Swagger UI
     "/api/redoc",                  # ReDoc
 )

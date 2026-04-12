@@ -14,6 +14,12 @@ from infrastructure.admin.extractor_tracker import ExtractorTracker
 from infrastructure.admin.pipeline_metrics import PipelineMetrics
 from infrastructure.admin.config_service import ConfigService, ConfigVersionRow
 from infrastructure.admin.config_diff import ConfigDiff, ConfigDiffEngine
+from infrastructure.admin.user_service import (
+    InvitationService,
+    InvitationToken,
+    RoleService,
+    UserService,
+)
 
 __all__ = [
     "SystemHealthAggregator",
@@ -24,4 +30,8 @@ __all__ = [
     "ConfigVersionRow",
     "ConfigDiff",
     "ConfigDiffEngine",
+    "UserService",
+    "RoleService",
+    "InvitationService",
+    "InvitationToken",
 ]
