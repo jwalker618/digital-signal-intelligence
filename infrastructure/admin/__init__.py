@@ -1,21 +1,27 @@
 """
-B-1: Admin backend services.
+Admin backend services (B-1, B-2).
 
 Provides:
-- SystemHealthAggregator: unified green/amber/red health across API, DB,
-  Redis, World Engine, and extractors.
+- SystemHealthAggregator: unified green/amber/red health.
 - ExtractorTracker: per-extractor success/error counters.
-- PipelineMetrics: assessment throughput, latency percentiles, failure
-  rate. On-demand + hourly snapshots for trend analysis.
+- PipelineMetrics: assessment throughput / latency / failure rate.
+- ConfigService: versioned coverage config lifecycle.
+- ConfigDiffEngine: structured diff between config versions.
 """
 
 from infrastructure.admin.health import SystemHealthAggregator, HealthStatus
 from infrastructure.admin.extractor_tracker import ExtractorTracker
 from infrastructure.admin.pipeline_metrics import PipelineMetrics
+from infrastructure.admin.config_service import ConfigService, ConfigVersionRow
+from infrastructure.admin.config_diff import ConfigDiff, ConfigDiffEngine
 
 __all__ = [
     "SystemHealthAggregator",
     "HealthStatus",
     "ExtractorTracker",
     "PipelineMetrics",
+    "ConfigService",
+    "ConfigVersionRow",
+    "ConfigDiff",
+    "ConfigDiffEngine",
 ]

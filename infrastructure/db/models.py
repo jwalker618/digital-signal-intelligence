@@ -1111,3 +1111,40 @@ class MetricSnapshot(Base):
     coverage = Column(String(50))
     metrics = Column(JSONB, nullable=False, default=dict)
 
+
+
+class ConfigVersion(Base):
+    """Versioned coverage config (B-2). Every edit creates a new row."""
+    __tablename__ = "config_versions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    coverage = Column(String(50), nullable=False, index=True)
+    config_name = Column(String(100), nullable=False)
+    version_number = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    config_hash = Column(String(64), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default="DRAFT")
+    validation_report = Column(JSONB)
+    calibration_report = Column(JSONB)
+    notes = Column(Text)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("uq_config_versions_coverage_config_version", "coverage", "config_name", "version_number", unique=True),
+    )
+
+
+class ConfigDeployment(Base):
+    """Audit record of a config version deployment (B-2)."""
+    __tablename__ = "config_deployments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    config_version_id = Column(UUID(as_uuid=True), ForeignKey("config_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    deployed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    deployed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    calibration_result = Column(JSONB)
+    rolled_back_at = Column(DateTime(timezone=True))
+    rolled_back_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+
