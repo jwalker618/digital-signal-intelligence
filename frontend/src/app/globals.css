@@ -159,3 +159,10 @@
   @apply font-bold;
   @apply text-left;
 }
+
+@utility dsi-user-message {
+  @apply opacity-50;
+  @apply italic; 
+  @apply py-4;
+  @apply text-xs text-center text-wrap;
+}

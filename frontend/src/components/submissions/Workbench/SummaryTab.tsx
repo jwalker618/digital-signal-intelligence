@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 
 import { formatNum, formatNumber, formatPercent, formatDate, formatText } from "@/lib/format";
+import { getSortedItems, } from "@/lib/utils";
+
 import "@/app/globals.css";
 
 const DECISION_STYLE: Record<string, { bg: string; }> = {
@@ -29,6 +31,10 @@ export default function SummaryTab() {
   const [isBaseOpen, setIsBaseOpen] = useState(false);  
   const [newNoteText, setNewNoteText] = useState("");
   const [isAddingNote, setIsAddingNote] = useState(false);
+
+  const riskGroup = getSortedItems(activeVersion.group_scores, "risk_weight");
+  const lossGroup = getSortedItems(activeVersion.loss_group_scores, "loss_weight", "_composite");
+  const exposureGroup = getSortedItems(activeVersion.exposure_components.group_scores, "exposure_weight", "_composite");
 
   if (!activeSubmission || !activeVersion) {
     return (
@@ -167,113 +173,113 @@ export default function SummaryTab() {
         {/* ═══════════════════════════════════════════════════════════════════
             THREE PILLAR ASSESSMENT
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex flex-col ml-dsi-pad">
-          <div className="dsi-section-header">
-            <Layers className="icon"/>
-            <span className="text-sm">Three Pillar Assessment</span>
-          </div>
+          <div className="flex flex-col ml-dsi-pad">
+            <div className="dsi-section-header">
+              <Layers className="icon"/>
+              <span className="text-sm">Three Pillar Assessment</span>
+            </div>
+            
+            <div className="dsi-section-analysis">
+              <div className="grid grid-cols-3 gap-dsi-gap">
+                
+                {/* RISK */}
+                <div>
+                  <div className="flex gap-2 ml-dsi-pad pt-1">
+                    <ChartNoAxesGantt className="icon"/>
+                    <span className="text-sm">Risk</span>
+                  </div>
+                  <div className="grid grid-cols-[70%_30%]">
+                    
+                    {/* row 1 */}
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1 ml-dsi-pad pl-0">Group</div>
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1">Composite Contribution</div>
+                    
+                    {/* row 2 */}
+                    <div className="dsi-analysis-description text-sm border-r-1 border-dsi-outline/50">{formatText(riskGroup[0]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right ">{formatNumber(riskGroup[0]?.risk_contribution,2)}</div>
 
-          <div className="dsi-section-analysis">
-            <div className="grid grid-cols-1 md:grid-cols-3">
-              
-              {/* RISK */}
-              <div className="border-r-1 border-dsi-outline/50">
-                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
-                  <ChartNoAxesGantt className="icon"/>
-                  <span className="text-sm">Risk</span>
+                    {/* row 3 */}
+                    <div className="dsi-analysis-description text-sm border-r-1 border-dsi-outline/50">{formatText(riskGroup[1]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(riskGroup[1]?.risk_contribution,2)}</div>
+
+                    {/* row 4 */}
+                    <div className="dsi-analysis-description text-sm border-r-1 border-dsi-outline/50">{formatText(riskGroup[2]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(riskGroup[2]?.risk_contribution,2)}</div>
+
+                  </div>
                 </div>
+                
+                {/* LOSS */}
                 <div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Final Composite Score</span>
-                    <span className="dsi-analysis-item">{formatNumber(activeVersion.final_composite_score, 1)}</span>
+                  <div className="flex gap-2 ml-dsi-pad pt-1">
+                    <TrendingUpDown className="icon" />
+                    <span className="text-sm">Loss Propensity</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Score-Based Tier</span>
-                    <span className="dsi-analysis-item">T{activeVersion.score_based_tier}</span>
+                  
+                  <div className="grid grid-cols-[40%_30%_30%]">
+                    
+                    {/* row 1 */}
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1 ml-dsi-pad pl-0">Group</div>
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1">Severity Contribution</div>
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1">Frequency Contribution</div>
+
+                    {/* row 2 */}
+                    <div className="dsi-analysis-description text-sm border-r-1 border-dsi-outline/50">{formatText(lossGroup[0]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[0]?.severity_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[0]?.frequency_contribution,2)}</div>
+
+                    {/* row 3 */}
+                    <div className="dsi-analysis-description text-sm border-r-1 border-dsi-outline/50">{formatText(lossGroup[1]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[1]?.severity_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[1]?.frequency_contribution,2)}</div>
+
+                    {/* row 4 */}
+                    <div className="dsi-analysis-description text-sm">{formatText(lossGroup[2]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[2]?.severity_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(lossGroup[2]?.frequency_contribution,2)}</div> 
+
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Final Tier</span>
-                    <span className="dsi-analysis-item">T{activeVersion.final_tier} ({activeVersion.tier_label})</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Confidence</span>
-                    <span className="dsi-analysis-item">{((activeVersion.confidence || 0) * 100).toFixed(0)}%</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Signal Coverage</span>
-                    <span className="dsi-analysis-item">{((activeVersion.signal_coverage || 0) * 100).toFixed(0)}%</span>
-                  </div>
+
                 </div>
-              </div>
-              
-              {/* LOSS */}
-              <div className="border-r-1 border-dsi-outline/50">
-                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
-                  <TrendingUpDown className="icon" />
-                  <span className="text-sm">Loss Propensity</span>
-                </div>
+                
+                {/* EXPOSURE */}
                 <div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Propensity Band</span>
-                    <span className="dsi-analysis-item">{activeVersion.loss_propensity_band?.replace(/_/g, ' ') || 'N/A'}</span>
+                  <div className="flex gap-2 ml-dsi-pad pt-1">
+                    <Globe className="icon" />
+                    <span className="text-sm">Exposure</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Combined Modifier</span>
-                    <span className="dsi-analysis-item">{activeVersion.loss_combined_modifier?.toFixed(3) || '1.000'}x</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Trend</span>
-                    <span className={`font-bold ${activeVersion.loss_trend_direction?.toLowerCase().includes('improv') ? 'text-dsi-positive' : activeVersion.loss_trend_direction?.toLowerCase().includes('deter') ? 'text-dsi-negative' : 'opacity-70'}`}>
-                      {activeVersion.loss_trend_direction?.replace(/_/g, ' ') || 'Stable'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Cohort</span>
-                    <span className="dsi-analysis-item">{activeVersion.loss_cohort_name || 'Unknown'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Model Confidence</span>
-                    <span className="dsi-analysis-item">{activeVersion.loss_confidence != null ? `${(activeVersion.loss_confidence * 100).toFixed(0)}%` : 'N/A'}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* EXPOSURE */}
-              <div>
-                <div className="flex gap-2 ml-dsi-pad pt-1 pb-1">
-                  <Globe className="icon" />
-                  <span className="text-sm">Exposure</span>
-                </div>
-                <div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Exposure Value</span>
-                    <span className="dsi-analysis-item">{formatNumber(activeVersion.exposure_value, 0)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Exposure Band</span>
-                    <span className="dsi-analysis-item">{activeVersion.exposure_band_label || 'N/A'}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Modifier</span>
-                    <span className="dsi-analysis-item">{activeVersion.exposure_modifier?.toFixed(3) || '1.000'}x</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Size Score</span>
-                    <span className="dsi-analysis-item">{formatNum(activeVersion.exposure_size_score, 1)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="dsi-analysis-description">Method</span>
-                    <span className="dsi-analysis-item ">{activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || 'N/A'}</span>
+
+                  <div className="grid grid-cols-[40%_30%_30%]">
+
+                    {/* row 1 */}
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1 ml-dsi-pad pl-0">Group</div>
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1">Size Contribution</div>
+                    <div className="dsi-analysis-description content-end text-xs border-b-1 border-dsi-outline/50 pb-1">Complexity Contribution</div>
+
+                    {/* row 2 */}
+                    <div className="dsi-analysis-description">{formatText(exposureGroup[0]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[0]?.size_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[0]?.complexity_contribution,2)}</div>
+
+                    {/* row 3 */}
+                    <div className="dsi-analysis-description">{formatText(exposureGroup[1]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[1]?.size_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[1]?.complexity_contribution,2)}</div>
+
+                    {/* row 4 */}
+                    <div className="dsi-analysis-description">{formatText(exposureGroup[2]?.name, "capitalize", "n/a")}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[2]?.size_contribution,2)}</div>
+                    <div className="dsi-analysis-item text-right">{formatNumber(exposureGroup[2]?.complexity_contribution,2)}</div> 
+
                   </div>
                 </div>
 
-              </div>
+              </div>    
             </div>
           </div>
-        </div>
 
       </div>
-
+      
       {/* ═══════════════════════════════════════════════════════════════════
           COMMERCIAL & RISK TERMS SUMMARY
           ═══════════════════════════════════════════════════════════════════ */}
@@ -310,7 +316,7 @@ export default function SummaryTab() {
                 </div>
               </div>
             ) : (
-              <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No commercial terms available</p>
+              <p className="dsi-user-message">No commercial terms available</p>
             )}
           </div>
 
@@ -351,7 +357,7 @@ export default function SummaryTab() {
               </div>
 
             ) : (
-              <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No risk terms available</p>
+              <p className="dsi-user-message">No risk terms available</p>
             )}
           </div>
         </div>
@@ -375,21 +381,34 @@ export default function SummaryTab() {
               value={newNoteText}
               onChange={(e) => setNewNoteText(e.target.value)}
               placeholder="Add a note..."
-              className="flex-1 bg-dsi-background/50 border border-dsi-outline/20 rounded px-3 py-2 text-sm text-dsi-selected outline-none focus:border-dsi-selected"
+              className="
+                flex-1
+                bg-dsi-contrast-analysis
+                border-1 border-dsi-contrast-analysis/30
+                pr-dsi-pad pl-dsi-pad ml-2 py-2
+                text-sm 
+                hover:text-dsi-selected
+                hover:border-dsi-outline"
               onKeyDown={(e) => e.key === 'Enter' && handleAddNote()}
               disabled={isAddingNote}
             />
             <button
               onClick={handleAddNote}
               disabled={!newNoteText.trim() || isAddingNote}
-              className="bg-dsi-selected text-dsi-background px-4 py-2 rounded flex items-center gap-2 text-sm font-semibold disabled:opacity-50 hover:opacity-90 transition-opacity"
+              className="
+                border-1
+                pr-dsi-pad pl-dsi-pad mr-2
+                flex items-center 
+                text-sm  
+                hover:text-dsi-selected"
             >
-              <Plus className="w-4 h-4" /> {isAddingNote ? 'Saving...' : 'Add'}
+              <Plus className="icon" /> {isAddingNote ? 'Saving...' : 'Add'}
             </button>
           </div>
+          
           {/* Notes list — reads from activeVersion.notes (persisted) */}
           {notes.length === 0 ? (
-            <p className="text-xs opacity-50 italic text-center py-4 text-wrap">No notes recorded yet. Add one above.</p>
+            <p className="dsi-user-message">No notes recorded yet. Add one above.</p>
           ) : (
             <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
               {[...notes].reverse().map((note: any, i: number) => {
@@ -425,7 +444,7 @@ export default function SummaryTab() {
               </div>
             ))}
           {Object.keys(activeSubmission.submission_data || {}).length === 0 && (
-            <div className="text-center opacity-50 italic py-4">No submission data available.</div>
+            <div className="dsi-user-message">No submission data available.</div>
           )}
         </div>
       </Modal>
@@ -439,7 +458,7 @@ export default function SummaryTab() {
             </div>
           ))}
           {Object.keys(activeVersion.discovery_output || {}).length === 0 && (
-            <div className="text-center opacity-50 italic py-4">No discovery output available.</div>
+            <div className="dsi-user-message">No discovery output available.</div>
           )}
         </div>
       </Modal>
