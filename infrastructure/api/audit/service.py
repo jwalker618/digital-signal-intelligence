@@ -16,6 +16,7 @@ change persists without its audit entry, and vice versa.
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
@@ -152,6 +153,73 @@ def audit_from_request(
 
 
 # =============================================================================
+# Push dispatch (A-4e)
+# =============================================================================
+
+
+def push_enabled() -> bool:
+    """Push is enabled when the VAPID private key + claims email are set.
+
+    Call sites that construct AuditService can do:
+
+        AuditService(db, broadcaster=..., push_enabled=push_enabled())
+
+    to opt their mutations into push fan-out without hardcoding the toggle.
+    """
+    return bool(os.getenv("VAPID_PRIVATE_KEY")) and bool(os.getenv("VAPID_CLAIMS_EMAIL"))
+
+
+def _dispatch_push(
+    *,
+    tenant_id: str,
+    actor_id: Optional[str],
+    action_type: str,
+    resource_type: Optional[str],
+    ws_broadcaster: Any,
+) -> None:
+    """Send push notifications to tenant members who are offline + opted-in.
+
+    Uses a fresh DB session (the triggering commit has already happened).
+    Kept at module level for testability and so AuditService stays lean.
+    """
+    from infrastructure.api.push.categories import category_for_action
+    from infrastructure.api.push.service import PushService
+    from infrastructure.db.config import session_scope
+    from infrastructure.db.models import User
+
+    category = category_for_action(action_type)
+    if category is None:
+        return
+
+    title = action_type.replace("_", " ").title()
+    body = f"A {resource_type or 'resource'} was updated in your tenant."
+
+    try:
+        with session_scope() as db:
+            rows = db.execute(
+                select(User.id).where(
+                    User.tenant_id == tenant_id,
+                    User.is_active == True,  # noqa: E712
+                )
+            ).all()
+            recipient_ids = [str(r[0]) for r in rows]
+            if not recipient_ids:
+                return
+            service = PushService(db, connection_manager=ws_broadcaster)
+            service.notify_event(
+                action_type=action_type,
+                tenant_id=tenant_id,
+                actor_id=actor_id,
+                recipient_ids=recipient_ids,
+                title=title,
+                body=body,
+                url="/",
+            )
+    except Exception as exc:  # noqa: BLE001
+        logger.debug("Push dispatch failed: %s", exc)
+
+
+# =============================================================================
 # AuditService
 # =============================================================================
 
@@ -159,7 +227,12 @@ def audit_from_request(
 class AuditService:
     """Records business-level audit events and queries the audit trail."""
 
-    def __init__(self, db: Session, broadcaster: Optional[Any] = None):
+    def __init__(
+        self,
+        db: Session,
+        broadcaster: Optional[Any] = None,
+        push_enabled: bool = False,
+    ):
         """
         Args:
             db: SQLAlchemy sync session. Events are added to this session
@@ -168,9 +241,14 @@ class AuditService:
             broadcaster: Optional object with `.broadcast_to_tenant_sync(tenant_id, message)`.
                          When provided, a WebSocket message is queued after
                          the session commits. If None, no broadcast.
+            push_enabled: If True, after the WebSocket broadcast fires a
+                push notification is dispatched to offline, opted-in
+                tenant members via A-4's PushService. The dispatch uses
+                a fresh DB session (the commit has already happened).
         """
         self.db = db
         self.broadcaster = broadcaster
+        self.push_enabled = push_enabled
 
     def record(self, event: AuditEvent) -> str:
         """Persist an audit event. Returns the created audit_log id (UUID str).
@@ -228,11 +306,30 @@ class AuditService:
         }
         tenant_id = event.tenant_id
 
+        push_enabled = self.push_enabled
+        actor_id = event.user_id
+        action_type_value = event.action_type.value
+        resource_type = event.resource_type
+        ws_broadcaster = self.broadcaster
+
         def _emit(session):
             try:
                 broadcaster.broadcast_to_tenant_sync(tenant_id, payload)
             except Exception as exc:  # noqa: BLE001
                 logger.warning("WebSocket broadcast failed: %s", exc)
+            # A-4e: After the WS broadcast, fan out to offline subscribers.
+            if not push_enabled:
+                return
+            try:
+                _dispatch_push(
+                    tenant_id=tenant_id,
+                    actor_id=actor_id,
+                    action_type=action_type_value,
+                    resource_type=resource_type,
+                    ws_broadcaster=ws_broadcaster,
+                )
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("Push dispatch failed: %s", exc)
 
         # once=True: SA removes the listener automatically after firing.
         # Do NOT call sa_event.remove() inside the handler -- that double-removes.

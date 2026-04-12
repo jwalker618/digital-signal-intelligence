@@ -51,6 +51,7 @@ from infrastructure.api.audit import (
     AuditActionType,
     AuditService,
     audit_from_request,
+    push_enabled,
 )
 from infrastructure.api.auth.permissions import (
     AuthContext,
@@ -67,7 +68,11 @@ router = APIRouter()
 
 
 def _broadcast_svc(db: Session) -> AuditService:
-    return AuditService(db, broadcaster=get_connection_manager())
+    return AuditService(
+        db,
+        broadcaster=get_connection_manager(),
+        push_enabled=push_enabled(),
+    )
 
 
 # =============================================================================

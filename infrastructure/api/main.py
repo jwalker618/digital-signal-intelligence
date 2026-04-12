@@ -430,6 +430,7 @@ from .routes import commercialterms, riskterms, submissions, quotes, referrals, 
 from .auth.routes import router as auth_router
 from .websocket.routes import router as websocket_router
 from .admin import router as admin_router
+from .push import router as push_router
 from .recalibration import router as recalibration_router
 from world_engine.registry.api import router as world_engine_router
 
@@ -448,6 +449,7 @@ app.include_router(commercialterms.router, prefix="/api/v1", tags=["Commercialte
 app.include_router(riskterms.router, prefix="/api/v1", tags=["Riskterms"])
 app.include_router(losses.router, prefix="/api/v1", tags=["Losses"])
 app.include_router(recalibration_router, prefix="/api/v1", tags=["Recalibration"])
+app.include_router(push_router, prefix="/api/v1", tags=["Push"])
 app.include_router(world_engine_router, prefix="/api/v1/world-engine", tags=["World Engine"])
 
 # =============================================================================

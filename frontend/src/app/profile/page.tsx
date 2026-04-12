@@ -10,6 +10,7 @@ import { ShieldCheck, UserRound, KeyRound, LogOut, Bell } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
 import { MFASetup } from "@/components/auth/MFASetup";
+import { NotificationPreferences } from "@/components/profile/NotificationPreferences";
 import { passwordResetRequest } from "@/lib/authApi";
 
 function Section({
@@ -115,12 +116,8 @@ export default function ProfilePage() {
           )}
         </Section>
 
-        {/* Placeholder slot so A-4 can drop a preferences section here
-            without restructuring. */}
         <Section title="Notifications" icon={Bell}>
-          <p className="text-sm opacity-70">
-            Push notification preferences will appear here once enabled.
-          </p>
+          <NotificationPreferences />
         </Section>
 
         <Section title="Session" icon={LogOut}>

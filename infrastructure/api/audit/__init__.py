@@ -14,6 +14,7 @@ from infrastructure.api.audit.service import (
     AuditEvent,
     AuditService,
     audit_from_request,
+    push_enabled,
 )
 from infrastructure.api.audit.state_capture import (
     StateCapture,
@@ -27,4 +28,5 @@ __all__ = [
     "StateCapture",
     "audit_from_request",
     "capture_model",
+    "push_enabled",
 ]

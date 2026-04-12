@@ -35,6 +35,8 @@ const pwaConfig = {
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
+  // A-4f: extend the generated SW with push + notificationclick handlers.
+  customWorkerSrc: "public/custom-sw.js",
   workboxOptions: {
     runtimeCaching: [
       {
