@@ -20,7 +20,11 @@ export default function LoginPage() {
 
   const login = useAuthStore((s) => s.login);
   const loginSSO = useAuthStore((s) => s.loginSSO);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Subscribe to the *result* of isAuthenticated(), not the function
+  // reference. The function itself is stable on the Zustand store, so
+  // selecting it would never trigger a re-render when the underlying
+  // user/token state flips to authenticated after login.
+  const isAuthed = useAuthStore((s) => s.isAuthenticated());
   const mfaChallengePending = useAuthStore((s) => s.mfaChallengePending);
 
   const [email, setEmail] = useState("");
@@ -32,8 +36,8 @@ export default function LoginPage() {
 
   // Once fully authenticated, leave the login page
   useEffect(() => {
-    if (isAuthenticated()) router.replace(nextPath);
-  }, [isAuthenticated, nextPath, router]);
+    if (isAuthed) router.replace(nextPath);
+  }, [isAuthed, nextPath, router]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
