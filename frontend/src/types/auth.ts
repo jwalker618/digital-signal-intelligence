@@ -37,14 +37,19 @@ export interface SSOStartResponse {
 // Permission strings are snake:case:verb, matching A-1's
 // infrastructure/api/auth/permissions.py::Permission enum.
 export type Permission =
-  | "submission:read"
-  | "submission:write"
-  | "submission:approve"
+  | "assessment:read"
+  | "assessment:write"
+  | "assessment:refer"
+  | "entity:read"
+  | "entity:write"
   | "config:read"
   | "config:write"
   | "config:deploy"
   | "recalibration:view"
   | "recalibration:approve"
+  | "portfolio:view"
+  | "portfolio:simulate"
+  | "world_engine:view"
   | "admin:system"
   | "admin:users"
   | "admin:audit";

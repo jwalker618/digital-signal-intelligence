@@ -63,8 +63,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const pageQuickAction = useDsiStore((state) => state.pageQuickAction);
   const hasPageActions = useDsiStore((state) => state.hasPageActions);
 
-  const canViewSubmissions = hasPermission("submission:read");
-  const canViewWorldEngine = hasPermission("submission:read"); // WE is linked from submissions context
+  const canViewSubmissions = hasPermission("assessment:read");
+  const canViewWorldEngine = hasPermission("world_engine:view");
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
