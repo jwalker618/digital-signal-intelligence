@@ -29,7 +29,9 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   const isBooting = useAuthStore((s) => s.isBooting);
   const sessionExpiresAt = useAuthStore((s) => s.sessionExpiresAt);
   const refresh = useAuthStore((s) => s.refresh);
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  // Subscribe to the computed boolean, not the function reference, so the
+  // guard re-runs its redirect effect whenever auth state actually changes.
+  const isAuthed = useAuthStore((s) => s.isAuthenticated());
 
   const [warning, setWarning] = useState<string | null>(null);
   const bootedRef = useRef(false);
@@ -46,11 +48,11 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
     if (isBooting) return;
     const isPublic = PUBLIC_PATHS.some((p) => pathname?.startsWith(p));
     if (isPublic) return;
-    if (!isAuthenticated()) {
+    if (!isAuthed) {
       const next = encodeURIComponent(pathname ?? "/");
       router.replace(`/login?next=${next}`);
     }
-  }, [isBooting, isAuthenticated, pathname, router]);
+  }, [isBooting, isAuthed, pathname, router]);
 
   // Expiry watchdog -- refresh/warn/redirect
   useEffect(() => {
