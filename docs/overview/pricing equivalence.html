@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Precision Illusion — DSI vs Traditional Pricing</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #faf8f5;
+    --surface: #ffffff;
+    --surface-alt: #f5f2ee;
+    --border: #e8e3db;
+    --border-strong: #d4cec4;
+    --ink: #1a1714;
+    --ink-dim: #5c564d;
+    --ink-muted: #8a8279;
+    --accent: #c45d3e;
+    --accent-dim: rgba(196,93,62,0.08);
+    --accent-light: rgba(196,93,62,0.15);
+    --trad: #6b7b3a;
+    --trad-bg: rgba(107,123,58,0.06);
+    --trad-border: rgba(107,123,58,0.2);
+    --dsi: #3a6b7b;
+    --dsi-bg: rgba(58,107,123,0.06);
+    --dsi-border: rgba(58,107,123,0.2);
+    --equal: #8b6914;
+    --equal-bg: rgba(139,105,20,0.08);
+    --serif: 'Libre Baskerville', Georgia, serif;
+    --sans: 'DM Sans', 'Helvetica Neue', sans-serif;
+    --mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    padding: 36px 32px 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    max-width: 520px;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--ink-dim);
+    max-width: 540px;
+    line-height: 1.5;
+  }
+
+  /* ── NAV ── */
+  .nav {
+    padding: 0 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 400;
+    padding: 14px 16px;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--ink-muted);
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    display: inline-block;
+  }
+  .nav-btn.active {
+    font-weight: 600;
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .nav-btn:hover:not(.active) { color: var(--ink-dim); }
+
+  /* ── ENTITY BANNER ── */
+  .entity-banner {
+    padding: 14px 32px;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .entity-name {
+    font-family: var(--serif);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .entity-desc {
+    font-size: 11px;
+    color: var(--ink-muted);
+  }
+
+  /* ── CONTENT ── */
+  .content {
+    padding: 28px 32px;
+    max-width: 760px;
+    margin: 0 auto;
+  }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── TYPOGRAPHY ── */
+  .prose {
+    font-family: var(--serif);
+    font-size: 15px;
+    color: var(--ink);
+    line-height: 1.75;
+    margin-bottom: 16px;
+    max-width: 640px;
+  }
+  .emphasis { color: var(--accent); font-weight: 600; }
+  .math-block {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+    padding: 16px 20px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin: 16px 0;
+    line-height: 1.8;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .section-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 400;
+    color: var(--ink);
+    margin: 16px 0 12px;
+  }
+
+  /* ── TAGS ── */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 3px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .tag-trad { color: var(--trad); background: var(--trad-bg); border: 1px solid var(--trad-border); }
+  .tag-dsi { color: var(--dsi); background: var(--dsi-bg); border: 1px solid var(--dsi-border); }
+
+  /* ── CALLOUT BOXES ── */
+  .callout {
+    padding: 20px 24px;
+    border-radius: 6px;
+    margin: 20px 0;
+  }
+  .callout-equal { background: var(--equal-bg); border: 1px solid var(--equal); }
+  .callout-accent { background: var(--accent-dim); border: 1px solid var(--accent); }
+  .callout-trad { background: var(--trad-bg); border: 1px solid var(--trad-border); }
+  .callout-dsi { background: var(--dsi-bg); border: 1px solid var(--dsi-border); }
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .callout-label-equal { color: var(--equal); }
+  .callout-label-accent { color: var(--accent); }
+  .callout-label-trad { color: var(--trad); }
+  .callout-label-dsi { color: var(--dsi); }
+  .callout .prose { margin-bottom: 0; }
+
+  /* ── TABLE ── */
+  .table-wrap {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .table-head {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-muted);
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .table-row {
+    display: grid;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .table-row:last-child { border-bottom: none; }
+  .table-row.highlight { background: var(--trad-bg); }
+  .table-foot {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 700;
+    background: var(--surface-alt);
+    border-top: 1px solid var(--border-strong);
+  }
+  .sov-grid { grid-template-columns: 2fr 1fr 1fr 0.8fr 1fr; }
+  .sov-grid-no-prem { grid-template-columns: 2fr 1fr 1fr 0.8fr; }
+  .mod-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .result-box {
+    padding: 12px;
+    background: var(--surface-alt);
+    border-top: 1px solid var(--border-strong);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ── SIGNAL BARS ── */
+  .signal-item { margin-bottom: 10px; }
+  .signal-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3px;
+  }
+  .signal-cat { font-size: 12px; color: var(--ink-dim); }
+  .signal-score { font-family: var(--mono); font-size: 12px; color: var(--dsi); font-weight: 600; }
+  .signal-track { height: 4px; border-radius: 2px; background: var(--border); }
+  .signal-fill { height: 4px; border-radius: 2px; transition: width 0.5s ease; }
+  .signal-detail { font-size: 10px; color: var(--ink-muted); margin-top: 3px; }
+  .signal-result {
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--dsi-bg);
+    border: 1px solid var(--dsi-border);
+    border-radius: 4px;
+  }
+
+  /* ── RATE BARS ── */
+  .rate-item { margin-bottom: 6px; }
+  .rate-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+  .rate-label { font-size: 11px; color: var(--ink-dim); }
+  .rate-label.avg { color: var(--accent); font-weight: 700; }
+  .rate-value { font-family: var(--mono); font-size: 11px; color: var(--ink-dim); }
+  .rate-value.avg { color: var(--accent); font-weight: 700; }
+  .rate-track { height: 4px; border-radius: 3px; background: var(--border); }
+  .rate-track.avg { height: 6px; }
+  .rate-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+
+  /* ── SIDE-BY-SIDE ── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .compare-header-trad {
+    padding: 12px 16px;
+    background: var(--trad-bg);
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+  .compare-header-dsi {
+    padding: 12px 16px;
+    background: var(--dsi-bg);
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-cell {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-cell-trad { border-right: 1px solid var(--border); }
+  .compare-cell.bold-trad { background: var(--trad-bg); }
+  .compare-cell.bold-dsi { background: var(--dsi-bg); }
+  .compare-label { font-size: 10px; color: var(--ink-muted); margin-bottom: 3px; }
+  .compare-val { font-family: var(--mono); font-size: 12px; color: var(--ink); }
+  .compare-val.bold { font-size: 16px; font-weight: 700; }
+  .compare-val.trad-color { color: var(--trad); }
+  .compare-val.dsi-color { color: var(--dsi); }
+
+  /* ── DELTA BOX ── */
+  .delta-box {
+    padding: 20px 24px;
+    background: var(--equal-bg);
+    border: 1px solid var(--equal);
+    border-radius: 6px;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .delta-num { font-family: var(--mono); font-size: 28px; font-weight: 700; color: var(--equal); }
+  .delta-sub { font-size: 13px; color: var(--ink-dim); margin-top: 4px; }
+
+  /* ── COST TABLE ── */
+  .cost-grid { grid-template-columns: 1.2fr 1fr 1fr; }
+
+  /* ── CONCLUSION ITEMS ── */
+  .conclusion-item {
+    display: flex;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .conclusion-item:last-child { border-bottom: none; }
+  .conclusion-num {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--accent);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  .conclusion-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .conclusion-body { font-family: var(--serif); font-size: 14px; color: var(--ink-dim); line-height: 1.7; }
+
+  .adds-item { display: flex; gap: 10px; margin-bottom: 8px; }
+  .adds-arrow { color: var(--dsi); font-weight: 700; flex-shrink: 0; }
+  .adds-text { font-size: 13px; color: var(--ink); line-height: 1.5; }
+
+  /* ── REVEAL BUTTON ── */
+  .reveal-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--accent);
+    background: var(--accent-dim);
+    color: var(--accent);
+    cursor: pointer;
+    margin-bottom: 16px;
+    transition: all 0.2s;
+  }
+  .reveal-btn:hover { background: var(--accent-light); }
+
+  /* ── FOOTER NAV ── */
+  .footer-nav {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .footer-nav button {
+    font-family: var(--sans);
+    font-size: 12px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .prev-btn { border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .prev-btn:disabled { color: var(--ink-muted); opacity: 0.4; cursor: default; }
+  .next-btn { border: 1px solid var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .next-btn:disabled { opacity: 0.4; cursor: default; }
+  .page-indicator { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); align-self: center; }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 20px 32px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+    margin-top: 20px;
+  }
+  .footer span { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); }
+
+  /* ── DSI PRICING CALC ── */
+  .calc-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .calc-label { font-size: 12px; color: var(--ink-dim); }
+  .calc-value { font-family: var(--mono); font-size: 12px; }
+  .calc-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin: 12px 0 8px;
+  }
+
+  /* ── FORMULA FLOW ── */
+  .formula-flow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+    padding: 12px 16px;
+    background: var(--surface-alt);
+    border-radius: 6px;
+    line-height: 1.8;
+    overflow-x: auto;
+  }
+  .formula-flow .step { color: var(--ink); }
+  .formula-flow .highlight { color: var(--accent); }
+  .formula-flow .result { color: var(--ink); font-weight: 700; }
+  .formula-flow .muted { color: var(--ink-muted); }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .header { padding: 24px 20px 20px; }
+    .header h1 { font-size: 22px; }
+    .nav { padding: 0 20px; }
+    .entity-banner { padding: 12px 20px; }
+    .content { padding: 20px; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-cell-trad { border-right: none; }
+    .compare-header-trad { border-right: none; }
+    .sov-grid, .sov-grid-no-prem { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-label">Pricing Methodology Comparison</div>
+  <h1>The Precision Illusion</h1>
+  <p>Why asset-level granularity in traditional pricing doesn't produce more accurate premiums
+    than organisational-level signal assessment — and costs orders of magnitude more.</p>
+</div>
+
+<!-- ═══ NAV ═══ -->
+<div class="nav" id="nav"></div>
+
+<!-- ═══ ENTITY BANNER ═══ -->
+<div class="entity-banner">
+  <span class="entity-name">Hargrove Industrial Group</span>
+  <span class="entity-desc">Diversified manufacturer — plastics, packaging, precision components · $280,000,000 revenue · 1,850 employees · 6 locations</span>
+</div>
+
+<!-- ═══ CONTENT ═══ -->
+<div class="content" id="content"></div>
+
+<!-- ═══ FOOTER ═══ -->
+<div class="footer">
+  <span>© John Walker — All rights reserved. Digital Signal Intelligence (DSI) is proprietary IP.</span>
+</div>
+
+<script>
+// ─── DATA ───────────────────────────────────────────────────────────
+const SOV = [
+  { id:1, name:"HQ & Admin — Charlotte, NC", construction:"Fire Resistive", occupancy:"Office", tiv:18500000, rate:0.00042, protection:"Sprinklered" },
+  { id:2, name:"Plant 1 — Plastics Extrusion, Gastonia, NC", construction:"Non-Combustible", occupancy:"Manufacturing — Moderate", tiv:65000000, rate:0.00095, protection:"Sprinklered" },
+  { id:3, name:"Plant 2 — Packaging, Greenville, SC", construction:"Non-Combustible", occupancy:"Manufacturing — Light", tiv:42000000, rate:0.00078, protection:"Sprinklered" },
+  { id:4, name:"Plant 3 — Precision Components, Roanoke, VA", construction:"Fire Resistive", occupancy:"Manufacturing — Light", tiv:55000000, rate:0.00072, protection:"Sprinklered" },
+  { id:5, name:"Warehouse — Distribution, Spartanburg, SC", construction:"Metal Frame", occupancy:"Storage — Moderate", tiv:28000000, rate:0.00088, protection:"Partial Sprinkler" },
+  { id:6, name:"R&D Lab — Charlotte, NC", construction:"Fire Resistive", occupancy:"Lab/Light Industrial", tiv:15000000, rate:0.00055, protection:"Sprinklered" },
+];
+SOV.forEach(a => a.premium = a.tiv * a.rate);
+const tradTotal = SOV.reduce((s,a) => s + a.tiv, 0);
+const tradBasePremium = SOV.reduce((s,a) => s + a.premium, 0);
+
+const TRAD_MODS = [
+  { name:"Experience modifier", value:0.95, rationale:"Favourable loss history" },
+  { name:"Schedule credit", value:0.90, rationale:"Underwriter discretion — 'good account'" },
+  { name:"Market adjustment", value:1.05, rationale:"Hardening market conditions" },
+];
+const tradModProduct = TRAD_MODS.reduce((p,m) => p * m.value, 1);
+const tradFinal = tradBasePremium * tradModProduct;
+const tradWtdRate = tradBasePremium / tradTotal;
+
+const DSI_SIGNALS = [
+  { cat:"Technical Infrastructure", score:74, detail:"Mixed OT/IT, legacy SCADA in Plant 1, modern elsewhere" },
+  { cat:"Network Authority", score:82, detail:"ISO 9001/14001 certified, Tier-1 supply chain partners" },
+  { cat:"Corporate Footprint", score:78, detail:"6 locations, 3 states, moderate complexity" },
+  { cat:"Behavioural", score:71, detail:"OSHA incident rate declining, active safety investment" },
+  { cat:"Public Records", score:85, detail:"No material litigation, 1 minor EPA action (resolved)" },
+  { cat:"Structured Data", score:68, detail:"AM Best rated suppliers, no credit watch" },
+];
+const DSI_COMPOSITE = 742, DSI_TIER = 2, DSI_RATE = 0.00075;
+const DSI_BAND = "$150M–$300M", DSI_MID = 225000000, DSI_CONF = 0.79;
+const DSI_MODS = [
+  { name:"Exposure Size", value:0.94, source:"Scale credit (6 locations, diversified)" },
+  { name:"Loss Propensity", value:0.92, source:"Behavioural: declining incident rate, safety investment" },
+  { name:"Complexity", value:1.08, source:"Multi-state, mixed occupancy, OT/IT convergence" },
+];
+const dsiModProduct = DSI_MODS.reduce((p,m) => p * m.value, 1);
+const dsiBase = DSI_MID * DSI_RATE;
+const dsiFinal = dsiBase * dsiModProduct;
+
+const assetBps = SOV.map(a => a.rate * 10000);
+const bpsMin = Math.min(...assetBps), bpsMax = Math.max(...assetBps);
+const bpsSpread = bpsMax - bpsMin;
+const wtdBps = tradWtdRate * 10000;
+
+const fmt = n => n.toLocaleString("en-US",{maximumFractionDigits:0});
+const fmtBps = n => n.toFixed(1) + " bps";
+
+const diff = Math.abs(tradFinal - dsiFinal);
+const diffPct = (diff / tradFinal * 100).toFixed(1);
+
+// ─── SECTIONS ───────────────────────────────────────────────────────
+const SECTIONS = [
+  { id:"thesis", label:"The Argument" },
+  { id:"trad", label:"Traditional Method" },
+  { id:"dsi", label:"DSI Method" },
+  { id:"compare", label:"Side-by-Side" },
+  { id:"illusion", label:"The Precision Illusion" },
+  { id:"conclusion", label:"Conclusion" },
+];
+
+let currentSection = 0;
+let showPremiums = false;
+let showMods = false;
+
+// ─── RENDER ─────────────────────────────────────────────────────────
+function renderNav() {
+  const nav = document.getElementById("nav");
+  nav.innerHTML = SECTIONS.map((s,i) =>
+    `<button class="nav-btn ${i===currentSection?'active':''}" onclick="goTo(${i})">${s.label}</button>`
+  ).join("");
+}
+
+function goTo(i) {
+  currentSection = i;
+  showPremiums = false;
+  showMods = false;
+  renderNav();
+  renderContent();
+}
+
+function revealPremiums() { showPremiums = true; renderContent(); }
+function revealMods() { showMods = true; renderContent(); }
+function prev() { if(currentSection > 0) goTo(currentSection - 1); }
+function next() { if(currentSection < SECTIONS.length - 1) goTo(currentSection + 1); }
+
+function signalColor(score) {
+  if(score >= 80) return "var(--dsi)";
+  if(score >= 65) return "var(--equal)";
+  return "var(--accent)";
+}
+
+function renderContent() {
+  const el = document.getElementById("content");
+  let h = "";
+
+  // ═══ THESIS ═══
+  if(currentSection === 0) {
+    h = `
+      <p class="prose">All property and casualty pricing, regardless of methodology, reduces to the same fundamental operation: <span class="emphasis">apply a rate to an exposure basis, then adjust for modifying factors</span>.</p>
+      <div class="math-block">Premium = Exposure × Rate × Modifiers</div>
+      <p class="prose">The traditional model and DSI differ not in this formula — they share it — but in <span class="emphasis">where the inputs come from</span> and <span class="emphasis">at what level of aggregation</span> they're applied.</p>
+      <div class="divider"></div>
+      <p class="prose">Traditional underwriting gathers a Statement of Values — a schedule of individual assets with declared replacement costs — and applies rates per asset based on construction, occupancy, protection, and location. The rates themselves are selected by the underwriter from experience, reference tables, and judgement. The sum of these individual asset premiums, modified by experience and market factors, produces the final price.</p>
+      <p class="prose">DSI assesses the <span class="emphasis">organisation</span> — not its individual assets — through observable digital signals. It produces a composite risk score, maps it to a tier, selects a base rate, and applies it to a signal-inferred exposure basis. Modifiers for risk quality, loss propensity, and exposure complexity adjust the final premium deterministically.</p>
+      <div class="divider"></div>
+      <div class="callout callout-equal">
+        <div class="callout-label callout-label-equal">Core Thesis</div>
+        <p class="prose" style="font-family:var(--serif);font-size:15px;line-height:1.7">The asset-level granularity in traditional pricing creates an <em>appearance</em> of precision without delivering superior predictive accuracy. The underwriter's per-asset rates cluster around an organisational judgement they've already made. DSI makes that organisational judgement explicit, observable, and repeatable — at a fraction of the cost and time.</p>
+      </div>
+    `;
+  }
+
+  // ═══ TRADITIONAL ═══
+  else if(currentSection === 1) {
+    const gridClass = showPremiums ? "sov-grid" : "sov-grid-no-prem";
+    const premHead = showPremiums ? `<span style="text-align:right">Premium</span>` : "";
+    const maxRate = Math.max(...SOV.map(a => a.rate));
+
+    h = `
+      <span class="tag tag-trad">Traditional Method</span>
+      <h2 class="section-title">Asset-Level Rating from Statement of Values</h2>
+      <p class="prose">The underwriter receives a six-location SOV from the broker. Each asset has a declared Total Insurable Value (TIV), construction type, occupancy class, and protection grade. The underwriter applies a rate per asset based on their assessment of each location's risk characteristics.</p>
+      <div class="table-wrap">
+        <div class="table-head ${gridClass}">
+          <span>Location</span><span style="text-align:right">TIV</span>
+          <span style="text-align:right">Rate (bps)</span><span style="text-align:center">Protection</span>
+          ${premHead}
+        </div>
+        ${SOV.map(a => `
+          <div class="table-row ${gridClass} ${a.rate === maxRate ? 'highlight' : ''}">
+            <div>
+              <div style="font-weight:600;color:var(--ink);font-size:12px">${a.name}</div>
+              <div style="color:var(--ink-muted);font-size:10px;margin-top:2px">${a.construction} · ${a.occupancy}</div>
+            </div>
+            <div style="font-family:var(--mono);color:var(--ink);text-align:right">$${fmt(a.tiv)}</div>
+            <div style="font-family:var(--mono);color:var(--trad);text-align:right">${fmtBps(a.rate*10000)}</div>
+            <div style="color:var(--ink-muted);text-align:center;font-size:11px">${a.protection}</div>
+            ${showPremiums ? `<div style="font-family:var(--mono);color:var(--ink);text-align:right;font-weight:600">$${fmt(a.premium)}</div>` : ''}
+          </div>
+        `).join("")}
+        <div class="table-foot ${gridClass}">
+          <span>Total</span>
+          <span style="text-align:right">$${fmt(tradTotal)}</span>
+          <span style="text-align:right;color:var(--accent)">${fmtBps(wtdBps)}</span>
+          <span></span>
+          ${showPremiums ? `<span style="text-align:right">$${fmt(tradBasePremium)}</span>` : ''}
+        </div>
+      </div>
+    `;
+
+    if(!showPremiums) {
+      h += `<button class="reveal-btn" onclick="revealPremiums()">Show calculated premiums →</button>`;
+    } else {
+      h += `<p class="prose">The asset-level sum produces a base premium of <span class="emphasis">$${fmt(tradBasePremium)}</span> on a total TIV of $${fmt(tradTotal)}. But this isn't the final price — the underwriter now applies account-level modifiers.</p>`;
+
+      if(!showMods) {
+        h += `<button class="reveal-btn" onclick="revealMods()">Apply modifiers →</button>`;
+      } else {
+        h += `
+          <div class="table-wrap">
+            <div style="padding:10px 12px;background:var(--surface-alt);font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border)">Account-Level Modifiers</div>
+            ${TRAD_MODS.map(m => `
+              <div class="mod-row">
+                <div>
+                  <div style="font-size:12px;font-weight:600;color:var(--ink)">${m.name}</div>
+                  <div style="font-size:11px;color:var(--ink-muted);margin-top:2px">${m.rationale}</div>
+                </div>
+                <span style="font-family:var(--mono);font-size:14px;color:${m.value<1?'var(--trad)':'var(--accent)'};font-weight:600">×${m.value.toFixed(2)}</span>
+              </div>
+            `).join("")}
+            <div class="result-box">
+              <span style="font-size:13px;font-weight:700;color:var(--ink)">Final Premium</span>
+              <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent)">$${fmt(tradFinal)}</span>
+            </div>
+            <div style="padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--ink-muted)">
+              $${fmt(tradBasePremium)} × ${tradModProduct.toFixed(4)} = $${fmt(tradFinal)}
+            </div>
+          </div>
+          <div class="callout callout-trad">
+            <div class="callout-label callout-label-trad">Note the structure</div>
+            <p class="prose" style="font-family:var(--serif);font-size:14px;line-height:1.7">After all the per-asset work, the underwriter applied <em>account-level</em> modifiers that moved the price by ${(Math.abs(1 - tradModProduct)*100).toFixed(1)}%. The "schedule credit" of 10% is a subjective, undocumented adjustment. This is the pricing decision that actually matters — and it was made at the organisational level, not the asset level.</p>
+          </div>
+        `;
+      }
+    }
+  }
+
+  // ═══ DSI ═══
+  else if(currentSection === 2) {
+    h = `
+      <span class="tag tag-dsi">DSI Method</span>
+      <h2 class="section-title">Organisational-Level Signal Assessment</h2>
+      <p class="prose">DSI assesses the same entity — Hargrove Industrial Group — through its observable digital signals. No SOV is required. The exposure basis is inferred from signals with stated confidence, and the rate is determined by the composite risk score.</p>
+
+      <div class="table-wrap" style="padding:16px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Signal Assessment</div>
+        ${DSI_SIGNALS.map(s => `
+          <div class="signal-item">
+            <div class="signal-header">
+              <span class="signal-cat">${s.cat}</span>
+              <span class="signal-score">${s.score}/100</span>
+            </div>
+            <div class="signal-track"><div class="signal-fill" style="width:${s.score}%;background:${signalColor(s.score)}"></div></div>
+            <div class="signal-detail">${s.detail}</div>
+          </div>
+        `).join("")}
+        <div class="signal-result">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:13px;font-weight:600;color:var(--ink)">Composite Score</span>
+            <span style="font-family:var(--mono);font-size:22px;font-weight:700;color:var(--dsi)">${DSI_COMPOSITE}/1000</span>
+          </div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--ink-dim);margin-top:4px">Tier ${DSI_TIER} — Standard · Confidence ${DSI_CONF}</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div style="padding:10px 12px;background:var(--surface-alt);font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;border-bottom:1px solid var(--border)">Pricing Calculation</div>
+        <div style="padding:12px">
+          <div class="calc-row">
+            <span class="calc-label">Exposure Band (signal-inferred)</span>
+            <span class="calc-value" style="color:var(--dsi)">${DSI_BAND} @ ${DSI_CONF*100}% conf.</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">Exposure Midpoint (pricing basis)</span>
+            <span class="calc-value" style="color:var(--ink)">$${fmt(DSI_MID)}</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">Tier ${DSI_TIER} Base Rate</span>
+            <span class="calc-value" style="color:var(--dsi)">${fmtBps(DSI_RATE*10000)}</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label" style="font-weight:600;color:var(--ink)">Base Premium</span>
+            <span class="calc-value" style="font-size:14px;font-weight:600;color:var(--ink)">$${fmt(dsiBase)}</span>
+          </div>
+          <div class="calc-section-label">Modifiers</div>
+          ${DSI_MODS.map(m => `
+            <div class="calc-row">
+              <div>
+                <span style="font-size:12px;color:var(--ink)">${m.name}</span>
+                <div style="font-size:10px;color:var(--ink-muted);margin-top:2px">${m.source}</div>
+              </div>
+              <span style="font-family:var(--mono);font-size:13px;color:${m.value<1?'var(--dsi)':'var(--accent)'};font-weight:600">×${m.value.toFixed(2)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <div class="result-box">
+          <span style="font-size:13px;font-weight:700;color:var(--ink)">Final Premium</span>
+          <span style="font-family:var(--mono);font-size:20px;font-weight:700;color:var(--dsi)">$${fmt(dsiFinal)}</span>
+        </div>
+        <div style="padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--ink-muted)">
+          $${fmt(dsiBase)} × ${dsiModProduct.toFixed(4)} = $${fmt(dsiFinal)}
+        </div>
+      </div>
+
+      <div class="callout callout-dsi">
+        <div class="callout-label callout-label-dsi">Key difference</div>
+        <p class="prose" style="font-family:var(--serif);font-size:14px;line-height:1.7">Every input is observable, every modifier is deterministic, and the exposure basis carries a stated confidence level. The same entity scored twice produces the same result. No SOV was required, no documents were exchanged, and the entire assessment completed in under 60 seconds.</p>
+      </div>
+    `;
+  }
+
+  // ═══ SIDE-BY-SIDE ═══
+  else if(currentSection === 3) {
+    const rows = [
+      { label:"Exposure Basis", trad:`SOV: $${fmt(tradTotal)} declared TIV`, dsi:`Signals: ${DSI_BAND} inferred (${DSI_CONF*100}% conf.)` },
+      { label:"Rate Selection", trad:`Per-asset: ${fmtBps(bpsMin)}–${fmtBps(bpsMax)} range`, dsi:`Tier ${DSI_TIER}: ${fmtBps(DSI_RATE*10000)} (deterministic)` },
+      { label:"Effective Wtd Rate", trad:fmtBps(wtdBps), dsi:fmtBps(DSI_RATE*10000) },
+      { label:"Base Premium", trad:`$${fmt(tradBasePremium)}`, dsi:`$${fmt(dsiBase)}` },
+      { label:"Modifier Product", trad:`×${tradModProduct.toFixed(4)} (incl. subjective credit)`, dsi:`×${dsiModProduct.toFixed(4)} (deterministic)` },
+      { label:"Final Premium", trad:`$${fmt(tradFinal)}`, dsi:`$${fmt(dsiFinal)}`, bold:true },
+    ];
+
+    const costs = [
+      { metric:"Information gathered", trad:"6-asset SOV, loss runs, questionnaire", dsi:"Domain name" },
+      { metric:"Time to price", trad:"15–30 days", dsi:"47 seconds" },
+      { metric:"Cost to place", trad:"$350–$650", dsi:"< $10" },
+      { metric:"Reproducibility", trad:"No — different UW, different price", dsi:"Yes — deterministic" },
+      { metric:"Audit trail", trad:"Reconstructed", dsi:"Immutable, versioned" },
+    ];
+
+    h = `
+      <h2 class="section-title" style="margin-top:0">Same Entity, Same Formula, Same Neighbourhood</h2>
+      <div class="compare-grid">
+        <div class="compare-header-trad"><span class="tag tag-trad">Traditional</span></div>
+        <div class="compare-header-dsi"><span class="tag tag-dsi">DSI</span></div>
+        ${rows.map(r => `
+          <div class="compare-cell compare-cell-trad ${r.bold?'bold-trad':''}">
+            <div class="compare-label">${r.label}</div>
+            <div class="compare-val ${r.bold?'bold trad-color':''}">${r.trad}</div>
+          </div>
+          <div class="compare-cell ${r.bold?'bold-dsi':''}">
+            <div class="compare-label">${r.label}</div>
+            <div class="compare-val ${r.bold?'bold dsi-color':''}">${r.dsi}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="delta-box">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--equal);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Price Difference</div>
+        <div class="delta-num">${diffPct}%</div>
+        <div class="delta-sub">$${fmt(diff)} on a $${fmt(tradFinal)} programme</div>
+      </div>
+
+      <div class="table-wrap">
+        <div style="padding:10px 12px;background:var(--surface-alt);font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;border-bottom:1px solid var(--border)">But consider the cost to arrive there</div>
+        ${costs.map(r => `
+          <div class="table-row cost-grid">
+            <span style="color:var(--ink-dim)">${r.metric}</span>
+            <span style="font-family:var(--mono);color:var(--trad);text-align:center">${r.trad}</span>
+            <span style="font-family:var(--mono);color:var(--dsi);text-align:center">${r.dsi}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // ═══ ILLUSION ═══
+  else if(currentSection === 4) {
+    h = `
+      <h2 class="section-title" style="margin-top:0">What the Underwriter Actually Did</h2>
+      <p class="prose">Look at the per-asset rate distribution. The underwriter applied rates ranging from ${fmtBps(bpsMin)} to ${fmtBps(bpsMax)} — a spread of ${fmtBps(bpsSpread)}. This looks like granular, asset-level analysis. But examine what's really happening:</p>
+
+      <div class="table-wrap" style="padding:16px;margin-bottom:20px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Per-Asset Rate Distribution (bps)</div>
+        ${SOV.map(a => {
+          const bps = a.rate * 10000;
+          const pct = (bps / 12) * 100;
+          return `<div class="rate-item">
+            <div class="rate-header">
+              <span class="rate-label">${a.name.split("—")[0].trim()}</span>
+              <span class="rate-value">${fmtBps(bps)}</span>
+            </div>
+            <div class="rate-track"><div class="rate-fill" style="width:${pct}%;background:var(--trad)"></div></div>
+          </div>`;
+        }).join("")}
+        <div class="divider"></div>
+        <div class="rate-item">
+          <div class="rate-header">
+            <span class="rate-label avg">TIV-Weighted Average</span>
+            <span class="rate-value avg">${fmtBps(wtdBps)}</span>
+          </div>
+          <div class="rate-track avg"><div class="rate-fill" style="width:${(wtdBps/12)*100}%;background:var(--accent)"></div></div>
+        </div>
+        <div class="rate-item">
+          <div class="rate-header">
+            <span class="rate-label avg" style="color:var(--dsi)">DSI Tier 2 Rate</span>
+            <span class="rate-value avg" style="color:var(--dsi)">${fmtBps(DSI_RATE*10000)}</span>
+          </div>
+          <div class="rate-track avg"><div class="rate-fill" style="width:${(DSI_RATE*10000/12)*100}%;background:var(--dsi)"></div></div>
+        </div>
+      </div>
+
+      <p class="prose">The rates aren't truly independent assessments. They follow a predictable pattern: offices are cheaper than manufacturing, manufacturing is cheaper than warehousing. These relativities are <span class="emphasis">occupancy-driven tables</span> — not individual risk analysis. The underwriter selected a central rate (around ${fmtBps(wtdBps)}) and spread it across assets using standard construction/occupancy relativities.</p>
+
+      <p class="prose">Then, having done all that per-asset work, the underwriter applied a <span class="emphasis">10% schedule credit</span> at the account level — a subjective, undocumented discount that says "this is a good account." That single adjustment moved the premium more than the entire asset-level rate differentiation.</p>
+
+      <div class="callout callout-accent">
+        <div class="callout-label callout-label-accent">The critical question</div>
+        <p style="font-family:var(--serif);font-size:16px;color:var(--ink);line-height:1.7;margin:0">If the organisational judgement (the schedule credit, the experience modifier) is the decision that actually drives the final price — why not make it the <em>primary</em> method rather than an afterthought applied on top of illusory asset-level precision?</p>
+      </div>
+
+      <p class="prose">That is exactly what DSI does. The composite risk score <em>is</em> the organisational judgement — made explicit, observable, and deterministic. The signal-inferred exposure band replaces the self-reported SOV. And the modifiers for loss propensity and complexity replace the subjective schedule credit with traceable, auditable adjustments.</p>
+
+      <div class="divider"></div>
+
+      <div style="font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px">Consider also</div>
+      <p class="prose">Two identical buildings — same construction, same occupancy, same TIV — owned by different organisations will have different loss outcomes. The building doesn't cause the loss. The <span class="emphasis">organisation's behaviour</span> does: their maintenance practices, safety culture, incident response capability, investment in protection. Traditional pricing assesses the building. DSI assesses the organisation. Which is more likely to predict the loss?</p>
+    `;
+  }
+
+  // ═══ CONCLUSION ═══
+  else if(currentSection === 5) {
+    const items = [
+      { num:"1", title:"The formula is identical", body:`Both methods apply a rate to an exposure basis and adjust with modifiers. The mathematical structure is the same. Premium = Exposure × Rate × Modifiers.` },
+      { num:"2", title:"The granularity is illusory", body:`Traditional per-asset rating produces a weighted average rate of ${fmtBps(wtdBps)} — within ${fmtBps(Math.abs(wtdBps - DSI_RATE*10000))} of DSI's tier rate of ${fmtBps(DSI_RATE*10000)}. The asset-level differentiation creates an appearance of precision, but the underwriter's real pricing decision was an organisational judgement applied as a schedule credit.` },
+      { num:"3", title:"The efficiency difference is structural", body:`The traditional method required weeks of document assembly, subjective interpretation by multiple parties, and produced a non-reproducible result. DSI produced an equivalent price in under a minute from observable signals, with a complete audit trail and stated confidence bounds.` },
+    ];
+
+    const adds = [
+      "Confidence scoring — DSI states how sure it is. Traditional pricing implies certainty it doesn't have.",
+      "Behavioural loss inference — losses are predicted from organisational behaviour, not historical frequency on sparse data.",
+      "Continuous monitoring — signals are re-assessed automatically, not once per renewal cycle.",
+      "Reproducibility — the same entity scored by any participant produces the same result.",
+    ];
+
+    h = `
+      <h2 class="section-title" style="margin-top:0">Equivalent Accuracy, Radically Different Efficiency</h2>
+      <p class="prose">This comparison demonstrates three things:</p>
+      <div style="margin:16px 0 20px">
+        ${items.map(it => `
+          <div class="conclusion-item">
+            <div class="conclusion-num">${it.num}</div>
+            <div>
+              <div class="conclusion-title">${it.title}</div>
+              <p class="conclusion-body">${it.body}</p>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div style="padding:24px;background:linear-gradient(135deg,var(--surface) 0%,var(--surface-alt) 100%);border:1px solid var(--accent);border-radius:6px;margin-bottom:20px">
+        <p style="font-family:var(--serif);font-size:16px;color:var(--ink);line-height:1.7;margin:0;text-align:center">DSI does not claim to be more accurate than traditional underwriting. It claims to be <span class="emphasis">equally accurate, demonstrably faster, reproducible, and auditable</span> — at a fraction of the cost. The asset-level SOV process adds time and expense without adding predictive power.</p>
+      </div>
+
+      <div style="padding:16px 20px;background:var(--surface-alt);border:1px solid var(--border);border-radius:6px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--ink-muted);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">What DSI adds that traditional cannot</div>
+        ${adds.map(a => `
+          <div class="adds-item">
+            <span class="adds-arrow">→</span>
+            <span class="adds-text">${a}</span>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  // ── FOOTER NAV ──
+  h += `
+    <div class="footer-nav">
+      <button class="prev-btn" onclick="prev()" ${currentSection===0?'disabled':''}>← Previous</button>
+      <span class="page-indicator">${currentSection+1} / ${SECTIONS.length}</span>
+      <button class="next-btn" onclick="next()" ${currentSection===SECTIONS.length-1?'disabled':''}>Next →</button>
+    </div>
+  `;
+
+  el.innerHTML = h;
+}
+
+// ─── INIT ───────────────────────────────────────────────────────────
+renderNav();
+renderContent();
+</script>
+</body>
+</html>
