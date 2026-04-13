@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import uuid
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -220,20 +221,27 @@ class ConfigService:
         version_number = self._next_version_number(coverage, config_name)
         config_hash = hashlib.sha256(content.encode()).hexdigest()
 
-        result = self.db.execute(
+        # Generate id in Python rather than relying on the column's server
+        # default. The model declares `default=uuid.uuid4` (Python-side), so
+        # if the table was created via Base.metadata.create_all instead of
+        # the alembic migration (which sets server_default=gen_random_uuid()),
+        # an INSERT that omits `id` leaves it NULL and violates NOT NULL.
+        new_id = str(uuid.uuid4())
+
+        self.db.execute(
             text(
                 """
                 INSERT INTO config_versions (
-                    coverage, config_name, version_number, content, config_hash,
+                    id, coverage, config_name, version_number, content, config_hash,
                     status, notes, author_id
                 ) VALUES (
-                    :coverage, :config_name, :version_number, :content, :hash,
+                    :id, :coverage, :config_name, :version_number, :content, :hash,
                     'DRAFT', :notes, :author_id
                 )
-                RETURNING id::text
                 """
             ),
             {
+                "id": new_id,
                 "coverage": coverage,
                 "config_name": config_name,
                 "version_number": version_number,
@@ -242,8 +250,7 @@ class ConfigService:
                 "notes": notes,
                 "author_id": author_id,
             },
-        ).first()
-        new_id = result[0]
+        )
         logger.info(
             "ConfigService: DRAFT created coverage=%s config=%s v%d (hash=%s)",
             coverage, config_name, version_number, config_hash[:12],
@@ -411,13 +418,14 @@ class ConfigService:
             text(
                 """
                 INSERT INTO config_deployments (
-                    config_version_id, deployed_by, deployed_at, calibration_result
+                    id, config_version_id, deployed_by, deployed_at, calibration_result
                 ) VALUES (
-                    :version_id, :deployed_by, :now, CAST(:calibration AS jsonb)
+                    :id, :version_id, :deployed_by, :now, CAST(:calibration AS jsonb)
                 )
                 """
             ),
             {
+                "id": str(uuid.uuid4()),
                 "version_id": version_id,
                 "deployed_by": deployed_by,
                 "now": datetime.now(timezone.utc),
@@ -506,11 +514,16 @@ class ConfigService:
         self.db.execute(
             text(
                 """
-                INSERT INTO config_deployments (config_version_id, deployed_by, deployed_at)
-                VALUES (:id, :by, :now)
+                INSERT INTO config_deployments (id, config_version_id, deployed_by, deployed_at)
+                VALUES (:deployment_id, :id, :by, :now)
                 """
             ),
-            {"id": previous["id"], "by": rolled_back_by, "now": datetime.now(timezone.utc)},
+            {
+                "deployment_id": str(uuid.uuid4()),
+                "id": previous["id"],
+                "by": rolled_back_by,
+                "now": datetime.now(timezone.utc),
+            },
         )
 
         logger.info(
