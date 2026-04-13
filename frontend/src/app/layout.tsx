@@ -69,29 +69,27 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
 
-  // Measure sidebar width perfectly based on the parent DOM
+  // Measure sidebar width perfectly based on the parent DOM. Re-runs when
+  // the aside mounts (e.g. after navigating from /login to /): without
+  // `isPublicAuthPage` in the deps, the effect fired once on /login while
+  // sidebarRef was still null, bailed out early, and never re-ran -- leaving
+  // collapsedWidthPx at null forever and hiding nav + bottom icons.
   useEffect(() => {
     if (!sidebarRef.current || !sidebarRef.current.parentElement) return;
 
     const measure = () => {
-      // Get the true pixel width of the whole screen/parent container
       const parentWidth = sidebarRef.current?.parentElement?.getBoundingClientRect().width;
-      
-      // Mathematically lock the collapsed width to exactly 5% of the usable screen.
       if (parentWidth) {
         setCollapsedWidthPx(parentWidth * 0.05);
       }
     };
 
     const observer = new ResizeObserver(measure);
-    if (sidebarRef.current?.parentElement) {
-      observer.observe(sidebarRef.current.parentElement);
-    }
-
+    observer.observe(sidebarRef.current.parentElement);
     measure();
 
     return () => observer.disconnect();
-  }, []); 
+  }, [isPublicAuthPage]);
 
   useEffect(() => {
     const html = document.documentElement;
@@ -153,14 +151,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </button>
 
             {/* NAVIGATION */}
-            {isOpen && collapsedWidthPx && (
-              <nav 
+            {isOpen && (
+              <nav
                 className="
-                  absolute left-10 right-0 
+                  absolute left-10 right-0
                   py-dsi-pad 
                   overflow-y-auto 
                   overflow-x-hidden no-scrollbar"
-                style={{ top: collapsedWidthPx, bottom: collapsedWidthPx }} // Added bottom constraint so it doesn't overlap icons
+                style={{
+                  // Fall back to a sensible default so the nav renders even
+                  // before the ResizeObserver has measured the parent.
+                  top: collapsedWidthPx ?? 64,
+                  bottom: collapsedWidthPx ?? 64,
+                }}
               >
                 <div className="px-dsi-pad">
                   
@@ -394,16 +397,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             )}
 
             {/* BOTTOM ICONS (Now using Flexbox for easy layout!) */}
-            {isOpen && collapsedWidthPx && (
-              <div 
+            {isOpen && (
+              <div
                 className="
-                  absolute 
-                  left-dsi-pad 
-                  right-dsi-pad 
-                  border-t-3 border-dsi-outline 
-                  flex items-center 
+                  absolute
+                  left-dsi-pad
+                  right-dsi-pad
+                  border-t-3 border-dsi-outline
+                  flex items-center
                   justify-between"
-                style={{ bottom: 0, height: collapsedWidthPx }}
+                style={{ bottom: 0, height: collapsedWidthPx ?? 64 }}
               >
                 {/* Left Side: User Menu */}
                 <div className="flex items-center gap-6 relative">
