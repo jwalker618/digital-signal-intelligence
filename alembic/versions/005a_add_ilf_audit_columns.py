@@ -1,7 +1,7 @@
 """Add ILF audit columns to model_versions
 
-Revision ID: 005
-Revises: 004
+Revision ID: 005a
+Revises: 005
 Create Date: 2026-03-18
 
 Changes:
@@ -16,8 +16,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = "005"
-down_revision: str = "004"
+revision: str = "005a"
+down_revision: str = "005"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

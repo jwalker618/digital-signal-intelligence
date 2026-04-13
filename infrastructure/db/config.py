@@ -168,11 +168,36 @@ def session_scope() -> Generator[Session, None, None]:
         session.close()
 
 
+def _seed_initial_constraint_regime(sync_conn) -> None:
+    """Seed the 'initial' CAF constraint regime if we_constraint_history is empty.
+
+    Mirrors the data seed in alembic/versions/011_world_engine_tables.py. Has
+    to live here rather than on the model because create_all() only creates
+    tables, not data, and the world-engine code expects at least one regime
+    row to exist before it can compute CAF values.
+    """
+    from sqlalchemy import text as _text
+
+    seeded = sync_conn.execute(
+        _text("SELECT COUNT(*) FROM we_constraint_history")
+    ).scalar()
+    if not seeded:
+        sync_conn.execute(
+            _text(
+                "INSERT INTO we_constraint_history "
+                "(regime_name, caf_floor, caf_cap, confidence_gate, min_relationships, effective_from, evidence) "
+                "VALUES ('initial', 0.80, 1.50, 0.6, 2, NOW(), "
+                "'{\"note\": \"Initial constraints at launch\"}'::jsonb)"
+            )
+        )
+
+
 async def init_db() -> None:
-    """Initialize database tables."""
+    """Initialize database tables and seed world-engine reference data."""
     eng = get_async_engine()
     async with eng.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        await conn.run_sync(_seed_initial_constraint_regime)
 
 
 async def close_db() -> None:

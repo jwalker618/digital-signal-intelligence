@@ -1167,3 +1167,220 @@ class UserInvitation(Base):
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
+
+# =============================================================================
+# World Engine tables (migration 011)
+#
+# The world_engine/ package queries these tables via raw sqlalchemy.text(...)
+# SQL rather than ORM sessions -- these declarative models exist primarily as
+# the schema source of truth so Base.metadata.create_all() can materialise
+# them on init_db(). Column types, defaults, and indexes mirror
+# alembic/versions/011_world_engine_tables.py.
+# =============================================================================
+
+
+class WeRelationship(Base):
+    """Discovered causal relationship between two signals."""
+    __tablename__ = "we_relationships"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    source_signal = Column(String(200), nullable=False)
+    target_signal = Column(String(200), nullable=False)
+    direction = Column(String(30), nullable=False)
+    lag_months = Column(Float)
+    correlation_rho = Column(Float, nullable=False)
+    granger_f_statistic = Column(Float)
+    granger_p_value = Column(Float)
+    effect_size = Column(Float, nullable=False)
+    confounders_tested = Column(JSONB, nullable=False, server_default="[]")
+    holdout_rho = Column(Float)
+    holdout_p_value = Column(Float)
+    predictive_hit_rate = Column(Float)
+    population_size = Column(Integer, nullable=False)
+    coverage_scope = Column(JSONB, nullable=False, server_default="[]")
+    lifecycle_state = Column(String(30), nullable=False)
+    state_entered_at = Column(DateTime(timezone=True), nullable=False)
+    influence_weight = Column(Float, nullable=False, server_default="0.0")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index(
+            "ix_we_relationships_state_signals",
+            "lifecycle_state", "source_signal", "target_signal",
+        ),
+        Index("ix_we_relationships_lifecycle", "lifecycle_state"),
+    )
+
+
+class WeStateTransition(Base):
+    """Lifecycle audit trail for relationship state changes."""
+    __tablename__ = "we_state_transitions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    relationship_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("we_relationships.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    from_state = Column(String(30), nullable=False)
+    to_state = Column(String(30), nullable=False)
+    transitioned_at = Column(DateTime(timezone=True), nullable=False)
+    reason = Column(Text, nullable=False)
+    evidence = Column(JSONB, nullable=False, server_default="{}")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_state_transitions_relationship", "relationship_id"),
+    )
+
+
+class WeConsistencyScore(Base):
+    """Per-assessment consistency scoring."""
+    __tablename__ = "we_consistency_scores"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    entity_id = Column(String(200), nullable=False)
+    assessment_id = Column(String(200), nullable=False)
+    overall_consistency = Column(Float, nullable=False)
+    signal_pair_scores = Column(JSONB, nullable=False, server_default="{}")
+    cross_group_scores = Column(JSONB, nullable=False, server_default="{}")
+    cross_layer_divergence = Column(JSONB, nullable=False, server_default="{}")
+    divergent_pairs = Column(JSONB, nullable=False, server_default="[]")
+    computed_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_consistency_scores_entity", "entity_id", "computed_at"),
+        Index("ix_we_consistency_scores_assessment", "assessment_id"),
+    )
+
+
+class WePopulationConsistency(Base):
+    """Population-level consistency aggregates per coverage/period."""
+    __tablename__ = "we_population_consistency"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    coverage = Column(String(50))
+    period = Column(String(50))  # e.g. "2026-04" or "all"
+    mean_consistency = Column(Float)
+    median_consistency = Column(Float)
+    p10_consistency = Column(Float)
+    p90_consistency = Column(Float)
+    sample_size = Column(Integer, nullable=False)
+    metrics = Column(JSONB, nullable=False, server_default="{}")
+    computed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_population_consistency_period", "coverage", "period"),
+    )
+
+
+class WeCausalAdjustment(Base):
+    """Per-assessment causal adjustment factor (CAF) output."""
+    __tablename__ = "we_causal_adjustments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    entity_id = Column(String(200), nullable=False)
+    assessment_id = Column(String(200), nullable=False)
+    caf_value = Column(Float, nullable=False)
+    confidence = Column(Float, nullable=False)
+    active_precursors = Column(JSONB, nullable=False, server_default="[]")
+    trajectory = Column(JSONB, nullable=False, server_default="{}")
+    relationships_evaluated = Column(Integer, nullable=False, server_default="0")
+    constrained = Column(Boolean, nullable=False, server_default="false")
+    raw_caf = Column(Float, nullable=False, server_default="1.0")
+    constraint_regime = Column(String(50), nullable=False, server_default="initial")
+    computed_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_causal_adjustments_assessment", "assessment_id"),
+        Index("ix_we_causal_adjustments_entity", "entity_id", "computed_at"),
+    )
+
+
+class WePortfolioConcentration(Base):
+    """Portfolio concentration alert."""
+    __tablename__ = "we_portfolio_concentrations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    entity_id = Column(String(200), nullable=False)
+    dimension = Column(String(50), nullable=False)  # node | pathway | derivative | cohort
+    detail = Column(Text, nullable=False)
+    severity = Column(Float, nullable=False)
+    affected_entities = Column(JSONB, nullable=False, server_default="[]")
+    computed_at = Column(DateTime(timezone=True), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_portfolio_concentrations_entity_dim", "entity_id", "dimension"),
+    )
+
+
+class WeDriftAlert(Base):
+    """Drift or regime-change alert raised during a scan run."""
+    __tablename__ = "we_drift_alerts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    alert_type = Column(String(50), nullable=False)
+    severity = Column(String(20), nullable=False)
+    source_signal = Column(String(200))
+    target_signal = Column(String(200))
+    relationship_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("we_relationships.id", ondelete="SET NULL"),
+    )
+    description = Column(Text, nullable=False)
+    evidence = Column(JSONB, nullable=False, server_default="{}")
+    detected_at = Column(DateTime(timezone=True), nullable=False)
+    acknowledged = Column(Boolean, nullable=False, server_default="false")
+    acknowledged_at = Column(DateTime(timezone=True))
+
+    __table_args__ = (
+        Index("ix_we_drift_alerts_severity_detected", "severity", "detected_at"),
+        Index("ix_we_drift_alerts_relationship", "relationship_id"),
+    )
+
+
+class WeScanRun(Base):
+    """Batch discovery cycle audit trail."""
+    __tablename__ = "we_scan_runs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    run_id = Column(String(100), unique=True, nullable=False)
+    started_at = Column(DateTime(timezone=True), nullable=False)
+    completed_at = Column(DateTime(timezone=True))
+    maturity_stage = Column(String(30), nullable=False)
+    entities_scanned = Column(Integer, nullable=False, server_default="0")
+    pairs_tested = Column(Integer, nullable=False, server_default="0")
+    candidates_found = Column(Integer, nullable=False, server_default="0")
+    candidates_after_inference = Column(Integer, nullable=False, server_default="0")
+    candidates_after_confound = Column(Integer, nullable=False, server_default="0")
+    candidates_after_holdout = Column(Integer, nullable=False, server_default="0")
+    new_registrations = Column(Integer, nullable=False, server_default="0")
+    drift_alerts_raised = Column(Integer, nullable=False, server_default="0")
+    stats = Column(JSONB, nullable=False, server_default="{}")
+    errors = Column(JSONB, nullable=False, server_default="[]")
+
+    __table_args__ = (
+        Index("ix_we_scan_runs_started", "started_at"),
+    )
+
+
+class WeConstraintHistory(Base):
+    """CAF constraint regime history (widened by WE-4 ConstraintCalibrator)."""
+    __tablename__ = "we_constraint_history"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    regime_name = Column(String(50), nullable=False)
+    caf_floor = Column(Float, nullable=False)
+    caf_cap = Column(Float, nullable=False)
+    confidence_gate = Column(Float, nullable=False)
+    min_relationships = Column(Integer, nullable=False)
+    effective_from = Column(DateTime(timezone=True), nullable=False)
+    effective_to = Column(DateTime(timezone=True))
+    evidence = Column(JSONB, nullable=False, server_default="{}")
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_we_constraint_history_effective", "effective_from"),
+    )
+

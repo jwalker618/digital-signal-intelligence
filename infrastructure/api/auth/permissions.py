@@ -50,45 +50,20 @@ class Permission(str, Enum):
     WORLD_ENGINE_VIEW = "world_engine:view"
 
 
-# Default role templates. Seeded by migration 012. Kept here as the source
-# of truth -- the migration references these strings literally.
+# Default role templates. Seeded by migration 012 and by seed_v5.py.
+# Temporarily every role carries the full permission set so the whole
+# application is exercisable without permission-gated UI hiding features
+# during development. Tailor these back role-by-role once the product
+# boundaries stabilise -- the Permission enum, require_permission()
+# dependency, and PermissionGate components are all still in place, so
+# shrinking a role's list will start hiding items again immediately.
+_ALL_PERMISSIONS: list[Permission] = [p for p in Permission]
 DEFAULT_ROLES: dict[str, list[Permission]] = {
-    "UNDERWRITER": [
-        Permission.ASSESSMENT_READ,
-        Permission.ASSESSMENT_WRITE,
-        Permission.ASSESSMENT_REFER,
-        Permission.ENTITY_READ,
-        Permission.WORLD_ENGINE_VIEW,
-    ],
-    "SENIOR_UNDERWRITER": [
-        Permission.ASSESSMENT_READ,
-        Permission.ASSESSMENT_WRITE,
-        Permission.ASSESSMENT_REFER,
-        Permission.ENTITY_READ,
-        Permission.CONFIG_READ,
-        Permission.WORLD_ENGINE_VIEW,
-        Permission.PORTFOLIO_VIEW,
-    ],
-    "ACTUARIAL": [
-        Permission.ASSESSMENT_READ,
-        Permission.ASSESSMENT_WRITE,
-        Permission.ASSESSMENT_REFER,
-        Permission.ENTITY_READ,
-        Permission.CONFIG_READ,
-        Permission.CONFIG_WRITE,
-        Permission.RECALIBRATION_VIEW,
-        Permission.RECALIBRATION_APPROVE,
-        Permission.WORLD_ENGINE_VIEW,
-        Permission.PORTFOLIO_VIEW,
-    ],
-    "ADMIN": [p for p in Permission],  # all permissions
-    "READ_ONLY": [
-        Permission.ASSESSMENT_READ,
-        Permission.ENTITY_READ,
-        Permission.CONFIG_READ,
-        Permission.WORLD_ENGINE_VIEW,
-        Permission.PORTFOLIO_VIEW,
-    ],
+    "UNDERWRITER": list(_ALL_PERMISSIONS),
+    "SENIOR_UNDERWRITER": list(_ALL_PERMISSIONS),
+    "ACTUARIAL": list(_ALL_PERMISSIONS),
+    "ADMIN": list(_ALL_PERMISSIONS),
+    "READ_ONLY": list(_ALL_PERMISSIONS),
 }
 
 

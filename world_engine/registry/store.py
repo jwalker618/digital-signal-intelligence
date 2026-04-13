@@ -213,47 +213,57 @@ class IntelligenceRegistry:
         return [self._row_to_drift(r) for r in rows]
 
     def get_engine_stats(self) -> dict:
-        """Summary statistics for the /stats endpoint."""
+        """Summary statistics for the /stats endpoint.
+
+        World-engine tables live only in alembic migration 011. When the
+        schema was bootstrapped via Base.metadata.create_all (no alembic
+        run), those tables won't exist and every query below would raise.
+        Each probe is therefore wrapped defensively -- missing tables
+        surface as zero counts so the endpoint still returns a usable
+        payload instead of a 500. Matches the pattern in
+        world_engine/maturity.py._count_relationships.
+        """
+        def _scalar(sql: str, params: dict | None = None) -> int:
+            try:
+                result = self.db.execute(text(sql), params or {}).scalar()
+                return int(result or 0)
+            except Exception:
+                self.db.rollback()
+                return 0
+
+        def _rows(sql: str) -> list:
+            try:
+                return self.db.execute(text(sql)).all()
+            except Exception:
+                self.db.rollback()
+                return []
+
         counts_by_state = dict(
-            self.db.execute(
-                text(
-                    "SELECT lifecycle_state, COUNT(*) FROM we_relationships "
-                    "GROUP BY lifecycle_state"
-                )
-            ).all()
+            _rows(
+                "SELECT lifecycle_state, COUNT(*) FROM we_relationships "
+                "GROUP BY lifecycle_state"
+            )
         )
-        scan_total = (
-            self.db.execute(text("SELECT COUNT(*) FROM we_scan_runs")).scalar() or 0
-        )
+        scan_total = _scalar("SELECT COUNT(*) FROM we_scan_runs")
         week_ago = datetime.now(timezone.utc) - timedelta(days=7)
-        scan_week = (
-            self.db.execute(
-                text("SELECT COUNT(*) FROM we_scan_runs WHERE started_at >= :since"),
-                {"since": week_ago},
-            ).scalar()
-            or 0
+        scan_week = _scalar(
+            "SELECT COUNT(*) FROM we_scan_runs WHERE started_at >= :since",
+            {"since": week_ago},
         )
-        drift_unack = (
-            self.db.execute(
-                text("SELECT COUNT(*) FROM we_drift_alerts WHERE acknowledged = false")
-            ).scalar()
-            or 0
+        drift_unack = _scalar(
+            "SELECT COUNT(*) FROM we_drift_alerts WHERE acknowledged = false"
         )
-        cons_total = (
-            self.db.execute(text("SELECT COUNT(*) FROM we_consistency_scores")).scalar() or 0
-        )
-        caf_total = (
-            self.db.execute(text("SELECT COUNT(*) FROM we_causal_adjustments")).scalar() or 0
-        )
+        cons_total = _scalar("SELECT COUNT(*) FROM we_consistency_scores")
+        caf_total = _scalar("SELECT COUNT(*) FROM we_causal_adjustments")
         return {
             "relationships_by_state": {
                 state: int(count) for state, count in counts_by_state.items()
             },
-            "scan_runs_total": int(scan_total),
-            "scan_runs_last_7_days": int(scan_week),
-            "drift_alerts_unacknowledged": int(drift_unack),
-            "consistency_scores_total": int(cons_total),
-            "caf_computations_total": int(caf_total),
+            "scan_runs_total": scan_total,
+            "scan_runs_last_7_days": scan_week,
+            "drift_alerts_unacknowledged": drift_unack,
+            "consistency_scores_total": cons_total,
+            "caf_computations_total": caf_total,
         }
 
     # ==================================================================
