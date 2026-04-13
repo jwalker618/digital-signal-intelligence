@@ -4,127 +4,214 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Precision Illusion — DSI vs Traditional Pricing</title>
-<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  /* ── DSI DESIGN TOKENS (aligned with frontend/src/app/globals.css) ── */
   :root {
-    --bg: #faf8f5;
-    --surface: #ffffff;
-    --surface-alt: #f5f2ee;
-    --border: #e8e3db;
-    --border-strong: #d4cec4;
-    --ink: #1a1714;
-    --ink-dim: #5c564d;
-    --ink-muted: #8a8279;
-    --accent: #c45d3e;
-    --accent-dim: rgba(196,93,62,0.08);
-    --accent-light: rgba(196,93,62,0.15);
-    --trad: #6b7b3a;
-    --trad-bg: rgba(107,123,58,0.06);
-    --trad-border: rgba(107,123,58,0.2);
-    --dsi: #3a6b7b;
-    --dsi-bg: rgba(58,107,123,0.06);
-    --dsi-border: rgba(58,107,123,0.2);
-    --equal: #8b6914;
-    --equal-bg: rgba(139,105,20,0.08);
-    --serif: 'Libre Baskerville', Georgia, serif;
-    --sans: 'DM Sans', 'Helvetica Neue', sans-serif;
+    /* DSI surface palette — light */
+    --dsi-outline: #ffffff;
+    --dsi-contrast-background: #7A766F;
+    --dsi-background: #E8E3DA;
+    --dsi-selected: #0A1A2F;
+    --dsi-analysis: #BCB7AF;
+    --dsi-contrast-analysis: #DBD6CD;
+
+    /* Semantic mapping for this page */
+    --bg: var(--dsi-background);
+    --surface: var(--dsi-contrast-analysis);
+    --surface-alt: var(--dsi-analysis);
+    --border: var(--dsi-outline);
+    --border-strong: var(--dsi-contrast-background);
+    --ink: var(--dsi-selected);
+    --ink-dim: #4a4a4a;
+    --ink-muted: var(--dsi-contrast-background);
+
+    /* Accent = the brand "selected" navy */
+    --accent: var(--dsi-selected);
+    --accent-dim: rgba(10,26,47,0.08);
+    --accent-light: rgba(10,26,47,0.15);
+
+    /* Method colours — warm amber for traditional, info blue for DSI */
+    --trad: #a85d2b;
+    --trad-bg: rgba(168,93,43,0.08);
+    --trad-border: rgba(168,93,43,0.25);
+    --dsi: #2563eb;
+    --dsi-bg: rgba(37,99,235,0.08);
+    --dsi-border: rgba(37,99,235,0.25);
+    --equal: #8a6a20;
+    --equal-bg: rgba(138,106,32,0.08);
+
+    /* Fonts — match frontend */
+    --font-ibm: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-inter: 'Inter', ui-sans-serif, system-ui, sans-serif;
     --mono: 'JetBrains Mono', 'Fira Code', monospace;
+    /* Legacy aliases used below */
+    --serif: var(--font-inter);
+    --sans: var(--font-ibm);
+  }
+
+  /* ── DARK MODE — matches frontend .dark teal/cyan palette ── */
+  html.dark {
+    --dsi-outline: #39d3ba;
+    --dsi-contrast-background: #0B3954;
+    --dsi-background: #0599AD;
+    --dsi-selected: #FFFFFF;
+    --dsi-analysis: #07738A;
+    --dsi-contrast-analysis: #06859B;
+
+    --bg: var(--dsi-background);
+    --surface: var(--dsi-contrast-analysis);
+    --surface-alt: var(--dsi-analysis);
+    --border: rgba(57,211,186,0.4);
+    --border-strong: var(--dsi-outline);
+    --ink: var(--dsi-selected);
+    --ink-dim: #d5f4ee;
+    --ink-muted: #9fd9cd;
+
+    --accent: var(--dsi-outline);
+    --accent-dim: rgba(57,211,186,0.12);
+    --accent-light: rgba(57,211,186,0.22);
+
+    --trad: #f8bd5e;
+    --trad-bg: rgba(248,189,94,0.12);
+    --trad-border: rgba(248,189,94,0.35);
+    --dsi: #7ec5ff;
+    --dsi-bg: rgba(126,197,255,0.12);
+    --dsi-border: rgba(126,197,255,0.35);
+    --equal: #f59e0b;
+    --equal-bg: rgba(245,158,11,0.12);
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: var(--sans);
+    font-family: var(--font-ibm);
     background: var(--bg);
     color: var(--ink);
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
+    transition: background 0.2s, color 0.2s;
   }
 
-  /* ── HEADER ── */
+  /* ── TITLE BAR — mirrors frontend title bar with breadcrumb ── */
   .header {
-    padding: 36px 32px 28px;
-    border-bottom: 1px solid var(--border);
+    padding: 20px 32px 18px;
+    border-bottom: 3px solid var(--border);
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
   }
+  .header-left { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .header-crumb {
+    font-family: var(--font-inter);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .header-crumb .sep { opacity: 0.4; font-weight: 300; }
+  .header-crumb .bold { font-weight: 700; }
   .header-label {
     font-family: var(--mono);
     font-size: 10px;
     color: var(--ink-muted);
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    margin-bottom: 8px;
-  }
-  .header h1 {
-    font-family: var(--serif);
-    font-size: 28px;
-    font-weight: 400;
-    color: var(--ink);
-    line-height: 1.2;
-    letter-spacing: -0.01em;
-    max-width: 520px;
-    margin-bottom: 8px;
   }
   .header p {
-    font-size: 14px;
+    font-family: var(--font-ibm);
+    font-size: 13px;
     color: var(--ink-dim);
-    max-width: 540px;
-    line-height: 1.5;
+    max-width: 620px;
+    line-height: 1.55;
+    margin-top: 2px;
   }
-
-  /* ── NAV ── */
-  .nav {
-    padding: 0 32px;
-    border-bottom: 1px solid var(--border);
+  .header-actions { display: flex; align-items: center; gap: 8px; }
+  .theme-toggle {
+    font-family: var(--font-ibm);
+    font-size: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-strong);
     background: var(--surface);
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .theme-toggle:hover { background: var(--surface-alt); }
+
+  /* ── NAV — DSI sidebar-tab style ── */
+  .nav {
+    padding: 10px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-alt);
     overflow-x: auto;
     white-space: nowrap;
     -webkit-overflow-scrolling: touch;
+    display: flex;
+    gap: 4px;
   }
   .nav-btn {
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 400;
-    padding: 14px 16px;
+    font-family: var(--font-ibm);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
     border: none;
     cursor: pointer;
     background: transparent;
-    color: var(--ink-muted);
-    border-bottom: 2px solid transparent;
-    transition: all 0.2s;
+    color: var(--ink-dim);
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+    transition: background 0.2s, color 0.2s;
     display: inline-block;
   }
   .nav-btn.active {
     font-weight: 600;
-    color: var(--accent);
-    border-bottom-color: var(--accent);
+    color: var(--ink);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--border-strong);
   }
-  .nav-btn:hover:not(.active) { color: var(--ink-dim); }
+  .nav-btn:hover:not(.active) { color: var(--ink); background: var(--bg); }
 
-  /* ── ENTITY BANNER ── */
+  /* ── ENTITY BANNER — DSI section-header treatment ── */
   .entity-banner {
-    padding: 14px 32px;
-    background: var(--surface-alt);
-    border-bottom: 1px solid var(--border);
+    margin: 16px 24px 0;
+    padding: 10px 16px;
+    background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
+    border: 1px solid var(--border);
+    border-radius: 12px;
     display: flex;
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
   }
   .entity-name {
-    font-family: var(--serif);
+    font-family: var(--font-inter);
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ink);
+    letter-spacing: 0.01em;
   }
   .entity-desc {
     font-size: 11px;
     color: var(--ink-muted);
+    font-family: var(--font-ibm);
   }
 
   /* ── CONTENT ── */
   .content {
-    padding: 28px 32px;
-    max-width: 760px;
+    padding: 24px 24px 32px;
+    max-width: 860px;
     margin: 0 auto;
   }
   .section { display: none; }
@@ -132,41 +219,42 @@
 
   /* ── TYPOGRAPHY ── */
   .prose {
-    font-family: var(--serif);
-    font-size: 15px;
+    font-family: var(--font-ibm);
+    font-size: 14.5px;
     color: var(--ink);
-    line-height: 1.75;
-    margin-bottom: 16px;
-    max-width: 640px;
+    line-height: 1.7;
+    margin-bottom: 14px;
+    max-width: 680px;
   }
-  .emphasis { color: var(--accent); font-weight: 600; }
+  .emphasis { color: var(--accent); font-weight: 700; }
   .math-block {
     font-family: var(--mono);
     font-size: 13px;
     color: var(--ink);
-    padding: 16px 20px;
-    background: var(--surface-alt);
+    padding: 14px 18px;
+    background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 10px;
     margin: 16px 0;
     line-height: 1.8;
     overflow-x: auto;
     white-space: pre-wrap;
   }
-  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+  .divider { height: 1px; background: var(--border); margin: 22px 0; opacity: 0.7; }
   .section-title {
-    font-family: var(--serif);
-    font-size: 20px;
-    font-weight: 400;
+    font-family: var(--font-inter);
+    font-size: 22px;
+    font-weight: 600;
     color: var(--ink);
-    margin: 16px 0 12px;
+    margin: 8px 0 14px;
+    letter-spacing: 0.01em;
   }
 
   /* ── TAGS ── */
   .tag {
     display: inline-block;
-    padding: 3px 10px;
-    border-radius: 3px;
+    padding: 4px 10px;
+    border-radius: 4px;
     font-family: var(--mono);
     font-size: 10px;
     font-weight: 600;
@@ -176,11 +264,12 @@
   .tag-trad { color: var(--trad); background: var(--trad-bg); border: 1px solid var(--trad-border); }
   .tag-dsi { color: var(--dsi); background: var(--dsi-bg); border: 1px solid var(--dsi-border); }
 
-  /* ── CALLOUT BOXES ── */
+  /* ── CALLOUT BOXES — DSI rounded-xl analysis card ── */
   .callout {
-    padding: 20px 24px;
-    border-radius: 6px;
+    padding: 18px 22px;
+    border-radius: 12px;
     margin: 20px 0;
+    border-bottom-width: 3px;
   }
   .callout-equal { background: var(--equal-bg); border: 1px solid var(--equal); }
   .callout-accent { background: var(--accent-dim); border: 1px solid var(--accent); }
@@ -192,6 +281,7 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     margin-bottom: 8px;
+    font-weight: 600;
   }
   .callout-label-equal { color: var(--equal); }
   .callout-label-accent { color: var(--accent); }
@@ -199,44 +289,49 @@
   .callout-label-dsi { color: var(--dsi); }
   .callout .prose { margin-bottom: 0; }
 
-  /* ── TABLE ── */
+  /* ── TABLE — DSI section card ── */
   .table-wrap {
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-bottom: 3px solid var(--border-strong);
+    border-radius: 12px;
     overflow: hidden;
-    margin-bottom: 16px;
+    margin-bottom: 18px;
+    background: var(--surface);
   }
   .table-head {
     display: grid;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-family: var(--mono);
     font-size: 10px;
     color: var(--ink-muted);
-    background: var(--surface-alt);
+    background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
     border-bottom: 1px solid var(--border);
     text-transform: uppercase;
     letter-spacing: 0.06em;
+    font-weight: 600;
   }
   .table-row {
     display: grid;
     gap: 8px;
-    padding: 10px 12px;
+    padding: 10px 14px;
     font-size: 12px;
     border-bottom: 1px solid var(--border);
     align-items: center;
+    color: var(--ink);
   }
   .table-row:last-child { border-bottom: none; }
   .table-row.highlight { background: var(--trad-bg); }
   .table-foot {
     display: grid;
     gap: 8px;
-    padding: 12px;
+    padding: 12px 14px;
     font-family: var(--mono);
     font-size: 12px;
     font-weight: 700;
-    background: var(--surface-alt);
+    background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
     border-top: 1px solid var(--border-strong);
+    color: var(--ink);
   }
   .sov-grid { grid-template-columns: 2fr 1fr 1fr 0.8fr 1fr; }
   .sov-grid-no-prem { grid-template-columns: 2fr 1fr 1fr 0.8fr; }
@@ -248,8 +343,8 @@
     align-items: center;
   }
   .result-box {
-    padding: 12px;
-    background: var(--surface-alt);
+    padding: 14px;
+    background: color-mix(in srgb, var(--surface-alt) 60%, transparent);
     border-top: 1px solid var(--border-strong);
     display: flex;
     justify-content: space-between;
@@ -292,9 +387,11 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-bottom: 3px solid var(--border-strong);
+    border-radius: 12px;
     overflow: hidden;
     margin-bottom: 20px;
+    background: var(--surface);
   }
   .compare-header-trad {
     padding: 12px 16px;
@@ -322,10 +419,11 @@
 
   /* ── DELTA BOX ── */
   .delta-box {
-    padding: 20px 24px;
+    padding: 22px 24px;
     background: var(--equal-bg);
     border: 1px solid var(--equal);
-    border-radius: 6px;
+    border-bottom-width: 3px;
+    border-radius: 12px;
     text-align: center;
     margin-bottom: 20px;
   }
@@ -367,16 +465,17 @@
 
   /* ── REVEAL BUTTON ── */
   .reveal-btn {
-    font-family: var(--sans);
-    font-size: 12px;
-    padding: 8px 16px;
-    border-radius: 6px;
+    font-family: var(--font-ibm);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 8px;
     border: 1px solid var(--accent);
     background: var(--accent-dim);
     color: var(--accent);
     cursor: pointer;
-    margin-bottom: 16px;
-    transition: all 0.2s;
+    margin-bottom: 18px;
+    transition: background 0.2s;
   }
   .reveal-btn:hover { background: var(--accent-light); }
 
@@ -389,27 +488,31 @@
     border-top: 1px solid var(--border);
   }
   .footer-nav button {
-    font-family: var(--sans);
-    font-size: 12px;
-    padding: 8px 16px;
-    border-radius: 6px;
+    font-family: var(--font-ibm);
+    font-size: 13px;
+    font-weight: 500;
+    padding: 9px 18px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: background 0.2s, color 0.2s;
   }
-  .prev-btn { border: 1px solid var(--border); background: var(--surface); color: var(--ink); }
+  .prev-btn { border: 1px solid var(--border-strong); background: var(--surface); color: var(--ink); }
+  .prev-btn:hover:not(:disabled) { background: var(--surface-alt); }
   .prev-btn:disabled { color: var(--ink-muted); opacity: 0.4; cursor: default; }
-  .next-btn { border: 1px solid var(--accent); background: var(--accent-dim); color: var(--accent); }
+  .next-btn { border: 1px solid var(--accent); background: var(--accent-dim); color: var(--accent); font-weight: 600; }
+  .next-btn:hover:not(:disabled) { background: var(--accent-light); }
   .next-btn:disabled { opacity: 0.4; cursor: default; }
   .page-indicator { font-family: var(--mono); font-size: 11px; color: var(--ink-muted); align-self: center; }
 
   /* ── FOOTER ── */
   .footer {
-    padding: 20px 32px;
-    border-top: 1px solid var(--border);
+    padding: 18px 32px;
+    border-top: 3px solid var(--border);
+    background: var(--surface-alt);
     text-align: center;
     margin-top: 20px;
   }
-  .footer span { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); }
+  .footer span { font-family: var(--mono); font-size: 10px; color: var(--ink-muted); letter-spacing: 0.04em; }
 
   /* ── DSI PRICING CALC ── */
   .calc-row {
@@ -462,12 +565,25 @@
 </head>
 <body>
 
-<!-- ═══ HEADER ═══ -->
+<!-- ═══ TITLE BAR ═══ -->
 <div class="header">
-  <div class="header-label">Pricing Methodology Comparison</div>
-  <h1>The Precision Illusion</h1>
-  <p>Why asset-level granularity in traditional pricing doesn't produce more accurate premiums
-    than organisational-level signal assessment — and costs orders of magnitude more.</p>
+  <div class="header-left">
+    <div class="header-label">Pricing Methodology Comparison</div>
+    <div class="header-crumb">
+      <span class="sep">/</span>
+      <span>DSI Overview</span>
+      <span class="sep">/</span>
+      <span class="bold">The Precision Illusion</span>
+    </div>
+    <p>Why asset-level granularity in traditional pricing doesn't produce more accurate premiums
+      than organisational-level signal assessment — and costs orders of magnitude more.</p>
+  </div>
+  <div class="header-actions">
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+      <span id="themeIcon">☀</span>
+      <span id="themeLabel">Light</span>
+    </button>
+  </div>
 </div>
 
 <!-- ═══ NAV ═══ -->
@@ -917,6 +1033,36 @@ function renderContent() {
 
   el.innerHTML = h;
 }
+
+// ─── THEME TOGGLE ───────────────────────────────────────────────────
+(function initTheme() {
+  const root = document.documentElement;
+  const icon = document.getElementById("themeIcon");
+  const label = document.getElementById("themeLabel");
+  const btn = document.getElementById("themeToggle");
+
+  const stored = localStorage.getItem("dsi-theme");
+  const initial = stored || (window.matchMedia?.("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  applyTheme(initial);
+
+  btn.addEventListener("click", () => {
+    const next = root.classList.contains("dark") ? "light" : "dark";
+    applyTheme(next);
+    localStorage.setItem("dsi-theme", next);
+  });
+
+  function applyTheme(mode) {
+    if (mode === "dark") {
+      root.classList.add("dark");
+      icon.textContent = "☾";
+      label.textContent = "Dark";
+    } else {
+      root.classList.remove("dark");
+      icon.textContent = "☀";
+      label.textContent = "Light";
+    }
+  }
+})();
 
 // ─── INIT ───────────────────────────────────────────────────────────
 renderNav();
