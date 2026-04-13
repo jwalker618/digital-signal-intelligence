@@ -181,7 +181,20 @@ def seed_auth(db: Session) -> tuple[Tenant, dict[str, Role], dict[str, User]]:
     db.flush()
 
     # Back-fill tenant_id on existing tenant-scoped rows where missing.
+    # Only touch tables that actually have a tenant_id column -- submissions
+    # and quotes never had one added in the 012 auth foundation migration,
+    # so we probe information_schema first and skip gracefully.
     for table in ("submissions", "quotes", "loss_events", "audit_logs"):
+        has_column = db.execute(
+            text(
+                "SELECT 1 FROM information_schema.columns "
+                "WHERE table_name = :t AND column_name = 'tenant_id'"
+            ),
+            {"t": table},
+        ).scalar()
+        if not has_column:
+            logger.info("  skip %s: no tenant_id column", table)
+            continue
         db.execute(
             text(
                 f"UPDATE {table} SET tenant_id = :tid WHERE tenant_id IS NULL"
