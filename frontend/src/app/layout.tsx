@@ -55,6 +55,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   const logout = useAuthStore((s) => s.logout);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
+  // Page-level action slots. Subscribed here at the top of the component so
+  // the hook order is stable regardless of which branch of the layout is
+  // rendered (public auth pages vs. the app shell). Previously these were
+  // called inline inside the JSX, which triggered "Rendered fewer hooks than
+  // expected" when navigating between /login and protected pages.
+  const pageQuickAction = useDsiStore((state) => state.pageQuickAction);
+  const hasPageActions = useDsiStore((state) => state.hasPageActions);
+
   const canViewSubmissions = hasPermission("submission:read");
   const canViewWorldEngine = hasPermission("submission:read"); // WE is linked from submissions context
 
@@ -497,10 +505,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 ">
                 
                 {/* 1. Optional Quick Action Slot */}
-                {useDsiStore(state => state.pageQuickAction)}
+                {pageQuickAction}
 
                 {/* 2. Optional Ellipsis Menu Trigger */}
-                {useDsiStore(state => state.hasPageActions) && (
+                {hasPageActions && (
                   <button 
                     onClick={() => useDsiStore.getState().setPageActionsOpen(true)} 
                     className="p-1.5 rounded text-dsi-contrast-background hover:bg-dsi-outline/10 hover:text-dsi-selected transition-colors"
