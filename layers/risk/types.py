@@ -889,6 +889,12 @@ class ModelVersion:
     final_premium: float = 0.0
     uncapped_premium: Optional[float] = None  # Pre-guardrail premium (set when capped)
 
+    # WE-4: Causal Adjustment Factor
+    caf_value: float = 1.0                     # Multiplicative adjustment (default neutral)
+    caf_confidence: Optional[float] = None
+    caf_constrained: bool = False
+    static_premium: Optional[float] = None     # P_static for CAF audit: P_final = P_static * CAF
+
     # Decision (Step 13)
     decision: DecisionType = DecisionType.REFER
     auto_approve: bool = False
@@ -1162,6 +1168,10 @@ class WorkflowResult:
 
     # Premium assembly (commercial terms applied to technical premium)
     premium_breakdown: Optional[Any] = None  # PremiumBreakdown from premium_assembly
+
+    # World Engine consistency (WE-2). None if scoring failed or was skipped.
+    consistency_score: Optional[float] = None              # 0-1 overall
+    divergent_pairs: List[str] = field(default_factory=list)  # signal pairs flagged as divergent
 
 
 # Backward compatibility aliases

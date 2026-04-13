@@ -157,6 +157,187 @@ class WorkflowEngine:
         self.loss_correlation_scorer = loss_correlation_scorer
         self.enable_loss_correlation = enable_loss_correlation and LOSS_CORRELATION_AVAILABLE
 
+    def _compute_caf(
+        self,
+        entity_id: str,
+        model_version_id: str,
+        scoring_result: Any,
+        pricing_result: Any,
+        config: Any,
+    ) -> Any:
+        """WE-4: compute CAF for this assessment.
+
+        Returns the CausalAdjustmentFactor object (full payload). The
+        caller applies the caf_value to pricing_result.final_premium and
+        records the audit columns on model_version.
+
+        Defaults to neutral (CAF=1.0) on any failure -- CAF is a non-
+        blocking parallel pricing track and must never disrupt the static
+        premium.
+        """
+        from world_engine.causal_pricing import CausalPricingEngine
+        from world_engine.registry import IntelligenceRegistry
+        from world_engine.types import CausalAdjustmentFactor
+
+        try:
+            from infrastructure.db.config import session_scope
+
+            with session_scope() as db:
+                registry = IntelligenceRegistry(db)
+                engine = CausalPricingEngine(registry)
+
+                # Build inputs from workflow state
+                signal_scores = {
+                    s.signal_id: float(s.raw_score)
+                    for s in (scoring_result.signal_outputs or [])
+                    if s.raw_score is not None
+                }
+                tier_rates = self._extract_tier_rates(config)
+
+                caf = engine.compute_caf(
+                    entity_id=entity_id,
+                    assessment_id=model_version_id,
+                    signal_scores=signal_scores,
+                    current_tier=pricing_result.final_tier,
+                    tier_rates=tier_rates,
+                )
+                registry.store_caf(caf)
+                return caf
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("CAF computation failed -- neutral (non-blocking): %s", exc)
+            return CausalAdjustmentFactor.neutral(
+                entity_id=entity_id,
+                assessment_id=model_version_id,
+                current_tier=pricing_result.final_tier,
+            )
+
+    def _extract_tier_rates(self, config: Any) -> Dict[int, float]:
+        """Pull a numeric rate per tier from the config.
+
+        Uses the PREMIUM_BASE.value when present, falls back to
+        MULTIPLIER.applied * 1000, or tier id as ratio. The exact units
+        don't matter -- CAF uses ratios, not absolute values.
+        """
+        rates: Dict[int, float] = {}
+        try:
+            bands = getattr(getattr(config, "risk_tier_bands", None), "bands", None)
+            if not bands:
+                return rates
+            for band in bands:
+                try:
+                    app = band.interpretation.application
+                    if getattr(app, "value", None) is not None:
+                        rates[band.id] = float(app.value)
+                    elif getattr(app, "applied", None) is not None:
+                        rates[band.id] = float(app.applied) * 1000.0
+                    else:
+                        rates[band.id] = float(band.id)
+                except Exception:
+                    rates[band.id] = float(band.id)
+        except Exception:
+            pass
+        return rates
+
+    def _compute_consistency(
+        self,
+        entity_id: str,
+        model_version: Any,
+        scoring_result: Any,
+        pricing_result: Any,
+        loss_propensity_result: Any,
+        config: Any,
+    ) -> Tuple[Optional[float], List[str]]:
+        """WE-2: compute inline consistency for this assessment.
+
+        Persists the ConsistencyScore to the registry and returns the
+        overall score + divergent signal pairs for inclusion in the
+        WorkflowResult. Never raises -- exceptions bubble up to the
+        caller which treats them as non-blocking.
+        """
+        from world_engine.consistency import ConsistencyInputs, ConsistencyScorer, SignalScore
+        from world_engine.registry import IntelligenceRegistry
+
+        # Build signals list from scoring_result.signal_outputs
+        signals = [
+            SignalScore(
+                signal_id=s.signal_id,
+                group_id=s.group_id,
+                raw_score=float(s.raw_score),
+            )
+            for s in (scoring_result.signal_outputs or [])
+            if s.raw_score is not None
+        ]
+
+        # Group composites: group_scores is Dict[group_id, dict-or-number]
+        group_composites: Dict[str, float] = {}
+        for gid, detail in (scoring_result.group_scores or {}).items():
+            if gid.startswith("_"):  # skip computed summaries
+                continue
+            if isinstance(detail, dict):
+                value = detail.get("risk_score") or detail.get("score") or detail.get("value")
+            else:
+                value = detail
+            if isinstance(value, (int, float)):
+                group_composites[gid] = float(value)
+
+        # Map loss-propensity band to an ordinal (1-5)
+        loss_band_order = {
+            "very_low": 1, "low": 2, "moderate": 3, "elevated": 4, "high": 5,
+        }
+        loss_tier = None
+        if loss_propensity_result is not None:
+            band = getattr(loss_propensity_result, "loss_propensity_band", None)
+            band_val = band.value if hasattr(band, "value") else band
+            if isinstance(band_val, str):
+                loss_tier = loss_band_order.get(band_val.lower())
+
+        # Exposure tier from model_version.exposure_band_id if present
+        exposure_tier = getattr(model_version, "exposure_band_id", None)
+        if exposure_tier is not None:
+            try:
+                exposure_tier = int(exposure_tier)
+            except (TypeError, ValueError):
+                exposure_tier = None
+
+        # Max tier for normalisation: use config.risk_tier_bands count if available
+        max_tier = 5
+        try:
+            bands = getattr(getattr(config, "risk_tier_bands", None), "__len__", None)
+            if callable(bands):
+                max_tier = max(max_tier, len(config.risk_tier_bands))
+        except Exception:
+            pass
+
+        assessment_id = getattr(model_version, "version_code", None) or getattr(
+            model_version, "id", ""
+        )
+
+        inputs = ConsistencyInputs(
+            entity_id=entity_id,
+            assessment_id=str(assessment_id),
+            signals=signals,
+            group_composites=group_composites,
+            risk_tier=getattr(pricing_result, "final_tier", None),
+            loss_tier=loss_tier,
+            exposure_tier=exposure_tier,
+            max_tier=max_tier,
+        )
+
+        scorer = ConsistencyScorer()
+        cs = scorer.score(inputs)
+
+        # Persist to registry (best-effort: if DB is unavailable we still
+        # return the in-memory score so the API response carries it).
+        try:
+            from infrastructure.db.config import session_scope
+
+            with session_scope() as db:
+                IntelligenceRegistry(db).store_consistency_score(cs)
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("ConsistencyScore persistence skipped: %s", exc)
+
+        return cs.overall_consistency, list(cs.divergent_pairs)
+
     def _calculate_loss_propensity(
         self,
         signal_outputs: List[Any],
@@ -453,6 +634,30 @@ class WorkflowEngine:
             config=config,
         )
 
+        # ---------------------------------------------------------------
+        # WE-4: Apply Causal Adjustment Factor (CAF) to the static premium.
+        #
+        #   P_final = P_static * CAF
+        #
+        # CAF defaults to 1.0 when World Engine maturity < EMERGE, no
+        # matching relationships, insufficient confidence, or any failure.
+        # The static final_premium is preserved for audit (static_premium).
+        # ---------------------------------------------------------------
+        static_premium = float(pricing_result.final_premium)
+        caf_detail = self._compute_caf(
+            entity_id=entity_id,
+            model_version_id=model_id,
+            scoring_result=scoring_result,
+            pricing_result=pricing_result,
+            config=config,
+        )
+        caf_value = float(caf_detail.caf_value)
+        if caf_value != 1.0:
+            pricing_result.final_premium = static_premium * caf_value
+            # Scale per-limit premiums for consistency with recommended premium
+            for _k, _v in list(pricing_result.limit_premiums.items()):
+                pricing_result.limit_premiums[_k] = float(_v) * caf_value
+
         # Combine referral reasons and notes
         all_referrals = scoring_result.referrals + query_result.referrals
         all_notes = scoring_result.notes + query_result.notes
@@ -503,6 +708,15 @@ class WorkflowEngine:
             confidence=scoring_result.confidence,
             signal_coverage=scoring_result.signal_coverage,
         )
+
+        # WE-4: attach CAF audit columns to the model version
+        try:
+            model_version.caf_value = caf_value
+            model_version.caf_confidence = float(caf_detail.confidence)
+            model_version.caf_constrained = bool(caf_detail.constrained)
+            model_version.static_premium = static_premium
+        except Exception as exc:  # noqa: BLE001
+            logger.debug("Could not attach CAF audit fields: %s", exc)
 
         # Determine recommended option via ROL-driven dual recommendation
         recommended_limit = 0.0
@@ -785,6 +999,27 @@ class WorkflowEngine:
             if "_composite" in _exp_group_scores:
                 _exp_group_scores["_composite"]["exposure_band_label"] = blabel
 
+        # -----------------------------------------------------------------
+        # WE-2: Consistency scoring (non-blocking)
+        #
+        # Runs after all three layers have produced outputs + pricing has
+        # assigned the final tier. Failure does NOT block the assessment;
+        # the score is simply omitted.
+        # -----------------------------------------------------------------
+        consistency_score_value: Optional[float] = None
+        divergent_pairs: List[str] = []
+        try:
+            consistency_score_value, divergent_pairs = self._compute_consistency(
+                entity_id=entity_id,
+                model_version=model_version,
+                scoring_result=scoring_result,
+                pricing_result=pricing_result,
+                loss_propensity_result=loss_propensity_result,
+                config=config,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Consistency scoring failed (non-blocking): %s", exc)
+
         return WorkflowResult(
             entity_id=entity_id,
             coverage=coverage,
@@ -809,6 +1044,9 @@ class WorkflowEngine:
             submission_notes=all_notes,
             # Premium assembly (Step 14)
             premium_breakdown=premium_breakdown,
+            # WE-2: Consistency
+            consistency_score=consistency_score_value,
+            divergent_pairs=divergent_pairs,
         )
 
     def verify_inputs(

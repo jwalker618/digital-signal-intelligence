@@ -73,6 +73,57 @@ class ReferralStatus(str, enum.Enum):
 # MODELS
 # =============================================================================
 
+class Tenant(Base):
+    """Isolated customer organisation.
+
+    All tenant-scoped resources (users, submissions, etc.) carry a tenant_id
+    FK back to this table. Multi-tenancy is enforced at the query layer via
+    the tenant_middleware.
+    """
+    __tablename__ = "tenants"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    sso_provider = Column(String(20), nullable=False, default="NONE")  # NONE | SAML | OIDC
+    sso_metadata = Column(JSONB, nullable=False, default=dict)
+    settings = Column(JSONB, nullable=False, default=dict)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
+    roles = relationship("Role", back_populates="tenant", cascade="all, delete-orphan")
+    sessions = relationship("UserSession", back_populates="tenant", cascade="all, delete-orphan")
+
+
+class Role(Base):
+    """Tenant-scoped role with a granular permission set.
+
+    System roles (is_system_role=True) are seeded by migration and cannot
+    be deleted. Custom roles can be created by admins per tenant.
+    """
+    __tablename__ = "roles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    name = Column(String(100), nullable=False)
+    permissions = Column(JSONB, nullable=False, default=list)
+    is_system_role = Column(Boolean, nullable=False, default=False)
+    description = Column(Text)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", back_populates="roles")
+    users = relationship("User", back_populates="role", foreign_keys="User.role_id")
+
+    __table_args__ = (
+        Index("uq_roles_tenant_name", "tenant_id", "name", unique=True),
+    )
+
+
 class User(Base):
     """User account for API access."""
     __tablename__ = "users"
@@ -85,6 +136,21 @@ class User(Base):
     is_superuser = Column(Boolean, default=False)
     permissions = Column(JSONB, default=list)
 
+    # Multi-tenant / role
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="RESTRICT"), nullable=True)
+
+    # MFA
+    mfa_secret = Column(String(255))  # Encrypted TOTP secret
+    mfa_backup_codes = Column(JSONB)  # Encrypted list of single-use codes
+    mfa_enabled = Column(Boolean, nullable=False, default=False)
+
+    # Account security
+    is_locked = Column(Boolean, nullable=False, default=False)
+    failed_login_attempts = Column(Integer, nullable=False, default=0)
+    password_reset_token_hash = Column(String(255))
+    password_reset_expires_at = Column(DateTime(timezone=True))
+
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     last_login = Column(DateTime(timezone=True))
@@ -92,6 +158,34 @@ class User(Base):
     # Relationships
     api_keys = relationship("APIKey", back_populates="user", cascade="all, delete-orphan")
     submissions = relationship("Submission", back_populates="created_by_user")
+    tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])
+    role = relationship("Role", back_populates="users", foreign_keys=[role_id])
+    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", foreign_keys="UserSession.user_id")
+
+
+class UserSession(Base):
+    """Active JWT session with refresh token rotation.
+
+    A session row exists per active refresh token. When a refresh token is
+    used, the row is updated with a new hash (rotation). Revoking a session
+    sets revoked_at and invalidates all tokens associated with it.
+    """
+    __tablename__ = "user_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    refresh_token_hash = Column(String(255), unique=True, nullable=False, index=True)
+    user_agent = Column(Text)
+    ip_address = Column(String(45))
+    expires_at = Column(DateTime(timezone=True), nullable=False, index=True)
+    revoked_at = Column(DateTime(timezone=True))
+    last_activity_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    user = relationship("User", back_populates="sessions", foreign_keys=[user_id])
+    tenant = relationship("Tenant", back_populates="sessions")
 
 
 class APIKey(Base):
@@ -335,6 +429,14 @@ class ModelVersionRecord(Base):
     final_composite_score = Column(Float)    # Score used for tier margin / distance calculations
     confidence = Column(Float)
     signal_coverage = Column(Float)
+
+    # WE-4: Causal Adjustment Factor audit summary
+    #   Full payload (precursors, trajectory, constraint regime) lives in
+    #   we_causal_adjustments. These columns capture the at-a-glance state.
+    caf_value = Column(Float, nullable=False, default=1.0, server_default="1.0")
+    caf_confidence = Column(Float)
+    caf_constrained = Column(Boolean, nullable=False, default=False, server_default="false")
+    static_premium = Column(Float)  # P_static for CAF audit: P_final = P_static * CAF
 
     # Conditions
     signal_conditions = Column(JSONB, default=list)
@@ -597,7 +699,11 @@ class SignalAuditRecord(Base):
 
 
 class AuditLog(Base):
-    """Audit log for compliance and debugging."""
+    """Audit log for compliance and debugging.
+
+    Extended in A-2 with action_type (granular enum), before/after state,
+    tenant scoping, session linkage, and request correlation.
+    """
     __tablename__ = "audit_logs"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -605,6 +711,12 @@ class AuditLog(Base):
     # Event info
     event_type = Column(String(100), nullable=False, index=True)
     event_action = Column(String(100), nullable=False)
+    action_type = Column(String(50), index=True)  # AuditActionType enum value
+
+    # Scoping (A-2)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"))
+    session_id = Column(UUID(as_uuid=True), ForeignKey("user_sessions.id", ondelete="SET NULL"))
+    request_id = Column(String(50), index=True)
 
     # Resource
     resource_type = Column(String(100))
@@ -616,8 +728,13 @@ class AuditLog(Base):
     ip_address = Column(String(45))
     user_agent = Column(String(500))
 
-    # Details
+    # State change (A-2)
+    before_state = Column(JSONB)
+    after_state = Column(JSONB)
+
+    # Additional details
     details = Column(JSONB, default=dict)
+    duration_ms = Column(Float)
 
     # Timestamp
     created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
@@ -625,7 +742,31 @@ class AuditLog(Base):
     __table_args__ = (
         Index("ix_audit_logs_resource", "resource_type", "resource_code"),
         Index("ix_audit_logs_user", "user_id", "created_at"),
+        Index("ix_audit_logs_tenant_created", "tenant_id", "created_at"),
     )
+
+
+class UserSessionActivity(Base):
+    """Per-request activity log within a user session.
+
+    Records every authenticated API request the user makes. Feeds session
+    duration, page-view, and activity metrics for the admin backend (B-1).
+    Distinct from AuditLog -- this is low-cardinality request metadata,
+    not business events.
+    """
+    __tablename__ = "user_session_activity"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    session_id = Column(UUID(as_uuid=True), ForeignKey("user_sessions.id", ondelete="SET NULL"), nullable=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    path = Column(String(500), nullable=False)
+    method = Column(String(10), nullable=False)
+    status_code = Column(Integer)
+    duration_ms = Column(Float)
+    request_id = Column(String(50))
+    occurred_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
 
 
 # =============================================================================
@@ -795,4 +936,234 @@ class RiskTermsRecord(Base):
 
     # Relationships
     model_version = relationship("ModelVersionRecord", backref="risk_terms")
+
+
+class LossEvent(Base):
+    """Actual loss event -- a claim or incident reported after a policy is bound.
+
+    Loss events are linked to a specific ModelVersionRecord (the assessment
+    active at bind time) via the SignalLossLinker. The linked assessment
+    is the source of signal scores that feed recalibration analysis (C-2).
+    """
+    __tablename__ = "loss_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Entity
+    entity_name = Column(String(500), nullable=False)
+
+    # Policy linkage
+    quote_id = Column(UUID(as_uuid=True), ForeignKey("quotes.id", ondelete="SET NULL"))
+    policy_reference = Column(String(100))
+    claim_reference = Column(String(100))
+
+    # Timeline
+    loss_date = Column(DateTime(timezone=True), nullable=False)
+    notification_date = Column(DateTime(timezone=True))
+    closed_date = Column(DateTime(timezone=True))
+
+    # Classification
+    loss_type = Column(String(100), nullable=False)
+    coverage = Column(String(50), nullable=False)
+    config_name = Column(String(100))
+
+    # Financial
+    incurred_amount = Column(Float, nullable=False, default=0.0)
+    paid_amount = Column(Float, nullable=False, default=0.0)
+    reserved_amount = Column(Float, nullable=False, default=0.0)
+    currency = Column(String(3), nullable=False, default="USD")
+
+    # Status + cause
+    status = Column(String(20), nullable=False, default="OPEN")  # OPEN | CLOSED | REOPENED
+    cause_description = Column(Text)
+    event_metadata = Column("metadata", JSONB, nullable=False, default=dict)  # reserved 'metadata' is the column name
+
+    # Link to assessment at bind time (populated by linker)
+    linked_assessment_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id", ondelete="SET NULL"))
+    linker_run_at = Column(DateTime(timezone=True))
+
+    # Audit
+    created_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    quote = relationship("Quote", foreign_keys=[quote_id])
+    linked_assessment = relationship("ModelVersionRecord", foreign_keys=[linked_assessment_id])
+    signal_loss_pairs = relationship("SignalLossPair", back_populates="loss_event", cascade="all, delete-orphan")
+
+    __table_args__ = (
+        Index("ix_loss_events_entity_date", "entity_name", "loss_date"),
+        Index("ix_loss_events_coverage_status", "coverage", "status"),
+    )
+
+
+class SignalLossPair(Base):
+    """Pairs a bind-time signal profile with the actual loss outcome.
+
+    This is the primary input to the C-2 recalibration engine: for every
+    loss, a snapshot of exactly the signal scores the model used at bind,
+    so we can back-test which signals actually predicted the loss.
+    """
+    __tablename__ = "signal_loss_pairs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    assessment_id = Column(UUID(as_uuid=True), ForeignKey("model_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    loss_event_id = Column(UUID(as_uuid=True), ForeignKey("loss_events.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    # Signal profile at bind time (dict of signal_code -> score)
+    signal_scores_at_bind = Column(JSONB, nullable=False, default=dict)
+
+    # Composite metrics at bind time
+    composite_score_at_bind = Column(Float)
+    tier_at_bind = Column(Integer)
+    loss_propensity_at_bind = Column(Float)
+    confidence_at_bind = Column(Float)
+
+    # Temporal
+    bind_date = Column(DateTime(timezone=True))
+    time_to_loss_days = Column(Integer)
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    # Relationships
+    assessment = relationship("ModelVersionRecord", foreign_keys=[assessment_id])
+    loss_event = relationship("LossEvent", back_populates="signal_loss_pairs", foreign_keys=[loss_event_id])
+
+    __table_args__ = (
+        Index("uq_signal_loss_pair_composite", "assessment_id", "loss_event_id", unique=True),
+    )
+
+
+
+class RecalibrationProposal(Base):
+    """A recalibration proposal awaiting review + deployment (C-2).
+
+    Generated by the recalibration engine, reviewed by actuarial users in
+    the governance UI (C-3), deployed via the B-2 config management pipeline.
+    """
+    __tablename__ = "recalibration_proposals"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False)
+
+    coverage = Column(String(50), nullable=False)
+    config_name = Column(String(100), nullable=False)
+
+    proposed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    proposed_by = Column(String(100), nullable=False)
+    trigger = Column(String(50), nullable=False, default="system")
+
+    status = Column(String(20), nullable=False, default="DRAFT")
+
+    signal_report_cards = Column(JSONB, nullable=False, default=list)
+    weight_changes = Column(JSONB, nullable=False, default=list)
+    tier_threshold_changes = Column(JSONB, nullable=False, default=list)
+    impact_assessment = Column(JSONB, nullable=False, default=dict)
+    statistical_evidence = Column(JSONB, nullable=False, default=dict)
+    sample_size = Column(Integer, nullable=False, default=0)
+
+    reviewer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    review_decision = Column(String(20))
+    review_rationale = Column(Text)
+    reviewed_at = Column(DateTime(timezone=True))
+
+    deployed_config_version_id = Column(UUID(as_uuid=True))
+    deployed_at = Column(DateTime(timezone=True))
+
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+
+class ExtractorHealth(Base):
+    """Per-extractor health metrics for the admin dashboard (B-1)."""
+    __tablename__ = "extractor_health"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    extractor_id = Column(String(200), nullable=False, index=True)
+    coverage = Column(String(50), index=True)
+    signal_type = Column(String(100))
+
+    success_count_24h = Column(Integer, nullable=False, default=0)
+    error_count_24h = Column(Integer, nullable=False, default=0)
+    avg_latency_ms = Column(Float)
+
+    last_success_at = Column(DateTime(timezone=True))
+    last_error_at = Column(DateTime(timezone=True))
+    last_error_message = Column(Text)
+
+    ttl_seconds = Column(Integer)
+    data_freshness_score = Column(Float)  # 0-1
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+
+class MetricSnapshot(Base):
+    """Periodic pipeline metric rollups for trend analysis (B-1)."""
+    __tablename__ = "metric_snapshots"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    snapshot_type = Column(String(20), nullable=False)  # hourly | daily
+    captured_at = Column(DateTime(timezone=True), nullable=False)
+    coverage = Column(String(50))
+    metrics = Column(JSONB, nullable=False, default=dict)
+
+
+
+class ConfigVersion(Base):
+    """Versioned coverage config (B-2). Every edit creates a new row."""
+    __tablename__ = "config_versions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    coverage = Column(String(50), nullable=False, index=True)
+    config_name = Column(String(100), nullable=False)
+    version_number = Column(Integer, nullable=False)
+    content = Column(Text, nullable=False)
+    config_hash = Column(String(64), nullable=False, index=True)
+    status = Column(String(20), nullable=False, default="DRAFT")
+    validation_report = Column(JSONB)
+    calibration_report = Column(JSONB)
+    notes = Column(Text)
+    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("uq_config_versions_coverage_config_version", "coverage", "config_name", "version_number", unique=True),
+    )
+
+
+class ConfigDeployment(Base):
+    """Audit record of a config version deployment (B-2)."""
+    __tablename__ = "config_deployments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    config_version_id = Column(UUID(as_uuid=True), ForeignKey("config_versions.id", ondelete="CASCADE"), nullable=False, index=True)
+    deployed_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    deployed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
+    calibration_result = Column(JSONB)
+    rolled_back_at = Column(DateTime(timezone=True))
+    rolled_back_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+
+
+
+class UserInvitation(Base):
+    """Pending user invitation (B-3)."""
+    __tablename__ = "user_invitations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), nullable=False, index=True)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="SET NULL"))
+    inviter_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+
+    token_hash = Column(String(255), nullable=False, unique=True, index=True)
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    accepted_at = Column(DateTime(timezone=True))
+    cancelled_at = Column(DateTime(timezone=True))
+
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 

@@ -1,16 +1,20 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 import {
   PanelRightClose, PanelRightOpen, Lightbulb, LightbulbOff, Bug, CircleUserRound, ArrowLeftToLine, MoreVertical,
   Inbox, FileStack, Shield, FolderKanban, UserStar, Rows4, Bot, TrendingUpDown, Globe, Calculator, ChartNoAxesGantt, FlaskConical, Orbit,
   Building2, FileText, Network, Layers, FileCheck, Clock, RefreshCw, LayoutDashboard, ChevronDown, ChevronRight,
-  BookKey, Scale,
+  BookKey, Scale, LogOut, Wrench, Sliders,
 } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
 import { UserProvider } from "@/context/UserContext";
+import { useAuthStore } from "@/store/authStore";
+import { SessionGuard } from "@/components/auth/SessionGuard";
+import { NotificationToastHost } from "@/components/shared/NotificationToast";
 import "./globals.css";
 
 // 1. Font Configuration
@@ -35,9 +39,24 @@ const SidebarIconBtn = ({ icon: Icon, onClick, className = "", style }: { icon: 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  
+
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
   const { activeMenu, setActiveMenu, daysFilter, setDaysFilter, previousMenu, activeSubmission, navigateBack, activeCategory, setActiveCategory, expandedCategories, toggleCategory } = useDsiStore();
+
+  const router = useRouter();
+  const pathname = usePathname();
+  const isPublicAuthPage =
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/reset-password") ||
+    pathname?.startsWith("/sso/callback");
+
+  const hasPermission = useAuthStore((s) => s.hasPermission);
+  const authUser = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+
+  const canViewSubmissions = hasPermission("submission:read");
+  const canViewWorldEngine = hasPermission("submission:read"); // WE is linked from submissions context
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const [collapsedWidthPx, setCollapsedWidthPx] = useState<number | null>(null);
@@ -73,9 +92,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   }, [isDark]);
 
   return (
-    <html lang="en" suppressHydrationWarning> 
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* A-3i: PWA installability + Apple touch icons. The service worker
+            and manifest linkage are wired via next.config.ts + public/manifest.json. */}
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#000000" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body className={`${ibmPlex.variable} ${inter.variable} font-ibm h-screen w-screen overflow-hidden`}>
         <UserProvider>
+        <SessionGuard>
+        <NotificationToastHost />
+        {isPublicAuthPage ? (
+          children
+        ) : (
         <div className="relative h-full w-full">
 
           {/* SIDEBAR — overlays content when expanded */}
@@ -243,58 +276,108 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
                     /* === TOP LEVEL MODE */
                     <>
-                      <button 
-                        onClick={() => setIsSubmissionsExpanded(!isSubmissionsExpanded)}
-                        className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Inbox className="icon shrink-0" />
-                          <span className="text-sm tracking-wider">Submissions</span>
-                        </div>
-                      </button>
-                      
-                      {isSubmissionsExpanded && (
-                        <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
-                          {[
-                            { name: "Referral Pipeline", icon: UserStar },
-                            { name: "Full Pipeline", icon: Rows4 },
-                            { name: "Performance Metrics", icon: Bot }
-                          ].map((item) => (
-                            <li key={item.name}>
-                              <button
-                                onClick={() => {
-                                  setActiveMenu(item.name)
-                                  setIsOpen(false)}
-                                }
-                                className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
-                                  activeMenu === item.name 
-                                    ? "text-dsi-contrast-background bg-dsi-background font-semibold" 
-                                    : "text-dsi-background hover:text-dsi-selected"
-                                }`}
-                              >
-                                <item.icon className="icon shrink-0" />
-                                <span className="truncate">{item.name}</span>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
+                      {canViewSubmissions && (
+                        <>
+                          <button
+                            onClick={() => setIsSubmissionsExpanded(!isSubmissionsExpanded)}
+                            className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Inbox className="icon shrink-0" />
+                              <span className="text-sm tracking-wider">Submissions</span>
+                            </div>
+                          </button>
+
+                          {isSubmissionsExpanded && (
+                            <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
+                              {[
+                                { name: "Referral Pipeline", icon: UserStar },
+                                { name: "Full Pipeline", icon: Rows4 },
+                                { name: "Performance Metrics", icon: Bot }
+                              ].map((item) => (
+                                <li key={item.name}>
+                                  <button
+                                    onClick={() => {
+                                      setActiveMenu(item.name)
+                                      setIsOpen(false)}
+                                    }
+                                    className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
+                                      activeMenu === item.name
+                                        ? "text-dsi-contrast-background bg-dsi-background font-semibold"
+                                        : "text-dsi-background hover:text-dsi-selected"
+                                    }`}
+                                  >
+                                    <item.icon className="icon shrink-0" />
+                                    <span className="truncate">{item.name}</span>
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </>
                       )}
 
                       {/* WORLD ENGINE — top-level item */}
-                      <button
-                        onClick={() => {
-                          setActiveMenu("World Engine");
-                          setIsOpen(false);
-                        }}
-                        className={`w-full flex items-center gap-3 py-2 mt-4 ${
-                          activeMenu === "World Engine"
-                            ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
-                            : "text-dsi-background hover:text-dsi-selected"
-                        }`}
-                      >
-                        <Orbit className="icon shrink-0" />
-                        <span className="text-sm tracking-wider">World Engine</span>
-                      </button>
+                      {canViewWorldEngine && (
+                        <button
+                          onClick={() => {
+                            setActiveMenu("World Engine");
+                            setIsOpen(false);
+                            router.push("/world-engine");
+                          }}
+                          className={`w-full flex items-center gap-3 py-2 mt-4 ${
+                            pathname?.startsWith("/world-engine")
+                              ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
+                              : "text-dsi-background hover:text-dsi-selected"
+                          }`}
+                        >
+                          <Orbit className="icon shrink-0" />
+                          <span className="text-sm tracking-wider">World Engine</span>
+                        </button>
+                      )}
+
+                      {/* Role-gated sections wired up in A-3e */}
+                      {hasPermission("config:read") && (
+                        <button
+                          onClick={() => { setActiveMenu("Config"); setIsOpen(false); router.push("/admin/configs"); }}
+                          className={`w-full flex items-center gap-3 py-2 mt-2 ${
+                            pathname?.startsWith("/admin/configs")
+                              ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
+                              : "text-dsi-background hover:text-dsi-selected"
+                          }`}
+                        >
+                          <Sliders className="icon shrink-0" />
+                          <span className="text-sm tracking-wider">Config</span>
+                        </button>
+                      )}
+
+                      {hasPermission("recalibration:view") && (
+                        <button
+                          onClick={() => { setActiveMenu("Recalibration"); setIsOpen(false); router.push("/admin/recalibration"); }}
+                          className={`w-full flex items-center gap-3 py-2 mt-2 ${
+                            pathname?.startsWith("/admin/recalibration")
+                              ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
+                              : "text-dsi-background hover:text-dsi-selected"
+                          }`}
+                        >
+                          <TrendingUpDown className="icon shrink-0" />
+                          <span className="text-sm tracking-wider">Recalibration</span>
+                        </button>
+                      )}
+
+                      {hasPermission("admin:system") && (
+                        <button
+                          onClick={() => { setActiveMenu("Admin"); setIsOpen(false); router.push("/admin"); }}
+                          className={`w-full flex items-center gap-3 py-2 mt-2 ${
+                            pathname === "/admin" || pathname?.startsWith("/admin/")
+                              ? "text-dsi-contrast-background bg-dsi-background font-semibold px-2 rounded"
+                              : "text-dsi-background hover:text-dsi-selected"
+                          }`}
+                        >
+                          <Wrench className="icon shrink-0" />
+                          <span className="text-sm tracking-wider">Admin</span>
+                        </button>
+                      )}
                     </>
 
                   )}
@@ -314,9 +397,42 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   justify-between"
                 style={{ bottom: 0, height: collapsedWidthPx }}
               >
-                {/* Left Side: User Icon */}
-                <div className="flex items-center gap-6">
-                  <SidebarIconBtn icon={CircleUserRound} />
+                {/* Left Side: User Menu */}
+                <div className="flex items-center gap-6 relative">
+                  <SidebarIconBtn
+                    icon={CircleUserRound}
+                    onClick={() => setUserMenuOpen((v) => !v)}
+                  />
+                  {userMenuOpen && (
+                    <div
+                      className="absolute bottom-10 left-0 z-40 min-w-[14rem] bg-dsi-background text-dsi-contrast-background border-2 border-dsi-outline rounded shadow-lg p-2 flex flex-col gap-1"
+                    >
+                      <div className="px-2 py-1 text-xs opacity-70 truncate">
+                        {authUser?.email ?? "Not signed in"}
+                      </div>
+                      {authUser?.role && (
+                        <div className="px-2 py-0.5 text-xs opacity-60">
+                          {authUser.role}
+                        </div>
+                      )}
+                      <button
+                        onClick={() => { setUserMenuOpen(false); router.push("/profile"); }}
+                        className="text-left px-2 py-1 hover:bg-dsi-outline/10 rounded flex items-center gap-2 text-sm"
+                      >
+                        <CircleUserRound className="w-4 h-4" /> Profile
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setUserMenuOpen(false);
+                          await logout();
+                          router.replace("/login");
+                        }}
+                        className="text-left px-2 py-1 hover:bg-dsi-outline/10 rounded flex items-center gap-2 text-sm"
+                      >
+                        <LogOut className="w-4 h-4" /> Sign out
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 {/* Right Side: Theme Toggle */}
@@ -405,6 +521,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </main>
 
         </div>
+        )}
+        </SessionGuard>
         </UserProvider>
       </body>
     </html>
