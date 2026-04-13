@@ -244,7 +244,7 @@ def seed_audit_events(
 
     for i, q in enumerate(quotes):
         actor = admin if i % 3 == 0 else uw
-        action = AuditActionType.ASSESSMENT_COMPLETE
+        action = AuditActionType.ASSESSMENT_UPDATE
         svc.record(
             AuditEvent(
                 action_type=action,
