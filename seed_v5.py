@@ -128,16 +128,22 @@ def seed_auth(db: Session) -> tuple[Tenant, dict[str, Role], dict[str, User]]:
         role = db.execute(
             select(Role).where(Role.tenant_id == tenant.id, Role.name == role_name)
         ).scalar_one_or_none()
+        perm_values = [p.value for p in perms]
         if role is None:
             role = Role(
                 tenant_id=tenant.id,
                 name=role_name,
-                permissions=[p.value for p in perms],
+                permissions=perm_values,
                 is_system_role=True,
                 description=f"Seeded {role_name} role",
             )
             db.add(role)
             db.flush()
+        else:
+            # Refresh permissions so rolling DEFAULT_ROLES changes actually
+            # apply on re-seed (otherwise roles created on a previous run
+            # keep their stale permission list forever).
+            role.permissions = perm_values
         roles[role_name] = role
 
     users_spec = [

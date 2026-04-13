@@ -1,7 +1,7 @@
 """Add base_premium_derivation JSONB column to model_versions
 
 Revision ID: 006
-Revises: 005
+Revises: 005a
 Create Date: 2026-03-20
 
 Changes:
@@ -17,7 +17,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 
 # revision identifiers, used by Alembic.
 revision: str = "006"
-down_revision: str = "005"
+down_revision: str = "005a"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
