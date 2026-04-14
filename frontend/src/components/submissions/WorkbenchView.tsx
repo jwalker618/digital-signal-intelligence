@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import Modal from "@/components/Modal";
+import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import { Download, FileText, MoreVertical, Calendar, Hash, Printer, X, Settings2 } from "lucide-react";
 
