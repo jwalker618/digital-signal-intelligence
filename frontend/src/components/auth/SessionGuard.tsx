@@ -4,7 +4,7 @@
 //   - Trigger authStore.boot() on first mount (refresh from persisted
 //     refresh_token, fetch /me, populate user).
 //   - Redirect to /login if the session is missing or expired.
-//   - Show a toast 5 minutes before expiry warning the user.
+//   - Show a toast 30 minutes before expiry warning the user.
 //   - Auto-refresh on token near-expiry.
 //
 // Public pages (/login, /reset-password, /sso/callback) bypass the guard.
@@ -18,7 +18,7 @@ import { Loader2 } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
-const WARN_THRESHOLD_MS = 5 * 60 * 1000;
+const WARN_THRESHOLD_MS = 30 * 60 * 1000;
 const REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
 
 export function SessionGuard({ children }: { children: React.ReactNode }) {

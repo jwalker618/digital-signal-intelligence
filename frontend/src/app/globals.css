@@ -113,6 +113,18 @@
   height: 20px;
 }
 
+@utility dsi-popup-header {
+  @apply flex;
+  @apply justify-between;
+  @apply text-dsi-analysis;
+  @apply gap-dsi-pad;
+  @apply rounded-t-xl rounded-tr-none;
+  @apply border-b-1 border-dsi-outline/70;
+  @apply bg-dsi-contrast-background;
+  @apply hover:bg-dsi-selected;
+  @apply pl-dsi-pad;
+}
+
 @utility dsi-section-header {
   @apply flex;
   @apply gap-dsi-pad;
@@ -150,12 +162,14 @@
 
 @utility dsi-analysis-description {
   @apply pt-1 pl-dsi-pad pr-dsi-pad;
+  @apply content-center;
   @apply text-sm;
   @apply text-left;
 }
 
 @utility dsi-analysis-item {
   @apply pt-1 pl-dsi-pad pr-dsi-pad;
+  @apply content-center;
   @apply font-bold;
   @apply text-left;
 }
