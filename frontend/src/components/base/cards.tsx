@@ -172,9 +172,9 @@ export const SubmissionHeaderCard = ({
   return (
     <div
       className={`
-        sticky top-dsi-pad z-20 mb-24 bottom-12
+        sticky top-0 z-20 mb-4
         pt-3 pb-2
-        rounded-xl
+        rounded-b-xl
         border-b-3 border-dsi-contrast-background
         ${DECISION_BG[decision]}
         shadow-sm
