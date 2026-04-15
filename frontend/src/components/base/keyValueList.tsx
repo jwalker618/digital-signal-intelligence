@@ -1,11 +1,14 @@
 /**
- * KeyValueList — renders a key/value object as a divided list.
+ * KeyValueList — object→list convenience wrapper over LabelValueList.
  *
- * Used for modal bodies like Submission Data / Discovery Output where the
- * layout is identical and only the label/value formatting differs.
+ * Used when the source is a raw `Record<string, V>` rather than a
+ * pre-structured rows array (modal bodies like Submission Data / Discovery
+ * Output). Delegates all rendering to LabelValueList so styling stays in one
+ * place.
  */
 
 import "@/app/globals.css";
+import LabelValueList, { LabelValueVariant } from "./labelValueList";
 
 export interface KeyValueListProps<V = unknown> {
   data: Record<string, V> | null | undefined;
@@ -18,6 +21,8 @@ export interface KeyValueListProps<V = unknown> {
   /** Tailwind classes appended to the value `<span>`. */
   valueClassName?: string;
   emptyMessage?: string;
+  /** Visual variant — defaults to "modal" (divided font-mono rows). */
+  variant?: LabelValueVariant;
 }
 
 export default function KeyValueList<V = unknown>({
@@ -25,28 +30,18 @@ export default function KeyValueList<V = unknown>({
   filter,
   renderLabel = (k) => k,
   renderValue = (v) => String(v),
-  valueClassName = "",
+  valueClassName,
   emptyMessage = "No data available.",
+  variant = "modal",
 }: KeyValueListProps<V>) {
-  const entries = Object.entries(data ?? {}).filter(([k]) => !filter || filter(k));
+  const rows = Object.entries(data ?? {})
+    .filter(([k]) => !filter || filter(k))
+    .map(([k, v]) => ({
+      key: k,
+      label: renderLabel(k),
+      value: renderValue(v as V, k),
+      valueClassName,
+    }));
 
-  if (entries.length === 0) {
-    return <div className="dsi-user-message">{emptyMessage}</div>;
-  }
-
-  return (
-    <div className="space-y-3 font-mono text-sm">
-      {entries.map(([key, value]) => (
-        <div
-          key={key}
-          className="flex justify-between items-center py-2 border-b border-dsi-outline/5 last:border-0"
-        >
-          <span className="opacity-60">{renderLabel(key)}</span>
-          <span className={`font-bold text-right ${valueClassName}`}>
-            {renderValue(value as V, key)}
-          </span>
-        </div>
-      ))}
-    </div>
-  );
+  return <LabelValueList rows={rows} variant={variant} emptyMessage={emptyMessage} />;
 }

@@ -2,16 +2,12 @@
 
 /**
  * Risk terms summary — deductible, SIR, aggregate limit, coverage terms.
- * Body content for a StandardCard(titled "Risk Terms Summary").
+ * Body content for a StandardCard titled "Risk Terms Summary".
  */
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatNumber } from "@/lib/format";
-
-interface Row {
-  label: string;
-  value: React.ReactNode;
-}
+import LabelValueList from "@/components/base/labelValueList";
 
 export default function RiskTermsSummary() {
   const { activeRisk } = useDsiStore() as any;
@@ -24,22 +20,15 @@ export default function RiskTermsSummary() {
     ? `${Object.keys(activeRisk.coverage_terms).length} terms`
     : "N/A";
 
-  const rows: Row[] = [
-    { label: "Deductible Type", value: activeRisk.deductible_type || "N/A" },
-    { label: "Deductible Amount", value: formatNumber(activeRisk.deductible_amount, 0) },
-    { label: "SIR", value: formatNumber(activeRisk.sir_amount, 0, "n/a") },
-    { label: "Aggregate Limit", value: formatNumber(activeRisk.aggregate_limit, 0, "n/a") },
-    { label: "Coverage Terms", value: coverageCount },
-  ];
-
   return (
-    <div>
-      {rows.map((r) => (
-        <div key={r.label} className="flex justify-between">
-          <span className="dsi-analysis-description">{r.label}</span>
-          <span className="dsi-analysis-item">{r.value}</span>
-        </div>
-      ))}
-    </div>
+    <LabelValueList
+      rows={[
+        { label: "Deductible Type", value: activeRisk.deductible_type || "N/A" },
+        { label: "Deductible Amount", value: formatNumber(activeRisk.deductible_amount, 0) },
+        { label: "SIR", value: formatNumber(activeRisk.sir_amount, 0, "n/a") },
+        { label: "Aggregate Limit", value: formatNumber(activeRisk.aggregate_limit, 0, "n/a") },
+        { label: "Coverage Terms", value: coverageCount },
+      ]}
+    />
   );
 }
