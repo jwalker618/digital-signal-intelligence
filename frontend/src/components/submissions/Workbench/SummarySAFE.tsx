@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import Modal from "@/components/Modal";
+import Modal from "@/components/base/modal";
 
 import {
   User, Search, MessageSquare, Plus, ShieldCheck, Layers, Building2, ShieldX, ShieldQuestionMark, Scale,
