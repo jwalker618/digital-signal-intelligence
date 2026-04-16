@@ -7,21 +7,16 @@ import {
   Paperclip, Minus, Clock, GitBranch, Layers, AlertTriangle
 } from "lucide-react";
 import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, ReferenceLine, Label
-} from "recharts";
-
-import { 
-  DECISION_COLORS, 
-  getDecisionColor, 
-  tooltipStyle, 
-  CHART_GRID_COLOR, 
-  CHART_AXIS_COLOR, 
-  CHART_SUBJECT_COLOR, 
-  CHART_PEER_COLOR } from "@/lib/chartConfig";
-import {
   formatNumber, formatPercent, formatCurrency
 } from "@/lib/format";
+import {
+  KpiTile,
+  ScoreBar,
+} from "@/components/base/content/primatives";
+import {
+  PeerScatterChart,
+  BenchmarkBarChart,
+} from "@/components/base/charts/primatives";
 
 export default function LossTab() {
   const {
@@ -177,57 +172,44 @@ export default function LossTab() {
         <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           {/* Row 1: Primary KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 pl-dsi-pad pr-dsi-pad">
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Propensity Band</span>
-              <span className="font-bold text-lg text-dsi-selected uppercase">
-                {activeVersion.loss_propensity_band?.replace(/_/g, ' ') || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Severity Band</span>
-              <span className="font-bold text-lg uppercase">
-                {activeVersion.severity_propensity_band?.replace(/_/g, ' ') || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Combined Modifier</span>
-              <span className="font-bold text-lg">
-                {activeVersion.loss_combined_modifier != null ? formatNumber(activeVersion.loss_combined_modifier, 3) : "1.000"}x
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Freq Multiplier</span>
-              <span className="font-bold text-lg">
-                {activeVersion.loss_frequency_multiplier != null ? formatNumber(activeVersion.loss_frequency_multiplier, 3) : "1.000"}x
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Sev Multiplier</span>
-              <span className="font-bold text-lg">
-                {activeVersion.loss_severity_multiplier != null ? formatNumber(activeVersion.loss_severity_multiplier, 3) : "1.000"}x
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Model Confidence</span>
-              <span className="font-bold text-lg">
-                {activeVersion.loss_confidence != null ? formatPercent(activeVersion.loss_confidence, 0) : "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Cohort</span>
-              <span className="font-bold text-sm leading-tight block">
-                {activeVersion.loss_cohort_name || "Unknown"}
-              </span>
-              <span className="text-[10px] opacity-40">
-                {activeVersion.loss_cohort_confidence != null ? `${formatPercent(activeVersion.loss_cohort_confidence, 0)} conf` : ''}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Score Velocity</span>
-              <span className={`font-bold text-lg ${activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
-                {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
-              </span>
-            </div>
+            <KpiTile
+              label="Propensity Band"
+              value={(activeVersion.loss_propensity_band?.replace(/_/g, ' ') || "N/A").toUpperCase()}
+              variant="emphasis"
+            />
+            <KpiTile
+              label="Severity Band"
+              value={(activeVersion.severity_propensity_band?.replace(/_/g, ' ') || "N/A").toUpperCase()}
+            />
+            <KpiTile
+              label="Combined Modifier"
+              value={`${activeVersion.loss_combined_modifier != null ? formatNumber(activeVersion.loss_combined_modifier, 3) : "1.000"}x`}
+            />
+            <KpiTile
+              label="Freq Multiplier"
+              value={`${activeVersion.loss_frequency_multiplier != null ? formatNumber(activeVersion.loss_frequency_multiplier, 3) : "1.000"}x`}
+            />
+            <KpiTile
+              label="Sev Multiplier"
+              value={`${activeVersion.loss_severity_multiplier != null ? formatNumber(activeVersion.loss_severity_multiplier, 3) : "1.000"}x`}
+            />
+            <KpiTile
+              label="Model Confidence"
+              value={activeVersion.loss_confidence != null ? formatPercent(activeVersion.loss_confidence, 0) : "N/A"}
+            />
+            <KpiTile
+              label="Cohort"
+              value={activeVersion.loss_cohort_name || "Unknown"}
+              subtext={activeVersion.loss_cohort_confidence != null ? `${formatPercent(activeVersion.loss_cohort_confidence, 0)} conf` : undefined}
+            />
+            <KpiTile
+              label="Score Velocity"
+              value={
+                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}>
+                  {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
+                </span>
+              }
+            />
           </div>
 
           {/* Row 2: Meta line */}
@@ -266,64 +248,17 @@ export default function LossTab() {
                 <ShieldAlert className="icon"/><span className="text-sm">Frequency vs. Severity Matrix</span>
               </div>
               <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-decline"></span> Decline</span>
-                  <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-muted"></span> Unknown</span>
-                </div>
-                <div className="pl-dsi-pad pr-dsi-pad h-[400px] w-full relative">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.5} />
-                      <XAxis
-                        type="number"
-                        dataKey="x_propensity"
-                        name="Frequency (Propensity)"
-                        stroke="var(--dsi-chart-axis)"
-                        tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                        label={{ value: 'Loss Propensity Score', position: 'insideBottom', offset: -15, fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                      />
-                      <YAxis
-                        type="number"
-                        dataKey="y_severity"
-                        name="Severity"
-                        stroke="var(--dsi-chart-axis)"
-                        tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                        label={{ value: 'Severity Score', angle: -90, position: 'insideLeft', fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                      />
-                      <RechartsTooltip
-                        cursor={{ strokeDasharray: '3 3' }}
-                        contentStyle={tooltipStyle}
-                        formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name]}
-                      />
-                      {/* Subject crosshair reference lines */}
-                      <ReferenceLine
-                        x={activeVersion.loss_propensity_score || 0}
-                        stroke="var(--dsi-chart-subject)"
-                        strokeDasharray="4 4"
-                        strokeOpacity={0.6}
-                      />
-                      <ReferenceLine
-                        y={activeVersion.severity_propensity_score || 0}
-                        stroke="var(--dsi-chart-subject)"
-                        strokeDasharray="4 4"
-                        strokeOpacity={0.6}
-                      />
-                      {/* Peer dots colored by decision */}
-                      {lossScatterData.map((point: any, idx: number) => (
-                        <Scatter
-                          key={`peer-${idx}`}
-                          data={[point]}
-                          fill={getDecisionColor(point.decision)}
-                          fillOpacity={0.5}
-                          isAnimationActive={false}
-                        />
-                      ))}
-                      <Scatter name="Active Submission" data={activePoint} fill="var(--dsi-chart-subject)" shape="star" />
-                    </ScatterChart>
-                  </ResponsiveContainer>
-                </div>
+                <PeerScatterChart
+                  points={lossScatterData.map((p: any) => ({ x: p.x_propensity, y: p.y_severity, decision: p.decision }))}
+                  subject={{
+                    x: activeVersion.loss_propensity_score || 0,
+                    y: activeVersion.severity_propensity_score || 0,
+                  }}
+                  xLabel="Loss Propensity Score"
+                  yLabel="Severity Score"
+                  xName="Frequency (Propensity)"
+                  yName="Severity"
+                />
               </div>
             </div>
 
@@ -432,67 +367,16 @@ export default function LossTab() {
               </div>
               <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
                 <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
-                <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
-                  {lossCohortBenchmarks.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={lossCohortBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
-                        <XAxis
-                          dataKey="cohort_name"
-                          stroke="var(--dsi-chart-axis)"
-                          tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }}
-                          interval={0}
-                          tickFormatter={(val) => val.length > 15 ? val.substring(0, 15) + '...' : val}
-                        />
-                        <YAxis
-                          stroke="var(--dsi-chart-axis)"
-                          tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                          domain={['auto', 'auto']}
-                        />
-                        <RechartsTooltip
-                          contentStyle={tooltipStyle}
-                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
-                          formatter={(value: any, name: string) => {
-                            if (name === 'avg_modifier') return [`${formatNumber(Number(value), 3)}x`, 'Avg Modifier'];
-                            return [value, name];
-                          }}
-                          labelFormatter={(label) => {
-                            const match = lossCohortBenchmarks.find((d: any) => d.cohort_name === label);
-                            return match ? `${label} (n=${match.peer_count})` : label;
-                          }}
-                        />
-                        {/* Subject modifier reference line */}
-                        <ReferenceLine
-                          y={subjectModifier}
-                          stroke="var(--dsi-chart-subject)"
-                          strokeDasharray="6 3"
-                          strokeWidth={2}
-                        >
-                          <Label value={`Subject ${formatNumber(subjectModifier, 3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
-                        </ReferenceLine>
-                        <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
-                          label={({ x, y, width, index }: any) => {
-                            const entry = lossCohortBenchmarks[index];
-                            return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
-                                n={entry?.peer_count}
-                              </text>
-                            );
-                          }}
-                        >
-                          {lossCohortBenchmarks.map((entry: any, index: number) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={entry.cohort_name === activeVersion.loss_cohort_name ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex h-full items-center justify-center opacity-50 italic text-sm">No cohort data available.</div>
-                  )}
-                </div>
+                <BenchmarkBarChart
+                  data={lossCohortBenchmarks}
+                  categoryKey="cohort_name"
+                  valueKey="avg_modifier"
+                  subjectCategory={activeVersion.loss_cohort_name}
+                  subjectValue={subjectModifier}
+                  peerCountKey="peer_count"
+                  valueName="Avg Modifier"
+                  emptyMessage="No cohort data available."
+                />
               </div>
             </div>
 
@@ -516,34 +400,10 @@ export default function LossTab() {
                               <span className="text-[10px] opacity-40 ml-1">{formatPercent(confidence, 0)} conf</span>
                             )}
                           </div>
-                          {/* Frequency bar */}
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-[10px] opacity-50 w-10 shrink-0">Freq</span>
-                            <div className="flex-1 h-1.5 bg-dsi-background rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(100, Math.max(2, freqScore))}%`,
-                                  backgroundColor: freqScore > 70 ? 'var(--dsi-negative)' : freqScore > 40 ? 'var(--dsi-warning)' : 'var(--dsi-positive)'
-                                }}
-                              />
-                            </div>
-                            <span className="text-[10px] font-bold w-8 text-right">{formatNumber(freqScore, 1)}</span>
+                          <div className="mb-1">
+                            <ScoreBar label="Freq" value={freqScore} />
                           </div>
-                          {/* Severity bar */}
-                          <div className="flex items-center gap-2">
-                            <span className="text-[10px] opacity-50 w-10 shrink-0">Sev</span>
-                            <div className="flex-1 h-1.5 bg-dsi-background rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(100, Math.max(2, sevScore))}%`,
-                                  backgroundColor: sevScore > 70 ? 'var(--dsi-negative)' : sevScore > 40 ? 'var(--dsi-warning)' : 'var(--dsi-positive)'
-                                }}
-                              />
-                            </div>
-                            <span className="text-[10px] font-bold w-8 text-right">{formatNumber(sevScore, 1)}</span>
-                          </div>
+                          <ScoreBar label="Sev" value={sevScore} />
                         </div>
                       );
                     })}
