@@ -370,8 +370,8 @@ export default function SummaryTab() {
         >
           <ContributionTable
             columns={[
-              { label: "Group", field: null, width: "50%", align: "left" },
-              { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
+              { label: "Group", field: null, width: "50%", align: "left", headeralign: "left", },
+              { label: "Contribution", field: "risk_contribution", width: "50%", align: "right", headeralign: "center", },
             ]}
             rows={mockContributionRows}
             otherRow={mockContributionOther}
@@ -388,17 +388,12 @@ export default function SummaryTab() {
           <ExpandableGroupTable
             columns={[
               {
-                label: (
-                  <>
-                    <PenLine className="icon" /> Adjustments
-                  </>
-                ),
-                width: "50%",
-                align: "left",
+                label: (<>  <PenLine className="icon" /> Adjustments </> ),
+                width: "50%", align: "left", headeralign: "left",
               },
-              { label: "Modifier", width: "10%", align: "center" },
-              { label: "Impact", width: "20%", align: "right" },
-              { label: "Result", width: "20%", align: "right" },
+              { label: "Modifier", width: "10%", align: "center", headeralign: "center" },
+              { label: "Impact", width: "20%", align: "right", headeralign: "center" },
+              { label: "Result", width: "20%", align: "center", headeralign: "center" },
             ]}
             groups={mockModifierGroups}
             renderItemCells={(mod) => [

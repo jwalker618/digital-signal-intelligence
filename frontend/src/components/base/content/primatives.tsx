@@ -30,37 +30,36 @@ const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
   { at: Infinity, color: "var(--dsi-negative)" },
 ];
 
-const COMMON_CELL =
-  "overflow-x-hidden whitespace-nowrap border-collapse";
-
 export type Padding = "sm" | "md" | "lg";
 
 const PADDING_CLASS: Record<NonNullable<InfoPanelProps["padding"]>, string> = {
   sm: "p-2", md: "p-3", lg: "p-4",
 };
 
-/** COMMON INTERFACES ---------------------------------------------------------------------------------------------- */
-
-/** GUIDANCE
- * width: CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
- * align: Horizontal alignment for this column's cells. Default `"left"`.
- */
-export interface StandardTableColumn {
-  label?: React.ReactNode;
-  field?: string | null;
-  width?: string;
-  align?: Align;
-}
-
-export interface StandardTableRow extends Record<string, unknown> {
-  name?: string | null;
-}
-
 /** Build a CSS grid-template-columns track list from column widths.
  *  Missing widths fall back to "1fr" so omitting width gives equal columns.
  *  Tolerates null/undefined for defensive rendering during loading states. */
 const buildGridTemplate = (columns: StandardTableColumn[] | null | undefined): string =>
   (columns ?? []).map((c) => c.width ?? "1fr").join(" ");
+
+/** COMMON INTERFACES ---------------------------------------------------------------------------------------------- */
+
+/** GUIDANCE
+ * width: CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
+ * align: Horizontal alignment for this column's rows. Default `"right"`.
+ * headeralign: Horizontal alignment for this column's header cell. Default to "center"`.
+ */
+export interface StandardTableColumn {
+  label?: React.ReactNode;
+  field?: string | null;
+  width?: string;
+  align: Align | "right";
+  headeralign: Align | "center";
+}
+
+export interface StandardTableRow extends Record<string, unknown> {
+  name?: string | null;
+}
 
 /** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
 
@@ -98,11 +97,6 @@ export const ContributionTable = ({
   const template = buildGridTemplate(columns);
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
 
-  // Field presence drives default alignment: name columns default to left,
-  // value columns default to right.
-  const defaultAlign = (c: StandardTableColumn): Align =>
-    c.field ? "right" : "left";
-
   return (
 
     <div className={`grid ${className}`} style={{ gridTemplateColumns: template }}>
@@ -113,8 +107,10 @@ export const ContributionTable = ({
           key={`h-${i}`}
           className={`
             dsi-analysis-description
-            text-xs ${TEXTALIGN_CLASS[c.align ?? defaultAlign(c)]}
-            border-b-1 border-dsi-outline/50`}
+            text-xs 
+            ${TEXTALIGN_CLASS[c.headeralign]}  
+            border-b-1 border-dsi-outline/50
+            pb-1`}
         >
           {c.label}
         </div>
@@ -123,16 +119,16 @@ export const ContributionTable = ({
       {/* Data rows */}
       {allRows.map((row, idx) => (
         <Fragment key={`r-${idx}`}>
+          
           {columns.map((c, i) => {
             const isName = !c.field;
-            const align = c.align ?? defaultAlign(c);
             return (
               <div
                 key={`v-${idx}-${i}`}
                 className={
                   isName
-                    ? `dsi-analysis-description text-xs ${TEXTALIGN_CLASS[align]} border-r-1 border-dsi-outline/50`
-                    : `dsi-analysis-item ${TEXTALIGN_CLASS[align]}`
+                    ? `dsi-analysis-description ${TEXTALIGN_CLASS[c.headeralign]} border-r-1 border-dsi-outline/50 pt-1 pb-1`
+                    : `dsi-analysis-item ${TEXTALIGN_CLASS[c.align]} pt-1 pb-1`
                 }
               >
                 {isName
@@ -198,10 +194,10 @@ export interface ExpandableGroupTableProps<T> {
  *
  *   <ExpandableGroupTable
  *     columns={[
- *       { label: "Adjustments", width: "50%", align: "left" },
- *       { label: "Modifier",   width: "10%", align: "center" },
- *       { label: "Impact",     width: "20%", align: "right" },
- *       { label: "Result",     width: "20%", align: "right" },
+ *       { label: "Adjustments", width: "50%", align: "left", headeralign: "left" },
+ *       { label: "Modifier",    width: "10%", align: "center", headeralign: "center" },
+ *       { label: "Impact",      width: "20%", align: "right", headeralign: "center" },
+ *       { label: "Result",      width: "20%", align: "right", headeralign: "center" },
  *     ]}
  *     groups={[
  *       { key: "categorical", title: "Categorical",
@@ -258,9 +254,13 @@ export const ExpandableGroupTable = <T,>({
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`${COMMON_CELL} text-xs pt-2 pb-2 ${TEXTALIGN_CLASS[c.align ?? "left"]} ${
-              i === lastIdx ? "pl-dsi-pad pr-dsi-pad" : ""
-            } ${i === 0 ? "flex gap-dsi-pad text-sm" : ""}`}
+            className={`
+              dsi-analysis-description
+              flex gap-dsi-pad 
+              text-xs 
+              ${TEXTALIGN_CLASS[c.headeralign]} 
+              border-b-1 border-dsi-outline/50
+              pb-1`}
           >
             {c.label}
           </div>
@@ -271,10 +271,17 @@ export const ExpandableGroupTable = <T,>({
         const isOpen = !!expanded[g.key];
         return (
           <Fragment key={g.key}>
+            
             {/* Group header row */}
             <div
               onClick={() => toggle(g.key)}
-              className={`${COMMON_CELL} border-t border-dsi-outline/10 hover:text-dsi-selected cursor-pointer flex gap-dsi-pad text-sm pt-dsi-pad pb-dsi-pad`}
+              className="
+                dsi-analysis-description  
+                border-t border-dsi-outline/20 
+                hover:text-dsi-selected 
+                flex 
+                gap-dsi-pad 
+                pt-dsi-pad pb-dsi-pad"
             >
               {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
               {g.title}
@@ -282,15 +289,17 @@ export const ExpandableGroupTable = <T,>({
             {g.summary.map((cell, i) => {
               const colIdx = i + 1;
               const col = columns[colIdx];
-              const align = col?.align ?? "right";
               const isLast = colIdx === lastIdx;
               return (
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`${COMMON_CELL} border-t border-dsi-outline/10 cursor-pointer content-center ${TEXTALIGN_CLASS[align]} ${
-                    isLast ? "pl-dsi-pad pr-dsi-pad text-sm" : "text-xs"
-                  }`}
+                  className={`
+                      border-t border-dsi-outline/10 
+                      cursor-pointer 
+                      content-center ${TEXTALIGN_CLASS[col.headeralign]}  
+                      ${isLast ? "pl-dsi-pad pr-dsi-pad text-sm" : "text-xs"}`
+                    }
                 >
                   {cell}
                 </div>
@@ -306,11 +315,10 @@ export const ExpandableGroupTable = <T,>({
                   <Fragment key={`${g.key}-item-${idx}`}>
                     {cells.map((cell, colIdx) => {
                       const col = columns[colIdx];
-                      const align = col?.align ?? "left";
                       return (
                         <div
                           key={colIdx}
-                          className={`${COMMON_CELL} bg-dsi-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[align]} ${
+                          className={`bg-dsi-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[col.headeralign]} ${
                             colIdx === 0 ? "pl-dsi-padicon" : ""
                           } ${colIdx === lastIdx ? "pr-dsi-pad" : ""}`}
                         >
@@ -325,7 +333,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className={`${COMMON_CELL} text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30`}
+                className={`text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30`}
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}
