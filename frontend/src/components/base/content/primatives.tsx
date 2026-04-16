@@ -2,7 +2,13 @@
 
 import "@/app/globals.css";
 import { Fragment, useState } from "react";
-import { formatNumber, formatText } from "@/lib/format";
+import {
+  formatNumber,
+  formatText,
+  formatCurrency,
+  formatPercent,
+  formatDate,
+} from "@/lib/format";
 
 import {
   StatusPaletteEntry,
@@ -36,47 +42,127 @@ const PADDING_CLASS: Record<NonNullable<InfoPanelProps["padding"]>, string> = {
   sm: "p-2", md: "p-3", lg: "p-4",
 };
 
-/** Build a CSS grid-template-columns track list from column widths.
- *  Missing widths fall back to "1fr" so omitting width gives equal columns.
- *  Tolerates null/undefined for defensive rendering during loading states. */
-const buildGridTemplate = (columns: StandardTableColumn[] | null | undefined): string =>
-  (columns ?? []).map((c) => c.width ?? "1fr").join(" ");
-
 /** COMMON INTERFACES ---------------------------------------------------------------------------------------------- */
 
+/** Per-column formatter — maps 1:1 to the kept helpers in `@/lib/format`.
+ *  Deprecated helpers (formatNum, formatDollar, formatPct, formatKey) are
+ *  intentionally not surfaced here. */
+export type ColumnFormat = "text" | "number" | "currency" | "percent" | "date";
+
+/** Optional formatter configuration shared by every table-like primitive
+ *  that renders data via columns. Defaults mirror each helper's defaults. */
+export interface ColumnFormatOptions {
+  format?: ColumnFormat;
+  /** Numeric decimals for number / currency / percent. */
+  decimals?: number;
+  /** ISO currency code for `format: "currency"`. Default `"USD"`. */
+  currency?: string;
+  /** Casing for `format: "text"`. Default `"capitalize"`. */
+  textCase?: "normal" | "upper" | "lower" | "capitalize";
+  /** BCP-47 locale for `format: "date"`. Default `"en-GB"`. */
+  locale?: string;
+  /** Fallback string when the source value is nullish. */
+  fallback?: string;
+}
+
 /** GUIDANCE
- * width: CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
- * align: Horizontal alignment for this column's rows. Default `"right"`.
- * headeralign: Horizontal alignment for this column's header cell. Default to "center"`.
+ * label:        Header cell content.
+ * field:        Row field to read. Omit (or pass null) to treat this column
+ *               as the "name" column — it will render `row.name` instead,
+ *               with name-style chrome (border-r, lighter weight).
+ * width:        CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`.
+ *               Default `"1fr"`.
+ * align:        Cell alignment. Defaults to "right" for value columns and
+ *               "left" for name columns.
+ * headeralign:  Header cell alignment. Defaults to "center" for value
+ *               columns and "left" for name columns.
+ * format + opts:Formatter to apply to raw values. Defaults: "text" for
+ *               name columns, "number" for value columns.
  */
-export interface StandardTableColumn {
+export interface StandardTableColumn extends ColumnFormatOptions {
   label?: React.ReactNode;
   field?: string | null;
   width?: string;
-  align: Align | "right";
-  headeralign: Align | "center";
+  align?: Align;
+  headeralign?: Align;
 }
 
 export interface StandardTableRow extends Record<string, unknown> {
   name?: string | null;
 }
 
+/** Apply the column's configured formatter (or the smart default based on
+ *  whether the column has a `field`) to a raw cell value. */
+const applyColumnFormat = (
+  value: unknown,
+  column: StandardTableColumn,
+): string => {
+  const {
+    format,
+    decimals,
+    currency = "USD",
+    textCase = "capitalize",
+    locale = "en-GB",
+    fallback,
+  } = column;
+  const chosen: ColumnFormat = format ?? (column.field ? "number" : "text");
+
+  switch (chosen) {
+    case "text":
+      return formatText(
+        value as string | null | undefined,
+        textCase,
+        fallback ?? "n/a",
+      );
+    case "number":
+      return formatNumber(
+        value as number | null | undefined,
+        decimals ?? 2,
+        fallback ?? "0",
+      );
+    case "currency":
+      return formatCurrency(
+        value as number | null | undefined,
+        decimals ?? 0,
+        currency,
+        fallback ?? "0",
+      );
+    case "percent":
+      return formatPercent(
+        value as number | null | undefined,
+        decimals ?? 0,
+        fallback ?? "0",
+      );
+    case "date":
+      return formatDate(
+        value as string | null | undefined,
+        locale,
+        fallback ?? "n/a",
+      );
+    default:
+      return String(value ?? fallback ?? "");
+  }
+};
+
+/** Build a CSS grid-template-columns track list from column widths.
+ *  Missing widths fall back to "1fr" so omitting width gives equal columns.
+ *  Tolerates null/undefined for defensive rendering during loading states. */
+const buildGridTemplate = (columns: StandardTableColumn[] | null | undefined): string =>
+  (columns ?? []).map((c) => c.width ?? "1fr").join(" ");
+
 /** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE
- * columns: Column definitions. A column without `field` is treated as a
- *          NAME column and renders `row.name` (formatted text, left default,
- *          border-r). A column with `field` renders `row[field]` as a
- *          numeric cell (right default, no border).
- * rows: Pre-sorted rows; at most the first 3 are rendered.
+ * columns: Column definitions. Fieldless columns render `row.name` in
+ *          name-style (border-r, lighter weight). Fielded columns render
+ *          `row[field]` through the column's formatter (default "number").
+ * rows:    Pre-sorted rows; at most the first 3 are rendered.
  * otherRow: Optional pre-aggregated "Other" row rendered after the top 3.
- * decimals: Decimal places for value formatting. Default 2.
  */
 interface ContributionTableProps {
   columns: StandardTableColumn[];
   rows: StandardTableRow[];
   otherRow?: StandardTableRow;
-  decimals?: number;
   className?: string;
 }
 
@@ -90,12 +176,16 @@ export const ContributionTable = ({
   columns = [],
   rows = [],
   otherRow,
-  decimals = 2,
   className = "",
 }: ContributionTableProps) => {
 
   const template = buildGridTemplate(columns);
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
+
+  const cellAlign = (c: StandardTableColumn): Align =>
+    c.align ?? (c.field ? "right" : "left");
+  const headerAlign = (c: StandardTableColumn): Align =>
+    c.headeralign ?? (c.field ? "center" : "left");
 
   return (
 
@@ -105,12 +195,7 @@ export const ContributionTable = ({
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`
-            dsi-analysis-description
-            text-xs 
-            ${TEXTALIGN_CLASS[c.headeralign]}  
-            border-b-1 border-dsi-outline/50
-            pb-1`}
+          className={`dsi-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-dsi-outline/50 pb-1`}
         >
           {c.label}
         </div>
@@ -119,21 +204,20 @@ export const ContributionTable = ({
       {/* Data rows */}
       {allRows.map((row, idx) => (
         <Fragment key={`r-${idx}`}>
-          
           {columns.map((c, i) => {
             const isName = !c.field;
+            const rawValue = isName ? row?.name : row?.[c.field!];
+            const content = applyColumnFormat(rawValue, c);
             return (
               <div
                 key={`v-${idx}-${i}`}
                 className={
                   isName
-                    ? `dsi-analysis-description ${TEXTALIGN_CLASS[c.headeralign]} border-r-1 border-dsi-outline/50 pt-1 pb-1`
-                    : `dsi-analysis-item ${TEXTALIGN_CLASS[c.align]} pt-1 pb-1`
+                    ? `dsi-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-dsi-outline/50 pt-1 pb-1`
+                    : `dsi-analysis-item ${TEXTALIGN_CLASS[cellAlign(c)]} pt-1 pb-1`
                 }
               >
-                {isName
-                  ? formatText(row?.name, "capitalize", "n/a")
-                  : formatNumber(row?.[c.field!] as number | null | undefined, decimals)}
+                {content}
               </div>
             );
           })}
@@ -157,15 +241,19 @@ export interface ExpandableGroup<T> {
 }
 
 /** GUIDANCE
- * expanded: Controlled expansion map — if provided, `onToggle` is required
- * defaultExpanded: Uncontrolled initial expansion map
- * showColumnHeaders: Render the column header row. Default true if any column has a label
+ * renderItemCells: Optional custom row renderer. If omitted, cells are
+ *                  computed per column from `item[column.field]` through
+ *                  `applyColumnFormat(...)`.
+ * expanded: Controlled expansion map — if provided, `onToggle` is required.
+ * defaultExpanded: Uncontrolled initial expansion map.
+ * showColumnHeaders: Render the column header row. Default true if any
+ *                    column has a label.
  * defaultEmptyMessage: Default empty-state text.
  */
 export interface ExpandableGroupTableProps<T> {
   columns: StandardTableColumn[];
   groups: ExpandableGroup<T>[];
-  renderItemCells: (item: T, index: number, group: ExpandableGroup<T>) => React.ReactNode[];
+  renderItemCells?: (item: T, index: number, group: ExpandableGroup<T>) => React.ReactNode[];
   expanded?: Record<string, boolean>;
   onToggle?: (key: string) => void;
   defaultExpanded?: Record<string, boolean>;
@@ -244,6 +332,11 @@ export const ExpandableGroupTable = <T,>({
   const template = buildGridTemplate(columns);
   const lastIdx = columns.length - 1;
 
+  const cellAlign = (c: StandardTableColumn | undefined): Align =>
+    c?.align ?? (c?.field ? "right" : "left");
+  const headerAlign = (c: StandardTableColumn | undefined): Align =>
+    c?.headeralign ?? (c?.field ? "center" : "left");
+
   return (
     <div
       className={`grid ${className}`}
@@ -254,13 +347,7 @@ export const ExpandableGroupTable = <T,>({
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`
-              dsi-analysis-description
-              flex gap-dsi-pad 
-              text-xs 
-              ${TEXTALIGN_CLASS[c.headeralign]} 
-              border-b-1 border-dsi-outline/50
-              pb-1`}
+            className={`dsi-analysis-description flex gap-dsi-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-dsi-outline/50 pb-1`}
           >
             {c.label}
           </div>
@@ -271,21 +358,16 @@ export const ExpandableGroupTable = <T,>({
         const isOpen = !!expanded[g.key];
         return (
           <Fragment key={g.key}>
-            
-            {/* Group header row */}
+
+            {/* Group header row — chevron + title cell */}
             <div
               onClick={() => toggle(g.key)}
-              className="
-                dsi-analysis-description  
-                border-t border-dsi-outline/20 
-                hover:text-dsi-selected 
-                flex 
-                gap-dsi-pad 
-                pt-dsi-pad pb-dsi-pad"
+              className="dsi-analysis-description border-t border-dsi-outline/20 hover:text-dsi-selected cursor-pointer flex gap-dsi-pad pt-dsi-pad pb-dsi-pad"
             >
               {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
               {g.title}
             </div>
+            {/* Group header row — summary value cells (align with value cells) */}
             {g.summary.map((cell, i) => {
               const colIdx = i + 1;
               const col = columns[colIdx];
@@ -294,12 +376,9 @@ export const ExpandableGroupTable = <T,>({
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`
-                      border-t border-dsi-outline/10 
-                      cursor-pointer 
-                      content-center ${TEXTALIGN_CLASS[col.headeralign]}  
-                      ${isLast ? "pl-dsi-pad pr-dsi-pad text-sm" : "text-xs"}`
-                    }
+                  className={`border-t border-dsi-outline/10 cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
+                    isLast ? "pl-dsi-pad pr-dsi-pad text-sm" : "text-xs"
+                  }`}
                 >
                   {cell}
                 </div>
@@ -310,7 +389,17 @@ export const ExpandableGroupTable = <T,>({
             {isOpen &&
               g.items.length > 0 &&
               g.items.map((item, idx) => {
-                const cells = renderItemCells(item, idx, g);
+                // Auto-derive cells from `field + format` if caller didn't
+                // provide a custom renderer.
+                const cells = renderItemCells
+                  ? renderItemCells(item, idx, g)
+                  : columns.map((c) => {
+                      const raw = c.field
+                        ? (item as Record<string, unknown>)[c.field]
+                        : (item as Record<string, unknown>).name;
+                      return applyColumnFormat(raw, c);
+                    });
+
                 return (
                   <Fragment key={`${g.key}-item-${idx}`}>
                     {cells.map((cell, colIdx) => {
@@ -318,7 +407,7 @@ export const ExpandableGroupTable = <T,>({
                       return (
                         <div
                           key={colIdx}
-                          className={`bg-dsi-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[col.headeralign]} ${
+                          className={`bg-dsi-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
                             colIdx === 0 ? "pl-dsi-padicon" : ""
                           } ${colIdx === lastIdx ? "pr-dsi-pad" : ""}`}
                         >
@@ -333,7 +422,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className={`text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30`}
+                className="text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}

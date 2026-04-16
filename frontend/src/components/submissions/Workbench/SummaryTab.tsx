@@ -57,6 +57,11 @@ import {
 } from "@/components/base/charts/primatives";
 
 import { DECISION_PALETTE, ACTION_PALETTE } from "@/lib/statusPalette";
+import {
+  formatText,
+  formatNumber,
+  formatCurrency,
+} from "@/lib/format";
 
 /* ── Tiny helpers used only inside this showcase ─────────────────────── */
 
@@ -365,13 +370,13 @@ export default function SummaryTab() {
             ═══════════════════════════════════════════════════════════════ */}
         <ShowcaseSection
           title="ContributionTable"
-          caption="The calculation grid used across the three-pillar assessment."
+          caption={`Each column declares its own formatter — "text" | "number" | "currency" | "percent" | "date" — plus any options (decimals, currency code, textCase, locale, fallback). Name columns (no field) default to "text"; value columns default to "number".`}
           spanClass="col-span-1 md:col-span-2 lg:col-span-2"
         >
           <ContributionTable
             columns={[
-              { label: "Group", field: null, width: "50%", align: "left", headeralign: "left", },
-              { label: "Contribution", field: "risk_contribution", width: "50%", align: "right", headeralign: "center", },
+              { label: "Group",        field: null,                width: "50%", format: "text",   textCase: "capitalize" },
+              { label: "Contribution", field: "risk_contribution", width: "50%", format: "number", decimals: 2 },
             ]}
             rows={mockContributionRows}
             otherRow={mockContributionOther}
@@ -383,23 +388,23 @@ export default function SummaryTab() {
             ═══════════════════════════════════════════════════════════════ */}
         <ShowcaseSection
           title="ExpandableGroupTable"
-          caption="Click a group header to expand. Controls its own open/closed state, or accept `expanded` + `onToggle` to control externally."
+          caption={`Same column-level formatters as ContributionTable. Pass \`renderItemCells\` for custom per-cell output (e.g. suffixes like "x"), or omit it and let columns auto-render from \`field + format\`.`}
         >
           <ExpandableGroupTable
             columns={[
               {
-                label: (<>  <PenLine className="icon" /> Adjustments </> ),
-                width: "50%", align: "left", headeralign: "left",
+                label: (<><PenLine className="icon" /> Adjustments</>),
+                field: "name", width: "50%", format: "text", textCase: "capitalize",
               },
-              { label: "Modifier", width: "10%", align: "center", headeralign: "center" },
-              { label: "Impact", width: "20%", align: "right", headeralign: "center" },
-              { label: "Result", width: "20%", align: "center", headeralign: "center" },
+              { label: "Modifier", field: "multiplier", width: "10%", format: "number",   decimals: 3 },
+              { label: "Impact",   field: "impact",     width: "20%", format: "currency", decimals: 0 },
+              { label: "Result",   field: null,         width: "20%", align: "right" },
             ]}
             groups={mockModifierGroups}
             renderItemCells={(mod) => [
-              mod.name,
-              `${mod.multiplier.toFixed(3)}x`,
-              mod.impact >= 0 ? `$${mod.impact.toLocaleString()}` : `-$${Math.abs(mod.impact).toLocaleString()}`,
+              formatText(mod.name, "capitalize"),
+              `${formatNumber(mod.multiplier, 3)}x`,
+              formatCurrency(mod.impact),
               "-",
             ]}
             defaultExpanded={{ categorical: true }}
