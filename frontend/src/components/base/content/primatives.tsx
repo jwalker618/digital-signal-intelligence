@@ -24,10 +24,6 @@ const TEXTALIGN_CLASS: Record<Align, string> = {
   left: "text-left", center: "text-center", right: "text-right",
 };
 
-const JUSTIFYALIGN_CLASS: Record<Align, string> = {
-  left: "justify-start", center: "justify-center", right: "justify-end",
-};
-
 const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
   { at: 40, color: "var(--dsi-positive)" },
   { at: 70, color: "var(--dsi-warning)" },
@@ -60,11 +56,18 @@ export interface StandardTableRow extends Record<string, unknown> {
   name?: string | null;
 }
 
+/** Build a CSS grid-template-columns track list from column widths.
+ *  Missing widths fall back to "1fr" so omitting width gives equal columns. */
+const buildGridTemplate = (columns: StandardTableColumn[]): string =>
+  columns.map((c) => c.width ?? "1fr").join(" ");
+
 /** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE
- * columns: Value columns — header label, source field, width and alignment
- *          all together so they can't drift in length.
+ * columns: Column definitions. A column without `field` is treated as a
+ *          NAME column and renders `row.name` (formatted text, left default,
+ *          border-r). A column with `field` renders `row[field]` as a
+ *          numeric cell (right default, no border).
  * rows: Pre-sorted rows; at most the first 3 are rendered.
  * otherRow: Optional pre-aggregated "Other" row rendered after the top 3.
  * decimals: Decimal places for value formatting. Default 2.
@@ -78,7 +81,7 @@ interface ContributionTableProps {
 }
 
 /**
- *   Col1Header | Col1Header | Col2Header | ...
+ *   Col0Header | Col1Header | Col2Header | ...
  *   -----------+------------+------------+----
  *   row1.name  | row1[f1]   | row1[f2]   | ...
  *   other      | sum[f1]    | sum[f2]    | ...
@@ -91,40 +94,52 @@ export const ContributionTable = ({
   className = "",
 }: ContributionTableProps) => {
 
-  const template = columns.map((c) => c.width ?? "1fr").join(" ");
+  const template = buildGridTemplate(columns);
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
+
+  // Field presence drives default alignment: name columns default to left,
+  // value columns default to right.
+  const defaultAlign = (c: StandardTableColumn): Align =>
+    c.field ? "right" : "left";
 
   return (
 
     <div className={`grid ${className}`} style={{ gridTemplateColumns: template }}>
 
+      {/* Headers */}
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
           className={`
             dsi-analysis-description
-            text-xs ${TEXTALIGN_CLASS[c.align ?? "right"]}
+            text-xs ${TEXTALIGN_CLASS[c.align ?? defaultAlign(c)]}
             border-b-1 border-dsi-outline/50`}
         >
           {c.label}
         </div>
       ))}
 
+      {/* Data rows */}
       {allRows.map((row, idx) => (
         <Fragment key={`r-${idx}`}>
-          <div className={`
-            dsi-analysis-description
-            text-xs text-right
-            border-r-1 border-dsi-outline/50`}>
-            {formatText(row?.name, "capitalize", "n/a")}
-          </div>
-          {columns.map((c, i) => (
-            <div key={`v-${idx}-${i}`} className={`
-              dsi-analysis-item
-              ${TEXTALIGN_CLASS[c.align ?? "right"]}`}>
-              {formatNumber(row?.[c.field] as number | null | undefined, decimals)}
-            </div>
-          ))}
+          {columns.map((c, i) => {
+            const isName = !c.field;
+            const align = c.align ?? defaultAlign(c);
+            return (
+              <div
+                key={`v-${idx}-${i}`}
+                className={
+                  isName
+                    ? `dsi-analysis-description text-xs ${TEXTALIGN_CLASS[align]} border-r-1 border-dsi-outline/50`
+                    : `dsi-analysis-item ${TEXTALIGN_CLASS[align]}`
+                }
+              >
+                {isName
+                  ? formatText(row?.name, "capitalize", "n/a")
+                  : formatNumber(row?.[c.field!] as number | null | undefined, decimals)}
+              </div>
+            );
+          })}
         </Fragment>
       ))}
     </div>
@@ -229,7 +244,7 @@ export const ExpandableGroupTable = <T,>({
   };
 
   const renderHeaders = showColumnHeaders ?? columns.some((c) => c.label !== undefined);
-  const template = columns.map((c) => c.width ?? "1fr").join(" ");
+  const template = buildGridTemplate(columns);
   const lastIdx = columns.length - 1;
 
   return (
@@ -622,14 +637,13 @@ export const ScoreBar = ({
 
 /** STATS GRID---------------------------------------------------------------------------------------------- */
 
-export interface StatsGridColumn {
-  label: React.ReactNode;
+/** GUIDANCE
+ * Shares label / width / align with StandardTableColumn. Adds the per-column
+ * `value` because StatsGrid embeds the value in the column def rather than
+ * looking it up on a row by `field`.
+ */
+export interface StatsGridColumn extends StandardTableColumn {
   value: React.ReactNode;
-  /**
-   * Any valid grid-template-columns track value — `"10%"`, `"1fr"`, `"auto"`,
-   * etc. Defaults to `"1fr"` so omitting this gives equal-width columns.
-   */
-  width?: string;
 }
 
 interface StatsGridProps {
@@ -643,11 +657,11 @@ interface StatsGridProps {
  * underneath (uses `dsi-grid-table-header` / `dsi-grid-table-item`).
  *
  * Column widths are passed via inline grid-template-columns so arbitrary
- * percentages don't need to be known at build time (Tailwind's JIT only sees
- * static class strings).
+ * percentages don't need to be known at build time. Per-column `align`
+ * overrides the utilities' default centering.
  */
 export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
-  const template = columns.map((c) => c.width ?? "1fr").join(" ");
+  const template = buildGridTemplate(columns);
   const lastIdx = columns.length - 1;
 
   return (
@@ -655,7 +669,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`dsi-grid-table-header ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`dsi-grid-table-header ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.label}
         </div>
@@ -663,7 +677,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`v-${i}`}
-          className={`dsi-grid-table-item ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`dsi-grid-table-item ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.value}
         </div>
