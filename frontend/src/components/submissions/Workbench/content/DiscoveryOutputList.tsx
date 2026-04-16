@@ -6,7 +6,7 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatKey } from "@/lib/format";
-import KeyValueList from "@/components/base/keyValueList";
+import { KeyValueList } from "@/components/base/content/primatives";
 
 export default function DiscoveryOutputList() {
   const { activeVersion } = useDsiStore() as any;

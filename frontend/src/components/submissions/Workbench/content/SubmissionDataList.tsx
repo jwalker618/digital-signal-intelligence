@@ -6,7 +6,7 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatText } from "@/lib/format";
-import KeyValueList from "@/components/base/keyValueList";
+import { KeyValueList } from "@/components/base/content/primatives";
 
 const HIDDEN_KEYS = new Set(["limit", "product_type"]);
 

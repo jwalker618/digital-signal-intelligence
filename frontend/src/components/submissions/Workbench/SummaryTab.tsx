@@ -33,24 +33,28 @@ import {
   CardGrid,
   StandardCard,
   PopupCard,
+  SectionCard,
   SubmissionHeaderCard,
-
 } from "@/components/base/cards";
 
-import SectionCard from "@/components/base/sectionCard";
-
 /* ── Content primitives ──────────────────────────────────────────────── */
-import LabelValueList from "@/components/base/labelValueList";
-import KeyValueList from "@/components/base/keyValueList";
-import StatsGrid from "@/components/base/statsGrid";
-import ContributionTable from "@/components/base/contributionTable";
-import ExpandableGroupTable from "@/components/base/expandableGroupTable";
-import KpiTile from "@/components/base/kpiTile";
-import StatusPill from "@/components/base/statusPill";
-import ScoreBar from "@/components/base/scoreBar";
-import InfoPanel from "@/components/base/infoPanel";
-import PeerScatterChart from "@/components/base/charts/PeerScatterChart";
-import BenchmarkBarChart from "@/components/base/charts/primatives";
+import {
+  LabelValueList,
+  KeyValueList,
+  StatsGrid,
+  ContributionTable,
+  ExpandableGroupTable,
+  KpiTile,
+  StatusPill,
+  ScoreBar,
+  InfoPanel,
+} from "@/components/base/content/primatives";
+
+/* ── Chart primitives ────────────────────────────────────────────────── */
+import {
+  PeerScatterChart,
+  BenchmarkBarChart,
+} from "@/components/base/charts/primatives";
 
 import { DECISION_PALETTE, ACTION_PALETTE } from "@/lib/statusPalette";
 
