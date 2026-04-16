@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { CircleCheck, CircleX, Loader2, Filter, X } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
 import { useDsiStore } from "@/store/dsiStore";
+import { StatusPill } from "@/components/base/content/primatives";
+import { DECISION_PALETTE } from "@/lib/statusPalette";
+import { formatCurrency, formatNumber } from "@/lib/format";
 import "@/app/globals.css";
 
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
@@ -187,9 +190,6 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
 
             <tbody>
               {displayData.map((sub: any, index: number) => {
-                const premium = sub.recommended_premium || 0;
-                const limit = sub.recommended_limit || 0;
-
                 return (
                   <tr
                     key={sub.submission_code || index}
@@ -198,14 +198,16 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                   >
                     <td className="py-3 px-1">{sub.entity_name}</td>
                     <td className="py-3 px-2">{sub.coverage_configuration}</td>
-                    <td className="py-3 px-2 text-right">{(sub.final_composite_score ?? 0).toFixed(0)}</td>
+                    <td className="py-3 px-2 text-right">{formatNumber(sub.final_composite_score)}</td>
                     <td className="py-3 px-2 text-right">{sub.final_tier}</td>
-                    <td className="py-3 px-2 text-right">{premium.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
-                    <td className="py-3 px-2 text-right">{limit.toLocaleString(undefined, { maximumFractionDigits: 0 })}</td>
+                    <td className="py-3 px-2 text-right">{formatCurrency(sub.recommended_premium)}</td>
+                    <td className="py-3 px-2 text-right">{formatCurrency(sub.recommended_limit)}</td>
 
                     <td className="py-3 px-2">
                       {type === "full" ? (
-                        <span className="lowercase">{sub.decision}</span>
+                        <StatusPill palette={DECISION_PALETTE} status={sub.decision}>
+                          {sub.decision || "—"}
+                        </StatusPill>
                       ) : (
                         <div className="flex items-center justify-center gap-4">
                           <button
