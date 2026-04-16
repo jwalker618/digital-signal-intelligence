@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 
 import { api, fmtDate } from "@/lib/api";
+import { formatNumber, formatPercent } from "@/lib/format";
 import type {
   ExtractorHealth,
   PipelineMetrics,
@@ -62,8 +63,8 @@ export default function AdminSystemHealthPage() {
       </header>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 
@@ -96,14 +97,11 @@ export default function AdminSystemHealthPage() {
             Pipeline ({pipeline.window_hours}h window)
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
-            <Stat label="Assessments" value={pipeline.total_assessments.toLocaleString()} />
-            <Stat label="p50" value={`${pipeline.p50_ms.toFixed(0)} ms`} />
-            <Stat label="p95" value={`${pipeline.p95_ms.toFixed(0)} ms`} />
-            <Stat label="p99" value={`${pipeline.p99_ms.toFixed(0)} ms`} />
-            <Stat
-              label="Failure rate"
-              value={`${(pipeline.failure_rate * 100).toFixed(2)}%`}
-            />
+            <Stat label="Assessments" value={formatNumber(pipeline.total_assessments)} />
+            <Stat label="p50" value={`${formatNumber(pipeline.p50_ms)} ms`} />
+            <Stat label="p95" value={`${formatNumber(pipeline.p95_ms)} ms`} />
+            <Stat label="p99" value={`${formatNumber(pipeline.p99_ms)} ms`} />
+            <Stat label="Failure rate" value={formatPercent(pipeline.failure_rate, 2)} />
           </div>
         </section>
       )}
@@ -153,7 +151,7 @@ export default function AdminSystemHealthPage() {
 
       {!loading && health?.status === "green" && (
         <p className="text-xs opacity-50 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+          <CheckCircle2 className="w-4 h-4 text-dsi-positive" />
           All systems nominal. Auto-refresh every 30s.
         </p>
       )}
