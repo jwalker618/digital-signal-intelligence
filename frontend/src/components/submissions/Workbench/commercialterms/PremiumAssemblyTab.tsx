@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
-import StickyHeader from "@/components/shared/StickyHeader";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { Calculator, ArrowDown, Activity, AlertTriangle, DollarSign } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/format";
 
@@ -51,7 +51,7 @@ export default function PremiumAssemblyTab() {
 
   return (
     <div className="w-full no-scrollbar border-collapse animate-in fade-in duration-500 pb-12 pt-3">
-      <StickyHeader
+      <KeyDetailsBar
         status={activeQuote?.status}
         validFrom={activeQuote?.valid_from}
         validUntil={activeQuote?.valid_until}
