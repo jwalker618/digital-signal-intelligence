@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: dsi-staging
+
+resources:
+  - ../../base
+  - ../../rollout.yaml
+  # External Secrets land in C2; staging uses mock values until then.
+  - ../../secrets-template.yaml
+
+images:
+  - name: ghcr.io/jwalker618/digital-signal-intelligence/dsi-api
+    newTag: develop
+
+commonLabels:
+  app.kubernetes.io/environment: staging

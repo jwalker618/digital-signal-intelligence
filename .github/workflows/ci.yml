@@ -230,62 +230,176 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy-staging:
+    # V6 Phase 4 (C1): real kubectl + Argo Rollouts canary to the staging
+    # EKS cluster, with migration-preview artefact and smoke-test-driven
+    # auto-rollback.
     name: Deploy to Staging
-    needs: docker-build
+    needs: [docker-build, config-health-gate]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/develop'
     environment: staging
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to staging
-        run: |
-          echo "Deploying to staging environment..."
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop"
-          # Uncomment when K8s cluster is configured:
-          # kubectl set image deployment/dsi-api dsi-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop -n dsi-staging
-          echo "Staging deployment configured"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
 
-      - name: Smoke test
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.STAGING_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.STAGING_AWS_REGION }}
+
+      - name: Install kubectl and argo-rollouts plugin
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+      - name: Install Argo Rollouts kubectl plugin
         run: |
-          echo "Running smoke tests against staging..."
-          # Uncomment when staging endpoint is available:
-          # curl -sf https://staging.dsi.internal/api/v1/health/live || exit 1
-          # curl -sf https://staging.dsi.internal/api/v1/health/ready || exit 1
-          echo "Smoke test endpoints configured"
+          curl -sSL -o kubectl-argo-rollouts \
+            https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+          chmod +x kubectl-argo-rollouts
+          sudo mv kubectl-argo-rollouts /usr/local/bin/
+
+      - name: Update kubeconfig for staging cluster
+        run: |
+          aws eks update-kubeconfig \
+            --name ${{ secrets.STAGING_EKS_CLUSTER_NAME }} \
+            --region ${{ secrets.STAGING_AWS_REGION }}
+
+      - name: Preview alembic migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: |
+          alembic upgrade head --sql > migration-preview.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-preview-staging
+          path: migration-preview.sql
+          if-no-files-found: ignore
+
+      - name: Apply alembic migrations
+        env:
+          DATABASE_URL: ${{ secrets.STAGING_DATABASE_URL }}
+        run: alembic upgrade head
+
+      - name: Apply kustomize overlay
+        run: kubectl apply -k deploy/kubernetes/overlays/staging
+
+      - name: Trigger canary with new image
+        run: |
+          kubectl argo rollouts set image dsi-api \
+            dsi-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -n dsi-staging
+          kubectl argo rollouts wait dsi-api -n dsi-staging --timeout 10m
+
+      - name: Smoke test staging (golden-entity)
+        run: |
+          curl -sf https://staging.dsi.internal/api/v1/health/ready
+          curl -sfX POST https://staging.dsi.internal/api/v1/assess \
+            -H "Authorization: Bearer ${{ secrets.STAGING_SMOKE_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            --data-binary @tests/fixtures/golden_entities/cyber/microsoft.yaml
+
+      - name: Rollback on failure
+        if: failure()
+        run: kubectl argo rollouts undo dsi-api -n dsi-staging
 
   deploy-production:
+    # V6 Phase 4 (C1): production deploy mirrors staging with a narrower
+    # canary (20→50→100 with pauses + analysis) and a GitHub environment
+    # manual-approval gate via `environment: production`.
     name: Deploy to Production
-    needs: docker-build
+    needs: [docker-build, config-health-gate]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: production
+    permissions:
+      id-token: write
+      contents: read
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Deploy to production
-        run: |
-          echo "Deploying to production environment..."
-          echo "Image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest"
-          # Uncomment when K8s cluster is configured:
-          # kubectl set image deployment/dsi-api dsi-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest -n dsi-production
-          echo "Production deployment configured"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - run: pip install -r requirements.txt
 
-      - name: Smoke test
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.PRODUCTION_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ secrets.PRODUCTION_AWS_REGION }}
+
+      - name: Install kubectl + argo-rollouts plugin
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'v1.29.0'
+      - name: Install Argo Rollouts kubectl plugin
         run: |
-          echo "Running smoke tests against production..."
-          # Uncomment when production endpoint is available:
-          # curl -sf https://api.dsi.internal/api/v1/health/live || exit 1
-          # curl -sf https://api.dsi.internal/api/v1/health/ready || exit 1
-          echo "Smoke test endpoints configured"
+          curl -sSL -o kubectl-argo-rollouts \
+            https://github.com/argoproj/argo-rollouts/releases/latest/download/kubectl-argo-rollouts-linux-amd64
+          chmod +x kubectl-argo-rollouts
+          sudo mv kubectl-argo-rollouts /usr/local/bin/
+
+      - name: Update kubeconfig for production cluster
+        run: |
+          aws eks update-kubeconfig \
+            --name ${{ secrets.PRODUCTION_EKS_CLUSTER_NAME }} \
+            --region ${{ secrets.PRODUCTION_AWS_REGION }}
+
+      - name: Preview alembic migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: alembic upgrade head --sql > migration-preview.sql
+      - uses: actions/upload-artifact@v4
+        with:
+          name: migration-preview-production
+          path: migration-preview.sql
+          if-no-files-found: ignore
+
+      - name: Apply alembic migrations
+        env:
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: alembic upgrade head
+
+      - name: Apply kustomize overlay
+        run: kubectl apply -k deploy/kubernetes/overlays/production
+
+      - name: Trigger canary with new image
+        run: |
+          kubectl argo rollouts set image dsi-api \
+            dsi-api=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            -n dsi-prod
+          kubectl argo rollouts wait dsi-api -n dsi-prod --timeout 20m
+
+      - name: Smoke test production across three coverages
+        run: |
+          for fx in cyber/microsoft fi/goldman_sachs marine/maersk; do
+            curl -sfX POST https://api.dsi.internal/api/v1/assess \
+              -H "Authorization: Bearer ${{ secrets.PRODUCTION_SMOKE_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              --data-binary @tests/fixtures/golden_entities/${fx}.yaml
+          done
+
+      - name: Rollback on failure
+        if: failure()
+        run: kubectl argo rollouts undo dsi-api -n dsi-prod
 
       - name: Notify
         if: always()
         run: |
           echo "Production deployment status: ${{ job.status }}"
-          echo "Rollback: kubectl rollout undo deployment/dsi-api -n dsi-production"
+          echo "Manual rollback: kubectl argo rollouts undo dsi-api -n dsi-prod"
 
   summary:
     name: Build Summary

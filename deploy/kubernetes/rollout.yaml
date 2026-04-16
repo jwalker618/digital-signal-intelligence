@@ -1,0 +1,147 @@
+# V6 Phase 4 (C1) — Argo Rollouts canary for dsi-api.
+#
+# Replaces deployment.yaml for environments that run Argo Rollouts.
+# The legacy Deployment is retained for reference but kustomize overlays
+# should select rollout.yaml in staging/production.
+#
+# Canary strategy:
+#   20% of pods → pause 2m → 50% → pause 5m → 100%
+# A failed analysis during any pause triggers auto-rollback.
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: dsi-api
+  namespace: dsi-prod
+  labels:
+    app.kubernetes.io/name: dsi-api
+    app.kubernetes.io/component: api
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: dsi-api
+  template:
+    metadata:
+      labels:
+        app: dsi-api
+        app.kubernetes.io/name: dsi-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/api/v1/metrics"
+    spec:
+      serviceAccountName: dsi-api
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+      containers:
+        - name: dsi-api
+          image: ghcr.io/jwalker618/digital-signal-intelligence/dsi-api:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: dsi-api-config
+            - secretRef:
+                name: dsi-api-secrets
+          resources:
+            requests: { cpu: "500m", memory: "512Mi" }
+            limits:   { cpu: "2000m", memory: "2Gi" }
+          livenessProbe:
+            httpGet: { path: /api/v1/health/live, port: http }
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet: { path: /api/v1/health/ready, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          startupProbe:
+            httpGet: { path: /api/v1/health/live, port: http }
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          volumeMounts:
+            - { name: tmp, mountPath: /tmp }
+            - { name: cache, mountPath: /app/.cache }
+      volumes:
+        - { name: tmp, emptyDir: {} }
+        - { name: cache, emptyDir: {} }
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels: { app: dsi-api }
+                topologyKey: kubernetes.io/hostname
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels: { app: dsi-api }
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        - setWeight: 20
+        - pause: { duration: 2m }
+        - analysis:
+            templates:
+              - templateName: dsi-api-canary-health
+        - setWeight: 50
+        - pause: { duration: 5m }
+        - analysis:
+            templates:
+              - templateName: dsi-api-canary-health
+        - setWeight: 100
+
+---
+# AnalysisTemplate — runs a synthetic smoke against the canary replica set
+# during each pause. Any failure aborts the rollout and Argo auto-rolls
+# back to the previous revision.
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: dsi-api-canary-health
+  namespace: dsi-prod
+spec:
+  metrics:
+    - name: health-ready
+      provider:
+        web:
+          url: "http://dsi-api-canary:8000/api/v1/health/ready"
+          timeoutSeconds: 5
+          jsonPath: '{$.status}'
+      successCondition: result == "ok" || result == "ready"
+      failureLimit: 0
+      interval: 30s
+      count: 3
+    - name: error-rate-5xx
+      provider:
+        prometheus:
+          address: http://prometheus.monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(http_requests_total{app="dsi-api",canary="true",status=~"5.."}[2m]))
+            /
+            clamp_min(sum(rate(http_requests_total{app="dsi-api",canary="true"}[2m])), 1)
+      successCondition: result <= 0.005
+      failureLimit: 1
+      interval: 30s
+      count: 4
