@@ -50,7 +50,7 @@ import StatusPill from "@/components/base/statusPill";
 import ScoreBar from "@/components/base/scoreBar";
 import InfoPanel from "@/components/base/infoPanel";
 import PeerScatterChart from "@/components/base/charts/PeerScatterChart";
-import BenchmarkBarChart from "@/components/base/charts/BenchmarkBarChart";
+import BenchmarkBarChart from "@/components/base/charts/primatives";
 
 import { DECISION_PALETTE, ACTION_PALETTE } from "@/lib/statusPalette";
 
