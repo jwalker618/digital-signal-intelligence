@@ -6,7 +6,7 @@ namespace: dsi-prod
 resources:
   - ../../base
   - ../../rollout.yaml
-  # Production uses ExternalSecrets (C2) — manifests land there.
+  - ../../external-secrets
 
 images:
   - name: ghcr.io/jwalker618/digital-signal-intelligence/dsi-api

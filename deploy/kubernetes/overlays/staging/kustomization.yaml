@@ -6,8 +6,8 @@ namespace: dsi-staging
 resources:
   - ../../base
   - ../../rollout.yaml
-  # External Secrets land in C2; staging uses mock values until then.
-  - ../../secrets-template.yaml
+  - ../../external-secrets/cluster-secret-store.yaml
+  - externalsecret-api-core.yaml
 
 images:
   - name: ghcr.io/jwalker618/digital-signal-intelligence/dsi-api
