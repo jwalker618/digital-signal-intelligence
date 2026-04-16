@@ -370,6 +370,7 @@ export default function SummaryTab() {
         >
           <ContributionTable
             columns={[
+              { label: "Group", field: null, width: "50%", align: "left" },
               { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
             ]}
             rows={mockContributionRows}

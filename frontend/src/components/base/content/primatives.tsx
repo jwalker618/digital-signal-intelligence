@@ -43,41 +43,26 @@ const PADDING_CLASS: Record<NonNullable<InfoPanelProps["padding"]>, string> = {
   sm: "p-2", md: "p-3", lg: "p-4",
 };
 
+/** COMMON INTERFACES ---------------------------------------------------------------------------------------------- */
 
-/** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
+/** GUIDANCE
+ * width: CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
+ * align: Horizontal alignment for this column's cells. Default `"left"`.
+ */
+export interface StandardTableColumn {
+  label?: React.ReactNode;
+  field?: string | null;
+  width?: string;
+  align?: Align;
+}
 
-export interface ContributionRow extends Record<string, unknown> {
+export interface StandardTableRow extends Record<string, unknown> {
   name?: string | null;
 }
 
+/** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE
- * label: Header text for this column.
- * field: Numeric field on each row whose value renders in this column's cells.
- * width: CSS grid track value, e.g. `"20%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
- * align: Horizontal alignment for both the header cell and value cells in this
- *        column. Default `"right"` (numeric columns).
- */
-export interface ContributionColumn {
-  label: React.ReactNode;
-  field: string;
-  width?: string;
-  align?: Align;
-}
-
-/** GUIDANCE
- * label: First column header. Default "Group".
- * width: First column width. Default "50%".
- * align: First column alignment for header and name cells. Default "left".
- */
-export interface ContributionGroupColumn {
-  label?: React.ReactNode;
-  width?: string;
-  align?: Align;
-}
-
-/** GUIDANCE
- * groupColumn: Configuration for the first column (group/category names).
  * columns: Value columns — header label, source field, width and alignment
  *          all together so they can't drift in length.
  * rows: Pre-sorted rows; at most the first 3 are rendered.
@@ -85,22 +70,20 @@ export interface ContributionGroupColumn {
  * decimals: Decimal places for value formatting. Default 2.
  */
 interface ContributionTableProps {
-  groupColumn?: ContributionGroupColumn;
-  columns: ContributionColumn[];
-  rows: ContributionRow[];
-  otherRow?: ContributionRow;
+  columns: StandardTableColumn[];
+  rows: StandardTableRow[];
+  otherRow?: StandardTableRow;
   decimals?: number;
   className?: string;
 }
 
 /**
- *   Group     | Col1Header | Col2Header | ...
- *   ----------+------------+------------+----
- *   row1.name | row1[f1]   | row1[f2]   | ...
- *   other     | sum[f1]    | sum[f2]    | ...
+ *   Col1Header | Col1Header | Col2Header | ...
+ *   -----------+------------+------------+----
+ *   row1.name  | row1[f1]   | row1[f2]   | ...
+ *   other      | sum[f1]    | sum[f2]    | ...
  */
 export const ContributionTable = ({
-  groupColumn,
   columns,
   rows,
   otherRow,
@@ -108,23 +91,13 @@ export const ContributionTable = ({
   className = "",
 }: ContributionTableProps) => {
 
-  const groupWidth = groupColumn?.width ?? "50%";
-  const groupAlign = groupColumn?.align ?? "left";
-  const groupLabel = groupColumn?.label ?? "Group";
-
-  const template = [groupWidth, ...columns.map((c) => c.width ?? "1fr")].join(" ");
+  const template = columns.map((c) => c.width ?? "1fr").join(" ");
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
 
   return (
 
     <div className={`grid ${className}`} style={{ gridTemplateColumns: template }}>
 
-      <div className={`
-        dsi-analysis-description
-        text-xs ${TEXTALIGN_CLASS[groupAlign]}
-        border-b-1 border-dsi-outline/50`}>
-        {groupLabel}
-      </div>
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
@@ -141,7 +114,7 @@ export const ContributionTable = ({
         <Fragment key={`r-${idx}`}>
           <div className={`
             dsi-analysis-description
-            text-xs ${TEXTALIGN_CLASS[groupAlign]}
+            text-xs text-right
             border-r-1 border-dsi-outline/50`}>
             {formatText(row?.name, "capitalize", "n/a")}
           </div>
@@ -161,16 +134,6 @@ export const ContributionTable = ({
 /** EXPANDABLE GROUP TABLE ---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE
- * label: CSS grid track value, e.g. `"50%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
- * align: Horizontal alignment for this column's cells. Default `"left"`.
- */
-export interface GroupTableColumn {
-  label?: React.ReactNode;
-  width?: string;
-  align?: Align;
-}
-
-/** GUIDANCE
  * emptyMessage: Shown when the group is expanded and `items` is empty.
  */
 export interface ExpandableGroup<T> {
@@ -188,7 +151,7 @@ export interface ExpandableGroup<T> {
  * defaultEmptyMessage: Default empty-state text.
  */
 export interface ExpandableGroupTableProps<T> {
-  columns: GroupTableColumn[];
+  columns: StandardTableColumn[];
   groups: ExpandableGroup<T>[];
   renderItemCells: (item: T, index: number, group: ExpandableGroup<T>) => React.ReactNode[];
   expanded?: Record<string, boolean>;
