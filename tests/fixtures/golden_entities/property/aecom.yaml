@@ -1,0 +1,22 @@
+entity_id: aecom
+name: AECOM
+coverage: property
+config_id: property_builders_risk
+domain: aecom.com
+registry_id: US-Delaware-0000868857
+minimum_viable_input:
+  revenue: 14378000000
+  limit: 100000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: ENGINEERING_CONSTRUCTION
+  domain: aecom.com
+expected:
+  composite_score: 140.0
+  tier: 5
+  decision: decline
+  recommended_premium: 8361.12
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

@@ -1,0 +1,23 @@
+entity_id: duke_energy
+name: Duke Energy Corporation
+coverage: property
+config_id: property_cat_exposed
+domain: duke-energy.com
+registry_id: US-Delaware-0001326160
+minimum_viable_input:
+  revenue: 28765000000
+  limit: 200000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: UTILITIES
+  cat_exposed: true
+  domain: duke-energy.com
+expected:
+  composite_score: 160.0
+  tier: 5
+  decision: decline
+  recommended_premium: 41560.21
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

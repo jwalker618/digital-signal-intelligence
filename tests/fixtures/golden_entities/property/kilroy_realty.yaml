@@ -1,0 +1,22 @@
+entity_id: kilroy_realty
+name: Kilroy Realty Corporation
+coverage: property
+config_id: property_general
+domain: kilroyrealty.com
+registry_id: US-Maryland-0001493633
+minimum_viable_input:
+  revenue: 1134000000
+  limit: 100000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: REAL_ESTATE
+  domain: kilroyrealty.com
+expected:
+  composite_score: 140.0
+  tier: 5
+  decision: decline
+  recommended_premium: 21978.96
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

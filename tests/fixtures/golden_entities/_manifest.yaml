@@ -357,3 +357,101 @@ coverages:
         product_type: standard
         industry_sector: HOSPITALITY
         domain: marriott.com
+    - entity_id: prologis
+      name: Prologis, Inc.
+      config_id: property_high_value
+      domain: prologis.com
+      registry_id: US-Maryland-0001045609
+      minimum_viable_input:
+        revenue: 8024000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: prologis.com
+    - entity_id: disney
+      name: The Walt Disney Company
+      config_id: property_high_value
+      domain: disney.com
+      registry_id: US-Delaware-0001744489
+      minimum_viable_input:
+        revenue: 88898000000
+        limit: 500000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: ENTERTAINMENT
+        domain: disney.com
+    - entity_id: chevron
+      name: Chevron Corporation
+      config_id: property_cat_exposed
+      domain: chevron.com
+      registry_id: US-Delaware-0000093410
+      minimum_viable_input:
+        revenue: 200949000000
+        limit: 500000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        cat_exposed: true
+        domain: chevron.com
+    - entity_id: duke_energy
+      name: Duke Energy Corporation
+      config_id: property_cat_exposed
+      domain: duke-energy.com
+      registry_id: US-Delaware-0001326160
+      minimum_viable_input:
+        revenue: 28765000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: UTILITIES
+        cat_exposed: true
+        domain: duke-energy.com
+    - entity_id: aecom
+      name: AECOM
+      config_id: property_builders_risk
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: ENGINEERING_CONSTRUCTION
+        domain: aecom.com
+    - entity_id: jll
+      name: Jones Lang LaSalle Incorporated
+      config_id: property_general
+      domain: jll.com
+      registry_id: US-Maryland-0001037976
+      minimum_viable_input:
+        revenue: 20762000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: jll.com
+    - entity_id: ashford_trust
+      name: Ashford Hospitality Trust, Inc.
+      config_id: property_sme
+      domain: ahtreit.com
+      registry_id: US-Maryland-0001232582
+      minimum_viable_input:
+        revenue: 1239000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: HOSPITALITY
+        domain: ahtreit.com
+    - entity_id: kilroy_realty
+      name: Kilroy Realty Corporation
+      config_id: property_general
+      domain: kilroyrealty.com
+      registry_id: US-Maryland-0001493633
+      minimum_viable_input:
+        revenue: 1134000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: kilroyrealty.com
