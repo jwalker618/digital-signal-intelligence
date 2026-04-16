@@ -44,9 +44,7 @@ const PADDING_CLASS: Record<NonNullable<InfoPanelProps["padding"]>, string> = {
 
 /** COMMON INTERFACES ---------------------------------------------------------------------------------------------- */
 
-/** Per-column formatter — maps 1:1 to the kept helpers in `@/lib/format`.
- *  Deprecated helpers (formatNum, formatDollar, formatPct, formatKey) are
- *  intentionally not surfaced here. */
+/** Per-column formatter — maps 1:1 to the helpers in `@/lib/format`. */
 export type ColumnFormat = "text" | "number" | "currency" | "percent" | "date";
 
 /** Optional formatter configuration shared by every table-like primitive

@@ -12,7 +12,7 @@ import {
   ResponsiveContainer, Cell
 } from "recharts";
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
-import { formatNum } from "@/lib/format";
+import { formatNumber } from "@/lib/format";
 
 const TIER_COLORS = ['var(--dsi-positive)', 'var(--dsi-info)', 'var(--dsi-warning)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
 const tooltipStyle = { backgroundColor: 'var(--dsi-chart-tooltip-bg)', borderColor: 'var(--dsi-chart-tooltip-border)', color: '#f8fafc', borderRadius: '8px', fontSize: '12px' };
@@ -125,7 +125,7 @@ export default function WorldEngineView() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Total Submissions</span><span className="text-xl font-black text-dsi-selected">{portfolio.count}</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">${(portfolio.totalPremium / 1000000).toFixed(1)}M</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNum(portfolio.avgScore, 0)}</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNumber(portfolio.avgScore, 0)}</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Approval Rate</span><span className="text-xl font-black text-dsi-positive">{portfolio.count > 0 ? ((portfolio.decDist['approve'] || 0) / portfolio.count * 100).toFixed(0) : 0}%</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-warning">{portfolio.count > 0 ? ((portfolio.decDist['refer'] || 0) / portfolio.count * 100).toFixed(0) : 0}%</span></div>
             </div>
@@ -338,9 +338,9 @@ export default function WorldEngineView() {
                     {shockResult.affected.slice(0, 15).map((item, idx) => (
                       <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`border-b border-dsi-outline/5 cursor-pointer hover:bg-dsi-background/20 ${item.tier_changed ? 'bg-dsi-negative/5' : ''}`}>
                         <td className="py-2 pr-2 font-semibold">{item.original.entity_name}</td>
-                        <td className="py-2 px-2 text-right">{formatNum(item.original_score, 0)}</td>
+                        <td className="py-2 px-2 text-right">{formatNumber(item.original_score, 0)}</td>
                         <td className="py-2 px-2 text-center opacity-30">→</td>
-                        <td className="py-2 px-2 text-right text-dsi-negative font-bold">{formatNum(item.shocked_score, 0)}</td>
+                        <td className="py-2 px-2 text-right text-dsi-negative font-bold">{formatNumber(item.shocked_score, 0)}</td>
                         <td className="py-2 px-2 text-right text-dsi-negative">{item.score_delta}</td>
                         <td className="py-2 px-2 text-center">
                           {item.tier_changed
