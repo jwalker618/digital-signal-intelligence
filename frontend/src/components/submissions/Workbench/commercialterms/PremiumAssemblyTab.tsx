@@ -172,7 +172,7 @@ export default function PremiumAssemblyTab() {
               <WaterfallStep
                 label={`Technical Premium (${ct.base_currency})`}
                 sublabel={`FX Rate: ${formatNumber(ct.fx_rate_to_usd, 4)}`}
-                value={`${ct.base_currency} ${Number(ct.technical_premium_local).toLocaleString()}`}
+                value={`${ct.base_currency} ${formatNumber(Number(ct.technical_premium_local))}`}
               />
               <ArrowSpacer />
             </>

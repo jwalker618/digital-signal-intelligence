@@ -5,7 +5,7 @@
  */
 
 import { useDsiStore } from "@/store/dsiStore";
-import { formatText } from "@/lib/format";
+import { formatText, formatCurrency } from "@/lib/format";
 import { KeyValueList } from "@/components/base/content/primatives";
 
 const HIDDEN_KEYS = new Set(["limit", "product_type"]);
@@ -20,7 +20,7 @@ export default function SubmissionDataList() {
       renderLabel={(k) => formatText(k, "normal")}
       renderValue={(val, key) =>
         typeof val === "number" && key.toLowerCase().includes("revenue")
-          ? `$${val.toLocaleString()}`
+          ? formatCurrency(val)
           : String(val)
       }
       emptyMessage="No submission data available."

@@ -72,7 +72,7 @@ export default function WorldEngineView() {
   }, [submissions]);
 
   const tierChartData = Object.entries(portfolio.tierDist).map(([t, c]) => ({ tier: `Tier ${t}`, count: c, tierNum: Number(t) })).sort((a, b) => a.tierNum - b.tierNum);
-  const covChartData = Object.entries(portfolio.covDist).map(([c, n]) => ({ coverage: c, count: n, pct: ((n / (portfolio.count || 1)) * 100).toFixed(0) })).sort((a, b) => b.count - a.count);
+  const covChartData = Object.entries(portfolio.covDist).map(([c, n]) => ({ coverage: c, count: n, pct: formatNumber((n / (portfolio.count || 1)) * 100) })).sort((a, b) => b.count - a.count);
 
   // Shock result — recalculates when active shocks change
   const shockResult: ShockResult | null = useMemo(() => {
