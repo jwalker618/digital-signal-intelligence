@@ -30,11 +30,13 @@ import {
 
 /* ── Card shells ─────────────────────────────────────────────────────── */
 import {
+  CardGrid,
   StandardCard,
   PopupCard,
   SubmissionHeaderCard,
+
 } from "@/components/base/cards";
-import CardGrid from "@/components/base/cardGrid";
+
 import SectionCard from "@/components/base/sectionCard";
 
 /* ── Content primitives ──────────────────────────────────────────────── */
@@ -152,8 +154,10 @@ const mockBenchmarkData = [
 
 export default function SummaryTab() {
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
+    <div className="w-full no-scrollbar animate-in fade-in duration-500">
+
       <CardGrid>
+
         {/* ═══════════════════════════════════════════════════════════════
             1. Submission header — banner + hero metrics
             ═══════════════════════════════════════════════════════════════ */}
@@ -270,7 +274,7 @@ export default function SummaryTab() {
             ═══════════════════════════════════════════════════════════════ */}
         <ShowcaseSection
           title="KpiTile"
-          caption="Drop tiles into a `grid grid-cols-N gap-4` row. Use `variant=\"emphasis\"` for the hero number."
+          caption="Drop tiles into a `grid grid-cols-N gap-4` row. Use `variant=\emphasis\` for the hero number."
         >
           <div className="grid grid-cols-2 md:grid-cols-6 gap-6">
             <KpiTile label="Pure Composite" value="612.4" />

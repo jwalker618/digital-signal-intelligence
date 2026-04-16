@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode, ElementType, useEffect, useRef } from "react";
-import { X } from "lucide-react";
+import { X, ArrowDownLeft } from "lucide-react";
 
 interface ModalProps {
   isOpen: boolean;
@@ -78,7 +78,14 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200"
+      className="
+        flex z-1500
+        fixed inset-0 
+        items-center 
+        justify-center 
+        bg-dsi-background/20 
+        backdrop-blur-sm
+        animate-in fade-in duration-200"
     >
       <div
         ref={dialogRef}
@@ -87,25 +94,25 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
         aria-labelledby="dsi-modal-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
-        className="bg-dsi-analysis border border-dsi-outline/20 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh] outline-none"
+        
+        className="flex flex-col w-[25%]"
       >
+
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-4 border-b border-dsi-outline/10 bg-dsi-background/30">
-          <h3 id="dsi-modal-title" className="text-lg font-bold flex items-center gap-2">
-            {Icon && <Icon className="w-5 h-5 text-dsi-selected" />}
-            {title}
-          </h3>
+        <div className="dsi-section-header items-center justify-between">
+          {Icon && <Icon className="icon"/>}
+          <span id="dsi-modal-title" className="font-bold">{title}</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 hover:bg-dsi-outline/10 rounded text-dsi-selected transition-colors"
+            className="hover:text-dsi-selected"
           >
-            <X className="w-5 h-5" />
+            <ArrowDownLeft className="icon" />
           </button>
         </div>
-
+ 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto">{children}</div>
+        <div className="dsi-section-analysis">{children}</div>
       </div>
     </div>
   );

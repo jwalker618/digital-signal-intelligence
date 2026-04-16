@@ -115,13 +115,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {isPublicAuthPage ? (
           children
         ) : (
+        
         <div className="relative h-full w-full">
 
           {/* SIDEBAR — overlays content when expanded */}
           <aside
             ref={sidebarRef}
             className={`
-              absolute top-0 left-0 h-full z-30 shrink-0 transition-all duration-300
+              absolute top-0 left-0 h-full z-1000 shrink-0 transition-all duration-300
               bg-dsi-contrast-background
               text-dsi-background
               border-r-3 border-dsi-outline
@@ -142,8 +143,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="
-                absolute top-dsi-pad 
-                right-dsi-pad p-dsi-pad 
+                absolute top-dsi-pad right-dsi-pad 
+                p-dsi-pad 
                 text-dsi-background 
                 hover:text-dsi-selected"
             >
@@ -473,9 +474,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 border-b-3 border-dsi-outline 
                 flex items-center 
                 justify-between 
-                px-dsi-main
-                whitespace-nowrap border-collapse
-                shrink-0"
+                px-dsi-main"
               style={{ height: 'var(--cw)' }}
             >
               <h1 className="

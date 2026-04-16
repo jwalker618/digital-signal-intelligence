@@ -10,12 +10,10 @@
 
 import "@/app/globals.css";
 import { useState } from "react";
+
 import {
-  ArrowUpRight,
-  LucideIcon,
-  ShieldCheck,
-  ShieldQuestionMark,
-  ShieldX,
+  ArrowUpRight, LucideIcon, ShieldCheck,
+  ShieldQuestionMark, ShieldX,
 } from "lucide-react";
 
 import Modal from "@/components/base/modal";
@@ -42,6 +40,27 @@ const DECISION_ICON: Record<Decision, LucideIcon> = {
   pending: ShieldX,
 };
 
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/*  CardGrid — the dashboard responsive grid wrapper.                         */
+/* ────────────────────────────────────────────────────────────────────────── */
+export interface CardGridProps {
+  children: React.ReactNode;
+  cols?: string;
+  className?: string;
+}
+export const CardGrid = ({
+  children,
+  cols = "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
+  className = "",
+}: CardGridProps) => {
+  return (
+    <div className={`grid ${cols} gap-dsi-pad ${className}`}>
+      {children}
+    </div>
+  );
+}
+
 /**
  * Props shared by every card variant so they are interchangeable from a
  * dashboard config that dispatches on a `card: ComponentRef`.
@@ -66,7 +85,7 @@ export const StandardCard = ({
   return (
     <div className={`flex flex-col h-full ${spanClass}`}>
       <div className="dsi-section-header">
-        {Icon && <Icon className="icon" />}
+        {Icon && <Icon className="icon"/>}
         <span className="text-sm">{title}</span>
       </div>
       <div className="dsi-section-analysis">{children}</div>
@@ -170,21 +189,27 @@ export const SubmissionHeaderCard = ({
   const Icon = lucideIcon ?? DECISION_ICON[decision];
 
   return (
+    <div className={`
+      sticky top-0 z-999
+      pt-dsi-pad pb-0.5
+      bg-dsi-background
+      ${spanClass}
+    `}
+    >
+
     <div
       className={`
-        sticky top-0 z-20 mb-4
-        pt-3 pb-2
-        rounded-b-xl
+        rounded-xl
+        pt-dsi-pad pb-dsi-pad
         border-b-3 border-dsi-contrast-background
         ${DECISION_BG[decision]}
         shadow-sm
-        ${spanClass}
       `}
     >
       {/* Top row — decision label + caller-supplied status info */}
-      <div className="flex items-center justify-between pb-3 border-b border-dsi-outline/50">
-        <div className="flex items-center gap-4 pl-dsi-pad">
-          <Icon className="w-10 h-10 text-dsi-selected" />
+      <div className="flex items-center justify-between pb-dsi-pad border-b border-dsi-outline/50">
+        <div className="flex gap-4 pl-dsi-pad">
+          <Icon className="largeicon" />
           <div>
             <span className="text-2xl font-bold uppercase tracking-wider text-dsi-selected">
               {title}
@@ -194,12 +219,15 @@ export const SubmissionHeaderCard = ({
         </div>
 
         {headerRight && (
-          <div className="flex items-center gap-6 pr-dsi-gap">{headerRight}</div>
+          <div className="flex items-center justify-between gap-4 pr-dsi-pad">{headerRight}</div>
         )}
       </div>
-
-      {/* Bottom row — caller-supplied metrics grid */}
-      {children}
+      <div className="pl-dsi-pad">
+        {/* Bottom row — caller-supplied metrics grid */}
+        {children}
+      </div>
+    </div>
+    
     </div>
   );
 };
