@@ -1,0 +1,22 @@
+entity_id: total_energies
+name: TotalEnergies SE
+coverage: fpr
+config_id: fpr_political_risk
+domain: totalenergies.com
+registry_id: FR-Paris-542051180
+minimum_viable_input:
+  revenue: 218941000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: OIL_GAS
+  domain: totalenergies.com
+expected:
+  composite_score: 320.0
+  tier: 5
+  decision: decline
+  recommended_premium: 2554148.23
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

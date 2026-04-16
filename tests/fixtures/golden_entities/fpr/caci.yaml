@@ -1,0 +1,22 @@
+entity_id: caci
+name: CACI International Inc
+coverage: fpr
+config_id: fpr_kidnap_ransom
+domain: caci.com
+registry_id: US-Delaware-0000017843
+minimum_viable_input:
+  revenue: 7658000000
+  limit: 10000000
+  deductible: 250000
+  product_type: standard
+  industry_sector: DEFENSE
+  domain: caci.com
+expected:
+  composite_score: 260.0
+  tier: 5
+  decision: decline
+  recommended_premium: 125731.7
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
