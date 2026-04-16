@@ -5,7 +5,7 @@
  */
 
 import { useDsiStore } from "@/store/dsiStore";
-import { formatKey } from "@/lib/format";
+import { formatText } from "@/lib/format";
 import { KeyValueList } from "@/components/base/content/primatives";
 
 export default function DiscoveryOutputList() {
@@ -14,7 +14,7 @@ export default function DiscoveryOutputList() {
   return (
     <KeyValueList
       data={activeVersion?.discovery_output}
-      renderLabel={(k) => formatKey(k)}
+      renderLabel={(k) => formatText(k, "upper")}
       valueClassName="text-dsi-selected"
       emptyMessage="No discovery output available."
     />

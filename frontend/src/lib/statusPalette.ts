@@ -1,10 +1,9 @@
 /**
  * Shared status → colour mappings.
  *
- * Consolidates the DECISION_STYLE / ACTION_COLORS maps that were duplicated
- * across SummarySAFE, ReferralTab, LossTab, ExposureTab and the cards
- * module. Each entry yields a background class and a text class; apply them
- * together to get the muted pill look used throughout the workbench.
+ * Single source of truth for decision / action / tone → (bg, text)
+ * Tailwind class pairs. Consumed by `StatusPill` (and any ad-hoc callsite
+ * that needs matching foreground + background classes).
  */
 
 export interface StatusPaletteEntry {
