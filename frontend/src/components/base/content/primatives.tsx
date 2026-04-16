@@ -50,6 +50,7 @@ export interface ContributionRow extends Record<string, unknown> {
   name?: string | null;
 }
 
+
 /** GUIDANCE
  * columnHeaders: headers beyond the "Group" column. Length drives column count.
  * rows: Pre-sorted rows; at most the first 3 are rendered.
@@ -82,19 +83,28 @@ export const ContributionTable = ({
   decimals = 2,
   className = "",
 }: ContributionTableProps) => {
+  
   const valueCols = columnHeaders.length;
   const template = `50% ${"20% ".repeat(valueCols).trim()}`;
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
 
   return (
+    
     <div className={`grid ${className}`} style={{ gridTemplateColumns: template }}>
-      <div className="dsi-analysis-description text-xs border-b-1 border-dsi-outline/50 ml-dsi-pad pl-0 pb-1">
+      
+      <div className="
+        dsi-analysis-description 
+        text-xs 
+        border-b-1 border-dsi-outline/50">
         Group
       </div>
       {columnHeaders.map((h) => (
         <div
           key={`h-${h}`}
-          className="dsi-analysis-description pl-0 pr-0 text-xs text-center border-b-1 border-dsi-outline/50 pb-1"
+          className="
+            dsi-analysis-description 
+            text-xs text-center 
+            border-b-1 border-dsi-outline/50"
         >
           {h}
         </div>
@@ -102,11 +112,16 @@ export const ContributionTable = ({
 
       {allRows.map((row, idx) => (
         <Fragment key={`r-${idx}`}>
-          <div className="dsi-analysis-description text-xs border-r-1 border-dsi-outline/50">
+          <div className="
+            dsi-analysis-description 
+            text-xs 
+            border-r-1 border-dsi-outline/50">
             {formatText(row?.name, "capitalize", "n/a")}
           </div>
           {fields.map((field) => (
-            <div key={field} className="dsi-analysis-item text-right">
+            <div key={field} className="
+              dsi-analysis-item 
+              text-right">
               {formatNumber(row?.[field] as number | null | undefined, decimals)}
             </div>
           ))}

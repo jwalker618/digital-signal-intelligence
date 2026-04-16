@@ -1,11 +1,3 @@
-/**
- * Shared card stylings.
- *
- * Composable primitives for the workbench dashboards. All visual treatment is
- * driven by the utilities in `app/globals.css` (dsi-section-header,
- * dsi-section-analysis, dsi-popup-header, bg-dsi-{decision} etc.).
- */
-
 "use client";
 
 import "@/app/globals.css";
@@ -17,6 +9,7 @@ import {
 } from "lucide-react";
 
 import Modal from "@/components/base/modal";
+
 import {
   SECTIONS,
   SectionKey,
@@ -29,22 +22,12 @@ import {
 
 export type Decision = "approve" | "refer" | "decline" | "pending";
 
-/** bg-* class applied to decision-styled surfaces. */
-const DECISION_BG: Record<Decision, string> = {
-  approve: "bg-dsi-approve",
-  refer:   "bg-dsi-refer",
-  decline: "bg-dsi-decline",
-  pending: "bg-dsi-muted",
+const SUBMISSION_DECISION: Record<Decision, {bg: string, icon: LucideIcon}> = {
+  approve: {bg: "bg-dsi-approve", icon: ShieldCheck},
+  refer:   {bg: "bg-dsi-refer", icon: ShieldQuestionMark},
+  decline: {bg: "bg-dsi-decline", icon: ShieldX},
+  pending: {bg: "bg-dsi-muted", icon: ShieldQuestionMark},
 };
-
-/** Icon used on the decision banner — matches SummarySAFE semantics. */
-const DECISION_ICON: Record<Decision, LucideIcon> = {
-  approve: ShieldCheck,
-  refer:   ShieldQuestionMark,
-  decline: ShieldX,
-  pending: ShieldX,
-};
-
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  CardGrid — the dashboard responsive grid wrapper.                         */
@@ -77,9 +60,7 @@ export interface BaseCardProps {
   children?: React.ReactNode;
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  StandardCard — section header + body                                      */
-/* ────────────────────────────────────────────────────────────────────────── */
+/** STANDARD CARD---------------------------------------------------------------------------------------------- */
 
 export const StandardCard = ({
   lucideIcon: Icon,
@@ -98,17 +79,14 @@ export const StandardCard = ({
   );
 };
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  PopupCard — teaser tile that opens a Modal                                */
-/* ────────────────────────────────────────────────────────────────────────── */
+/** POPUP CARD---------------------------------------------------------------------------------------------- */
 
+/** GUIDANCE
+ * teaser: What is rendered inside the tile in the grid. Defaults to the title
+ * modalIcon: Optional override for the icon shown in the modal header.
+ */
 export interface PopupCardProps extends BaseCardProps {
-  /**
-   * What is rendered inside the tile in the grid. Defaults to the title,
-   * styled with `dsi-section-analysis font-bold`.
-   */
   teaser?: React.ReactNode;
-  /** Optional override for the icon shown in the modal header. */
   modalIcon?: LucideIcon;
 }
 
@@ -162,23 +140,21 @@ export const PopupCard = ({
   );
 };
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  SubmissionHeaderCard — sticky decision banner frame                       */
-/* ────────────────────────────────────────────────────────────────────────── */
+/** SUBMISSION HEADER CARD---------------------------------------------------------------------------------------------- */
 
+/** GUIDANCE
+ * decision: Drives bg colour + default icon
+ * subtitle: Right-hand slot on the top row — typically status / dates / refs.
+ * headerRight: Right-hand slot on the top row — typically status / dates / refs.
+ * children: Bottom slot — the hero-numbers grid (composite score, tier, premium…).
+ *           Consumers provide their own grid so the frame stays reusable.
+ * lucideIcon: Override the default shield icon chosen from `decision`.
+ */
 export interface SubmissionHeaderCardProps extends BaseCardProps {
-  /** Drives bg colour + default icon. */
   decision: Decision;
-  /** Secondary label under the decision (e.g. "Auto-approved by engine"). */
   subtitle?: React.ReactNode;
-  /** Right-hand slot on the top row — typically status / dates / refs. */
   headerRight?: React.ReactNode;
-  /**
-   * Bottom slot — the hero-numbers grid (composite score, tier, premium…).
-   * Consumers provide their own grid so the frame stays reusable.
-   */
   children?: React.ReactNode;
-  /** Override the default shield icon chosen from `decision`. */
   lucideIcon?: LucideIcon;
 }
 
@@ -191,7 +167,7 @@ export const SubmissionHeaderCard = ({
   lucideIcon,
   spanClass = "",
 }: SubmissionHeaderCardProps) => {
-  const Icon = lucideIcon ?? DECISION_ICON[decision];
+  const Icon = lucideIcon ?? SUBMISSION_DECISION[decision].icon;
 
   return (
     <div className={`
@@ -207,7 +183,7 @@ export const SubmissionHeaderCard = ({
         rounded-xl
         pt-dsi-pad pb-dsi-pad
         border-b-3 border-dsi-contrast-background
-        ${DECISION_BG[decision]}
+        ${SUBMISSION_DECISION[decision].bg}
         shadow-sm
       `}
     >
@@ -237,9 +213,18 @@ export const SubmissionHeaderCard = ({
   );
 };
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  SectionCard — named section from the registry                             */
-/* ────────────────────────────────────────────────────────────────────────── */
+/** SECTION CARD---------------------------------------------------------------------------------------------- */
+
+/** GUIDANCE
+ * title: Override the registry title (e.g. `Notes (3)`).
+ * wrapper: Override the registry wrapper.
+ */
+export interface SectionCardProps {
+  section: SectionKey;
+  spanClass?: string;
+  title?: string;
+  wrapper?: SectionWrapper;
+}
 
 /**
  * Convenience wrapper that mounts a registered content component inside the
@@ -252,16 +237,6 @@ export const SubmissionHeaderCard = ({
  * Set `wrapper` to override the default wrapper from the registry (e.g. to
  * force a section that is normally a popup into a full card).
  */
-
-export interface SectionCardProps {
-  section: SectionKey;
-  spanClass?: string;
-  /** Override the registry title (e.g. `Notes (3)`). */
-  title?: string;
-  /** Override the registry wrapper. */
-  wrapper?: SectionWrapper;
-}
-
 export const SectionCard = ({
   section,
   spanClass,

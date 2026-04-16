@@ -74,9 +74,9 @@ function ShowcaseSection({
   return (
     <StandardCard title={title} lucideIcon={Flag} spanClass={spanClass}>
       {caption && (
-        <p className="pl-dsi-pad pr-dsi-pad text-xs opacity-60 mb-3">{caption}</p>
+        <p className="">{caption}</p>
       )}
-      <div className="pl-dsi-pad pr-dsi-pad pb-2">{children}</div>
+      <div className="">{children}</div>
     </StandardCard>
   );
 }
