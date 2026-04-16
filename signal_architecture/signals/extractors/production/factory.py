@@ -370,11 +370,42 @@ def _load_d1_sentiment_extractors():
         _registry.register_production(name, cls)
 
 
-# Eagerly register D1 extractors on import — they are cheap class refs,
+def _load_d3_litigation_extractors():
+    """V6/D3 — litigation + regulatory extensions (18 extractors)."""
+    try:
+        from . import litigation as lit
+    except ImportError as e:
+        logger.debug(f"Could not load D3 litigation extractors: {e}")
+        return
+    for name, cls in (
+        ("litigation.courtlistener", lit.CourtListenerExtractor),
+        ("litigation.pacer_rss", lit.PACERRSSExtractor),
+        ("litigation.stanford_scac", lit.StanfordSCACExtractor),
+        ("litigation.sec_litreleases", lit.SECLitigationReleasesExtractor),
+        ("litigation.finra_brokercheck", lit.FINRABrokerCheckExtractor),
+        ("litigation.sec_iapd", lit.SECIAPDExtractor),
+        ("litigation.gdpr_tracker", lit.GDPREnforcementTrackerExtractor),
+        ("litigation.cms_hospital", lit.CMSHospitalCompareExtractor),
+        ("litigation.joint_commission", lit.JointCommissionExtractor),
+        ("litigation.npdb_public", lit.NPDBPublicExtractor),
+        ("litigation.pcaob", lit.PCAOBQSAASVExtractor),
+        ("litigation.osha", lit.OSHAEstablishmentExtractor),
+        ("litigation.fmcsa", lit.FMCSASMSExtractor),
+        ("litigation.nhtsa_recalls", lit.NHTSARecallsExtractor),
+        ("litigation.cpsc_recalls", lit.CPSCRecallsExtractor),
+        ("litigation.fda_recalls", lit.FDARecallsExtractor),
+        ("litigation.eu_safety_gate", lit.EUSafetyGateExtractor),
+        ("litigation.usda_fsis", lit.USDAFSISRecallsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+# Eagerly register D1 + D3 extractors on import — they are cheap class refs,
 # no network calls happen until .extract() is invoked.
 _load_d1_web_extractors()
 _load_d1_identity_extractors()
 _load_d1_sentiment_extractors()
+_load_d3_litigation_extractors()
 
 
 # Register loaders for known extractor types

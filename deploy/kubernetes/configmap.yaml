@@ -57,5 +57,25 @@ data:
   DSI_DISABLE_GLASSDOOR: "false"
   DSI_DISABLE_GOOGLE_REVIEWS: "false"
 
+  # V6/D3 — Litigation + regulatory extractor kill-switches.
+  DSI_DISABLE_COURTLISTENER: "false"
+  DSI_DISABLE_PACER_RSS: "false"
+  DSI_DISABLE_SCAC: "false"
+  DSI_DISABLE_SEC_LITRELEASES: "false"
+  DSI_DISABLE_FINRA: "false"
+  DSI_DISABLE_IAPD: "false"
+  DSI_DISABLE_GDPR_TRACKER: "false"
+  DSI_DISABLE_CMS_HOSPITAL: "false"
+  DSI_DISABLE_JOINT_COMMISSION: "false"
+  DSI_DISABLE_NPDB: "false"
+  DSI_DISABLE_PCAOB: "false"
+  DSI_DISABLE_OSHA: "false"
+  DSI_DISABLE_FMCSA: "false"
+  DSI_DISABLE_NHTSA: "false"
+  DSI_DISABLE_CPSC: "false"
+  DSI_DISABLE_FDA: "false"
+  DSI_DISABLE_EU_SAFETYGATE: "false"
+  DSI_DISABLE_FSIS: "false"
+
   # V6/C3 — OpenTelemetry. Enable on production to emit spans.
   DSI_OTEL_ENABLED: "false"
