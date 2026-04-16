@@ -17,9 +17,8 @@ import { getSortedItems, getOtherRow } from "@/lib/utils";
 
 import {
   ContributionTable,
-  ContributionRow,
-  ContributionColumn,
-  ContributionGroupColumn,
+  StandardTableColumn,
+  StandardTableRow,
 } from "@/components/base/content/primatives";
 
 /* ── Local helper ─────────────────────────────────────────────────────── */
@@ -37,10 +36,9 @@ interface PillarProps {
   titleUnderline?: boolean;
   metrics: PillarMetric[];
   calculationLabel: string;
-  groupColumn?: ContributionGroupColumn;
-  columns: ContributionColumn[];
-  rows: ContributionRow[];
-  otherRow?: ContributionRow;
+  columns: StandardTableColumn[];
+  rows: StandardTableRow[];
+  otherRow?: StandardTableRow;
 }
 
 function Pillar({
@@ -49,7 +47,6 @@ function Pillar({
   titleUnderline = false,
   metrics,
   calculationLabel,
-  groupColumn,
   columns,
   rows,
   otherRow,
@@ -84,7 +81,6 @@ function Pillar({
 
       {/* Contribution table */}
       <ContributionTable
-        groupColumn={groupColumn}
         columns={columns}
         rows={rows}
         otherRow={otherRow}
@@ -129,6 +125,7 @@ export default function ThreePillarAssessment() {
         titleUnderline
         calculationLabel="Composite Score Calculation"
         columns={[
+          { label: "Group",        width: "50%", align: "left"  },
           { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
         ]}
         rows={riskGroup}
@@ -148,8 +145,9 @@ export default function ThreePillarAssessment() {
         icon={TrendingUpDown}
         calculationLabel="Loss Propensity Calculation"
         columns={[
-          { label: "Severity",  field: "severity_contribution",  align: "right" },
-          { label: "Frequency", field: "frequency_contribution", align: "right" },
+          { label: "Group",     width: "50%", align: "left"  },
+          { label: "Severity",  field: "severity_contribution",  width: "25%", align: "right" },
+          { label: "Frequency", field: "frequency_contribution", width: "25%", align: "right" },
         ]}
         rows={lossGroup}
         otherRow={lossOther}
@@ -167,8 +165,9 @@ export default function ThreePillarAssessment() {
         icon={Globe}
         calculationLabel="Exposure Calculation"
         columns={[
-          { label: "Size",       field: "size_contribution",       align: "right" },
-          { label: "Complexity", field: "complexity_contribution", align: "right" },
+          { label: "Group",      width: "50%", align: "left"  },
+          { label: "Size",       field: "size_contribution",       width: "25%", align: "right" },
+          { label: "Complexity", field: "complexity_contribution", width: "25%", align: "right" },
         ]}
         rows={exposureGroup}
         otherRow={exposureOther}
