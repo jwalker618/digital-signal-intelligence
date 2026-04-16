@@ -1,0 +1,2392 @@
+{
+  "_comment": "V6 config-compliance baseline. Pre-V6 known debt lives here so the health gate can start enforcing without blocking on pre-existing issues. Entries are cleared as maturation phases (A1-A8) land.",
+  "findings": [
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_record' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'route_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'corporate_governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_record' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'corporate_governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_space",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'space_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_space",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_space",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_space",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_category' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_rotary",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'rotary_wing_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_rotary",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'iosa_status' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_rotary",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_rotary",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_size' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_rotary",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_unmanned",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'unmanned_systems' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_unmanned",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_unmanned",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_unmanned",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_size' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_mro",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'mro_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_mro",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_mro",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_mro",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_category' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'iosa_status' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_size' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_category' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "aerospace/aerospace_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_gl",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'gl_class_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_gl",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_gl",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_gl",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_gl",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_wc",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'workplace_safety' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_wc",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_wc",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_wc",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_auto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'auto_fleet_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_auto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_auto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_auto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_auto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_umbrella",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'umbrella_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_umbrella",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'gl_class_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_umbrella",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_umbrella",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_umbrella",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_liability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'gl_class_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'gl_class_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'premises_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "casualty/casualty_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'technical_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_healthcare",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'health_data_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_healthcare",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_financial_services",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_system_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_financial_services",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_critical_infrastructure",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'ot_ics_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_critical_infrastructure",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'product_supply_chain_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_digital_platform",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'platform_user_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_digital_platform",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_manufacturing",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'manufacturing_operations_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_manufacturing",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_retail",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'retail_operations_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_retail",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_public_sector",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'public_sector_cyber_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_public_sector",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_professional_services",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'professional_data_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "cyber/cyber_professional_services",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'security_posture' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'executive' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'footprint' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_public",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'public_company_governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_public",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'transaction_event_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_public",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_public",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_public",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_pe_backed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'transaction_event_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_pe_backed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_pe_backed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_pe_backed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_nonprofit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_nonprofit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_nonprofit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_nonprofit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'transaction_event_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_ipo_spac",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'transaction_event_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_ipo_spac",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'public_company_governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_ipo_spac",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "do/do_ipo_spac",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_deepwater",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_deepwater",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_deepwater",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'deepwater_operations' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_deepwater",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_deepwater",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_onshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_onshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_onshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_onshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_onshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_unconventional",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_unconventional",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_unconventional",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_unconventional",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_upstream_unconventional",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_midstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_midstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_midstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_midstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_midstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_downstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_downstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_downstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_downstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_downstream",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_offshore_wind",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_offshore_wind",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_offshore_wind",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_offshore_wind",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_offshore_wind",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_onshore_renewable",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_onshore_renewable",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_onshore_renewable",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_onshore_renewable",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_onshore_renewable",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_storage",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_storage",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_storage",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_storage",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_storage",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_performance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "energy/energy_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'asset_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_condition' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'governance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cyber_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'financial_condition' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cyber_security' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_bank",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'banking_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_bank",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_bank",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_bank",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_insurer",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_insurer",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_insurer",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_fintech",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fintech_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_fintech",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_fintech",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_fintech",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_crypto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fintech_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_crypto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_framework' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_crypto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "fi/fi_crypto",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_trade_credit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trade_credit_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_trade_credit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'political_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_trade_credit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_trade_credit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_political_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'political_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_political_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_political_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_political_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_surety",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'surety_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_surety",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_surety",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_kidnap_ransom",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'kidnap_ransom_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_kidnap_ransom",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'political_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_kidnap_ransom",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_kidnap_ransom",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trade_credit_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'political_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "fpr/fpr_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_profile' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'sanctions_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'safety_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'operational_telemetry' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_profile' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cargo_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'port_state_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trading_pattern' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_age_band' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'flag_state_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_cargo",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'tanker_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'port_state_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_age_band' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'flag_state_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trading_pattern' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_tanker",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'offshore_marine' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'port_state_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_age_band' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'flag_state_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trading_pattern' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_offshore",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_war_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trading_pattern' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_war_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'port_state_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_war_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'flag_state_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_war_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_age_band' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_war_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'port_state_compliance' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fleet_age_band' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'flag_state_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'trading_pattern' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "marine/marine_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_sme",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'loss_tier_bands'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_sme",
+      "category": "structure",
+      "severity": "error",
+      "message": "'groups.three_layer_assessment' is missing or empty"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_large",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_large",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_large",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_large",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_large",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'partner_practice_mix' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_legal_specialist",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'case_portfolio' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_audit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_audit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_audit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_audit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_audit",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'audit_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_accounting",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_accounting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_accounting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_accounting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_accounting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_architecture",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'design_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_engineering",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_engineering",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_engineering",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_engineering",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_engineering",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'engineering_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_technology",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'delivery_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_financial_advisory",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'advisory_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_management_consulting",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_management_consulting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_management_consulting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_management_consulting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_management_consulting",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_real_estate",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'valuation_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "structure",
+      "severity": "error",
+      "message": "missing required section 'guardrails'"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_environmental",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'environmental_assessment_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'occupancy_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cat_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fire_protection' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'business_interruption' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_general",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'occupancy_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cat_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fire_protection' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'business_interruption' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_high_value",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'occupancy_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cat_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fire_protection' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'business_interruption' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_cat_exposed",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'occupancy_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cat_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fire_protection' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'business_interruption' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_builders_risk",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'construction_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'occupancy_risk' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'cat_exposure' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'fire_protection' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "property/property_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'business_interruption' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    }
+  ]
+}

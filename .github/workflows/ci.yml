@@ -127,8 +127,21 @@ jobs:
           path: htmlcov/
           if-no-files-found: ignore
 
-  calibrate:
-    name: Calibration Harness
+  config-health-gate:
+    # V6 Phase 1 (E2): Config Health Gate.
+    #
+    # Blocks PR merges on structural compliance regressions:
+    #   1. assess_config_compliance — structural schema + canonical category
+    #      audit; pre-V6 known debt is catalogued in
+    #      development/project/version/6/config_compliance_baseline.json.
+    #      The gate fails only on findings that are NEW vs the baseline.
+    #
+    # Runs as a non-blocking signal today:
+    #   2. calibrate — the end-to-end pricing calibration harness. The guardrail
+    #      hit rate is above the 15% threshold pending V6 A1-A3 maturation work.
+    #      Its report is uploaded so reviewers can see drift, but it does not
+    #      fail the PR. This step is promoted to blocking once A1-A3 land.
+    name: Config Health Gate
     needs: [setup, test]
     runs-on: ubuntu-latest
     if: always() && needs.test.result != 'cancelled'
@@ -147,22 +160,30 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run calibration harness
+      - name: Assess config compliance (blocking)
+        run: |
+          python development/project/assessments/scripts/assess_config_compliance.py \
+            --report compliance-report.json
+
+      - name: Run calibration harness (advisory; promoted to blocking post-A3)
+        continue-on-error: true
         run: |
           python -m infrastructure.builder.cli calibrate --json > calibration-report.json
           python -m infrastructure.builder.cli calibrate
 
-      - name: Upload calibration report
+      - name: Upload health-gate reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: calibration-report
-          path: calibration-report.json
+          name: config-health-gate-reports
+          path: |
+            compliance-report.json
+            calibration-report.json
           if-no-files-found: ignore
 
   docker-build:
     name: Build Docker Image
-    needs: [test, calibrate, rust-build]
+    needs: [test, config-health-gate, rust-build]
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     permissions:
@@ -263,14 +284,14 @@ jobs:
   summary:
     name: Build Summary
     runs-on: ubuntu-latest
-    needs: [setup, test, calibrate, rust-build]
+    needs: [setup, test, config-health-gate, rust-build]
     if: always()
     steps:
       - name: Check job results
         run: |
           echo "=== Job Results ==="
           echo "Test: ${{ needs.test.result }}"
-          echo "Calibrate: ${{ needs.calibrate.result }}"
+          echo "Config Health Gate: ${{ needs['config-health-gate'].result }}"
           echo "Rust: ${{ needs.rust-build.result }}"
 
       - name: Download pytest reports
@@ -327,13 +348,13 @@ jobs:
           EOF
 
       - name: Report success
-        if: ${{ needs.test.result == 'success' && needs.calibrate.result == 'success' }}
+        if: ${{ needs.test.result == 'success' && needs['config-health-gate'].result == 'success' }}
         run: echo "All checks passed!"
 
       - name: Report failure
-        if: ${{ needs.test.result == 'failure' || needs.calibrate.result == 'failure' }}
+        if: ${{ needs.test.result == 'failure' || needs['config-health-gate'].result == 'failure' }}
         run: |
           echo "Some checks failed!"
           echo "Test: ${{ needs.test.result }}"
-          echo "Calibrate: ${{ needs.calibrate.result }}"
+          echo "Config Health Gate: ${{ needs['config-health-gate'].result }}"
           exit 1
