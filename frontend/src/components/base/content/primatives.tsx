@@ -782,6 +782,78 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
   );
 }
 
+/** METRIC CARD---------------------------------------------------------------------------------------------- */
+
+export type MetricCardTone =
+  | "selected"
+  | "positive"
+  | "negative"
+  | "warning"
+  | "info"
+  | "muted";
+
+const METRIC_CARD_TONE: Record<
+  MetricCardTone,
+  { border: string; bg: string; text: string }
+> = {
+  selected: { border: "border-dsi-selected/30", bg: "bg-dsi-selected/5", text: "text-dsi-selected" },
+  positive: { border: "border-dsi-positive/30", bg: "bg-dsi-positive/5", text: "text-dsi-positive" },
+  negative: { border: "border-dsi-negative/30", bg: "bg-dsi-negative/5", text: "text-dsi-negative" },
+  warning:  { border: "border-dsi-warning/30",  bg: "bg-dsi-warning/5",  text: "text-dsi-warning"  },
+  info:     { border: "border-dsi-info/30",     bg: "bg-dsi-info/5",     text: "text-dsi-info"     },
+  muted:    { border: "border-dsi-muted/30",    bg: "bg-dsi-muted/5",    text: "text-dsi-muted"    },
+};
+
+/** GUIDANCE
+ * label:     Small uppercase caption above the hero value.
+ * value:     Hero value — rendered xl + bold.
+ * subtext:   Optional small caption beneath the value.
+ * tone:      When provided, applies `border-2 border-dsi-<tone>/30
+ *            bg-dsi-<tone>/5` and colours the value `text-dsi-<tone>`.
+ *            When omitted, renders a plain `border border-dsi-outline/20` card.
+ * lucideIcon: Optional leading icon rendered before the label.
+ */
+export interface MetricCardProps {
+  label: React.ReactNode;
+  value: React.ReactNode;
+  subtext?: React.ReactNode;
+  tone?: MetricCardTone;
+  lucideIcon?: LucideIcon;
+  className?: string;
+}
+
+/**
+ * The "big label + hero value + caption" tile used across the risk-terms
+ * tabs (Deductible / SIR / Aggregate / Reinstatement) inside a grid of
+ * overview numbers. Pick `tone` to highlight the primary/selected cell or
+ * to signal warning/info states.
+ */
+export const MetricCard = ({
+  label,
+  value,
+  subtext,
+  tone,
+  lucideIcon: Icon,
+  className = "",
+}: MetricCardProps) => {
+  const toneStyles = tone ? METRIC_CARD_TONE[tone] : null;
+  const frame = toneStyles
+    ? `border-2 ${toneStyles.border} ${toneStyles.bg}`
+    : "border border-dsi-outline/20";
+  const valueColor = toneStyles?.text ?? "";
+
+  return (
+    <div className={`${frame} rounded-xl p-5 ${className}`}>
+      <span className="flex items-center gap-1 opacity-50 text-xs mb-1 uppercase tracking-wider">
+        {Icon && <Icon className="w-3 h-3" />}
+        {label}
+      </span>
+      <span className={`block font-bold text-xl ${valueColor}`}>{value}</span>
+      {subtext && <span className="block text-xs opacity-50 mt-1">{subtext}</span>}
+    </div>
+  );
+}
+
 /** STATUS PILL---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE

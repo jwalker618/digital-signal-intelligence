@@ -1,10 +1,76 @@
 "use client";
 
-import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
-import { FileCheck, Activity, ShieldCheck, ShieldAlert } from "lucide-react";
+import { KpiTile, LabelValueList } from "@/components/base/content/primatives";
+import { FileCheck, ShieldCheck, ShieldAlert, LucideIcon } from "lucide-react";
+import { formatText } from "@/lib/format";
+
+const OVERVIEW_KEYS = new Set([
+  "extensions",
+  "exclusions",
+  "coverage_territory",
+  "territory",
+  "coverage_trigger",
+  "trigger",
+]);
+
+interface CoverageItem {
+  label: string;
+  description?: string | null;
+}
+
+const normaliseItem = (raw: unknown): CoverageItem => {
+  if (typeof raw === "string") return { label: raw };
+  if (raw && typeof raw === "object") {
+    const rec = raw as Record<string, unknown>;
+    return {
+      label: String(rec.name ?? rec.label ?? JSON.stringify(raw)),
+      description: (rec.description ?? rec.detail) as string | null | undefined,
+    };
+  }
+  return { label: String(raw) };
+};
+
+const CoverageItemList = ({
+  items,
+  emptyMessage,
+  tone,
+  icon: Icon,
+}: {
+  items: unknown[];
+  emptyMessage: string;
+  tone: "positive" | "negative";
+  icon: LucideIcon;
+}) => {
+  if (items.length === 0) {
+    return <p className="text-xs opacity-50 italic text-center py-4">{emptyMessage}</p>;
+  }
+
+  const bgClass = tone === "positive" ? "bg-dsi-positive/5 border-dsi-positive/10" : "bg-dsi-negative/5 border-dsi-negative/10";
+  const iconClass = tone === "positive" ? "text-dsi-positive" : "text-dsi-negative";
+
+  return (
+    <div className="flex flex-col gap-2">
+      {items.map((raw, i) => {
+        const { label, description } = normaliseItem(raw);
+        return (
+          <div
+            key={i}
+            className={`flex items-start gap-3 py-2 px-3 rounded border text-sm ${bgClass}`}
+          >
+            <Icon className={`w-4 h-4 shrink-0 mt-0.5 ${iconClass}`} />
+            <div>
+              <span className="font-semibold capitalize">{label}</span>
+              {description && <span className="block text-xs opacity-60 mt-0.5">{description}</span>}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function CoverageTermsTab() {
   const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
@@ -12,14 +78,15 @@ export default function CoverageTermsTab() {
   if (!activeSubmission || !activeVersion) return null;
 
   const rt = activeRisk;
-  const coverageTerms = rt.coverage_terms || {};
-  const extensions = coverageTerms.extensions || [];
-  const exclusions = coverageTerms.exclusions || [];
-  const territory = coverageTerms.coverage_territory || coverageTerms.territory;
-  const trigger = coverageTerms.coverage_trigger || coverageTerms.trigger;
+  const coverageTerms = (rt.coverage_terms ?? {}) as Record<string, unknown>;
+  const extensions = Array.isArray(coverageTerms.extensions) ? coverageTerms.extensions : [];
+  const exclusions = Array.isArray(coverageTerms.exclusions) ? coverageTerms.exclusions : [];
+  const territory = (coverageTerms.coverage_territory ?? coverageTerms.territory) as string | undefined;
+  const trigger = (coverageTerms.coverage_trigger ?? coverageTerms.trigger) as string | undefined;
+  const additional = Object.entries(coverageTerms).filter(([k]) => !OVERVIEW_KEYS.has(k));
 
   return (
-    <div className="w-full no-scrollbar border-collapse animate-in fade-in duration-500 pb-12 pt-3">
+    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
       <KeyDetailsBar
         status={activeQuote?.status}
         validFrom={activeQuote?.valid_from}
@@ -30,93 +97,47 @@ export default function CoverageTermsTab() {
         quoteCode={activeQuote?.quote_code}
       />
 
-      {/* Coverage Overview */}
       <SectionCard icon={FileCheck} title="Coverage Overview">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Coverage Territory</span>
-            <span className="font-bold capitalize">{territory || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Coverage Trigger</span>
-            <span className="font-bold capitalize">{trigger?.replace(/_/g, " ") || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Extensions Count</span>
-            <span className="font-bold">{Array.isArray(extensions) ? extensions.length : 0}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Exclusions Count</span>
-            <span className="font-bold">{Array.isArray(exclusions) ? exclusions.length : 0}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Coverage Territory" value={formatText(territory, "capitalize", "N/A")} />
+          <KpiTile label="Coverage Trigger" value={formatText(trigger, "capitalize", "N/A")} />
+          <KpiTile label="Extensions Count" value={extensions.length} />
+          <KpiTile label="Exclusions Count" value={exclusions.length} />
         </div>
       </SectionCard>
 
-      {/* Extensions */}
-      <SectionCard icon={ShieldCheck} title={`Extensions (${Array.isArray(extensions) ? extensions.length : 0})`}>
+      <SectionCard icon={ShieldCheck} title={`Extensions (${extensions.length})`}>
         <div className="px-dsi-pad py-4">
-          {Array.isArray(extensions) && extensions.length > 0 ? (
-            <div className="space-y-2">
-              {extensions.map((ext: any, i: number) => {
-                const label = typeof ext === "string" ? ext : ext.name || ext.label || JSON.stringify(ext);
-                const description = typeof ext === "object" ? (ext.description || ext.detail) : null;
-                return (
-                  <div key={i} className="flex items-start gap-3 py-2 px-3 rounded bg-dsi-positive/5 border border-dsi-positive/10 text-sm">
-                    <ShieldCheck className="w-4 h-4 text-dsi-positive shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold capitalize">{label}</span>
-                      {description && <span className="block text-xs opacity-60 mt-0.5">{description}</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-xs opacity-50 italic text-center py-4">No extensions defined</p>
-          )}
+          <CoverageItemList
+            items={extensions}
+            emptyMessage="No extensions defined"
+            tone="positive"
+            icon={ShieldCheck}
+          />
         </div>
       </SectionCard>
 
-      {/* Exclusions */}
-      <SectionCard icon={ShieldAlert} title={`Exclusions (${Array.isArray(exclusions) ? exclusions.length : 0})`}>
+      <SectionCard icon={ShieldAlert} title={`Exclusions (${exclusions.length})`}>
         <div className="px-dsi-pad py-4">
-          {Array.isArray(exclusions) && exclusions.length > 0 ? (
-            <div className="space-y-2">
-              {exclusions.map((exc: any, i: number) => {
-                const label = typeof exc === "string" ? exc : exc.name || exc.label || JSON.stringify(exc);
-                const description = typeof exc === "object" ? (exc.description || exc.detail) : null;
-                return (
-                  <div key={i} className="flex items-start gap-3 py-2 px-3 rounded bg-dsi-negative/5 border border-dsi-negative/10 text-sm">
-                    <ShieldAlert className="w-4 h-4 text-dsi-negative shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold capitalize">{label}</span>
-                      {description && <span className="block text-xs opacity-60 mt-0.5">{description}</span>}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-xs opacity-50 italic text-center py-4">No exclusions defined</p>
-          )}
+          <CoverageItemList
+            items={exclusions}
+            emptyMessage="No exclusions defined"
+            tone="negative"
+            icon={ShieldAlert}
+          />
         </div>
       </SectionCard>
 
-      {/* Additional Coverage Terms */}
-      {Object.keys(coverageTerms).filter(k => !["extensions", "exclusions", "coverage_territory", "territory", "coverage_trigger", "trigger"].includes(k)).length > 0 && (
+      {additional.length > 0 && (
         <SectionCard icon={FileCheck} title="Additional Terms">
-          <div className="px-dsi-pad py-4">
-            <div className="space-y-2">
-              {Object.entries(coverageTerms)
-                .filter(([k]) => !["extensions", "exclusions", "coverage_territory", "territory", "coverage_trigger", "trigger"].includes(k))
-                .map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center py-2 px-3 rounded bg-dsi-background/20 text-sm">
-                    <span className="opacity-70 capitalize">{key.replace(/_/g, " ")}</span>
-                    <span className="font-bold">{typeof value === "object" ? JSON.stringify(value) : String(value)}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
+          <LabelValueList
+            className="px-dsi-pad py-4"
+            rows={additional.map(([key, value]) => ({
+              key,
+              label: formatText(key, "capitalize"),
+              value: typeof value === "object" ? JSON.stringify(value) : String(value),
+            }))}
+          />
         </SectionCard>
       )}
     </div>
