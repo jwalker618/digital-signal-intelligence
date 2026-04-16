@@ -204,7 +204,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
         </p>
       )}
 
-      {error && <div className="text-sm text-red-500">{error}</div>}
+      {error && <div className="text-sm text-dsi-negative">{error}</div>}
     </div>
   );
 }

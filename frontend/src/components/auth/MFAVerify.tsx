@@ -63,7 +63,7 @@ export function MFAVerify() {
           aria-label="TOTP code"
         />
       </label>
-      {error && <div className="text-sm text-red-500">{error}</div>}
+      {error && <div className="text-sm text-dsi-negative">{error}</div>}
       <button
         type="submit"
         disabled={submitting || code.length !== 6}

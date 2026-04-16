@@ -166,7 +166,7 @@ function SetNewPasswordForm({
               className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
             />
           </label>
-          {error && <div className="text-sm text-red-500">{error}</div>}
+          {error && <div className="text-sm text-dsi-negative">{error}</div>}
           <button
             type="submit"
             disabled={busy}
