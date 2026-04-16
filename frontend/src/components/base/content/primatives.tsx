@@ -57,9 +57,10 @@ export interface StandardTableRow extends Record<string, unknown> {
 }
 
 /** Build a CSS grid-template-columns track list from column widths.
- *  Missing widths fall back to "1fr" so omitting width gives equal columns. */
-const buildGridTemplate = (columns: StandardTableColumn[]): string =>
-  columns.map((c) => c.width ?? "1fr").join(" ");
+ *  Missing widths fall back to "1fr" so omitting width gives equal columns.
+ *  Tolerates null/undefined for defensive rendering during loading states. */
+const buildGridTemplate = (columns: StandardTableColumn[] | null | undefined): string =>
+  (columns ?? []).map((c) => c.width ?? "1fr").join(" ");
 
 /** CONTRIBUTION TABLE ---------------------------------------------------------------------------------------------- */
 
@@ -87,8 +88,8 @@ interface ContributionTableProps {
  *   other      | sum[f1]    | sum[f2]    | ...
  */
 export const ContributionTable = ({
-  columns,
-  rows,
+  columns = [],
+  rows = [],
   otherRow,
   decimals = 2,
   className = "",
