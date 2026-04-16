@@ -782,6 +782,71 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
   );
 }
 
+/** COMPARE ROW---------------------------------------------------------------------------------------------- */
+
+/** GUIDANCE
+ * label:    Left cell content.
+ * sublabel: Optional secondary line under the label.
+ * original: Original-state value (left comparand).
+ * scenario: Scenario-state value (right comparand).
+ * changed:  When true, highlights the row with `bg-dsi-selected/5` and
+ *           renders the scenario value in `text-dsi-selected font-bold`.
+ * showArrow: Show the → between original and scenario. Default true.
+ * gridTemplate: Override the grid-template-columns. Default
+ *               `"1fr 80px 30px 80px"`.
+ * className: Extra classes appended to the outer grid.
+ */
+export interface CompareRowProps {
+  label: React.ReactNode;
+  sublabel?: React.ReactNode;
+  original: React.ReactNode;
+  scenario: React.ReactNode;
+  changed?: boolean;
+  showArrow?: boolean;
+  gridTemplate?: string;
+  className?: string;
+}
+
+/**
+ * The "label | original | → | scenario" row used repeatedly inside
+ * ScenarioTab's loss / exposure / pricing cascades to visualise
+ * before-vs-after comparisons. Kept column-template-driven so callers
+ * can re-use the same primitive with different widths.
+ */
+export const CompareRow = ({
+  label,
+  sublabel,
+  original,
+  scenario,
+  changed = false,
+  showArrow = true,
+  gridTemplate = "1fr 80px 30px 80px",
+  className = "",
+}: CompareRowProps) => {
+  return (
+    <div
+      className={`grid gap-0 py-1.5 border-b border-dsi-outline/5 ${
+        changed ? "bg-dsi-selected/5" : ""
+      } ${className}`}
+      style={{ gridTemplateColumns: gridTemplate }}
+    >
+      <div>
+        <span className="text-xs">{label}</span>
+        {sublabel && <span className="text-[10px] opacity-30 block">{sublabel}</span>}
+      </div>
+      <span className="text-right text-xs opacity-70">{original}</span>
+      {showArrow ? (
+        <span className="text-center opacity-30 text-xs">→</span>
+      ) : (
+        <span />
+      )}
+      <span className={`text-right text-xs font-bold ${changed ? "text-dsi-selected" : ""}`}>
+        {scenario}
+      </span>
+    </div>
+  );
+}
+
 /** METRIC CARD---------------------------------------------------------------------------------------------- */
 
 export type MetricCardTone =
