@@ -317,6 +317,66 @@ def _load_tls_extractors():
         logger.debug(f"Could not load TLS extractors: {e}")
 
 
+def _load_d1_web_extractors():
+    """V6/D1 — register the ten Universal Web Footprint extractors."""
+    try:
+        from . import web as w
+    except ImportError as e:
+        logger.debug(f"Could not load D1 web extractors: {e}")
+        return
+    pairs = [
+        ("web.github_org", w.GitHubOrgExtractor),
+        ("web.wayback", w.WaybackExtractor),
+        ("web.urlscan", w.URLScanExtractor),
+        ("web.commoncrawl", w.CommonCrawlExtractor),
+        ("web.tranco", w.TrancoRankExtractor),
+        ("web.safebrowsing", w.GoogleSafeBrowsingExtractor),
+        ("web.phishtank", w.PhishTankExtractor),
+        ("web.openphish", w.OpenPhishExtractor),
+        ("web.cloudflare_radar", w.CloudflareRadarExtractor),
+        ("web.google_transparency", w.GoogleTransparencyExtractor),
+    ]
+    for name, cls in pairs:
+        _registry.register_production(name, cls)
+
+
+def _load_d1_identity_extractors():
+    """V6/D1 — identity / breach-exposure extractors."""
+    try:
+        from . import identity as i
+    except ImportError as e:
+        logger.debug(f"Could not load D1 identity extractors: {e}")
+        return
+    for name, cls in (
+        ("identity.hibp", i.HIBPExtractor),
+        ("identity.intelx", i.IntelXExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d1_sentiment_extractors():
+    """V6/D1 — public-sentiment extractors."""
+    try:
+        from . import sentiment as s
+    except ImportError as e:
+        logger.debug(f"Could not load D1 sentiment extractors: {e}")
+        return
+    for name, cls in (
+        ("sentiment.trustpilot", s.TrustpilotScraper),
+        ("sentiment.bbb", s.BBBScraper),
+        ("sentiment.glassdoor", s.GlassdoorScraper),
+        ("sentiment.google_reviews", s.GoogleReviewsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+# Eagerly register D1 extractors on import — they are cheap class refs,
+# no network calls happen until .extract() is invoked.
+_load_d1_web_extractors()
+_load_d1_identity_extractors()
+_load_d1_sentiment_extractors()
+
+
 # Register loaders for known extractor types
 _dns_extractors = ['email_auth', 'dnssec', 'dns_records']
 _http_extractors = ['security_headers', 'security_txt', 'waf_presence', 'cdn_usage']

@@ -36,3 +36,26 @@ data:
   # Rate limiting
   RATE_LIMIT_PER_MINUTE: "60"
   RATE_LIMIT_BURST: "10"
+
+  # V6/D1 — Universal Web Footprint kill-switches. Flip to "true" to shed
+  # a specific extractor at runtime without a redeploy. Production default
+  # is every extractor live; staging may disable paid sources.
+  DSI_DISABLE_GITHUB_ORG: "false"
+  DSI_DISABLE_WAYBACK: "false"
+  DSI_DISABLE_URLSCAN: "false"
+  DSI_DISABLE_COMMONCRAWL: "false"
+  DSI_DISABLE_TRANCO: "false"
+  DSI_DISABLE_SAFEBROWSING: "false"
+  DSI_DISABLE_PHISHTANK: "false"
+  DSI_DISABLE_OPENPHISH: "false"
+  DSI_DISABLE_CF_RADAR: "false"
+  DSI_DISABLE_GOOGLE_TRANSPARENCY: "false"
+  DSI_DISABLE_HIBP: "false"
+  DSI_DISABLE_INTELX: "false"
+  DSI_DISABLE_TRUSTPILOT: "false"
+  DSI_DISABLE_BBB: "false"
+  DSI_DISABLE_GLASSDOOR: "false"
+  DSI_DISABLE_GOOGLE_REVIEWS: "false"
+
+  # V6/C3 — OpenTelemetry. Enable on production to emit spans.
+  DSI_OTEL_ENABLED: "false"
