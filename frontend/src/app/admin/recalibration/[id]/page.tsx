@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { api, fmtDate } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuthStore } from "@/store/authStore";
 import type { ProposalDetail } from "@/types/recalibration";
@@ -133,8 +134,8 @@ export default function ProposalDetailPage({
       </header>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 
@@ -196,14 +197,14 @@ export default function ProposalDetailPage({
             <button
               onClick={() => void act("approve", true)}
               disabled={!canEdit || busy !== null}
-              className="flex items-center gap-1 bg-emerald-700/40 border border-emerald-600 py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-dsi-positive/20 border border-dsi-positive py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" /> Approve
             </button>
             <button
               onClick={() => void act("reject", true)}
               disabled={!canReject || busy !== null}
-              className="flex items-center gap-1 bg-red-700/40 border border-red-600 py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-dsi-negative/20 border border-dsi-negative py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <XCircle className="w-4 h-4" /> Reject
             </button>
@@ -237,10 +238,10 @@ export default function ProposalDetailPage({
                 >
                   <td className="py-1 pr-2 font-mono">{w.signal_id}</td>
                   <td className="py-1 pr-2 text-right tabular-nums">
-                    {w.current_weight.toFixed(3)}
+                    {formatNumber(w.current_weight, 3)}
                   </td>
                   <td className="py-1 pr-2 text-right tabular-nums text-dsi-selected">
-                    {w.proposed_weight.toFixed(3)}
+                    {formatNumber(w.proposed_weight, 3)}
                   </td>
                   <td className="py-1 opacity-80">{w.rationale}</td>
                 </tr>

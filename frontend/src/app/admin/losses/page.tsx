@@ -10,6 +10,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, Link2, Upload } from "lucide-react";
 
 import { api, fmtDate } from "@/lib/api";
+import { formatCurrency } from "@/lib/format";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuthStore } from "@/store/authStore";
 import type { LossEvent } from "@/types/recalibration";
@@ -124,8 +125,8 @@ export default function LossesPage() {
       </header>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 
@@ -215,10 +216,10 @@ export default function LossesPage() {
                 <td className="py-1 px-3 font-mono text-xs">{l.coverage}</td>
                 <td className="py-1 px-3 text-xs">{fmtDate(l.event_date)}</td>
                 <td className="py-1 px-3 text-right tabular-nums">
-                  {l.gross_amount.toLocaleString()}
+                  {formatCurrency(l.gross_amount)}
                 </td>
                 <td className="py-1 px-3 text-right tabular-nums opacity-80">
-                  {l.net_amount?.toLocaleString() ?? "—"}
+                  {l.net_amount != null ? formatCurrency(l.net_amount) : "—"}
                 </td>
                 <td className="py-1 px-3">
                   <StatusBadge status={l.status} />
