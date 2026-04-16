@@ -29,6 +29,14 @@ Can also be called from seed_dsi_bench.py:
 import math
 import random
 import uuid
+import warnings as _warnings
+
+_warnings.warn(
+    "synthetic_generator.py is deprecated (V6/C4). Use "
+    "`python -m seed synthetic` instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 

@@ -1,6 +1,11 @@
 """
 DSI Comprehensive Bench Seed Script
 ====================================
+
+.. deprecated:: V6/C4 (April 2026)
+   Invoke via ``python -m seed bench`` instead. This root-level script
+   stays for compatibility through Q1-Q3 and is removed by C4-final.
+
 Seeds the database with realistic, end-to-end data covering every coverage,
 configuration, tier, decision path, signal group, and UI component.
 
@@ -50,6 +55,13 @@ Run:
 import uuid
 import random
 import logging
+import warnings as _warnings
+
+_warnings.warn(
+    "seed_dsi_bench.py is deprecated (V6/C4). Use `python -m seed bench` instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from dataclasses import asdict
 from datetime import datetime, timezone, timedelta
 from sqlalchemy import create_engine, text

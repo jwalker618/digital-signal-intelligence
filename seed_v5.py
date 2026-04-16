@@ -51,7 +51,14 @@ import logging
 import random
 import sys
 import uuid
+import warnings as _warnings
 from datetime import datetime, timedelta, timezone
+
+_warnings.warn(
+    "seed_v5.py is deprecated (V6/C4). Use `python -m seed v5` instead.",
+    DeprecationWarning,
+    stacklevel=2,
+)
 from typing import Optional
 
 from sqlalchemy import select, text, update
