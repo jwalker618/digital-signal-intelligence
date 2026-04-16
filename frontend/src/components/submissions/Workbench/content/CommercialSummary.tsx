@@ -7,7 +7,7 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatNumber } from "@/lib/format";
-import LabelValueList from "@/components/base/labelValueList";
+import { LabelValueList } from "@/components/base/content/primatives";
 
 export default function CommercialSummary() {
   const { activeCommercial } = useDsiStore() as any;

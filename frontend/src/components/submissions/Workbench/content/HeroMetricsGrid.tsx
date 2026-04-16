@@ -7,7 +7,7 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatNumber, formatText } from "@/lib/format";
-import StatsGrid from "@/components/base/statsGrid";
+import { StatsGrid } from "@/components/base/content/primatives";
 
 export default function HeroMetricsGrid() {
   const { activeQuote, activeVersion, activeCommercial } = useDsiStore() as any;

@@ -15,9 +15,10 @@ import { useDsiStore } from "@/store/dsiStore";
 import { formatPercent, formatText } from "@/lib/format";
 import { getSortedItems, getOtherRow } from "@/lib/utils";
 
-import ContributionTable, {
+import {
+  ContributionTable,
   ContributionRow,
-} from "@/components/base/contributionTable";
+} from "@/components/base/content/primatives";
 
 /* ── Local helper ─────────────────────────────────────────────────────── */
 

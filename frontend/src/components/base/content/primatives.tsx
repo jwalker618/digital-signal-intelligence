@@ -198,7 +198,7 @@ export interface ExpandableGroupTableProps<T> {
  *     ]}
  *   />
  */
-export const ExpandableGroupTable = ({
+export const ExpandableGroupTable = <T,>({
   columns,
   groups,
   renderItemCells,
@@ -463,7 +463,7 @@ export interface KeyValueListProps<V = unknown> {
  * Output). Delegates all rendering to LabelValueList so styling stays in one
  * place.
  */
-export const KeyValueList = ({
+export const KeyValueList = <V,>({
   data,
   filter,
   renderLabel = (k) => k,
@@ -471,7 +471,7 @@ export const KeyValueList = ({
   valueClassName,
   emptyMessage = "No data available.",
   variant = "modal",
-}: KeyValueListProps) => {
+}: KeyValueListProps<V>) => {
   const rows = Object.entries(data ?? {})
     .filter(([k]) => !filter || filter(k))
     .map(([k, v]) => ({
