@@ -52,77 +52,104 @@ export interface ContributionRow extends Record<string, unknown> {
 
 
 /** GUIDANCE
- * columnHeaders: headers beyond the "Group" column. Length drives column count.
+ * label: Header text for this column.
+ * field: Numeric field on each row whose value renders in this column's cells.
+ * width: CSS grid track value, e.g. `"20%"`, `"1fr"`, `"auto"`. Default `"1fr"`.
+ * align: Horizontal alignment for both the header cell and value cells in this
+ *        column. Default `"right"` (numeric columns).
+ */
+export interface ContributionColumn {
+  label: React.ReactNode;
+  field: string;
+  width?: string;
+  align?: Align;
+}
+
+/** GUIDANCE
+ * label: First column header. Default "Group".
+ * width: First column width. Default "50%".
+ * align: First column alignment for header and name cells. Default "left".
+ */
+export interface ContributionGroupColumn {
+  label?: React.ReactNode;
+  width?: string;
+  align?: Align;
+}
+
+/** GUIDANCE
+ * groupColumn: Configuration for the first column (group/category names).
+ * columns: Value columns — header label, source field, width and alignment
+ *          all together so they can't drift in length.
  * rows: Pre-sorted rows; at most the first 3 are rendered.
- * otherRow: Optional pre-aggregated "Other" row rendered after the top 3. 
- * fields: Numeric fields to read per row, one per column header.
+ * otherRow: Optional pre-aggregated "Other" row rendered after the top 3.
  * decimals: Decimal places for value formatting. Default 2.
  */
 interface ContributionTableProps {
-  columnHeaders: string[];
+  groupColumn?: ContributionGroupColumn;
+  columns: ContributionColumn[];
   rows: ContributionRow[];
   otherRow?: ContributionRow;
-  fields: string[];
   decimals?: number;
   className?: string;
 }
 
 /**
  *   Group     | Col1Header | Col2Header | ...
- *   -----------+------------+------------+----
+ *   ----------+------------+------------+----
  *   row1.name | row1[f1]   | row1[f2]   | ...
  *   other     | sum[f1]    | sum[f2]    | ...
- *
- * The "Group" column is fixed at 50% and each value column takes 20%.
  */
 export const ContributionTable = ({
-  columnHeaders,
+  groupColumn,
+  columns,
   rows,
   otherRow,
-  fields,
   decimals = 2,
   className = "",
 }: ContributionTableProps) => {
-  
-  const valueCols = columnHeaders.length;
-  const template = `50% ${"20% ".repeat(valueCols).trim()}`;
+
+  const groupWidth = groupColumn?.width ?? "50%";
+  const groupAlign = groupColumn?.align ?? "left";
+  const groupLabel = groupColumn?.label ?? "Group";
+
+  const template = [groupWidth, ...columns.map((c) => c.width ?? "1fr")].join(" ");
   const allRows = otherRow ? [...rows.slice(0, 3), otherRow] : rows.slice(0, 3);
 
   return (
-    
+
     <div className={`grid ${className}`} style={{ gridTemplateColumns: template }}>
-      
-      <div className="
-        dsi-analysis-description 
-        text-xs 
-        border-b-1 border-dsi-outline/50">
-        Group
+
+      <div className={`
+        dsi-analysis-description
+        text-xs ${TEXTALIGN_CLASS[groupAlign]}
+        border-b-1 border-dsi-outline/50`}>
+        {groupLabel}
       </div>
-      {columnHeaders.map((h) => (
+      {columns.map((c, i) => (
         <div
-          key={`h-${h}`}
-          className="
-            dsi-analysis-description 
-            text-xs text-center 
-            border-b-1 border-dsi-outline/50"
+          key={`h-${i}`}
+          className={`
+            dsi-analysis-description
+            text-xs ${TEXTALIGN_CLASS[c.align ?? "right"]}
+            border-b-1 border-dsi-outline/50`}
         >
-          {h}
+          {c.label}
         </div>
       ))}
 
       {allRows.map((row, idx) => (
         <Fragment key={`r-${idx}`}>
-          <div className="
-            dsi-analysis-description 
-            text-xs 
-            border-r-1 border-dsi-outline/50">
+          <div className={`
+            dsi-analysis-description
+            text-xs ${TEXTALIGN_CLASS[groupAlign]}
+            border-r-1 border-dsi-outline/50`}>
             {formatText(row?.name, "capitalize", "n/a")}
           </div>
-          {fields.map((field) => (
-            <div key={field} className="
-              dsi-analysis-item 
-              text-right">
-              {formatNumber(row?.[field] as number | null | undefined, decimals)}
+          {columns.map((c, i) => (
+            <div key={`v-${idx}-${i}`} className={`
+              dsi-analysis-item
+              ${TEXTALIGN_CLASS[c.align ?? "right"]}`}>
+              {formatNumber(row?.[c.field] as number | null | undefined, decimals)}
             </div>
           ))}
         </Fragment>
