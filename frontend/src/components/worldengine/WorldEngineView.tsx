@@ -13,9 +13,9 @@ import {
 } from "recharts";
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
 import { formatNumber } from "@/lib/format";
+import { tooltipStyle } from "@/lib/chartConfig";
 
 const TIER_COLORS = ['var(--dsi-positive)', 'var(--dsi-info)', 'var(--dsi-warning)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
-const tooltipStyle = { backgroundColor: 'var(--dsi-chart-tooltip-bg)', borderColor: 'var(--dsi-chart-tooltip-border)', color: '#f8fafc', borderRadius: '8px', fontSize: '12px' };
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
   'High': 'text-dsi-negative',
