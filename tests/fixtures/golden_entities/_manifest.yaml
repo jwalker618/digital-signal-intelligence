@@ -1,0 +1,263 @@
+# V6 Golden-Entity Manifest
+#
+# Lists the public entities used as snapshot fixtures for each coverage.
+# Adding an entry here and running:
+#
+#     python tests/fixtures/golden_entities/_generator.py --all
+#
+# will snapshot the current pipeline output into the matching fixture file
+# under tests/fixtures/golden_entities/{coverage}/{entity_id}.yaml.
+#
+# Target per V6 E5: 10 entities × 10 existing coverages = 100 fixtures.
+# This file currently lists 2 entities per coverage as a proof-of-concept
+# scaffold; the remaining 8/coverage land under the A1-A8 maturation phases
+# alongside the sub-config and signal work for each line.
+#
+# Premium tolerance is expressed in basis points (10_000 = 100%). Score
+# tolerance is absolute composite-score points. Keep tolerances tight
+# enough to catch regressions; widen only if the signal is genuinely noisy.
+
+coverages:
+  aerospace:
+    - entity_id: boeing
+      name: The Boeing Company
+      domain: boeing.com
+      registry_id: US-Delaware-0000004401
+      minimum_viable_input:
+        revenue: 77794000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: boeing.com
+    - entity_id: airbus
+      name: Airbus SE
+      domain: airbus.com
+      registry_id: NL-Amsterdam-24288945
+      minimum_viable_input:
+        revenue: 65446000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: airbus.com
+
+  casualty:
+    - entity_id: walmart
+      name: Walmart Inc.
+      config_id: casualty_gl
+      domain: walmart.com
+      registry_id: US-Delaware-0000104169
+      minimum_viable_input:
+        revenue: 648125000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: walmart.com
+    - entity_id: fedex
+      name: FedEx Corporation
+      config_id: casualty_auto
+      domain: fedex.com
+      registry_id: US-Delaware-0001048911
+      minimum_viable_input:
+        revenue: 90155000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: TRANSPORTATION
+        domain: fedex.com
+
+  cyber:
+    - entity_id: microsoft
+      name: Microsoft Corporation
+      domain: microsoft.com
+      registry_id: US-Washington-600413485
+      minimum_viable_input:
+        revenue: 211915000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: microsoft.com
+    - entity_id: jpmorgan_chase
+      name: JPMorgan Chase & Co.
+      domain: jpmorganchase.com
+      registry_id: US-Delaware-0000019617
+      minimum_viable_input:
+        revenue: 158104000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: jpmorganchase.com
+
+  do:
+    - entity_id: alphabet
+      name: Alphabet Inc.
+      domain: abc.xyz
+      registry_id: US-Delaware-0001652044
+      minimum_viable_input:
+        revenue: 307394000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: abc.xyz
+    - entity_id: tesla
+      name: Tesla, Inc.
+      domain: tesla.com
+      registry_id: US-Delaware-0001318605
+      minimum_viable_input:
+        revenue: 96773000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AUTOMOTIVE
+        domain: tesla.com
+
+  energy:
+    - entity_id: exxonmobil
+      name: Exxon Mobil Corporation
+      domain: exxonmobil.com
+      registry_id: US-NewJersey-0000034088
+      minimum_viable_input:
+        revenue: 344582000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: exxonmobil.com
+    - entity_id: nextera
+      name: NextEra Energy, Inc.
+      domain: nexteraenergy.com
+      registry_id: US-Florida-0000753308
+      minimum_viable_input:
+        revenue: 28114000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: UTILITIES
+        domain: nexteraenergy.com
+
+  fi:
+    - entity_id: goldman_sachs
+      name: The Goldman Sachs Group, Inc.
+      domain: goldmansachs.com
+      registry_id: US-Delaware-0000886982
+      minimum_viable_input:
+        revenue: 46254000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: goldmansachs.com
+    - entity_id: bank_of_america
+      name: Bank of America Corporation
+      domain: bankofamerica.com
+      registry_id: US-Delaware-0000070858
+      minimum_viable_input:
+        revenue: 171912000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: bankofamerica.com
+
+  fpr:
+    - entity_id: glencore
+      name: Glencore plc
+      config_id: fpr_trade_credit
+      domain: glencore.com
+      registry_id: JE-Jersey-107710
+      minimum_viable_input:
+        revenue: 217827000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: COMMODITY_TRADING
+        domain: glencore.com
+    - entity_id: palantir
+      name: Palantir Technologies Inc.
+      config_id: fpr_political_risk
+      domain: palantir.com
+      registry_id: US-Delaware-0001321655
+      minimum_viable_input:
+        revenue: 2865000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: palantir.com
+
+  marine:
+    - entity_id: maersk
+      name: A.P. Møller - Mærsk A/S
+      domain: maersk.com
+      registry_id: DK-Copenhagen-22756214
+      minimum_viable_input:
+        revenue: 51100000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: maersk.com
+    - entity_id: carnival
+      name: Carnival Corporation & plc
+      domain: carnivalcorp.com
+      registry_id: US-Panama-0000815097
+      minimum_viable_input:
+        revenue: 21593000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: carnivalcorp.com
+
+  pi:
+    - entity_id: deloitte
+      name: Deloitte Touche Tohmatsu Limited
+      domain: deloitte.com
+      registry_id: UK-London-OC301151
+      minimum_viable_input:
+        revenue: 64900000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: deloitte.com
+    - entity_id: mckinsey
+      name: McKinsey & Company
+      domain: mckinsey.com
+      registry_id: US-Delaware-0000851170
+      minimum_viable_input:
+        revenue: 16000000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: mckinsey.com
+
+  property:
+    - entity_id: simon_property
+      name: Simon Property Group, Inc.
+      domain: simon.com
+      registry_id: US-Delaware-0001063761
+      minimum_viable_input:
+        revenue: 5957000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: simon.com
+    - entity_id: marriott
+      name: Marriott International, Inc.
+      domain: marriott.com
+      registry_id: US-Delaware-0001048286
+      minimum_viable_input:
+        revenue: 23713000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: HOSPITALITY
+        domain: marriott.com
