@@ -86,6 +86,32 @@ def build_parser() -> argparse.ArgumentParser:
         help="Output result as JSON",
     )
 
+    # --- diff-config command (V6/C7) ---
+    diff_cmd = subparsers.add_parser(
+        "diff-config",
+        help="Render a logic.md diff between two versions of a coverage config",
+    )
+    diff_cmd.add_argument(
+        "--base-file", required=True,
+        help="Path to the base (pre-change) config.yaml",
+    )
+    diff_cmd.add_argument(
+        "--head-file", required=True,
+        help="Path to the head (post-change) config.yaml",
+    )
+    diff_cmd.add_argument(
+        "--coverage", default=None,
+        help="Coverage name for the diff header (defaults to the parent dir of --head-file)",
+    )
+    diff_cmd.add_argument(
+        "--context", type=int, default=3,
+        help="Unified-diff context lines (default: 3)",
+    )
+    diff_cmd.add_argument(
+        "--output", default=None,
+        help="Write the diff markdown to this path (default: stdout)",
+    )
+
     return parser
 
 
@@ -364,6 +390,82 @@ def cmd_calibrate(args) -> int:
     return 0 if report.passed else 1
 
 
+def cmd_diff_config(args) -> int:
+    """Render a logic.md diff between two versions of a coverage config.
+
+    V6/C7 — posts on every PR that touches coverages/**/config.yaml so
+    reviewers can see the pricing narrative delta without cross-referencing
+    raw YAML.
+    """
+    import difflib
+    import yaml as _yaml
+    from pathlib import Path as _Path
+
+    from coverages.doc_generator import DSIDocGenerator
+
+    base_path = _Path(args.base_file)
+    head_path = _Path(args.head_file)
+
+    if not head_path.exists():
+        print(f"error: head file not found: {head_path}", file=sys.stderr)
+        return 2
+
+    coverage = args.coverage or head_path.parent.name
+
+    def _inner_config_block(raw_yaml: str):
+        """Return the inner coverage block for doc_generator."""
+        data = _yaml.safe_load(raw_yaml)
+        if not isinstance(data, dict):
+            return {}
+        # v2.0 layout: {coverage_key: {sub_config: {...}}}
+        return next(iter(data.values()), {}) if len(data) == 1 else data
+
+    def _render(raw_yaml: str) -> str:
+        if not raw_yaml:
+            return ""
+        try:
+            inner = _inner_config_block(raw_yaml)
+        except _yaml.YAMLError as e:
+            return f"<unable to parse config: {e}>\n"
+        gen = DSIDocGenerator()
+        return gen.build_logic_md(coverage, inner)
+
+    base_text = base_path.read_text() if base_path.exists() else ""
+    head_text = head_path.read_text()
+
+    base_md = _render(base_text)
+    head_md = _render(head_text)
+
+    diff_lines = difflib.unified_diff(
+        base_md.splitlines(keepends=True),
+        head_md.splitlines(keepends=True),
+        fromfile=f"a/coverages/{coverage}/logic.md",
+        tofile=f"b/coverages/{coverage}/logic.md",
+        n=args.context,
+    )
+    diff_body = "".join(diff_lines)
+
+    if not diff_body.strip():
+        summary = (
+            f"### `{coverage}` — logic.md diff\n\n"
+            f"*No change in rendered logic.md.*\n"
+        )
+    else:
+        summary = (
+            f"### `{coverage}` — logic.md diff\n\n"
+            f"<details><summary>Click to expand</summary>\n\n"
+            f"```diff\n{diff_body}\n```\n\n"
+            f"</details>\n"
+        )
+
+    if args.output:
+        _Path(args.output).write_text(summary)
+    else:
+        print(summary)
+
+    return 0
+
+
 def main():
     parser = build_parser()
     args = parser.parse_args()
@@ -380,6 +482,8 @@ def main():
         return cmd_validate(args)
     elif args.command == "calibrate":
         return cmd_calibrate(args)
+    elif args.command == "diff-config":
+        return cmd_diff_config(args)
     elif args.command == "list-industries":
         return cmd_list_industries()
     elif args.command == "list-signals":
