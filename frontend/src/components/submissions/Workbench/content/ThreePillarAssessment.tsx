@@ -125,8 +125,8 @@ export default function ThreePillarAssessment() {
         titleUnderline
         calculationLabel="Composite Score Calculation"
         columns={[
-          { label: "Group",        width: "50%", align: "left"  },
-          { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
+          { label: "Group",        field: null,                width: "50%", format: "text",   textCase: "capitalize" },
+          { label: "Contribution", field: "risk_contribution", width: "50%", format: "number", decimals: 2 },
         ]}
         rows={riskGroup}
         otherRow={riskOther}
@@ -145,9 +145,9 @@ export default function ThreePillarAssessment() {
         icon={TrendingUpDown}
         calculationLabel="Loss Propensity Calculation"
         columns={[
-          { label: "Group",     width: "50%", align: "left"  },
-          { label: "Severity",  field: "severity_contribution",  width: "25%", align: "right" },
-          { label: "Frequency", field: "frequency_contribution", width: "25%", align: "right" },
+          { label: "Group",     field: null,                         width: "50%", format: "text",   textCase: "capitalize" },
+          { label: "Severity",  field: "severity_contribution",      width: "25%", format: "number", decimals: 2 },
+          { label: "Frequency", field: "frequency_contribution",     width: "25%", format: "number", decimals: 2 },
         ]}
         rows={lossGroup}
         otherRow={lossOther}
@@ -165,9 +165,9 @@ export default function ThreePillarAssessment() {
         icon={Globe}
         calculationLabel="Exposure Calculation"
         columns={[
-          { label: "Group",      width: "50%", align: "left"  },
-          { label: "Size",       field: "size_contribution",       width: "25%", align: "right" },
-          { label: "Complexity", field: "complexity_contribution", width: "25%", align: "right" },
+          { label: "Group",      field: null,                      width: "50%", format: "text",   textCase: "capitalize" },
+          { label: "Size",       field: "size_contribution",       width: "25%", format: "number", decimals: 2 },
+          { label: "Complexity", field: "complexity_contribution", width: "25%", format: "number", decimals: 2 },
         ]}
         rows={exposureGroup}
         otherRow={exposureOther}

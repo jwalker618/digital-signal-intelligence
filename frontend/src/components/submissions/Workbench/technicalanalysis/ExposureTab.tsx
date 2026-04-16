@@ -6,12 +6,15 @@ import {
   Target, Activity, BarChart3, Layers, ScatterChart as ScatterIcon,
   Paperclip, Puzzle, Gauge, AlertTriangle, ShieldAlert
 } from "lucide-react";
-import {
-  ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  BarChart, Bar, Cell, ReferenceLine, Label
-} from "recharts";
-import { getDecisionColor, tooltipStyle, CHART_GRID_COLOR, CHART_AXIS_COLOR, CHART_SUBJECT_COLOR, CHART_PEER_COLOR } from "@/lib/chartConfig";
 import { formatNumber, formatCurrency } from "@/lib/format";
+import {
+  KpiTile,
+  InfoPanel,
+} from "@/components/base/content/primatives";
+import {
+  PeerScatterChart,
+  BenchmarkBarChart,
+} from "@/components/base/charts/primatives";
 
 export default function ExposureTab() {
   const {
@@ -146,53 +149,29 @@ export default function ExposureTab() {
         <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           {/* Row 1: Primary KPIs — expanded */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-dsi-pad pr-dsi-pad">
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Exposure Value (TIV/Rev)</span>
-              <span className="font-bold text-lg text-dsi-selected">
-                {formatCurrency(activeVersion.exposure_value || 0)}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Exposure Band</span>
-              <span className="font-bold text-lg uppercase">
-                {activeVersion.exposure_band_label || "N/A"}
-              </span>
-              {hasBandPosition && (
-                <span className="text-[10px] opacity-40 block">
-                  {formatCurrency(Number(bandMin))} – {formatCurrency(Number(bandMax))}
-                </span>
-              )}
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Size Score</span>
-              <span className="font-bold text-lg">
-                {formatNumber(activeVersion.exposure_size_score, 1, "0.0")}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Complexity Score</span>
-              <span className="font-bold text-lg">
-                {formatNumber(activeVersion.exposure_complexity_score, 1, "N/A")}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Calculated Modifier</span>
-              <span className="font-bold text-lg">
-                {formatNumber(activeVersion.exposure_modifier, 3, "1.000")}x
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Assessment Method</span>
-              <span className="font-bold text-sm uppercase">
-                {activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || "N/A"}
-              </span>
-            </div>
-            <div>
-              <span className="opacity-70 block text-xs mb-1">Final Tier</span>
-              <span className="font-bold text-lg text-dsi-selected">
-                Tier {activeVersion.final_tier || "–"}
-              </span>
-            </div>
+            <KpiTile
+              label="Exposure Value (TIV/Rev)"
+              value={formatCurrency(activeVersion.exposure_value || 0)}
+              variant="emphasis"
+            />
+            <KpiTile
+              label="Exposure Band"
+              value={(activeVersion.exposure_band_label || "N/A").toUpperCase()}
+              subtext={
+                hasBandPosition
+                  ? `${formatCurrency(Number(bandMin))} – ${formatCurrency(Number(bandMax))}`
+                  : undefined
+              }
+            />
+            <KpiTile label="Size Score"       value={formatNumber(activeVersion.exposure_size_score, 1, "0.0")} />
+            <KpiTile label="Complexity Score" value={formatNumber(activeVersion.exposure_complexity_score, 1, "N/A")} />
+            <KpiTile label="Calculated Modifier" value={`${formatNumber(activeVersion.exposure_modifier, 3, "1.000")}x`} />
+            <KpiTile label="Assessment Method" value={(activeVersion.exposure_assessment_method?.replace(/_/g, ' ') || "N/A").toUpperCase()} />
+            <KpiTile
+              label="Final Tier"
+              value={`Tier ${activeVersion.final_tier || "–"}`}
+              variant="emphasis"
+            />
           </div>
         </div>
       </div>
@@ -240,23 +219,16 @@ export default function ExposureTab() {
 
                 {/* Position metrics */}
                 <div className="grid grid-cols-3 gap-4 text-wrap">
-                  <div className="border border-dsi-outline/20 rounded-lg p-3">
-                    <span className="text-xs opacity-60 block mb-1">Band Percentile</span>
+                  <InfoPanel label="Band Percentile">
                     <span className="font-bold text-lg">{formatNumber((bandPct || 0) * 100, 0)}%</span>
                     <span className="text-xs opacity-50 block">from band floor</span>
-                  </div>
-                  <div className="border border-dsi-outline/20 rounded-lg p-3">
-                    <span className="text-xs opacity-60 block mb-1">Below Ceiling</span>
-                    <span className="font-bold text-lg">
-                      {formatCurrency(bandMax - exposureValue)}
-                    </span>
-                  </div>
-                  <div className="border border-dsi-outline/20 rounded-lg p-3">
-                    <span className="text-xs opacity-60 block mb-1">Above Floor</span>
-                    <span className="font-bold text-lg">
-                      {formatCurrency(exposureValue - bandMin)}
-                    </span>
-                  </div>
+                  </InfoPanel>
+                  <InfoPanel label="Below Ceiling">
+                    <span className="font-bold text-lg">{formatCurrency(bandMax - exposureValue)}</span>
+                  </InfoPanel>
+                  <InfoPanel label="Above Floor">
+                    <span className="font-bold text-lg">{formatCurrency(exposureValue - bandMin)}</span>
+                  </InfoPanel>
                 </div>
               </div>
             ) : (
@@ -277,11 +249,10 @@ export default function ExposureTab() {
               <div className="pl-dsi-pad pr-dsi-pad space-y-3">
                 {/* Size component */}
                 {sizeComp && (
-                  <div className="border border-dsi-outline/20 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold uppercase">Size Component</span>
-                      <span className="text-[10px] opacity-40">Weight: {formatNumber(sizeComp.weight, 2)}</span>
-                    </div>
+                  <InfoPanel
+                    label="Size Component"
+                    aside={`Weight: ${formatNumber(sizeComp.weight, 2)}`}
+                  >
                     <div className="grid grid-cols-3 gap-3 text-wrap">
                       <div>
                         <span className="text-[10px] opacity-50 block">Score</span>
@@ -296,16 +267,15 @@ export default function ExposureTab() {
                         <span className="text-sm font-bold">{formatNumber(sizeComp.modifier, 3)}x</span>
                       </div>
                     </div>
-                  </div>
+                  </InfoPanel>
                 )}
 
                 {/* Complexity component */}
                 {complexityComp && (
-                  <div className="border border-dsi-outline/20 rounded-lg p-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold uppercase">Complexity Component</span>
-                      <span className="text-[10px] opacity-40">Weight: {formatNumber(complexityComp.weight, 2)}</span>
-                    </div>
+                  <InfoPanel
+                    label="Complexity Component"
+                    aside={`Weight: ${formatNumber(complexityComp.weight, 2)}`}
+                  >
                     <div className="grid grid-cols-3 gap-3 text-wrap">
                       <div>
                         <span className="text-[10px] opacity-50 block">Score</span>
@@ -320,7 +290,7 @@ export default function ExposureTab() {
                         <span className="text-sm font-bold">{formatNumber(complexityComp.modifier, 3)}x</span>
                       </div>
                     </div>
-                  </div>
+                  </InfoPanel>
                 )}
 
                 {/* Combined modifier */}
@@ -356,64 +326,17 @@ export default function ExposureTab() {
               <ScatterIcon className="icon"/><span className="text-sm">Exposure Magnitude vs. Overall Risk</span>
             </div>
             <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-              <div className="pl-dsi-pad pr-dsi-pad flex gap-4 mb-2 text-[10px] uppercase tracking-wider">
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-approve"></span> Approve</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-refer"></span> Refer</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-decline"></span> Decline</span>
-                <span className="flex items-center gap-1"><span className="inline-block w-2 h-2 rounded-full bg-dsi-muted"></span> Unknown</span>
-              </div>
-              <div className="pl-dsi-pad pr-dsi-pad h-[400px] w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.5} />
-                    <XAxis
-                      type="number"
-                      dataKey="x_magnitude"
-                      name="Magnitude Score"
-                      stroke="var(--dsi-chart-axis)"
-                      tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                      label={{ value: 'Exposure Magnitude Score (0-100)', position: 'insideBottom', offset: -15, fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="y_composite"
-                      name="Risk Score"
-                      stroke="var(--dsi-chart-axis)"
-                      tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                      label={{ value: 'Pure Composite Score (0-1000)', angle: -90, position: 'insideLeft', fill: 'var(--dsi-chart-axis)', fontSize: 12 }}
-                    />
-                    <RechartsTooltip
-                      cursor={{ strokeDasharray: '3 3' }}
-                      contentStyle={tooltipStyle}
-                      formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name]}
-                    />
-                    {/* Subject crosshair reference lines */}
-                    <ReferenceLine
-                      x={activeVersion.exposure_size_score || 0}
-                      stroke="var(--dsi-chart-subject)"
-                      strokeDasharray="4 4"
-                      strokeOpacity={0.6}
-                    />
-                    <ReferenceLine
-                      y={activeVersion.pure_composite_score || 0}
-                      stroke="var(--dsi-chart-subject)"
-                      strokeDasharray="4 4"
-                      strokeOpacity={0.6}
-                    />
-                    {/* Peer dots colored by decision */}
-                    {exposureScatterData.map((point: any, idx: number) => (
-                      <Scatter
-                        key={`peer-${idx}`}
-                        data={[point]}
-                        fill={getDecisionColor(point.decision)}
-                        fillOpacity={0.5}
-                        isAnimationActive={false}
-                      />
-                    ))}
-                    <Scatter name="Active Submission" data={activePoint} fill="var(--dsi-chart-subject)" shape="star" />
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
+              <PeerScatterChart
+                points={exposureScatterData.map((p: any) => ({ x: p.x_magnitude, y: p.y_composite, decision: p.decision }))}
+                subject={{
+                  x: activeVersion.exposure_size_score || 0,
+                  y: activeVersion.pure_composite_score || 0,
+                }}
+                xLabel="Exposure Magnitude Score (0-100)"
+                yLabel="Pure Composite Score (0-1000)"
+                xName="Magnitude Score"
+                yName="Risk Score"
+              />
             </div>
           </div>
 
@@ -429,58 +352,16 @@ export default function ExposureTab() {
               </div>
               <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
                 <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
-                <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
-                  {exposureBandBenchmarks.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={exposureBandBenchmarks} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
-                        <XAxis dataKey="band_label" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }} domain={['auto', 'auto']} />
-                        <RechartsTooltip
-                          contentStyle={tooltipStyle}
-                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
-                          formatter={(value: any, name: string) => {
-                            if (name === 'avg_modifier') return [`${formatNumber(Number(value), 3)}x`, 'Avg Modifier'];
-                            return [value, name];
-                          }}
-                          labelFormatter={(label) => {
-                            const match = exposureBandBenchmarks.find((d: any) => d.band_label === label);
-                            if (!match) return label;
-                            return `${label} (n=${match.peer_count}, avg value ${formatCurrency(Number(match.avg_exposure_value || 0))})`;
-                          }}
-                        />
-                        {/* Subject modifier reference line */}
-                        <ReferenceLine
-                          y={subjectModifier}
-                          stroke="var(--dsi-chart-subject)"
-                          strokeDasharray="6 3"
-                          strokeWidth={2}
-                        >
-                          <Label value={`Subject ${formatNumber(subjectModifier, 3)}x`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
-                        </ReferenceLine>
-                        <Bar dataKey="avg_modifier" radius={[4, 4, 0, 0]}
-                          label={({ x, y, width, index }: any) => {
-                            const entry = exposureBandBenchmarks[index];
-                            return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
-                                n={entry?.peer_count}
-                              </text>
-                            );
-                          }}
-                        >
-                          {exposureBandBenchmarks.map((entry: any, index: number) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={entry.band_label === activeVersion.exposure_band_label ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex h-full items-center justify-center opacity-50 italic text-sm">No band data available.</div>
-                  )}
-                </div>
+                <BenchmarkBarChart
+                  data={exposureBandBenchmarks}
+                  categoryKey="band_label"
+                  valueKey="avg_modifier"
+                  subjectCategory={activeVersion.exposure_band_label}
+                  subjectValue={subjectModifier}
+                  peerCountKey="peer_count"
+                  valueName="Avg Modifier"
+                  emptyMessage="No band data available."
+                />
               </div>
             </div>
 
@@ -491,54 +372,19 @@ export default function ExposureTab() {
               </div>
               <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
                 <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
-                <div className="pl-dsi-pad pr-dsi-pad h-[300px] w-full">
-                  {exposureTierDistribution.length > 0 ? (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={exposureTierDistribution} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--dsi-chart-grid)" opacity={0.5} />
-                        <XAxis dataKey="tier" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 12 }} domain={[0, 100]} />
-                        <RechartsTooltip
-                          contentStyle={tooltipStyle}
-                          cursor={{ fill: 'var(--dsi-chart-tooltip-bg)', opacity: 0.4 }}
-                          formatter={(value: any, name: string) => [formatNumber(Number(value), 1), name === 'avg_magnitude' ? 'Avg Magnitude' : name]}
-                          labelFormatter={(label) => {
-                            const match = exposureTierDistribution.find((d: any) => d.tier === label);
-                            return match ? `${label} (n=${match.peer_count})` : label;
-                          }}
-                        />
-                        {/* Subject magnitude reference line */}
-                        <ReferenceLine
-                          y={subjectMagnitude}
-                          stroke="var(--dsi-chart-subject)"
-                          strokeDasharray="6 3"
-                          strokeWidth={2}
-                        >
-                          <Label value={`Subject ${formatNumber(subjectMagnitude, 1)}`} position="right" fill="var(--dsi-chart-subject)" fontSize={11} />
-                        </ReferenceLine>
-                        <Bar dataKey="avg_magnitude" fill="var(--dsi-chart-peer)" radius={[4, 4, 0, 0]}
-                          label={({ x, y, width, index }: any) => {
-                            const entry = exposureTierDistribution[index];
-                            return (
-                              <text x={x + width / 2} y={y - 6} textAnchor="middle" fill="var(--dsi-chart-axis)" fontSize={10}>
-                                n={entry?.peer_count}
-                              </text>
-                            );
-                          }}
-                        >
-                           {exposureTierDistribution.map((entry: any, index: number) => (
-                            <Cell
-                              key={`cell-${index}`}
-                              fill={entry.tier === `Tier ${activeVersion.final_tier}` ? 'var(--dsi-chart-subject)' : 'var(--dsi-chart-peer)'}
-                            />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  ) : (
-                    <div className="flex h-full items-center justify-center opacity-50 italic text-sm">No tier data available.</div>
-                  )}
-                </div>
+                <BenchmarkBarChart
+                  data={exposureTierDistribution}
+                  categoryKey="tier"
+                  valueKey="avg_magnitude"
+                  subjectCategory={`Tier ${activeVersion.final_tier}`}
+                  subjectValue={subjectMagnitude}
+                  subjectValueDecimals={1}
+                  peerCountKey="peer_count"
+                  valueName="Avg Magnitude"
+                  formatValue={(v) => formatNumber(v, 1)}
+                  yDomain={[0, 100]}
+                  emptyMessage="No tier data available."
+                />
               </div>
             </div>
 

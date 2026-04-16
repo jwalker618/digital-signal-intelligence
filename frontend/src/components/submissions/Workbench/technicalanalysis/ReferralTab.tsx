@@ -8,15 +8,8 @@ import {
   ChevronDown, ChevronRight
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
-
-const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
-  referral:      { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
-  refer:         { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
-  tier_override: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
-  flag:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
-  note:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
-};
+import { StatusPill } from "@/components/base/content/primatives";
+import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
 
 export default function ReferralTab() {
   const {
@@ -205,19 +198,18 @@ export default function ReferralTab() {
           </div>
           {expandedGroups['ref_conditions'] && referralConditions.map((cond: any, idx: number) => {
             const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
-            const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
             return (
               <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 pl-8 bg-dsi-background/10 border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                  <ShieldAlert className={`w-3 h-3 shrink-0 ${getStatusStyle(ACTION_PALETTE, actionKey).text}`} />
                   <div className="min-w-0">
                     <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                     <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
                   </div>
                 </div>
-                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded shrink-0 ${colors.bg} ${colors.text}`}>
+                <StatusPill palette={ACTION_PALETTE} status={actionKey}>
                   {actionKey.replace('_', ' ')}
-                </span>
+                </StatusPill>
               </div>
             );
           })}

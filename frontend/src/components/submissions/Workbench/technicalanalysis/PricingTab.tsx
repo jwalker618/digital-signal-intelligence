@@ -1,29 +1,20 @@
 "use client";
 
-import { useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import { formatNumber, formatPercent, formatCurrency } from "@/lib/format";
 import {
-  Calculator, HandCoins, ChevronDown,
-  ChevronRight, ArrowRightToLine, Paperclip,
-  ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis
+  formatNumber,
+  formatPercent,
+  formatCurrency,
+  formatText,
+} from "@/lib/format";
+import { ExpandableGroupTable } from "@/components/base/content/primatives";
+import {
+  Calculator, HandCoins, ArrowRightToLine, Paperclip,
+  ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis,
 } from "lucide-react";
 
 export default function PricingTab() {
   const { activeSubmission, activeQuote, activeVersion, isSelectingLimit, selectLimitOption } = useDsiStore();
-
-  // Accordion state for the grouped modifiers
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({
-    categorical: false,
-    signal: false,
-    direct: false,
-    loss: false,
-    exposure: false,
-  });
-
-  const toggleGroup = (group: string) => {
-    setExpandedGroups(prev => ({ ...prev, [group]: !prev[group] }));
-  };
 
   if (!activeSubmission || !activeVersion) {
     return (
@@ -270,461 +261,72 @@ export default function PricingTab() {
 
               </div>
 
-            {/*ADJUSTMENTS*/}
-            <div className="grid grid-cols-[50%_10%_20%_20%] pt-2 pb-2">
-
-              {/* row 1: Table Headers */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                flex gap-dsi-pad text-sm pt-2 pb-2"
-                >
-                  <PenLine className="icon"/> Adjustments
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                text-center text-xs pt-2 pb-2"
-                >Modifier
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                text-right text-xs pt-2 pb-2"
-                >Impact
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                pl-dsi-pad pr-dsi-pad text-right text-xs pt-2 pb-2"
-                >Result
-              </div>
-
-              {/* ==============================================
-                  CATEGORICAL HEADER
-                  ============================================== */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                hover:text-dsi-selected cursor-pointer
-                border-t border-dsi-outline/10
-                flex gap-dsi-pad
-                text-sm
-                pt-dsi-pad pb-dsi-pad
-                "
-                onClick={() => toggleGroup('categorical')}
-                >
-                  {expandedGroups.categorical ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Categorical
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                text-xs text-center content-center
-                border-t border-dsi-outline/10
-                "
-                onClick={() => toggleGroup('categorical')}
-                >
-                  {categoricalItems.length} items
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                text-right font-bold content-center
-                "
-                onClick={() => toggleGroup('categorical')}
-                >
-                  {formatCurrency(categoricalTotal)}
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
-                "
-                onClick={() => toggleGroup('categorical')}
-                >
-                  {formatCurrency(premiumAfterCategorical)}
-              </div>
-
-              {/* ==============================================
-                  GROUP BODY: Categorical Items
-                  ============================================== */}
-              {expandedGroups.categorical && categoricalItems.map((mod, idx) => (
-                <div key={`cat-${idx}`} className="contents">
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                    title={mod.name}
-                    >
-                    {mod.name}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-center text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatNumber(mod.multiplier, 3)}x
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatCurrency(mod.impact)}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
-                    >
-                    -
-                  </div>
-                </div>
-              ))}
-
-              {expandedGroups.categorical && categoricalItems.length === 0 && (
-                <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
-                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                  >
-                  No modifiers applied.
-                </div>
-              )}
-
-
-              {/* ==============================================
-                  SIGNAL HEADER
-                  ============================================== */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                hover:text-dsi-selected cursor-pointer
-                border-t border-dsi-outline/10
-                flex gap-dsi-pad
-                text-sm
-                pt-dsi-pad pb-dsi-pad
-                "
-                onClick={() => toggleGroup('signal')}
-                >
-                  {expandedGroups.signal ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Signal
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                text-xs text-center content-center
-                border-t border-dsi-outline/10
-                "
-                onClick={() => toggleGroup('signal')}
-                >
-                  {signalItems.length} items
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                text-right font-bold content-center
-                "
-                onClick={() => toggleGroup('signal')}
-                >
-                  {formatCurrency(signalTotal)}
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
-                "
-                onClick={() => toggleGroup('signal')}
-                >
-                  {formatCurrency(premiumAfterSignal)}
-              </div>
-
-              {/* ==============================================
-                  GROUP BODY: Signal Items
-                  ============================================== */}
-              {expandedGroups.signal && signalItems.map((mod, idx) => (
-                <div key={`sig-${idx}`} className="contents">
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                    title={mod.name}
-                    >
-                    {mod.name}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-center text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatNumber(mod.multiplier, 3)}x
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatCurrency(mod.impact)}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
-                    >
-                    -
-                  </div>
-                </div>
-              ))}
-
-              {expandedGroups.signal && signalItems.length === 0 && (
-                <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
-                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                  >
-                  No modifiers applied.
-                </div>
-              )}
-
-
-              {/* ==============================================
-                  DIRECT HEADER
-                  ============================================== */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                hover:text-dsi-selected cursor-pointer
-                border-t border-dsi-outline/10
-                flex gap-dsi-pad
-                text-sm
-                pt-dsi-pad pb-dsi-pad
-                "
-                onClick={() => toggleGroup('direct')}
-                >
-                  {expandedGroups.direct ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Direct Query
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                text-xs text-center content-center
-                border-t border-dsi-outline/10
-                "
-                onClick={() => toggleGroup('direct')}
-                >
-                  {directItems.length} items
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                text-right font-bold content-center
-                "
-                onClick={() => toggleGroup('direct')}
-                >
-                  {formatCurrency(directTotal)}
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
-                "
-                onClick={() => toggleGroup('direct')}
-                >
-                  {formatCurrency(premiumAfterDirect)}
-              </div>
-
-              {/* ==============================================
-                  GROUP BODY: Direct Items
-                  ============================================== */}
-              {expandedGroups.direct && directItems.map((mod, idx) => (
-                <div key={`dir-${idx}`} className="contents">
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                    title={mod.name}
-                    >
-                    {mod.name}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-center text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatNumber(mod.multiplier, 3)}x
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatCurrency(mod.impact)}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
-                    >
-                    -
-                  </div>
-                </div>
-              ))}
-
-              {expandedGroups.direct && directItems.length === 0 && (
-                <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
-                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                  >
-                  No modifiers applied.
-                </div>
-              )}
-
-
-              {/* ==============================================
-                  LOSS HEADER
-                  ============================================== */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                hover:text-dsi-selected cursor-pointer
-                border-t border-dsi-outline/10
-                flex gap-dsi-pad
-                text-sm
-                pt-dsi-pad pb-dsi-pad
-                "
-                onClick={() => toggleGroup('loss')}
-                >
-                  {expandedGroups.loss ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Loss Analysis
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                text-xs text-center content-center
-                border-t border-dsi-outline/10
-                "
-                onClick={() => toggleGroup('loss')}
-                >
-                  {lossItems.length} items
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                text-right font-bold content-center
-                "
-                onClick={() => toggleGroup('loss')}
-                >
-                  {formatCurrency(lossTotal)}
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
-                "
-                onClick={() => toggleGroup('loss')}
-                >
-                  {formatCurrency(premiumAfterLoss)}
-              </div>
-
-              {/* ==============================================
-                  GROUP BODY: Loss Items
-                  ============================================== */}
-              {expandedGroups.loss && lossItems.map((mod, idx) => (
-                <div key={`loss-${idx}`} className="contents">
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                    title={mod.name}
-                    >
-                    {mod.name}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-center text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatNumber(mod.multiplier, 3)}x
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatCurrency(mod.impact)}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
-                    >
-                    -
-                  </div>
-                </div>
-              ))}
-
-              {expandedGroups.loss && lossItems.length === 0 && (
-                <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
-                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                  >
-                  No modifiers applied.
-                </div>
-              )}
-
-              {/* ==============================================
-                  EXPOSURE HEADER
-                  ============================================== */}
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse
-                hover:text-dsi-selected cursor-pointer
-                border-t border-dsi-outline/10
-                flex gap-dsi-pad
-                text-sm
-                pt-dsi-pad pb-dsi-pad
-                "
-                onClick={() => toggleGroup('exposure')}
-                >
-                  {expandedGroups.exposure ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />} Exposure Analysis
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                text-xs text-center content-center
-                border-t border-dsi-outline/10
-                "
-                onClick={() => toggleGroup('exposure')}
-                >
-                  {exposureItems.length} items
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                text-right font-bold content-center
-                "
-                onClick={() => toggleGroup('exposure')}
-                >
-                  {formatCurrency(exposureTotal)}
-              </div>
-              <div className="
-                overflow-x-hidden whitespace-nowrap border-collapse cursor-pointer
-                border-t border-dsi-outline/10
-                pl-dsi-pad pr-dsi-pad text-right text-sm content-center
-                "
-                onClick={() => toggleGroup('exposure')}
-                >
-                  {formatCurrency(premiumAfterExposure)}
-              </div>
-
-              {/* ==============================================
-                  GROUP BODY: Exposure Items
-                  ============================================== */}
-              {expandedGroups.exposure && exposureItems.map((mod, idx) => (
-                <div key={`exp-${idx}`} className="contents">
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                    title={mod.name}
-                    >
-                    {mod.name}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-center text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatNumber(mod.multiplier, 3)}x
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30"
-                    >
-                    {formatCurrency(mod.impact)}
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-right text-xs content-center bg-dsi-background/30 pr-dsi-pad"
-                    >
-                    -
-                  </div>
-                </div>
-              ))}
-
-              {expandedGroups.exposure && exposureItems.length === 0 && (
-                <div className="
-                  col-span-4 overflow-x-hidden whitespace-nowrap border-collapse
-                  text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
-                  >
-                  No modifiers applied.
-                </div>
-              )}
-
-            </div>
+            {/* ADJUSTMENTS — ExpandableGroupTable over the 5 modifier sources */}
+            <ExpandableGroupTable
+              columns={[
+                {
+                  label: (<><PenLine className="icon" /> Adjustments</>),
+                  field: "name",       width: "50%", format: "text", textCase: "capitalize",
+                  headeralign: "left",
+                },
+                { label: "Modifier", field: "multiplier", width: "10%", format: "number",   decimals: 3, align: "center", headeralign: "center" },
+                { label: "Impact",   field: "impact",     width: "20%", format: "currency",                       headeralign: "right" },
+                { label: "Result",   field: null,         width: "20%", align: "right", headeralign: "right" },
+              ]}
+              groups={[
+                {
+                  key: "categorical", title: "Categorical", items: categoricalItems,
+                  summary: [
+                    `${categoricalItems.length} items`,
+                    formatCurrency(categoricalTotal),
+                    formatCurrency(premiumAfterCategorical),
+                  ],
+                  emptyMessage: "No modifiers applied.",
+                },
+                {
+                  key: "signal", title: "Signal", items: signalItems,
+                  summary: [
+                    `${signalItems.length} items`,
+                    formatCurrency(signalTotal),
+                    formatCurrency(premiumAfterSignal),
+                  ],
+                  emptyMessage: "No modifiers applied.",
+                },
+                {
+                  key: "direct", title: "Direct Query", items: directItems,
+                  summary: [
+                    `${directItems.length} items`,
+                    formatCurrency(directTotal),
+                    formatCurrency(premiumAfterDirect),
+                  ],
+                  emptyMessage: "No modifiers applied.",
+                },
+                {
+                  key: "loss", title: "Loss Analysis", items: lossItems,
+                  summary: [
+                    `${lossItems.length} items`,
+                    formatCurrency(lossTotal),
+                    formatCurrency(premiumAfterLoss),
+                  ],
+                  emptyMessage: "No modifiers applied.",
+                },
+                {
+                  key: "exposure", title: "Exposure Analysis", items: exposureItems,
+                  summary: [
+                    `${exposureItems.length} items`,
+                    formatCurrency(exposureTotal),
+                    formatCurrency(premiumAfterExposure),
+                  ],
+                  emptyMessage: "No modifiers applied.",
+                },
+              ]}
+              renderItemCells={(mod: typeof categoricalItems[number]) => [
+                formatText(mod.name, "capitalize"),
+                `${formatNumber(mod.multiplier, 3)}x`,
+                formatCurrency(mod.impact),
+                "-",
+              ]}
+            />
 
               {/* FINAL PREMIUM CALCULATION */}
               <div className="

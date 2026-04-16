@@ -7,15 +7,8 @@ import {
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
 import { formatNumber, formatPercent, formatDate, formatText, formatCurrency } from "@/lib/format";
-
-const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
-  modifier:      { bg: 'bg-dsi-info/15', text: 'text-dsi-info' },
-  referral:      { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
-  refer:         { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
-  tier_override: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
-  flag:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
-  note:          { bg: 'bg-dsi-muted/15', text: 'text-dsi-muted' },
-};
+import { KpiTile, StatusPill } from "@/components/base/content/primatives";
+import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
 
 export default function RiskTab() {
   const { activeSubmission, activeVersion, activeQuote, riskSignals, isFetchingRiskSignals, fetchRiskSignals } = useDsiStore();
@@ -203,37 +196,12 @@ export default function RiskTab() {
         </div>
         <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
           <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pl-dsi-pad pr-dsi-pad">
-            
-            <div>
-              <span className="block text-sm mb-1">Pure Composite Score</span>
-              <span className="font-bold text-xl">{formatNumber(activeVersion.pure_composite_score, 1)}</span>
-            </div>  
-
-            <div>
-              <span className="block text-sm mb-1">Confidence</span>
-              <span className="font-bold text-lg">{formatPercent(activeVersion.confidence || 0, 0)}</span>
-            </div>
-
-            <div>
-              <span className="block text-sm mb-1">Signal Coverage</span>
-              <span className="font-bold text-lg">{formatPercent(activeVersion.signal_coverage || 0, 0)}</span>
-            </div>
-
-            <div>
-              <span className="block text-sm mb-1">Pure Score-Based Tier</span>
-              <span className="font-bold text-lg">T{activeVersion.score_based_tier}</span>
-            </div>
-
-            <div>
-              <span className="block text-sm mb-1">Final Composite Score</span>
-              <span className="font-bold text-lg text-dsi-selected normal-case">{formatNumber(activeVersion.final_composite_score, 1)}</span>
-            </div>
-
-            <div>
-              <span className="block text-sm mb-1">Final Tier</span>
-              <span className="font-bold text-lg text-dsi-selected normal-case">T{activeVersion.final_tier} ({activeVersion.tier_label})</span>
-            </div>
-
+            <KpiTile label="Pure Composite Score" value={formatNumber(activeVersion.pure_composite_score, 1)} />
+            <KpiTile label="Confidence"           value={formatPercent(activeVersion.confidence || 0, 0)} />
+            <KpiTile label="Signal Coverage"      value={formatPercent(activeVersion.signal_coverage || 0, 0)} />
+            <KpiTile label="Pure Score-Based Tier" value={`T${activeVersion.score_based_tier}`} />
+            <KpiTile label="Final Composite Score" value={formatNumber(activeVersion.final_composite_score, 1)} variant="emphasis" />
+            <KpiTile label="Final Tier"            value={`T${activeVersion.final_tier} (${activeVersion.tier_label})`} variant="emphasis" />
           </div>
         </div>
       </div>
@@ -466,14 +434,13 @@ export default function RiskTab() {
                       <div className="ml-8 mr-dsi-pad mb-1">
                         {groupConditions.map((cond: any, cidx: number) => {
                           const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
-                          const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
                           return (
                             <div key={`gc-${cidx}`} className="flex items-center gap-2 py-1 text-xs">
-                              <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                              <ShieldAlert className={`w-3 h-3 shrink-0 ${getStatusStyle(ACTION_PALETTE, actionKey).text}`} />
                               <span className="opacity-70 truncate">{cond.note || cond.source_name || 'Condition'}</span>
-                              <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${colors.bg} ${colors.text}`}>
+                              <StatusPill palette={ACTION_PALETTE} status={actionKey}>
                                 {actionKey.replace('_', ' ')}
-                              </span>
+                              </StatusPill>
                             </div>
                           );
                         })}
@@ -579,11 +546,11 @@ export default function RiskTab() {
                     </div>
                     {isExpanded && conds.map((cond: any, cidx: number) => {
                       const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
-                      const colors = ACTION_COLORS[actionKey] || ACTION_COLORS.note;
+                      const actionStyle = getStatusStyle(ACTION_PALETTE, actionKey);
                       return (
                         <div key={cidx} className="flex items-center justify-between px-dsi-pad py-2 pl-8 bg-dsi-background/10 border-b border-dsi-outline/5 hover:bg-dsi-background/20 transition-colors">
                           <div className="flex items-center gap-3 min-w-0">
-                            <ShieldAlert className={`w-3 h-3 shrink-0 ${colors.text}`} />
+                            <ShieldAlert className={`w-3 h-3 shrink-0 ${actionStyle.text}`} />
                             <div className="min-w-0">
                               <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                               <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
@@ -595,9 +562,9 @@ export default function RiskTab() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2 shrink-0 ml-2">
-                            <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded ${colors.bg} ${colors.text}`}>
+                            <StatusPill palette={ACTION_PALETTE} status={actionKey} size="md">
                               {actionKey.replace('_', ' ')}
-                            </span>
+                            </StatusPill>
                             {cond.action_value != null && typeof cond.action_value === 'number' && (
                               <span className="text-xs font-bold opacity-70 w-16 text-right">
                                 {actionKey === 'modifier' ? formatPercent(cond.action_value, 0) :

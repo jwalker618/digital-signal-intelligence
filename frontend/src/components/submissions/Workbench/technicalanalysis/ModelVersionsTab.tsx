@@ -5,13 +5,17 @@ import { useDsiStore } from "@/store/dsiStore";
 import { formatNumber, formatPercent, formatDate } from "@/lib/format";
 import {
   GitBranch, GitCommit, Bot, User, Paperclip,
-  ShieldCheck, ShieldAlert, AlertTriangle, ArrowDown, MessageSquare
+  ShieldCheck, ShieldAlert, AlertTriangle, ArrowDown, MessageSquare,
+  LucideIcon,
 } from "lucide-react";
 
-const DECISION_BADGE: Record<string, { bg: string; text: string }> = {
-  approve: { bg: 'bg-dsi-positive/15', text: 'text-dsi-positive' },
-  refer: { bg: 'bg-dsi-warning/15', text: 'text-dsi-warning' },
-  decline: { bg: 'bg-dsi-negative/15', text: 'text-dsi-negative' },
+import { StatusPill } from "@/components/base/content/primatives";
+import { DECISION_PALETTE } from "@/lib/statusPalette";
+
+const DECISION_ICON: Record<string, LucideIcon> = {
+  approve: ShieldCheck,
+  refer:   ShieldAlert,
+  decline: AlertTriangle,
 };
 
 const TYPE_LABEL: Record<string, string> = {
@@ -121,7 +125,6 @@ export default function ModelVersionsTab() {
               const tierChanged = prevVersion && mvTier !== prevTier;
 
               const decision = (mv.decision || '').toLowerCase();
-              const badge = DECISION_BADGE[decision];
               const versionType = TYPE_LABEL[mv.version_type] || mv.version_type || 'Version';
 
               // Conditions & notes counts
@@ -191,14 +194,16 @@ export default function ModelVersionsTab() {
                             )}
                           </div>
                         </div>
-                        {badge && (
+                        {DECISION_PALETTE[decision] && (
                           <div>
-                            <span className={`text-[10px] font-bold uppercase px-2 py-1 rounded ${badge.bg} ${badge.text}`}>
-                              {decision === 'approve' && <ShieldCheck className="w-3 h-3 inline mr-1" />}
-                              {decision === 'refer' && <ShieldAlert className="w-3 h-3 inline mr-1" />}
-                              {decision === 'decline' && <AlertTriangle className="w-3 h-3 inline mr-1" />}
+                            <StatusPill
+                              palette={DECISION_PALETTE}
+                              status={decision}
+                              lucideIcon={DECISION_ICON[decision]}
+                              size="md"
+                            >
                               {decision}
-                            </span>
+                            </StatusPill>
                           </div>
                         )}
                       </div>
