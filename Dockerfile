@@ -16,11 +16,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
-COPY requirements.txt .
+COPY requirements.txt requirements-otel.txt ./
 
-# Install Python dependencies
+# Install Python dependencies (incl. OpenTelemetry — runtime-gated by
+# DSI_OTEL_ENABLED, but always present so production images can flip on
+# instrumentation without a rebuild).
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir -r requirements-otel.txt
 
 # =============================================================================
 # Stage 2: Runtime

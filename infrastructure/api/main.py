@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse
 from .types import HealthResponse
 from .observability.logging_config import configure_logging
 from .observability.metrics import metrics, get_metrics_response
+from .observability.otel import init_otel as init_otel_tracing
 from .observability.rate_limiter import RateLimitMiddleware, set_redis_limiter
 
 # Configure structured logging before anything else
@@ -193,6 +194,11 @@ app = FastAPI(
     redoc_url="/api/redoc" if not settings.is_production else None,
     openapi_url="/api/openapi.json" if not settings.is_production else None,
 )
+
+# V6 Phase 6 (C3): OpenTelemetry auto-instrumentation.
+# No-op unless DSI_OTEL_ENABLED=true. Production deploys enable it via the
+# ConfigMap; local dev stays quiet by default.
+init_otel_tracing(app=app)
 
 
 # =============================================================================
