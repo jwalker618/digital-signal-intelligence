@@ -9,6 +9,7 @@ import {
 import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
 import { formatNumber, formatCurrency } from "@/lib/format";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CompareRow } from "@/components/base/content/primatives";
 
 const deltaColor = (s: number, o: number) =>
   Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-positive';
@@ -297,11 +298,11 @@ export default function ScenarioTab() {
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
                 </div>
-                <CalcRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNumber(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNumber(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
-                <CalcRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNumber(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNumber(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
-                <CalcRow label="Propensity Band" sublabel="" original={activeVersion?.loss_propensity_band?.replace(/_/g, ' ')?.toUpperCase() || 'N/A'} scenario={scenario.loss_modifier?.propensity_band?.replace(/_/g, ' ')?.toUpperCase() || '-'} changed={scenario.loss_modifier != null && scenario.loss_modifier.propensity_band !== activeVersion?.loss_propensity_band} />
-                <CalcRow label="Frequency Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.frequency_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
-                <CalcRow label="Severity Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.severity_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                <CompareRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNumber(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNumber(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CompareRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNumber(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNumber(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
+                <CompareRow label="Propensity Band" sublabel="" original={activeVersion?.loss_propensity_band?.replace(/_/g, ' ')?.toUpperCase() || 'N/A'} scenario={scenario.loss_modifier?.propensity_band?.replace(/_/g, ' ')?.toUpperCase() || '-'} changed={scenario.loss_modifier != null && scenario.loss_modifier.propensity_band !== activeVersion?.loss_propensity_band} />
+                <CompareRow label="Frequency Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.frequency_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
+                <CompareRow label="Severity Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.severity_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
                 {/* Combined result */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t-2 border-dsi-outline/20 mt-1">
                   <span className="text-sm font-bold">Combined Modifier</span>
@@ -334,9 +335,9 @@ export default function ScenarioTab() {
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
                 </div>
-                <CalcRow label="Exposure Value" sublabel="TIV / Revenue" original={formatCurrency(activeVersion?.exposure_value)} scenario={formatCurrency(activeVersion?.exposure_value)} changed={false} />
-                <CalcRow label="Size Score" sublabel="" original={formatNumber(activeVersion?.exposure_size_score, 1)} scenario={formatNumber(activeVersion?.exposure_size_score, 1)} changed={false} />
-                <CalcRow label="Exposure Band" sublabel="" original={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} scenario={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} changed={false} />
+                <CompareRow label="Exposure Value" sublabel="TIV / Revenue" original={formatCurrency(activeVersion?.exposure_value)} scenario={formatCurrency(activeVersion?.exposure_value)} changed={false} />
+                <CompareRow label="Size Score" sublabel="" original={formatNumber(activeVersion?.exposure_size_score, 1)} scenario={formatNumber(activeVersion?.exposure_size_score, 1)} changed={false} />
+                <CompareRow label="Exposure Band" sublabel="" original={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} scenario={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} changed={false} />
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t border-dsi-outline/20">
                   <span className="text-sm font-bold">Exposure Modifier</span>
                   <span className="text-right text-sm font-bold">{formatNumber(scenario.original_exposure_modifier, 3)}x</span>
@@ -521,20 +522,3 @@ export default function ScenarioTab() {
   );
 }
 
-// ─── Calculation Row Sub-component ───────────────────────────────────────────
-
-function CalcRow({ label, sublabel, original, scenario, changed }: {
-  label: string; sublabel: string; original: string; scenario: string; changed: boolean;
-}) {
-  return (
-    <div className={`grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-1.5 border-b border-dsi-outline/5 ${changed ? 'bg-dsi-selected/5' : ''}`}>
-      <div>
-        <span className="text-xs">{label}</span>
-        {sublabel && <span className="text-[10px] opacity-30 block">{sublabel}</span>}
-      </div>
-      <span className="text-right text-xs opacity-70">{original}</span>
-      <span className="text-center opacity-30 text-xs">→</span>
-      <span className={`text-right text-xs font-bold ${changed ? 'text-dsi-selected' : ''}`}>{scenario}</span>
-    </div>
-  );
-}
