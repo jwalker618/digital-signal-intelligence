@@ -369,10 +369,11 @@ export default function SummaryTab() {
           spanClass="col-span-1 md:col-span-2 lg:col-span-2"
         >
           <ContributionTable
-            columnHeaders={["Contribution"]}
+            columns={[
+              { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
+            ]}
             rows={mockContributionRows}
             otherRow={mockContributionOther}
-            fields={["risk_contribution"]}
           />
         </ShowcaseSection>
 

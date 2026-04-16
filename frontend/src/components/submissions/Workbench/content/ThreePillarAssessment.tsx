@@ -18,6 +18,8 @@ import { getSortedItems, getOtherRow } from "@/lib/utils";
 import {
   ContributionTable,
   ContributionRow,
+  ContributionColumn,
+  ContributionGroupColumn,
 } from "@/components/base/content/primatives";
 
 /* ── Local helper ─────────────────────────────────────────────────────── */
@@ -35,10 +37,10 @@ interface PillarProps {
   titleUnderline?: boolean;
   metrics: PillarMetric[];
   calculationLabel: string;
-  columnHeaders: string[];
+  groupColumn?: ContributionGroupColumn;
+  columns: ContributionColumn[];
   rows: ContributionRow[];
   otherRow?: ContributionRow;
-  fields: string[];
 }
 
 function Pillar({
@@ -47,10 +49,10 @@ function Pillar({
   titleUnderline = false,
   metrics,
   calculationLabel,
-  columnHeaders,
+  groupColumn,
+  columns,
   rows,
   otherRow,
-  fields,
 }: PillarProps) {
   return (
     <div>
@@ -82,10 +84,10 @@ function Pillar({
 
       {/* Contribution table */}
       <ContributionTable
-        columnHeaders={columnHeaders}
+        groupColumn={groupColumn}
+        columns={columns}
         rows={rows}
         otherRow={otherRow}
-        fields={fields}
       />
     </div>
   );
@@ -126,10 +128,11 @@ export default function ThreePillarAssessment() {
         icon={ChartNoAxesGantt}
         titleUnderline
         calculationLabel="Composite Score Calculation"
-        columnHeaders={["Contribution"]}
+        columns={[
+          { label: "Contribution", field: "risk_contribution", width: "50%", align: "right" },
+        ]}
         rows={riskGroup}
         otherRow={riskOther}
-        fields={["risk_contribution"]}
         metrics={[
           { label: "Overall Confidence", value: formatPercent(activeVersion.confidence, 0) },
           {
@@ -144,10 +147,12 @@ export default function ThreePillarAssessment() {
         title="Loss Propensity"
         icon={TrendingUpDown}
         calculationLabel="Loss Propensity Calculation"
-        columnHeaders={["Severity", "Frequency"]}
+        columns={[
+          { label: "Severity",  field: "severity_contribution",  align: "right" },
+          { label: "Frequency", field: "frequency_contribution", align: "right" },
+        ]}
         rows={lossGroup}
         otherRow={lossOther}
-        fields={["severity_contribution", "frequency_contribution"]}
         metrics={[
           { label: "Loss Confidence", value: formatPercent(activeVersion.loss_confidence, 0) },
           {
@@ -161,10 +166,12 @@ export default function ThreePillarAssessment() {
         title="Exposure"
         icon={Globe}
         calculationLabel="Exposure Calculation"
-        columnHeaders={["Size", "Complexity"]}
+        columns={[
+          { label: "Size",       field: "size_contribution",       align: "right" },
+          { label: "Complexity", field: "complexity_contribution", align: "right" },
+        ]}
         rows={exposureGroup}
         otherRow={exposureOther}
-        fields={["size_contribution", "complexity_contribution"]}
         metrics={[
           {
             label: "Exposure Band",
