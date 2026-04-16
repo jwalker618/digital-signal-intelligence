@@ -67,6 +67,102 @@ coverages:
         product_type: standard
         industry_sector: TRANSPORTATION
         domain: fedex.com
+    - entity_id: ups
+      name: United Parcel Service, Inc.
+      config_id: casualty_auto
+      domain: ups.com
+      registry_id: US-Delaware-0001090727
+      minimum_viable_input:
+        revenue: 91009000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TRANSPORTATION
+        domain: ups.com
+    - entity_id: target
+      name: Target Corporation
+      config_id: casualty_gl
+      domain: target.com
+      registry_id: US-Minnesota-0000027419
+      minimum_viable_input:
+        revenue: 107412000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: target.com
+    - entity_id: caterpillar
+      name: Caterpillar Inc.
+      config_id: casualty_gl
+      domain: caterpillar.com
+      registry_id: US-Delaware-0000018230
+      minimum_viable_input:
+        revenue: 67060000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MANUFACTURING
+        domain: caterpillar.com
+    - entity_id: kroger
+      name: The Kroger Co.
+      config_id: casualty_umbrella
+      domain: kroger.com
+      registry_id: US-Ohio-0000056873
+      minimum_viable_input:
+        revenue: 148258000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: kroger.com
+    - entity_id: waste_management
+      name: Waste Management, Inc.
+      config_id: casualty_environmental
+      domain: wm.com
+      registry_id: US-Delaware-0000823768
+      minimum_viable_input:
+        revenue: 20726000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ENVIRONMENTAL_SERVICES
+        domain: wm.com
+    - entity_id: dupont
+      name: DuPont de Nemours, Inc.
+      config_id: casualty_environmental
+      domain: dupont.com
+      registry_id: US-Delaware-0001666700
+      minimum_viable_input:
+        revenue: 12069000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: CHEMICALS
+        domain: dupont.com
+    - entity_id: sysco
+      name: Sysco Corporation
+      config_id: casualty_auto
+      domain: sysco.com
+      registry_id: US-Delaware-0000096021
+      minimum_viable_input:
+        revenue: 76324000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: FOOD_DISTRIBUTION
+        domain: sysco.com
+    - entity_id: costco
+      name: Costco Wholesale Corporation
+      config_id: casualty_gl
+      domain: costco.com
+      registry_id: US-Washington-0000909832
+      minimum_viable_input:
+        revenue: 242290000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: costco.com
 
   cyber:
     - entity_id: microsoft
