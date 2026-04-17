@@ -165,6 +165,10 @@ jobs:
           python development/project/assessments/scripts/assess_config_compliance.py \
             --report compliance-report.json
 
+      - name: Stub-import guard (V6/E10, blocking)
+        run: |
+          python development/project/assessments/scripts/check_no_stub_imports.py
+
       - name: Golden-entity regression (blocking)
         run: |
           pytest tests/integration/test_golden_entities.py -v \
