@@ -1,0 +1,24 @@
+entity_id: small_regional_reins
+name: Regional Mutual Reinsurance Co
+coverage: reinsurance
+config_id: reins_sme
+domain: regionalmutualre.example
+registry_id: US-Vermont-VTRE00001
+minimum_viable_input:
+  revenue: 180000000
+  limit: 15000000
+  deductible: 250000
+  product_type: treaty_proportional
+  cedent_name: Regional Mutual Re
+  treaty_type: proportional
+  subject_business: homeowners
+  domain: regionalmutualre.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 8445.6
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

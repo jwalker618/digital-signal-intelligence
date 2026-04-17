@@ -1,0 +1,24 @@
+entity_id: berkshire_re
+name: Berkshire Hathaway Reinsurance Group
+coverage: reinsurance
+config_id: reins_facultative
+domain: berkshirehathaway.com
+registry_id: US-Delaware-BRK000001
+minimum_viable_input:
+  revenue: 25000000000
+  limit: 250000000
+  deductible: 10000000
+  product_type: facultative_single_risk
+  cedent_name: BH Reinsurance Group
+  treaty_type: facultative
+  subject_business: specialty
+  domain: berkshirehathaway.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 6955.2
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

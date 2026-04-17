@@ -2288,3 +2288,145 @@ coverages:
         product_type: tech_eo
         business_model: saas
         domain: rapidflow.example
+
+  reinsurance:
+    - entity_id: munich_re
+      name: Munich Re
+      config_id: reins_treaty_excess_of_loss
+      domain: munichre.com
+      registry_id: DE-Munich-HRB42039
+      minimum_viable_input:
+        revenue: 67146000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: Munich Re
+        treaty_type: xol
+        subject_business: property_cat
+        domain: munichre.com
+    - entity_id: swiss_re
+      name: Swiss Re
+      config_id: reins_treaty_excess_of_loss
+      domain: swissre.com
+      registry_id: CH-Zurich-CHE-103.728.497
+      minimum_viable_input:
+        revenue: 50003000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: Swiss Re
+        treaty_type: xol
+        subject_business: property_cat
+        domain: swissre.com
+    - entity_id: hannover_re
+      name: Hannover Re
+      config_id: reins_treaty_proportional
+      domain: hannover-re.com
+      registry_id: DE-Hannover-HRB6778
+      minimum_viable_input:
+        revenue: 30040000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_proportional
+        cedent_name: Hannover Re
+        treaty_type: proportional
+        subject_business: casualty
+        domain: hannover-re.com
+    - entity_id: scor
+      name: SCOR SE
+      config_id: reins_treaty_proportional
+      domain: scor.com
+      registry_id: FR-Paris-562033357
+      minimum_viable_input:
+        revenue: 21360000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_proportional
+        cedent_name: SCOR SE
+        treaty_type: proportional
+        subject_business: life
+        domain: scor.com
+    - entity_id: renaissance_re
+      name: RenaissanceRe Holdings Ltd.
+      config_id: reins_treaty_excess_of_loss
+      domain: renre.com
+      registry_id: BM-Hamilton-EC20793
+      minimum_viable_input:
+        revenue: 9210000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: RenaissanceRe
+        treaty_type: xol
+        subject_business: property_cat
+        domain: renre.com
+    - entity_id: partner_re
+      name: PartnerRe Ltd.
+      config_id: reins_treaty_excess_of_loss
+      domain: partnerre.com
+      registry_id: BM-Hamilton-PR00001
+      minimum_viable_input:
+        revenue: 8310000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: PartnerRe
+        treaty_type: xol
+        subject_business: casualty
+        domain: partnerre.com
+    - entity_id: arch_capital
+      name: Arch Capital Group Ltd.
+      config_id: reins_treaty_aggregate
+      domain: archcapgroup.com
+      registry_id: BM-Hamilton-EC39246
+      minimum_viable_input:
+        revenue: 14050000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_aggregate
+        cedent_name: Arch Capital
+        treaty_type: aggregate_stop_loss
+        subject_business: mortgage
+        domain: archcapgroup.com
+    - entity_id: everest_re
+      name: Everest Group, Ltd.
+      config_id: reins_facultative
+      domain: everestre.com
+      registry_id: BM-Hamilton-EC35146
+      minimum_viable_input:
+        revenue: 14780000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: facultative_single_risk
+        cedent_name: Everest Group
+        treaty_type: facultative
+        subject_business: property
+        domain: everestre.com
+    - entity_id: berkshire_re
+      name: Berkshire Hathaway Reinsurance Group
+      config_id: reins_facultative
+      domain: berkshirehathaway.com
+      registry_id: US-Delaware-BRK000001
+      minimum_viable_input:
+        revenue: 25000000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: facultative_single_risk
+        cedent_name: BH Reinsurance Group
+        treaty_type: facultative
+        subject_business: specialty
+        domain: berkshirehathaway.com
+    - entity_id: small_regional_reins
+      name: Regional Mutual Reinsurance Co
+      config_id: reins_sme
+      domain: regionalmutualre.example
+      registry_id: US-Vermont-VTRE00001
+      minimum_viable_input:
+        revenue: 180000000
+        limit: 15000000
+        deductible: 250000
+        product_type: treaty_proportional
+        cedent_name: Regional Mutual Re
+        treaty_type: proportional
+        subject_business: homeowners
+        domain: regionalmutualre.example
