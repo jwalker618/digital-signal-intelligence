@@ -27,7 +27,7 @@ preserved across sessions.
 | 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | **DONE** | (next) |
 | 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | **DONE** | (next) |
 | 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | **DONE** | (next) |
-| 1.5 | C3 OpenTelemetry end-to-end smoke with `DSI_OTEL_ENABLED=true` | PENDING | — |
+| 1.5 | C3 OpenTelemetry end-to-end smoke with `DSI_OTEL_ENABLED=true` | **DONE** | (next) |
 | 1.6 | E10 physical stub move — **BLOCKED** until A1–A8 complete (inference functions still import stubs) | BLOCKED | — |
 
 ## Stage 2 — MedProf depth-first template
@@ -83,6 +83,20 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### 1.5 — OpenTelemetry end-to-end smoke
+
+`tests/integration/test_otel_end_to_end.py` installs the SDK's
+`InMemorySpanExporter` behind the global TracerProvider, reloads the
+DSI otel module with `DSI_OTEL_ENABLED=true`, and asserts that
+`extractor_span(...)` emits a span named `extractor.<source>` with the
+expected DSI-namespaced attributes.
+
+Also asserts the None-attribute filter (`dsi.entity_id` etc. stripped
+when unset) so the exporter never sees null values.
+
+Module-scoped fixture avoids OTel's once-per-process TracerProvider
+lock; each test clears the exporter in a function-scoped fixture.
 
 ### 1.4 — Example dsi-demo overlay
 
