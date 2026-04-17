@@ -2166,3 +2166,125 @@ coverages:
         primary_country: KE
         sector: nonprofit
         domain: horizonaid.example
+
+  teo:
+    - entity_id: salesforce_teo
+      name: Salesforce, Inc.
+      config_id: teo_saas
+      domain: salesforce.com
+      registry_id: US-Delaware-0001108524
+      minimum_viable_input:
+        revenue: 34857000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: saas
+        domain: salesforce.com
+    - entity_id: servicenow_teo
+      name: ServiceNow, Inc.
+      config_id: teo_saas
+      domain: servicenow.com
+      registry_id: US-Delaware-0001373715
+      minimum_viable_input:
+        revenue: 8971000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: saas
+        domain: servicenow.com
+    - entity_id: snowflake_teo
+      name: Snowflake Inc.
+      config_id: teo_saas
+      domain: snowflake.com
+      registry_id: US-Delaware-0001640147
+      minimum_viable_input:
+        revenue: 2806000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: saas
+        domain: snowflake.com
+    - entity_id: datadog_teo
+      name: Datadog, Inc.
+      config_id: teo_saas
+      domain: datadoghq.com
+      registry_id: US-Delaware-0001561550
+      minimum_viable_input:
+        revenue: 2128000000
+        limit: 25000000
+        deductible: 500000
+        product_type: tech_eo
+        business_model: saas
+        domain: datadoghq.com
+    - entity_id: openai_teo
+      name: OpenAI, Inc.
+      config_id: teo_aiml_vendor
+      domain: openai.com
+      registry_id: US-Delaware-OPENAI001
+      minimum_viable_input:
+        revenue: 3400000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: aiml_liability
+        business_model: aiml_vendor
+        domain: openai.com
+    - entity_id: anthropic_teo
+      name: Anthropic, PBC
+      config_id: teo_aiml_vendor
+      domain: anthropic.com
+      registry_id: US-Delaware-ANTHROPIC1
+      minimum_viable_input:
+        revenue: 850000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: aiml_liability
+        business_model: aiml_vendor
+        domain: anthropic.com
+    - entity_id: accenture_teo
+      name: Accenture plc
+      config_id: teo_systems_integrator
+      domain: accenture.com
+      registry_id: IE-Dublin-471706
+      minimum_viable_input:
+        revenue: 64124000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: systems_integrator
+        domain: accenture.com
+    - entity_id: infosys_teo
+      name: Infosys Limited
+      config_id: teo_systems_integrator
+      domain: infosys.com
+      registry_id: IN-Bengaluru-L85110KA1981PLC013115
+      minimum_viable_input:
+        revenue: 18562000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: systems_integrator
+        domain: infosys.com
+    - entity_id: cdw_teo
+      name: CDW Corporation
+      config_id: teo_managed_service_provider
+      domain: cdw.com
+      registry_id: US-Delaware-0001402057
+      minimum_viable_input:
+        revenue: 21037000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: managed_services
+        domain: cdw.com
+    - entity_id: startup_saas_sme
+      name: RapidFlow Analytics (SME SaaS)
+      config_id: teo_sme
+      domain: rapidflow.example
+      registry_id: US-Delaware-RF0055777
+      minimum_viable_input:
+        revenue: 8000000
+        limit: 5000000
+        deductible: 50000
+        product_type: tech_eo
+        business_model: saas
+        domain: rapidflow.example
