@@ -419,6 +419,29 @@ def _load_d2_stack_extractors():
         _registry.register_production(name, cls)
 
 
+def _load_d5_climate_extractors():
+    """V6/D5 — climate / environment extractors (11)."""
+    try:
+        from . import climate as c
+    except ImportError as e:
+        logger.debug(f"Could not load D5 climate extractors: {e}")
+        return
+    for name, cls in (
+        ("climate.fema_flood", c.FEMAFloodExtractor),
+        ("climate.noaa_cdo", c.NOAACDOExtractor),
+        ("climate.usfs_fire_hazard", c.USFSFireHazardExtractor),
+        ("climate.usgs_seismic", c.USGSSeismicExtractor),
+        ("climate.copernicus_sentinel", c.CopernicusSentinelExtractor),
+        ("climate.ecmwf_era5", c.ECMWFERA5Extractor),
+        ("climate.cdp_open", c.CDPOpenDataExtractor),
+        ("climate.energystar", c.ENERGYSTARExtractor),
+        ("climate.epa_tri", c.TRIExtractor),
+        ("climate.epa_superfund", c.SuperfundExtractor),
+        ("climate.nrc_inspections", c.NRCInspectionExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
 # Eagerly register D1 + D2 + D3 extractors on import — they are cheap class
 # refs, no network calls happen until .extract() is invoked.
 _load_d1_web_extractors()
@@ -426,6 +449,7 @@ _load_d1_identity_extractors()
 _load_d1_sentiment_extractors()
 _load_d2_stack_extractors()
 _load_d3_litigation_extractors()
+_load_d5_climate_extractors()
 
 
 # Register loaders for known extractor types

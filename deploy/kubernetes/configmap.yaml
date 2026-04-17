@@ -86,5 +86,18 @@ data:
   DSI_DISABLE_BUILTWITH: "false"
   DSI_DISABLE_HTTPARCHIVE: "false"
 
+  # V6/D5 — Climate / environment extractor kill-switches.
+  DSI_DISABLE_FEMA_FLOOD: "false"
+  DSI_DISABLE_NOAA_CDO: "false"
+  DSI_DISABLE_USFS_FIRE: "false"
+  DSI_DISABLE_USGS_SEISMIC: "false"
+  DSI_DISABLE_COPERNICUS: "false"
+  DSI_DISABLE_ERA5: "false"
+  DSI_DISABLE_CDP: "false"
+  DSI_DISABLE_ENERGYSTAR: "false"
+  DSI_DISABLE_TRI: "false"
+  DSI_DISABLE_SUPERFUND: "false"
+  DSI_DISABLE_NRC: "false"
+
   # V6/C3 — OpenTelemetry. Enable on production to emit spans.
   DSI_OTEL_ENABLED: "false"
