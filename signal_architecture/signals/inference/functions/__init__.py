@@ -23,3 +23,4 @@ from . import do
 from . import energy
 from . import cross_coverage
 from . import medprof  # V6/B1
+from . import wc  # V6/B2

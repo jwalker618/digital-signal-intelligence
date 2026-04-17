@@ -45,7 +45,22 @@ preserved across sessions.
 
 For each of B2, B3, B4, B5, B6, B7, B8, B9, B10, B11, B12: identical
 checklist to Stage 2 (config.yaml, inference functions, goldens,
-logic.md, calibrate PASS, compliance 0 warnings).
+logic.md, calibrate PASS, compliance 0 warnings). Committed one at a
+time so each coverage is a clean rollback point.
+
+| # | Coverage | Status | Signals | Goldens | Calibrate | Compliance |
+|---|----------|--------|---------|---------|-----------|------------|
+| 3.1 | B2 WC | **DONE** | 33 | 10 | PASS | PASS |
+| 3.2 | B3 ProdLib | PENDING | — | — | — | — |
+| 3.3 | B4 EnvLiab | PENDING | — | — | — | — |
+| 3.4 | B5 Construction | PENDING | — | — | — | — |
+| 3.5 | B6 Event | PENDING | — | — | — | — |
+| 3.6 | B7 PVT | PENDING | — | — | — | — |
+| 3.7 | B8 TEO | PENDING | — | — | — | — |
+| 3.8 | B9 Reinsurance | PENDING | — | — | — | — |
+| 3.9 | B10 Crop | PENDING | — | — | — | — |
+| 3.10 | B11 Specie | PENDING | — | — | — | — |
+| 3.11 | B12 Captive | PENDING | — | — | — | — |
 
 ## Stage 4 — A-series maturation
 

@@ -1,0 +1,24 @@
+entity_id: local_cafe_wc
+name: Local Cafe LLC (SME)
+coverage: wc
+config_id: wc_sme
+domain: localcafe.example
+registry_id: US-California-LLC00000001
+minimum_viable_input:
+  revenue: 2500000
+  limit: 1000000
+  deductible: 25000
+  product_type: workers_comp
+  naics_2digit: '72'
+  employee_count: 35
+  state: CA
+  domain: localcafe.example
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 11223.42
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

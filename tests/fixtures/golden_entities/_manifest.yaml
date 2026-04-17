@@ -1354,3 +1354,145 @@ coverages:
         facility_type: physician_group
         annual_patient_encounters: 2000000
         domain: pediatrix.com
+
+  wc:
+    - entity_id: walmart_wc
+      name: Walmart Inc.
+      config_id: wc_office
+      domain: walmart.com
+      registry_id: US-Delaware-0000104169
+      minimum_viable_input:
+        revenue: 648125000000
+        limit: 25000000
+        deductible: 250000
+        product_type: workers_comp
+        naics_2digit: '54'
+        employee_count: 2300000
+        state: AR
+        domain: walmart.com
+    - entity_id: amazon_wc
+      name: Amazon.com, Inc.
+      config_id: wc_transport
+      domain: amazon.com
+      registry_id: US-Delaware-0001018724
+      minimum_viable_input:
+        revenue: 574785000000
+        limit: 25000000
+        deductible: 250000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 1544000
+        state: WA
+        domain: amazon.com
+    - entity_id: ups_wc
+      name: United Parcel Service, Inc.
+      config_id: wc_transport
+      domain: ups.com
+      registry_id: US-Delaware-0001090727
+      minimum_viable_input:
+        revenue: 91009000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 500000
+        state: GA
+        domain: ups.com
+    - entity_id: hca_wc
+      name: HCA Healthcare, Inc.
+      config_id: wc_healthcare
+      domain: hcahealthcare.com
+      registry_id: US-Delaware-0000860730
+      minimum_viable_input:
+        revenue: 64968000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '62'
+        employee_count: 294000
+        state: TN
+        domain: hcahealthcare.com
+    - entity_id: caterpillar_wc
+      name: Caterpillar Inc.
+      config_id: wc_manufacturing
+      domain: caterpillar.com
+      registry_id: US-Delaware-0000018230
+      minimum_viable_input:
+        revenue: 67060000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '33'
+        employee_count: 112900
+        state: IL
+        domain: caterpillar.com
+    - entity_id: bechtel_wc
+      name: Bechtel Corporation
+      config_id: wc_construction
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        revenue: 17500000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '23'
+        employee_count: 55000
+        state: VA
+        domain: bechtel.com
+    - entity_id: fluor_wc
+      name: Fluor Corporation
+      config_id: wc_construction
+      domain: fluor.com
+      registry_id: US-Delaware-0001124198
+      minimum_viable_input:
+        revenue: 15474000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '23'
+        employee_count: 44000
+        state: TX
+        domain: fluor.com
+    - entity_id: fedex_wc
+      name: FedEx Corporation
+      config_id: wc_transport
+      domain: fedex.com
+      registry_id: US-Delaware-0001048911
+      minimum_viable_input:
+        revenue: 90155000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 500000
+        state: TN
+        domain: fedex.com
+    - entity_id: kaiser_wc
+      name: Kaiser Permanente
+      config_id: wc_healthcare
+      domain: kaiserpermanente.org
+      registry_id: US-California-K0123456
+      minimum_viable_input:
+        revenue: 100800000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '62'
+        employee_count: 240000
+        state: CA
+        domain: kaiserpermanente.org
+    - entity_id: local_cafe_wc
+      name: Local Cafe LLC (SME)
+      config_id: wc_sme
+      domain: localcafe.example
+      registry_id: US-California-LLC00000001
+      minimum_viable_input:
+        revenue: 2500000
+        limit: 1000000
+        deductible: 25000
+        product_type: workers_comp
+        naics_2digit: '72'
+        employee_count: 35
+        state: CA
+        domain: localcafe.example
