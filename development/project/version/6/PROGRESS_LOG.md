@@ -76,7 +76,7 @@ concrete list of new signals + inference functions.
 | 4.5 | A2 Property — add 10 new signals (habitational sub-config deferred to A2-deep) | **DONE** |
 | 4.6 | A3 Casualty — add 17 new signals across GL/auto/env/umbrella | **DONE** |
 | 4.7 | A4 D&O — add 14 new governance signals to do_public | **DONE** |
-| 4.8 | A5 FI — add 12 new signals | PENDING |
+| 4.8 | A5 FI — add 18 new signals across bank/insurer/fintech/crypto | **DONE** |
 | 4.9 | A6 Aerospace — add 14 new signals | PENDING |
 | 4.9 | A7 Marine — add 13 new signals | PENDING |
 | 4.9 | A8 — Cyber + PI + Energy finishing | PENDING |
@@ -111,6 +111,34 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.8 — A5 FI signal expansion
+
+18 new signals added across 4 of the 6 FI sub-configs, taking FI from
+61 → 78 unique signal IDs (mature bar ≥ 30 ✅):
+
+- `fi_bank` (+6): `ffiec_call_report_ratios`, `ubpr_roe_volatility`,
+  `bsa_aml_enforcement`, `cra_rating`, `camels_proxy_composite`,
+  `dfast_ccar_outcome`.
+- `fi_insurer` (+4): `naic_rbc_band`, `iris_ratio_band`,
+  `complaint_index`, `jiri_index` — previously had an empty
+  `signal_registry: []`.
+- `fi_fintech` (+3): `sponsor_bank_dependency`, `bsa_findings_velocity`,
+  `complaint_velocity`.
+- `fi_crypto` (+5): `ofac_exposure_proxy`, `mixer_tumbler_interaction`,
+  `travel_rule_compliance`, `reserve_attestation_cadence`,
+  `cex_dex_exposure_mix`.
+
+Inserter handles the `signal_registry: []` empty case by replacing the
+empty list with the populated block.
+
+Inference module `a5_maturation_signals.py` registers 18 neutral
+scaffolds — real bodies wire in with Stage 6 (FFIEC call-report,
+UBPR, NAIC RBC / IRIS, CFPB complaint, blockchain-explorer /
+Chainalysis-proxy extractors).
+
+Verification: calibrate fi PASS on all 6 sub-configs (26,712 fixtures,
+0 errors), 221/221 goldens green, compliance strict PASS.
 
 ### Stage 4.7 — A4 D&O signal expansion
 

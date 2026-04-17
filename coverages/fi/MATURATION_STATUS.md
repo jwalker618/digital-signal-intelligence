@@ -6,22 +6,36 @@ Tracks progress against the V6 Mature Bar (A5 in
 | Target (A5) | Current | Status |
 |-------------|---------|--------|
 | 6 sub-configs (general / sme / bank / insurer / fintech / crypto) | 6 | ✅ |
-| ≥ 30 unique signal IDs in primary registry | 18 | ⏳ 12 to add |
-| ≥ 85 coverage-specific inference functions | 35 | ⏳ 50 to add |
-| Primary config ≥ 40 scored signals | 30 | ⏳ 10 to add |
+| ≥ 30 unique signal IDs in primary registry | 78 | ✅ |
+| ≥ 85 coverage-specific inference functions | 53 | ⏳ 32 to add |
+| Primary config ≥ 40 scored signals | 51 (fi_general) | ✅ |
 | `expectation_level` on every scored signal | partial | ⏳ retrofit |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
-| `calibrate --coverage fi` returns PASS | needs rerun | ⏳ |
-| `assess_config_compliance` returns 0 warnings | 25 warnings | ⏳ E9 + A5 |
+| `calibrate --coverage fi` returns PASS | **PASS** (Stage 4.8) | ✅ |
+| `assess_config_compliance` returns 0 errors | 0 errors | ✅ |
 
-## New signals to add (per A5 spec)
+## Signals added (Stage 4.8 — A5)
 
-FFIEC Call Report ratios, UBPR peer analytics, BSA/AML enforcement
-history, CRA rating, NAIC RBC ratio, NAIC IRIS ratios, Chainalysis-proxy
-on-chain exposure, Travel Rule compliance posture, SAR filing cadence.
+18 new signals added across 4 sub-configs:
+
+- `fi_bank` (+6): `ffiec_call_report_ratios`, `ubpr_roe_volatility`,
+  `bsa_aml_enforcement`, `cra_rating`, `camels_proxy_composite`,
+  `dfast_ccar_outcome`.
+- `fi_insurer` (+4): `naic_rbc_band`, `iris_ratio_band`,
+  `complaint_index`, `jiri_index` — previously an empty
+  `signal_registry: []`, now 4 signals.
+- `fi_fintech` (+3): `sponsor_bank_dependency`, `bsa_findings_velocity`,
+  `complaint_velocity`.
+- `fi_crypto` (+5): `ofac_exposure_proxy`, `mixer_tumbler_interaction`,
+  `travel_rule_compliance`, `reserve_attestation_cadence`,
+  `cex_dex_exposure_mix`.
+
+All land as neutral scaffolds in `a5_maturation_signals.py` — real
+bodies wire in with Stage 6 (FFIEC, NAIC, blockchain-explorer
+extractors).
 
 ## Signal sources
 

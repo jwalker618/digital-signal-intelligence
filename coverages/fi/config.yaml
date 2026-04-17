@@ -2065,6 +2065,87 @@ financial_institutions:
           size:
             correlation_direction: positive
             weight: 0.15
+    - id: ffiec_call_report_ratios
+      inference_utility_function: ffiec_call_report_ratios_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: ubpr_roe_volatility
+      inference_utility_function: ubpr_roe_volatility_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: bsa_aml_enforcement
+      inference_utility_function: bsa_aml_enforcement_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: cra_rating
+      inference_utility_function: cra_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: camels_proxy_composite
+      inference_utility_function: camels_proxy_composite_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: dfast_ccar_outcome
+      inference_utility_function: dfast_ccar_outcome_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -2435,7 +2516,61 @@ financial_institutions:
         override: 4
         applied: null
         note: Insurance regulatory action
-    signal_registry: []
+    signal_registry:
+    - id: naic_rbc_band
+      inference_utility_function: naic_rbc_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: iris_ratio_band
+      inference_utility_function: iris_ratio_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: complaint_index
+      inference_utility_function: complaint_index_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: jiri_index
+      inference_utility_function: jiri_index_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -2900,6 +3035,42 @@ financial_institutions:
           complexity:
             correlation_direction: positive
             weight: 0.15
+    - id: sponsor_bank_dependency
+      inference_utility_function: sponsor_bank_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: bsa_findings_velocity
+      inference_utility_function: bsa_findings_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: complaint_velocity
+      inference_utility_function: complaint_velocity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -3374,6 +3545,66 @@ financial_institutions:
           complexity:
             correlation_direction: positive
             weight: 0.15
+    - id: ofac_exposure_proxy
+      inference_utility_function: ofac_exposure_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: mixer_tumbler_interaction
+      inference_utility_function: mixer_tumbler_interaction_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: travel_rule_compliance
+      inference_utility_function: travel_rule_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: reserve_attestation_cadence
+      inference_utility_function: reserve_attestation_cadence_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: cex_dex_exposure_mix
+      inference_utility_function: cex_dex_exposure_mix_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
