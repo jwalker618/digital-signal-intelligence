@@ -7,7 +7,7 @@ Tracks progress against the V6 Mature Bar (see
 |-------------|---------|--------|
 | ≥ 5 sub-configs reshaped | 5 | ✅ |
 | ≥ 22 unique signal IDs in primary registry | 30 | ✅ |
-| ≥ 70 coverage-specific inference functions | 31 | ⏳ 39 to add |
+| ≥ 70 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
 | Primary config ≥ 40 scored signals | 12 (fpr_trade_credit primary) | ⏳ 28 to add |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |

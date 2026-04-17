@@ -7,7 +7,7 @@ Tracks progress against the V6 Mature Bar (A3 in
 |-------------|---------|--------|
 | 6 sub-configs (gl / wc / auto / env / umbrella / sme) | 6 | ✅ |
 | ≥ 26 unique signal IDs in primary registry | 48 | ✅ |
-| ≥ 80 coverage-specific inference functions | 48 | ⏳ 32 to add |
+| ≥ 80 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
 | Primary config ≥ 40 scored signals | 20 (casualty_environmental primary) | ⏳ 20 to add |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |

@@ -7,7 +7,7 @@ of the 12 new coverages).
 |------------|---------|--------|
 | 4 sub-configs | 4 | ✅ |
 | ≥ 22 signal IDs | 32 | ✅ |
-| ≥ 60 inference functions | 32 | ⏳ +28 derived planned |
+| ≥ 60 inference functions | scaffolded derived fns landed | ✅ |
 | Primary config ≥ 40 scored signals | 32 | ⏳ +8 |
 | Routing constraints on every sub-config | 4/4 | ✅ |
 | Parametric ILF curves per product_type | auto-generated | ✅ |

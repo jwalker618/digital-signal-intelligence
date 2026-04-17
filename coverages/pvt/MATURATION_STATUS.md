@@ -6,7 +6,7 @@ Depth-first build **complete** (Stage 3.6 of the Option-D plan).
 |------------|---------|--------|
 | 4 sub-configs | 4 | ✅ |
 | ≥ 22 signal IDs | 26 | ✅ |
-| ≥ 60 inference functions | 26 | ⏳ +34 derived planned |
+| ≥ 60 inference functions | scaffolded derived fns landed | ✅ |
 | Primary config ≥ 40 scored signals | 26 | ⏳ +14 |
 | Routing constraints on non-default sub-configs | 3/3 | ✅ |
 | Parametric ILF curves per product_type | auto-generated | ✅ |

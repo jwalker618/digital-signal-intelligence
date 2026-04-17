@@ -8,7 +8,7 @@ finishing) — see
 |--------|---------|--------|
 | 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 14 (all A8-deep subs landed) | ✅ |
 | ≥ 40 unique signal IDs in primary registry | 102 | ✅ |
-| ≥ 80 coverage-specific inference functions | 95 | ✅ |
+| ≥ 80 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | present (all product_types covered) | ✅ |

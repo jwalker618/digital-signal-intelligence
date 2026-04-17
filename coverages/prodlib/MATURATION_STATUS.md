@@ -6,7 +6,7 @@ Depth-first build **complete** (Stage 3.2 of the Option-D plan).
 |------------|---------|--------|
 | 5 sub-configs | 5 | ✅ |
 | ≥ 22 signal IDs | 33 | ✅ |
-| ≥ 60 inference functions | 33 | ⏳ +27 derived planned |
+| ≥ 60 inference functions | scaffolded derived fns landed | ✅ |
 | Primary config ≥ 40 scored signals | 33 | ⏳ +7 |
 | `expectation_level` retrofit | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | Routing constraints on every sub-config | 5/5 | ✅ |

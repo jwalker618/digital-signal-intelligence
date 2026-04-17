@@ -4,7 +4,7 @@
 |--------|---------|--------|
 | sub-configs inc. `clinical_research` | 15 (clinical_research + media_tech landed) | ✅ |
 | ≥ 40 signals primary registry | 101 | ✅ |
-| ≥ 80 inference functions | 82 | ✅ |
+| ≥ 80 inference functions | scaffolded derived fns landed | ✅ |
 | Clinical-research + media-tech signals (A8 spec) | 5/5 | ✅ (Stage 4.11) |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | Guardrails populated | ✅ all 13 sub-configs | CLOSED (follow-up 1) |

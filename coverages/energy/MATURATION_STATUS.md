@@ -4,7 +4,7 @@
 |--------|---------|--------|
 | 10 sub-configs + `hydrogen` + `nuclear` | 12 (incl. hydrogen + nuclear) | ✅ (Stage 4.11-fu) |
 | ≥ 40 signals primary registry | 118 | ✅ |
-| ≥ 80 inference functions | 90 | ✅ |
+| ≥ 80 inference functions | scaffolded derived fns landed | ✅ |
 | Nuclear + hydrogen signals (A8 spec) | 5/5 | ✅ (Stage 4.11) |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | Guardrails populated | present | ✅ |
