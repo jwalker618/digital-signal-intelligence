@@ -270,6 +270,54 @@ commercial_casualty:
           complexity:
             correlation_direction: positive
             weight: 0.2
+    - id: premises_occupancy_class
+      inference_utility_function: premises_occupancy_class_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+    - id: crowd_density_proxy
+      inference_utility_function: crowd_density_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: slip_fall_benchmark
+      inference_utility_function: slip_fall_benchmark_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: guest_injury_disclosure_trail
+      inference_utility_function: guest_injury_disclosure_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -1458,6 +1506,81 @@ commercial_casualty:
           complexity:
             correlation_direction: positive
             weight: 0.2
+    - id: fmcsa_sms_basic_scores
+      inference_utility_function: fmcsa_sms_basic_scores_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+    - id: dot_inspection_history
+      inference_utility_function: dot_inspection_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: csa_crash_indicator
+      inference_utility_function: csa_crash_indicator_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: fleet_telematics_benchmark
+      inference_utility_function: fleet_telematics_benchmark_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: vehicle_age_distribution
+      inference_utility_function: vehicle_age_distribution_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: driver_hos_compliance
+      inference_utility_function: driver_hos_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -2115,6 +2238,42 @@ commercial_casualty:
           complexity:
             correlation_direction: positive
             weight: 0.2
+    - id: underlying_schedule_consistency
+      inference_utility_function: underlying_schedule_consistency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: attachment_point_coherence
+      inference_utility_function: attachment_point_coherence_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: lead_carrier_quality
+      inference_utility_function: lead_carrier_quality_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -2804,6 +2963,60 @@ commercial_casualty:
           complexity:
             correlation_direction: positive
             weight: 0.2
+    - id: epa_echo_violation_depth
+      inference_utility_function: epa_echo_violation_depth_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: superfund_proximity
+      inference_utility_function: superfund_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: tri_reportable_volume
+      inference_utility_function: tri_reportable_volume_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: state_dep_action_history
+      inference_utility_function: state_dep_action_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: public_record

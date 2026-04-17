@@ -6,9 +6,9 @@ Tracks progress against the V6 Mature Bar (A3 in
 | Target (A3) | Current | Status |
 |-------------|---------|--------|
 | 6 sub-configs (gl / wc / auto / env / umbrella / sme) | 6 | ✅ |
-| ≥ 26 unique signal IDs in primary registry | 15 | ⏳ 11 to add |
-| ≥ 80 coverage-specific inference functions | 31 | ⏳ 49 to add |
-| Primary config ≥ 40 scored signals | 26 | ⏳ 14 to add |
+| ≥ 26 unique signal IDs in primary registry | 48 | ✅ |
+| ≥ 80 coverage-specific inference functions | 48 | ⏳ 32 to add |
+| Primary config ≥ 40 scored signals | 20 (casualty_environmental primary) | ⏳ 20 to add |
 | `expectation_level` on every scored signal | partial | ⏳ retrofit |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ umbrella + env |
@@ -16,7 +16,7 @@ Tracks progress against the V6 Mature Bar (A3 in
 | `logic.md` regenerated | yes (V5) | ⏳ regen after registry expansion |
 | 10 golden entities green in regression | **10** | ✅ |
 | `calibrate --coverage casualty` returns PASS | **PASS** (Stage 4.1) | ✅ |
-| `assess_config_compliance` returns 0 warnings | 29 warnings | ⏳ E9 + A3 |
+| `assess_config_compliance` returns 0 errors | 0 errors | ✅ |
 
 ## Cross-walk to B2 (Workers' Compensation)
 
@@ -24,10 +24,23 @@ Tracks progress against the V6 Mature Bar (A3 in
 coverage (Q2). A3 retains the other 5 sub-configs and adds depth to GL,
 auto, environmental, and umbrella.
 
-## Signals to add (11)
+## Signals added (Stage 4.6 — A3)
 
-Per the A3 spec, primarily driven by D1/D3 extractors (OSHA, FMCSA,
-CourtListener, NHTSA, Superfund) plus new auto-fleet telemetry from D6.
+Landed in `signal_architecture/signals/inference/functions/casualty/a3_maturation_signals.py`
+and wired into the relevant sub-configs:
+
+- GL: `premises_occupancy_class`, `crowd_density_proxy`,
+  `slip_fall_benchmark`, `guest_injury_disclosure_trail`.
+- Auto: `fmcsa_sms_basic_scores`, `dot_inspection_history`,
+  `csa_crash_indicator`, `fleet_telematics_benchmark`,
+  `vehicle_age_distribution`, `driver_hos_compliance`.
+- Environmental: `epa_echo_violation_depth`, `superfund_proximity`,
+  `tri_reportable_volume`, `state_dep_action_history`.
+- Umbrella: `underlying_schedule_consistency`,
+  `attachment_point_coherence`, `lead_carrier_quality`.
+
+17 new signal IDs across 4 sub-configs. Neutral scaffolds; real
+bodies wire in with Stage 6 extractor depth.
 
 ## Next up
 

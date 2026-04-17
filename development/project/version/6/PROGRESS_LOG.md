@@ -74,7 +74,7 @@ concrete list of new signals + inference functions.
 | 4.3 | Aerospace_space calibration fix (31.6% hit) | **DONE** |
 | 4.4 | A1 FPR — add 9 new signals to registry | **DONE** |
 | 4.5 | A2 Property — add 10 new signals (habitational sub-config deferred to A2-deep) | **DONE** |
-| 4.6 | A3 Casualty — add 11 new signals | PENDING |
+| 4.6 | A3 Casualty — add 17 new signals across GL/auto/env/umbrella | **DONE** |
 | 4.7 | A4 D&O — add 14 new signals | PENDING |
 | 4.8 | A5 FI — add 12 new signals | PENDING |
 | 4.9 | A6 Aerospace — add 14 new signals | PENDING |
@@ -111,6 +111,37 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.6 — A3 Casualty signal expansion
+
+17 new signals added across 4 of the 6 casualty sub-configs, taking
+Casualty from 31 → 48 unique signal IDs (mature bar ≥ 26 ✅):
+
+- GL (+4): `premises_occupancy_class`, `crowd_density_proxy`,
+  `slip_fall_benchmark`, `guest_injury_disclosure_trail`.
+- Auto (+6): `fmcsa_sms_basic_scores`, `dot_inspection_history`,
+  `csa_crash_indicator`, `fleet_telematics_benchmark`,
+  `vehicle_age_distribution`, `driver_hos_compliance`.
+- Environmental (+4): `epa_echo_violation_depth`,
+  `superfund_proximity`, `tri_reportable_volume`,
+  `state_dep_action_history`.
+- Umbrella (+3): `underlying_schedule_consistency`,
+  `attachment_point_coherence`, `lead_carrier_quality`.
+
+Per-sub-config signal counts are now gl 15, wc 10, auto 17, umbrella
+18, environmental 20, sme 11.
+
+Insertion done surgically via a Python helper that scoped each
+insertion to the target sub-config's block (avoids replace_all
+ambiguity — 3 sub-configs shared the `General Liability Class Risk`
+group label).
+
+Inference module `a3_maturation_signals.py` registers 17 neutral
+scaffolds — extractor-backed bodies land with Stage 6 (FMCSA SMS,
+CSA, DOT inspection, EPA ECHO deep, TRI, Superfund NPL, state DEQ/DEP).
+
+Verification: calibrate casualty PASS on all 6 sub-configs (7,653
+fixtures, 0 errors), 221/221 goldens green, compliance strict PASS.
 
 ### Stage 4.5 — A2 Property signal expansion
 
