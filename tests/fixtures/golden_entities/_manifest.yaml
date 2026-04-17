@@ -691,6 +691,95 @@ coverages:
         product_type: standard
         industry_sector: CRUISE
         domain: carnivalcorp.com
+    - entity_id: msc_mediterranean
+      name: MSC Mediterranean Shipping Company
+      domain: msc.com
+      registry_id: CH-Geneva-CHE-121.459.065
+      minimum_viable_input:
+        revenue: 86400000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: msc.com
+    - entity_id: cma_cgm
+      name: CMA CGM S.A.
+      domain: cma-cgm.com
+      registry_id: FR-Marseille-562024422
+      minimum_viable_input:
+        revenue: 46549000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: cma-cgm.com
+    - entity_id: evergreen_marine
+      name: Evergreen Marine Corporation
+      domain: evergreen-marine.com
+      registry_id: TW-Taipei-22099132
+      minimum_viable_input:
+        revenue: 20651000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: evergreen-marine.com
+    - entity_id: royal_caribbean
+      name: Royal Caribbean Cruises Ltd.
+      domain: royalcaribbean.com
+      registry_id: LR-Liberia-0000884887
+      minimum_viable_input:
+        revenue: 13900000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: royalcaribbean.com
+    - entity_id: transocean
+      name: Transocean Ltd.
+      domain: deepwater.com
+      registry_id: CH-Zug-CHE-115.404.306
+      minimum_viable_input:
+        revenue: 2832000000
+        limit: 200000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OFFSHORE_DRILLING
+        domain: deepwater.com
+    - entity_id: valaris
+      name: Valaris Limited
+      domain: valaris.com
+      registry_id: BM-Hamilton-54555
+      minimum_viable_input:
+        revenue: 2041000000
+        limit: 200000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OFFSHORE_DRILLING
+        domain: valaris.com
+    - entity_id: kuehne_nagel
+      name: Kuehne + Nagel International AG
+      config_id: marine_cargo
+      domain: kuehne-nagel.com
+      registry_id: CH-Schindellegi-CHE-107.526.597
+      minimum_viable_input:
+        revenue: 24567000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: LOGISTICS
+        domain: kuehne-nagel.com
+    - entity_id: norwegian_cruise
+      name: Norwegian Cruise Line Holdings Ltd.
+      domain: ncl.com
+      registry_id: BM-Hamilton-0001513761
+      minimum_viable_input:
+        revenue: 8550000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: ncl.com
 
   pi:
     - entity_id: deloitte
