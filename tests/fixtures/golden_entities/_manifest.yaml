@@ -1760,3 +1760,135 @@ coverages:
         facility_type: retail
         naics_2digit: '44'
         domain: greenfield.example
+
+  construction:
+    - entity_id: bechtel_con
+      name: Bechtel Corporation
+      config_id: con_gc
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        revenue: 17500000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: general_contractor
+        project_value: 500000000
+        domain: bechtel.com
+    - entity_id: fluor_con
+      name: Fluor Corporation
+      config_id: con_gc
+      domain: fluor.com
+      registry_id: US-Delaware-0001124198
+      minimum_viable_input:
+        revenue: 15474000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: general_contractor
+        project_value: 400000000
+        domain: fluor.com
+    - entity_id: aecom_con
+      name: AECOM
+      config_id: con_gc
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: builders_risk
+        contractor_type: general_contractor
+        project_value: 350000000
+        domain: aecom.com
+    - entity_id: turner_con
+      name: Turner Construction Company
+      config_id: con_gc
+      domain: turnerconstruction.com
+      registry_id: US-New_York-TC0000001
+      minimum_viable_input:
+        revenue: 17000000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ccip
+        contractor_type: general_contractor
+        project_value: 600000000
+        domain: turnerconstruction.com
+    - entity_id: skanska_con
+      name: Skanska AB (US operations)
+      config_id: con_gc
+      domain: usa.skanska.com
+      registry_id: SE-Stockholm-5560001100
+      minimum_viable_input:
+        revenue: 14000000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ccip
+        contractor_type: general_contractor
+        project_value: 500000000
+        domain: usa.skanska.com
+    - entity_id: kiewit_con
+      name: Kiewit Corporation
+      config_id: con_infrastructure
+      domain: kiewit.com
+      registry_id: US-Delaware-K00000001
+      minimum_viable_input:
+        revenue: 13850000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: heavy_civil
+        project_value: 800000000
+        domain: kiewit.com
+    - entity_id: granite_construction
+      name: Granite Construction Incorporated
+      config_id: con_infrastructure
+      domain: graniteconstruction.com
+      registry_id: US-Delaware-0000861459
+      minimum_viable_input:
+        revenue: 3910000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: ocip
+        contractor_type: heavy_civil
+        project_value: 200000000
+        domain: graniteconstruction.com
+    - entity_id: emcor_sub
+      name: EMCOR Group, Inc.
+      config_id: con_subcontractor
+      domain: emcorgroup.com
+      registry_id: US-Delaware-0000105634
+      minimum_viable_input:
+        revenue: 13080000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: builders_risk
+        contractor_type: subcontractor
+        project_value: 150000000
+        domain: emcorgroup.com
+    - entity_id: quanta_energy
+      name: Quanta Services, Inc.
+      config_id: con_energy_xwalk
+      domain: quantaservices.com
+      registry_id: US-Delaware-0001050915
+      minimum_viable_input:
+        revenue: 23660000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: energy_field
+        project_value: 500000000
+        domain: quantaservices.com
+    - entity_id: small_home_builder
+      name: Maple Leaf Home Builders LLC (SME)
+      config_id: con_sme
+      domain: mapleleafhomes.example
+      registry_id: US-Colorado-LLC00098765
+      minimum_viable_input:
+        revenue: 4500000
+        limit: 2000000
+        deductible: 50000
+        product_type: builders_risk
+        contractor_type: general_contractor
+        project_value: 1500000
+        domain: mapleleafhomes.example

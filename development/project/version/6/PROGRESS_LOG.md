@@ -53,7 +53,7 @@ time so each coverage is a clean rollback point.
 | 3.1 | B2 WC | **DONE** | 33 | 10 | PASS | PASS |
 | 3.2 | B3 ProdLib | **DONE** | 33 | 10 | PASS | PASS |
 | 3.3 | B4 EnvLiab | **DONE** | 26 | 10 | PASS | PASS |
-| 3.4 | B5 Construction | PENDING | — | — | — | — |
+| 3.4 | B5 Construction | **DONE** | 26 | 10 | PASS | PASS |
 | 3.5 | B6 Event | PENDING | — | — | — | — |
 | 3.6 | B7 PVT | PENDING | — | — | — | — |
 | 3.7 | B8 TEO | PENDING | — | — | — | — |
