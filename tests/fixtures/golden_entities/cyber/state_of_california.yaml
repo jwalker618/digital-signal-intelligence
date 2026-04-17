@@ -1,0 +1,22 @@
+entity_id: state_of_california
+name: State of California
+coverage: cyber
+config_id: cyber_public_sector
+domain: ca.gov
+registry_id: US-California-GOV-CA
+minimum_viable_input:
+  revenue: 306000000000
+  limit: 100000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: GOVERNMENT
+  domain: ca.gov
+expected:
+  composite_score: 380.0
+  tier: 4
+  decision: refer
+  recommended_premium: 25916356.25
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

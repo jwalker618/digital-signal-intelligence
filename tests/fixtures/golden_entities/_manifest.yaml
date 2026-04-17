@@ -281,6 +281,102 @@ coverages:
         product_type: standard
         industry_sector: FINANCIAL_SERVICES
         domain: jpmorganchase.com
+    - entity_id: anthem
+      name: Elevance Health, Inc.
+      config_id: cyber_healthcare
+      domain: elevancehealth.com
+      registry_id: US-Indiana-0001156039
+      minimum_viable_input:
+        revenue: 171340000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: HEALTHCARE
+        domain: elevancehealth.com
+    - entity_id: unitedhealth_cyber
+      name: UnitedHealth Group Incorporated
+      config_id: cyber_healthcare
+      domain: unitedhealthgroup.com
+      registry_id: US-Delaware-0000731766
+      minimum_viable_input:
+        revenue: 371622000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: HEALTHCARE
+        domain: unitedhealthgroup.com
+    - entity_id: amazon_cyber
+      name: Amazon.com, Inc.
+      config_id: cyber_retail
+      domain: amazon.com
+      registry_id: US-Delaware-0001018724
+      minimum_viable_input:
+        revenue: 574785000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: amazon.com
+    - entity_id: shopify_cyber
+      name: Shopify Inc.
+      config_id: cyber_digital_platform
+      domain: shopify.com
+      registry_id: CA-Ontario-1692501
+      minimum_viable_input:
+        revenue: 7062000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: shopify.com
+    - entity_id: ge_cyber
+      name: GE Aerospace
+      config_id: cyber_manufacturing
+      domain: geaerospace.com
+      registry_id: US-Delaware-0000040545
+      minimum_viable_input:
+        revenue: 35110000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MANUFACTURING
+        domain: geaerospace.com
+    - entity_id: verisign
+      name: VeriSign, Inc.
+      config_id: cyber_critical_infrastructure
+      domain: verisign.com
+      registry_id: US-Delaware-0001014473
+      minimum_viable_input:
+        revenue: 1560000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: verisign.com
+    - entity_id: state_of_california
+      name: State of California
+      config_id: cyber_public_sector
+      domain: ca.gov
+      registry_id: US-California-GOV-CA
+      minimum_viable_input:
+        revenue: 306000000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: GOVERNMENT
+        domain: ca.gov
+    - entity_id: okta
+      name: Okta, Inc.
+      config_id: cyber_technology
+      domain: okta.com
+      registry_id: US-Delaware-0001660134
+      minimum_viable_input:
+        revenue: 2263000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: okta.com
 
   do:
     - entity_id: alphabet
@@ -425,6 +521,100 @@ coverages:
         product_type: standard
         industry_sector: UTILITIES
         domain: nexteraenergy.com
+    - entity_id: chevron_energy
+      name: Chevron Corporation (Energy)
+      config_id: energy_upstream_deepwater
+      domain: chevron.com
+      registry_id: US-Delaware-0000093410
+      minimum_viable_input:
+        revenue: 200949000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: chevron.com
+    - entity_id: shell_energy
+      name: Shell plc
+      config_id: energy_upstream_deepwater
+      domain: shell.com
+      registry_id: UK-London-04366849
+      minimum_viable_input:
+        revenue: 316621000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: shell.com
+    - entity_id: conocophillips
+      name: ConocoPhillips
+      config_id: energy_upstream_onshore
+      domain: conocophillips.com
+      registry_id: US-Delaware-0001163165
+      minimum_viable_input:
+        revenue: 56141000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: conocophillips.com
+    - entity_id: eog_resources
+      name: EOG Resources, Inc.
+      config_id: energy_upstream_unconventional
+      domain: eogresources.com
+      registry_id: US-Delaware-0000821189
+      minimum_viable_input:
+        revenue: 23649000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: eogresources.com
+    - entity_id: kinder_morgan
+      name: Kinder Morgan, Inc.
+      config_id: energy_midstream
+      domain: kindermorgan.com
+      registry_id: US-Delaware-0001506307
+      minimum_viable_input:
+        revenue: 15334000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: PIPELINE
+        domain: kindermorgan.com
+    - entity_id: valero
+      name: Valero Energy Corporation
+      config_id: energy_downstream
+      domain: valero.com
+      registry_id: US-Delaware-0001035002
+      minimum_viable_input:
+        revenue: 144766000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: REFINING
+        domain: valero.com
+    - entity_id: southern_company
+      name: The Southern Company
+      domain: southerncompany.com
+      registry_id: US-Delaware-0000092122
+      minimum_viable_input:
+        revenue: 25253000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: UTILITIES
+        domain: southerncompany.com
+    - entity_id: first_solar
+      name: First Solar, Inc.
+      domain: firstsolar.com
+      registry_id: US-Delaware-0001274494
+      minimum_viable_input:
+        revenue: 3319000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: RENEWABLES
+        domain: firstsolar.com
 
   fi:
     - entity_id: goldman_sachs
@@ -804,6 +994,102 @@ coverages:
         product_type: standard
         industry_sector: PROFESSIONAL_SERVICES
         domain: mckinsey.com
+    - entity_id: pwc
+      name: PricewaterhouseCoopers LLP
+      config_id: pi_accounting
+      domain: pwc.com
+      registry_id: US-Delaware-0000875320
+      minimum_viable_input:
+        revenue: 53100000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ACCOUNTING
+        domain: pwc.com
+    - entity_id: ey
+      name: Ernst & Young Global Limited
+      config_id: pi_accounting
+      domain: ey.com
+      registry_id: UK-London-4328808
+      minimum_viable_input:
+        revenue: 49400000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ACCOUNTING
+        domain: ey.com
+    - entity_id: kirkland_ellis
+      name: Kirkland & Ellis LLP
+      config_id: pi_legal_large
+      domain: kirkland.com
+      registry_id: US-Illinois-LLP00001234
+      minimum_viable_input:
+        revenue: 7200000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: LEGAL
+        domain: kirkland.com
+    - entity_id: latham_watkins
+      name: Latham & Watkins LLP
+      config_id: pi_legal_large
+      domain: lw.com
+      registry_id: US-California-LLP12345
+      minimum_viable_input:
+        revenue: 6500000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: LEGAL
+        domain: lw.com
+    - entity_id: aecom_pi
+      name: AECOM (PI)
+      config_id: pi_architecture
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ARCHITECTURE_ENGINEERING
+        domain: aecom.com
+    - entity_id: accenture_pi
+      name: Accenture plc
+      config_id: pi_technology
+      domain: accenture.com
+      registry_id: IE-Dublin-471706
+      minimum_viable_input:
+        revenue: 64124000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: accenture.com
+    - entity_id: bain_pi
+      name: Bain & Company
+      config_id: pi_management_consulting
+      domain: bain.com
+      registry_id: US-Massachusetts-MA00067890
+      minimum_viable_input:
+        revenue: 6000000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: bain.com
+    - entity_id: cbre_pi
+      name: CBRE Group, Inc.
+      config_id: pi_real_estate
+      domain: cbre.com
+      registry_id: US-Delaware-0001364742
+      minimum_viable_input:
+        revenue: 32017000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: cbre.com
 
   property:
     - entity_id: simon_property

@@ -1,0 +1,22 @@
+entity_id: aecom_pi
+name: AECOM (PI)
+coverage: pi
+config_id: pi_architecture
+domain: aecom.com
+registry_id: US-Delaware-0000868857
+minimum_viable_input:
+  revenue: 14378000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: ARCHITECTURE_ENGINEERING
+  domain: aecom.com
+expected:
+  composite_score: 400.0
+  tier: 4
+  decision: refer
+  recommended_premium: 2182331.03
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

@@ -1,0 +1,22 @@
+entity_id: bain_pi
+name: Bain & Company
+coverage: pi
+config_id: pi_management_consulting
+domain: bain.com
+registry_id: US-Massachusetts-MA00067890
+minimum_viable_input:
+  revenue: 6000000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: PROFESSIONAL_SERVICES
+  domain: bain.com
+expected:
+  composite_score: 500.0
+  tier: 3
+  decision: refer
+  recommended_premium: 406663.25
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

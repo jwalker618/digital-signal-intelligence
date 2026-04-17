@@ -1,0 +1,22 @@
+entity_id: ge_cyber
+name: GE Aerospace
+coverage: cyber
+config_id: cyber_manufacturing
+domain: geaerospace.com
+registry_id: US-Delaware-0000040545
+minimum_viable_input:
+  revenue: 35110000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: MANUFACTURING
+  domain: geaerospace.com
+expected:
+  composite_score: 380.0
+  tier: 4
+  decision: refer
+  recommended_premium: 10345759.88
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

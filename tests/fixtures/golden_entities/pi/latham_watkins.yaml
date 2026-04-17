@@ -1,0 +1,22 @@
+entity_id: latham_watkins
+name: Latham & Watkins LLP
+coverage: pi
+config_id: pi_legal_large
+domain: lw.com
+registry_id: US-California-LLP12345
+minimum_viable_input:
+  revenue: 6500000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: LEGAL
+  domain: lw.com
+expected:
+  composite_score: 460.0
+  tier: 5
+  decision: decline
+  recommended_premium: 5397149.55
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

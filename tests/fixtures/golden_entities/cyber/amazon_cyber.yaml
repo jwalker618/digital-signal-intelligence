@@ -1,0 +1,22 @@
+entity_id: amazon_cyber
+name: Amazon.com, Inc.
+coverage: cyber
+config_id: cyber_retail
+domain: amazon.com
+registry_id: US-Delaware-0001018724
+minimum_viable_input:
+  revenue: 574785000000
+  limit: 100000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: RETAIL
+  domain: amazon.com
+expected:
+  composite_score: 380.0
+  tier: 4
+  decision: refer
+  recommended_premium: 43412631.99
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

@@ -1,0 +1,22 @@
+entity_id: pwc
+name: PricewaterhouseCoopers LLP
+coverage: pi
+config_id: pi_accounting
+domain: pwc.com
+registry_id: US-Delaware-0000875320
+minimum_viable_input:
+  revenue: 53100000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: ACCOUNTING
+  domain: pwc.com
+expected:
+  composite_score: 500.0
+  tier: 3
+  decision: refer
+  recommended_premium: 1774344.67
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
