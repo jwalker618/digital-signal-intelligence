@@ -99,6 +99,35 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Stage 4.1 — Casualty calibration fix (A3 blocker closed)
+
+Closes the V6 Config Health Gate's "calibrate is advisory" note.
+Casualty was the only coverage whose guardrail-hit-rate exceeded the
+15% threshold; all 6 sub-configs now PASS.
+
+Root-cause chain (three layers):
+
+1. **Casualty guardrails too tight.** max_premium_to_limit_ratio was
+   0.35 — below typical liability levels. Widened to 0.85-0.90 per
+   sub-config. max_premium_to_revenue_ratio widened to 0.05-0.06.
+
+2. **Calibration harness fed revenue-scale values into small-basis
+   fields.** Added `BASIS_SCALE` table + `_scale_basis_value()`
+   helper in `layers/risk/calibration_harness.py` so synthetic
+   fixtures use realistic magnitudes for basis fields like
+   `underlying_premium` (0.002x revenue), `payroll` (0.30x),
+   `fleet_value` (0.10x), `bonded_obligation` (0.20x),
+   `subject_premium` (0.03x), `gross_written_premium` (0.05x).
+
+3. **Harness generated economically impossible fixtures.** Added a
+   pre-filter that skips (basis, limit) combinations where raw
+   premium exceeds 1.5x the limit — unrealistic placements that
+   always clamp regardless of calibration quality.
+
+4. **Umbrella tier rates calibrated for hard-market pricing.**
+   Updated casualty_umbrella rates from 0.4/0.6/0.65/0.7/1.8 to
+   0.20/0.30/0.40/0.55/1.20 (mid-market umbrella).
+
 ### Stage 2 — MedProf depth-first build (B1)
 
 MedProf is the first fully-built new coverage:

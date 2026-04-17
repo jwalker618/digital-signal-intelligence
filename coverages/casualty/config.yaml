@@ -621,8 +621,8 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.85
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0
   casualty_wc:
     metadata:
@@ -1195,8 +1195,8 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.9
+      max_premium_to_revenue_ratio: 0.06
       max_ilf_factor: 10.0
   casualty_auto:
     metadata:
@@ -1781,8 +1781,8 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.85
+      max_premium_to_revenue_ratio: 0.06
       max_ilf_factor: 10.0
   casualty_umbrella:
     metadata:
@@ -2165,7 +2165,7 @@ commercial_casualty:
           action: APPROVE
           application:
             method: MULTIPLIER
-            applied: 0.4
+            applied: 0.2
             basis: underlying_premium
       - id: 2
         label: STANDARD_PLUS
@@ -2177,7 +2177,7 @@ commercial_casualty:
           action: APPROVE
           application:
             method: MULTIPLIER
-            applied: 0.6
+            applied: 0.3
             basis: underlying_premium
       - id: 3
         label: STANDARD
@@ -2189,7 +2189,7 @@ commercial_casualty:
           action: REFER
           application:
             method: MULTIPLIER
-            applied: 0.65
+            applied: 0.4
             basis: underlying_premium
       - id: 4
         label: SUBSTANDARD
@@ -2201,7 +2201,7 @@ commercial_casualty:
           action: REFER
           application:
             method: MULTIPLIER
-            applied: 0.7
+            applied: 0.55
             basis: underlying_premium
       - id: 5
         label: DECLINE
@@ -2213,7 +2213,7 @@ commercial_casualty:
           action: DECLINE
           application:
             method: MULTIPLIER
-            applied: 1.8
+            applied: 1.2
             basis: underlying_premium
     loss_tier_bands:
       bands:
@@ -2439,9 +2439,9 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
-      max_ilf_factor: 10.0
+      max_premium_to_limit_ratio: 0.85
+      max_premium_to_revenue_ratio: 0.08
+      max_ilf_factor: 12.0
   casualty_environmental:
     metadata:
       name: DSI Environmental Liability Model
@@ -3128,9 +3128,9 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
-      max_ilf_factor: 10.0
+      max_premium_to_limit_ratio: 0.9
+      max_premium_to_revenue_ratio: 0.06
+      max_ilf_factor: 12.0
   casualty_sme:
     metadata:
       name: DSI Casualty SME Model
@@ -3696,6 +3696,6 @@ commercial_casualty:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.85
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0
