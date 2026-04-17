@@ -32,3 +32,4 @@ from . import pvt  # V6/B7
 from . import teo  # V6/B8
 from . import reinsurance  # V6/B9
 from . import crop  # V6/B10
+from . import specie  # V6/B11

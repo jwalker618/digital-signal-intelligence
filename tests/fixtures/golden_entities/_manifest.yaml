@@ -2562,3 +2562,125 @@ coverages:
         crop_type: apple
         state_country: US-CA
         domain: blossomhill.example
+
+  specie:
+    - entity_id: christies
+      name: Christie's International plc
+      config_id: specie_fine_art_gallery
+      domain: christies.com
+      registry_id: UK-London-01184537
+      minimum_viable_input:
+        tiv: 5000000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: christies.com
+    - entity_id: sothebys
+      name: Sotheby's
+      config_id: specie_fine_art_gallery
+      domain: sothebys.com
+      registry_id: US-Delaware-0000823094
+      minimum_viable_input:
+        tiv: 4200000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: sothebys.com
+    - entity_id: phillips
+      name: Phillips Auctioneers LLC
+      config_id: specie_fine_art_gallery
+      domain: phillips.com
+      registry_id: US-Delaware-PH00000001
+      minimum_viable_input:
+        tiv: 850000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: phillips.com
+    - entity_id: bonhams
+      name: Bonhams
+      config_id: specie_fine_art_gallery
+      domain: bonhams.com
+      registry_id: UK-London-04326104
+      minimum_viable_input:
+        tiv: 650000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: bonhams.com
+    - entity_id: brinks
+      name: The Brink's Company
+      config_id: specie_vault_cash
+      domain: brinks.com
+      registry_id: US-Virginia-0000078890
+      minimum_viable_input:
+        tiv: 3500000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: vault_cash
+        specie_type: vault_cash
+        domain: brinks.com
+    - entity_id: loomis_cit
+      name: Loomis AB
+      config_id: specie_vault_cash
+      domain: loomis.com
+      registry_id: SE-Stockholm-5566268600
+      minimum_viable_input:
+        tiv: 2800000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: vault_cash
+        specie_type: vault_cash
+        domain: loomis.com
+    - entity_id: tiffany
+      name: Tiffany & Co.
+      config_id: specie_jewelry_precious_metals
+      domain: tiffany.com
+      registry_id: US-Delaware-0000098246
+      minimum_viable_input:
+        tiv: 1800000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: tiffany.com
+    - entity_id: cartier
+      name: Cartier International SNC
+      config_id: specie_jewelry_precious_metals
+      domain: cartier.com
+      registry_id: FR-Paris-552110720
+      minimum_viable_input:
+        tiv: 2200000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: cartier.com
+    - entity_id: harry_winston
+      name: Harry Winston, Inc.
+      config_id: specie_jewelry_precious_metals
+      domain: harrywinston.com
+      registry_id: US-Delaware-HW000001
+      minimum_viable_input:
+        tiv: 1100000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: harrywinston.com
+    - entity_id: boutique_gallery_sme
+      name: Luminous Gallery LLC (SME)
+      config_id: specie_sme
+      domain: luminousgallery.example
+      registry_id: US-New_York-NY00012321
+      minimum_viable_input:
+        tiv: 7500000
+        limit: 5000000
+        deductible: 50000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: luminousgallery.example
