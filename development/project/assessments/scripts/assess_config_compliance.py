@@ -74,18 +74,20 @@ import yaml  # noqa: E402
 from infrastructure.builder.validator import ConfigValidator  # noqa: E402
 
 
-# Canonical 7 categories enforced by E9. Today this is a soft check — a
-# signal referencing a non-canonical category is reported as a warning, not
-# an error. E9 will flip the severity to ERROR once the migration completes.
-CANONICAL_CATEGORIES = {
-    "network_authority",
-    "technical_infrastructure",
-    "corporate_footprint",
-    "behavioural",
-    "public_record",
-    "structured_data",
-    "direct_inquiry",
-}
+# Canonical 7 categories enforced by E9. Sourced from the central taxonomy
+# module so there is a single source of truth.
+try:
+    from signal_architecture.signals.taxonomy import CANONICAL_IDS as CANONICAL_CATEGORIES
+except ImportError:  # fallback so the script runs pre-taxonomy-import
+    CANONICAL_CATEGORIES = {
+        "network_authority",
+        "technical_infrastructure",
+        "corporate_footprint",
+        "behavioural",
+        "public_record",
+        "structured_data",
+        "direct_inquiry",
+    }
 
 REQUIRED_TOP_SECTIONS = (
     "metadata",
