@@ -73,7 +73,7 @@ concrete list of new signals + inference functions.
 | 4.2 | FPR calibration fix (premium_exceeds_limit_ratio) | **DONE** |
 | 4.3 | Aerospace_space calibration fix (31.6% hit) | **DONE** |
 | 4.4 | A1 FPR — add 9 new signals to registry | **DONE** |
-| 4.5 | A2 Property — add 10 new signals + habitational sub-config | PENDING |
+| 4.5 | A2 Property — add 10 new signals (habitational sub-config deferred to A2-deep) | **DONE** |
 | 4.6 | A3 Casualty — add 11 new signals | PENDING |
 | 4.7 | A4 D&O — add 14 new signals | PENDING |
 | 4.8 | A5 FI — add 12 new signals | PENDING |
@@ -111,6 +111,30 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.5 — A2 Property signal expansion
+
+10 new signals added to every property sub-config's `signal_registry`,
+taking Property from 27 → 37 unique signal IDs (mature bar ≥ 22 ✅):
+
+- CAT perils: `fema_flood_zone`, `noaa_hail_history`,
+  `usfs_wildfire_hazard`, `usgs_seismic_vs30`, `nhc_track_proximity`,
+  `nfip_participation`.
+- Envelope / upkeep: `iso_caf_bceg_code_compliance`, `energy_star_score`,
+  `building_permit_trail`, `overhead_imagery_condition_score`.
+
+New inference module `a2_maturation_signals.py` registers 10 neutral
+scaffolds — real bodies wire in once D5 lands the FEMA NFHL / NOAA CDO
+/ USFS WHP / USGS Vs30 / NHC track / ISO CAF / ENERGY STAR extractors.
+
+Verification: calibrate property PASS on all 5 sub-configs (10,251
+fixtures, 0 errors), 221/221 goldens green, compliance gate strict
+PASS (no new findings vs baseline).
+
+`property_habitational` sub-config deferred to A2-deep (requires ~900
+lines of new config scaffolding and a dedicated habitational
+occupancy-class routing rule — out of scope for a single-session
+stage).
 
 ### Stage 4.4 — A1 FPR signal expansion
 

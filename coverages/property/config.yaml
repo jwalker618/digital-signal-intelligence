@@ -563,6 +563,138 @@ commercial_property:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: fema_flood_zone
+      inference_utility_function: fema_flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: noaa_hail_history
+      inference_utility_function: noaa_hail_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: usfs_wildfire_hazard
+      inference_utility_function: usfs_wildfire_hazard_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: usgs_seismic_vs30
+      inference_utility_function: usgs_seismic_vs30_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: nhc_track_proximity
+      inference_utility_function: nhc_track_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: iso_caf_bceg_code_compliance
+      inference_utility_function: iso_caf_bceg_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: energy_star_score
+      inference_utility_function: energy_star_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: building_permit_trail
+      inference_utility_function: building_permit_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: overhead_imagery_condition_score
+      inference_utility_function: overhead_imagery_condition_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: nfip_participation
+      inference_utility_function: nfip_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -1487,6 +1619,138 @@ commercial_property:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: fema_flood_zone
+      inference_utility_function: fema_flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: noaa_hail_history
+      inference_utility_function: noaa_hail_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: usfs_wildfire_hazard
+      inference_utility_function: usfs_wildfire_hazard_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: usgs_seismic_vs30
+      inference_utility_function: usgs_seismic_vs30_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: nhc_track_proximity
+      inference_utility_function: nhc_track_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: iso_caf_bceg_code_compliance
+      inference_utility_function: iso_caf_bceg_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: energy_star_score
+      inference_utility_function: energy_star_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: building_permit_trail
+      inference_utility_function: building_permit_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: overhead_imagery_condition_score
+      inference_utility_function: overhead_imagery_condition_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: nfip_participation
+      inference_utility_function: nfip_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -2392,6 +2656,138 @@ commercial_property:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: fema_flood_zone
+      inference_utility_function: fema_flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: noaa_hail_history
+      inference_utility_function: noaa_hail_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: usfs_wildfire_hazard
+      inference_utility_function: usfs_wildfire_hazard_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: usgs_seismic_vs30
+      inference_utility_function: usgs_seismic_vs30_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: nhc_track_proximity
+      inference_utility_function: nhc_track_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: iso_caf_bceg_code_compliance
+      inference_utility_function: iso_caf_bceg_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: energy_star_score
+      inference_utility_function: energy_star_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: building_permit_trail
+      inference_utility_function: building_permit_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: overhead_imagery_condition_score
+      inference_utility_function: overhead_imagery_condition_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: nfip_participation
+      inference_utility_function: nfip_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -3307,6 +3703,138 @@ commercial_property:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: fema_flood_zone
+      inference_utility_function: fema_flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: noaa_hail_history
+      inference_utility_function: noaa_hail_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: usfs_wildfire_hazard
+      inference_utility_function: usfs_wildfire_hazard_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: usgs_seismic_vs30
+      inference_utility_function: usgs_seismic_vs30_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: nhc_track_proximity
+      inference_utility_function: nhc_track_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: iso_caf_bceg_code_compliance
+      inference_utility_function: iso_caf_bceg_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: energy_star_score
+      inference_utility_function: energy_star_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: building_permit_trail
+      inference_utility_function: building_permit_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: overhead_imagery_condition_score
+      inference_utility_function: overhead_imagery_condition_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: nfip_participation
+      inference_utility_function: nfip_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -4180,6 +4708,138 @@ commercial_property:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: fema_flood_zone
+      inference_utility_function: fema_flood_zone_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: noaa_hail_history
+      inference_utility_function: noaa_hail_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: usfs_wildfire_hazard
+      inference_utility_function: usfs_wildfire_hazard_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: usgs_seismic_vs30
+      inference_utility_function: usgs_seismic_vs30_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: nhc_track_proximity
+      inference_utility_function: nhc_track_proximity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: iso_caf_bceg_code_compliance
+      inference_utility_function: iso_caf_bceg_code_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: energy_star_score
+      inference_utility_function: energy_star_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: building_permit_trail
+      inference_utility_function: building_permit_trail_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: overhead_imagery_condition_score
+      inference_utility_function: overhead_imagery_condition_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: nfip_participation
+      inference_utility_function: nfip_participation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
