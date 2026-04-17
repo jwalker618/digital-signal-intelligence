@@ -62,17 +62,44 @@ class DriftConfig:
 
 
 class DriftDetector:
-    """Raises DriftAlert rows when structural changes are detected."""
+    """Raises DriftAlert rows when structural changes are detected.
+
+    V6/E6 (stage 1.2): alert observers. After alerts are persisted the
+    detector fans out to registered observers (e.g. the
+    DriftReferralBridge that routes alerts into the referrals queue).
+    Observers are invoked synchronously but isolated — one observer's
+    failure does not block the rest.
+    """
 
     def __init__(self, config: Optional[DriftConfig] = None):
         self.config = config or DriftConfig()
+        # V6/E6 — observers registered via `on_alert`. Callable takes
+        # a single DriftAlert.
+        self._observers: list = []
+
+    def on_alert(self, observer) -> None:
+        """Register an observer called for each alert after persist."""
+        self._observers.append(observer)
+
+    def _fan_out(self, alerts: list) -> None:
+        if not self._observers:
+            return
+        for alert in alerts:
+            for obs in self._observers:
+                try:
+                    obs(alert)
+                except Exception as e:  # pragma: no cover — isolated
+                    logger.warning(
+                        "DriftDetector observer failed (non-blocking): %s", e,
+                    )
 
     def detect(
         self,
         registry: IntelligenceRegistry,
         new_candidates: list[CandidateRelationship],
     ) -> list[DriftAlert]:
-        """Run all four detection modes. Persists alerts via registry."""
+        """Run all four detection modes. Persists alerts via registry
+        and dispatches to registered observers (V6/E6)."""
         db = registry.db
         alerts: list[DriftAlert] = []
 
@@ -86,6 +113,8 @@ class DriftDetector:
 
         for alert in alerts:
             registry.store_drift_alert(alert)
+
+        self._fan_out(alerts)
 
         logger.info("DriftDetector: raised %d alerts", len(alerts))
         return alerts

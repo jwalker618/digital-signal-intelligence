@@ -24,7 +24,7 @@ preserved across sessions.
 | # | Item | Status | Commit |
 |---|------|--------|--------|
 | 1.1 | `ProductionExtractor.extract()` builds + persists `Provenance` on every successful extraction | **DONE** | (next) |
-| 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | PENDING | — |
+| 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | **DONE** | (next) |
 | 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | PENDING | — |
 | 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | PENDING | — |
 | 1.5 | C3 OpenTelemetry end-to-end smoke with `DSI_OTEL_ENABLED=true` | PENDING | — |
@@ -83,6 +83,31 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### 1.2 — DriftDetector ↔ DriftReferralBridge wiring
+
+`DriftDetector` gained an `on_alert(observer)` registration API; after
+alerts are persisted it fans out to registered observers in an
+isolated loop (failures log but don't propagate).
+
+New `world_engine/drift/wiring.py`:
+
+- `_referral_row_dispatcher(db_factory)` — SQL dispatcher that writes
+  one row into `referrals` per DriftReferral, with `referral_type =
+  'DRIFT'`, `drift_alert_id` FK populated, severity→priority mapping
+  (high=1, medium=3, low=6), and the full DriftReferral payload in the
+  `reasons` JSONB column. Commits + closes the session in a `finally`.
+- `wire_default_drift_observers(detector, db_factory, extra_dispatchers)`
+  — one-call bootstrap. Attaches the default SQL dispatcher + any
+  extras (e.g. Slack / PagerDuty callbacks callers want to add).
+
+Kept wiring in a separate module so the detector never imports the
+referral service directly — no circular dep, and tests swap alternative
+dispatchers trivially.
+
+5 new tests in `tests/unit/test_drift_wiring.py`: priority mapping,
+registration contract, SQL-shape assertion, end-to-end dispatch,
+extra-dispatchers fan-out. Existing 8 bridge tests still green.
 
 ### 1.1 — Provenance persistence wiring
 
