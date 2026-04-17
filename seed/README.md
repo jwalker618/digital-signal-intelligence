@@ -14,18 +14,25 @@ behind a single `python -m seed` CLI.
 | `python -m seed reset --confirm` | Placeholder for truncation (C4-interim). |
 | `python -m seed verify` | Assert headline row counts post-seed. |
 
-## State — V6/C4-interim
+## State — V6/C4-final (Q4)
 
-This package is a **thin shim** during Q1: each submodule imports the
-legacy root-level script (`seed_dsi_bench.py`, `seed_v5.py`,
-`synthetic_generator.py`) and delegates to its `main()`. Legacy scripts
-emit a `DeprecationWarning` on import so callers migrate to the CLI.
+Legacy root-level scripts (`seed_dsi_bench.py`, `seed_v5.py`,
+`synthetic_generator.py`) have been **deleted**. The canonical home
+for seed logic is this package — the CLI and modules import directly:
 
-## C4-final (Q4)
+- `seed/bench.py` — hand-curated 61-company bench (+ optional
+  synthetic fold-in).
+- `seed/v5.py` — V5 governance / experience augmentation.
+- `seed/synthetic.py` — high-volume synthetic portfolio.
 
-- Legacy scripts deleted from the repo root.
-- Content moved into `seed/bench.py`, `seed/v5.py`, `seed/synthetic.py`.
-- `seed/fixtures/` (new) replaces hard-coded entity tables inside bench.
-- `python -m seed verify` asserts a YAML-defined row-count contract.
-- `python -m seed reset` wires into alembic downgrade-to-base + ordered
-  TRUNCATE.
+Every module exposes a `run(**kwargs) -> int` entry point used by the
+CLI dispatcher in `seed/cli.py`.
+
+## Remaining (C4-final follow-ups)
+
+- `seed/fixtures/` — YAML fixtures replacing hard-coded entity tables
+  inside `bench.py` (refactor to be stepwise).
+- `python -m seed verify` — assert a YAML-defined row-count contract
+  per tenant.
+- `python -m seed reset` — wire into alembic downgrade-to-base +
+  ordered TRUNCATE.

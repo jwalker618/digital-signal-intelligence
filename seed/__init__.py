@@ -1,13 +1,11 @@
-"""DSI seed package (V6/C4).
+"""DSI seed package (V6/C4-final).
 
-Consolidates bench, v5 companion, and synthetic-generator seed scripts
-behind a single ``python -m seed`` CLI. The legacy root-level scripts
-(``seed_dsi_bench.py``, ``seed_v5.py``, ``synthetic_generator.py``)
-still exist and emit a ``DeprecationWarning``; they will be deleted in
-the C4-final phase (Q4 per V6_Master_Sequence.md) after `python -m seed
-init` is proven in CI.
+Canonical home for all bench / v5 / synthetic seed logic. Legacy
+root-level scripts (``seed_dsi_bench.py``, ``seed_v5.py``,
+``synthetic_generator.py``) were removed in V6/C4-final and their
+logic moved here verbatim.
 
-Entry points:
+Entry points (via ``python -m seed``):
 
     python -m seed init --tenant dsi-demo --entities 500
     python -m seed bench

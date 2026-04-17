@@ -32,29 +32,25 @@ def test_reset_with_confirm_placeholder():
     assert reset.run(confirm=True) == 0
 
 
-def test_legacy_bench_emits_deprecation(monkeypatch):
-    import importlib
-    import sys
-    import warnings
+def test_legacy_scripts_removed_from_repo_root():
+    """V6/C4-final deleted the legacy scripts from the repo root."""
+    from pathlib import Path
+    repo_root = Path(__file__).resolve().parents[2]
+    assert not (repo_root / "seed_dsi_bench.py").exists()
+    assert not (repo_root / "seed_v5.py").exists()
+    assert not (repo_root / "synthetic_generator.py").exists()
 
-    # Force fresh import to trigger the top-level deprecation warning.
-    for m in list(sys.modules):
-        if m.startswith("seed_dsi_bench") or m == "_seed_dsi_bench_legacy":
-            del sys.modules[m]
 
-    with warnings.catch_warnings(record=True) as captured:
-        warnings.simplefilter("always")
-        try:
-            from seed import bench
-            # Importing the module will not yet trigger the legacy import;
-            # call _load_legacy explicitly.
-            bench._load_legacy()
-        except Exception:
-            # Legacy seed has heavy DB imports; we only care the
-            # deprecation warning fires first.
-            pass
-    assert any(
-        issubclass(w.category, DeprecationWarning)
-        and "python -m seed bench" in str(w.message)
-        for w in captured
-    ), f"expected DeprecationWarning from seed_dsi_bench import, got {captured}"
+def test_seed_bench_exposes_run_callable():
+    from seed import bench
+    assert callable(getattr(bench, "run", None))
+
+
+def test_seed_v5_exposes_run_callable():
+    from seed import v5
+    assert callable(getattr(v5, "run", None))
+
+
+def test_seed_synthetic_exposes_run_callable():
+    from seed import synthetic
+    assert callable(getattr(synthetic, "run", None))
