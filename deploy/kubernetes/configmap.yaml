@@ -77,5 +77,14 @@ data:
   DSI_DISABLE_EU_SAFETYGATE: "false"
   DSI_DISABLE_FSIS: "false"
 
+  # V6/D2 — Technical / infrastructure extractor kill-switches.
+  DSI_DISABLE_SHODAN: "false"
+  DSI_DISABLE_CENSYS: "false"
+  DSI_DISABLE_BGP: "false"
+  DSI_DISABLE_PEERINGDB: "false"
+  DSI_DISABLE_WAPPALYZER: "false"
+  DSI_DISABLE_BUILTWITH: "false"
+  DSI_DISABLE_HTTPARCHIVE: "false"
+
   # V6/C3 — OpenTelemetry. Enable on production to emit spans.
   DSI_OTEL_ENABLED: "false"

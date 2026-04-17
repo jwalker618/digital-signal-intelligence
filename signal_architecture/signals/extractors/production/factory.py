@@ -400,11 +400,31 @@ def _load_d3_litigation_extractors():
         _registry.register_production(name, cls)
 
 
-# Eagerly register D1 + D3 extractors on import — they are cheap class refs,
-# no network calls happen until .extract() is invoked.
+def _load_d2_stack_extractors():
+    """V6/D2 — technical/infrastructure extractors (7)."""
+    try:
+        from . import stack as s
+    except ImportError as e:
+        logger.debug(f"Could not load D2 stack extractors: {e}")
+        return
+    for name, cls in (
+        ("stack.shodan", s.ShodanExtractor),
+        ("stack.censys", s.CensysExtractor),
+        ("stack.bgp_ripestat", s.BGPExtractor),
+        ("stack.peeringdb", s.PeeringDBExtractor),
+        ("stack.wappalyzer", s.WappalyzerExtractor),
+        ("stack.builtwith", s.BuiltWithExtractor),
+        ("stack.httparchive", s.HTTPArchiveExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+# Eagerly register D1 + D2 + D3 extractors on import — they are cheap class
+# refs, no network calls happen until .extract() is invoked.
 _load_d1_web_extractors()
 _load_d1_identity_extractors()
 _load_d1_sentiment_extractors()
+_load_d2_stack_extractors()
 _load_d3_litigation_extractors()
 
 
