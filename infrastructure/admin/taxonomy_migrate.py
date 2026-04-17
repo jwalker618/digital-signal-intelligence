@@ -135,8 +135,65 @@ DEFAULT_MAPPING: Dict[str, str] = {
 }
 
 
+def _merge_weights(target: dict, source: dict) -> None:
+    """Add per-dimension weights from source into target in-place.
+
+    Each dimension (risk / loss / exposure) is a mapping with a
+    ``weight`` key. When two entries collapse under E9, their weights
+    sum so that the total per-dimension weight across all groups stays
+    on 1.0 (which is what the scorer expects).
+    """
+    for dim in ("risk", "loss", "exposure"):
+        s_block = (source or {}).get(dim)
+        if not isinstance(s_block, dict):
+            continue
+        s_w = s_block.get("weight")
+        if s_w is None:
+            continue
+        t_block = target.setdefault(dim, {})
+        t_block["weight"] = round(
+            (t_block.get("weight", 0.0) or 0.0) + float(s_w), 6
+        )
+
+
+def _rebuild_signal_group_refs(cfg: dict, id_rename: Dict[str, str]) -> int:
+    """Rewrite every ``group_id`` reference in the signal_registry.
+
+    When the migration renames a three_layer_assessment group id
+    (e.g. ``safety_record`` → ``public_record``), every signal whose
+    ``three_layer_assessment.group_id`` points at the old id needs the
+    same rename — otherwise the signal disappears from the weighted
+    aggregation.
+    """
+    registry = cfg.get("signal_registry", [])
+    if not isinstance(registry, list):
+        return 0
+    changes = 0
+    for sig in registry:
+        if not isinstance(sig, dict):
+            continue
+        # Both three_layer_assessment.group_id and categories.group_id
+        # reference the groups list. Rewrite both.
+        for section_name in ("three_layer_assessment", "categories"):
+            section = sig.get(section_name)
+            if isinstance(section, dict):
+                gid = section.get("group_id")
+                if gid in id_rename:
+                    section["group_id"] = id_rename[gid]
+                    changes += 1
+    return changes
+
+
 def _apply(path: Path, mapping: Dict[str, str]) -> Tuple[int, List[str]]:
-    """Return (count_changes, unmapped_ids) after mutating the file in memory."""
+    """Return (count_changes, unmapped_ids) after mutating the file in memory.
+
+    - Renames non-canonical `three_layer_assessment.id` to the canonical
+      target per ``mapping``.
+    - Merges entries that collapse onto the same canonical id (summing
+      per-dimension weights so dimension totals stay on 1.0).
+    - Rewrites every ``signal_registry[*].three_layer_assessment.group_id``
+      reference so signals continue to aggregate into the renamed group.
+    """
     data = yaml.safe_load(path.read_text())
     if not isinstance(data, dict):
         return 0, []
@@ -148,21 +205,47 @@ def _apply(path: Path, mapping: Dict[str, str]) -> Tuple[int, List[str]]:
         for sub_key, cfg in sub_configs.items():
             if not isinstance(cfg, dict):
                 continue
-            tla = (cfg.get("groups") or {}).get("three_layer_assessment")
+            groups = cfg.get("groups") or {}
+            tla = groups.get("three_layer_assessment")
             if not isinstance(tla, list):
                 continue
+
+            # Build the rename map for this sub-config first so signal
+            # registry references can be rewritten consistently.
+            id_rename: Dict[str, str] = {}
             for entry in tla:
-                if not isinstance(entry, dict):
-                    continue
-                cur = entry.get("id")
+                cur = (entry or {}).get("id") if isinstance(entry, dict) else None
                 if not cur or cur in CANONICAL_IDS:
                     continue
                 new = mapping.get(cur)
                 if new is None:
                     unmapped.append(f"{cov_key}/{sub_key}: '{cur}'")
                     continue
-                entry["id"] = new
-                changes += 1
+                id_rename[cur] = new
+
+            # Apply renames + merge duplicates in one pass.
+            merged: List[dict] = []
+            by_new_id: Dict[str, dict] = {}
+            for entry in tla:
+                if not isinstance(entry, dict):
+                    merged.append(entry)
+                    continue
+                cur = entry.get("id")
+                new = id_rename.get(cur, cur)
+                if cur and new != cur:
+                    entry["id"] = new
+                    changes += 1
+                if new in by_new_id:
+                    # Merge into the earlier entry: sum per-dim weights,
+                    # keep the first entry's label/description.
+                    _merge_weights(by_new_id[new], entry)
+                else:
+                    by_new_id[new] = entry
+                    merged.append(entry)
+            groups["three_layer_assessment"] = merged
+
+            # Rewrite signal_registry group references.
+            changes += _rebuild_signal_group_refs(cfg, id_rename)
     path.write_text(yaml.safe_dump(data, sort_keys=False, width=120))
     return changes, unmapped
 

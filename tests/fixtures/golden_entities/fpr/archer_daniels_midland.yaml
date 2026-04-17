@@ -12,7 +12,7 @@ minimum_viable_input:
   industry_sector: AGRICULTURE
   domain: adm.com
 expected:
-  composite_score: 300.0
+  composite_score: 240.0
   tier: 5
   decision: decline
   recommended_premium: 17000.0

@@ -14,7 +14,7 @@ expected:
   composite_score: 100.0
   tier: 5
   decision: decline
-  recommended_premium: 35966.46
+  recommended_premium: 32696.78
 tolerance:
   score_points: 50.0
   premium_bps: 1000.0

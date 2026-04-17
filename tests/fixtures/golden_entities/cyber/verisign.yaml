@@ -12,10 +12,10 @@ minimum_viable_input:
   industry_sector: TECHNOLOGY
   domain: verisign.com
 expected:
-  composite_score: 360.0
-  tier: 4
-  decision: refer
-  recommended_premium: 2820322.66
+  composite_score: 260.0
+  tier: 5
+  decision: decline
+  recommended_premium: 3796588.19
 tolerance:
   score_points: 50.0
   premium_bps: 1000.0

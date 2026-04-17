@@ -2,8 +2,7 @@ cyber:
   cyber_general:
     metadata:
       name: DSI Cyber Technical Pricing Model
-      description: Cyber liability model based on externally observable technical
-        signals
+      description: Cyber liability model based on externally observable technical signals
       version: 2.3.0
       product_types:
       - cyber_liability
@@ -20,8 +19,7 @@ cyber:
         - field: client_name
           description: Client name (domain optional for discovery)
         - field: product_type
-          description: 'One of: cyber_liability, network_security, privacy_liability,
-            cyber_extortion'
+          description: 'One of: cyber_liability, network_security, privacy_liability, cyber_extortion'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -1282,8 +1280,7 @@ cyber:
   cyber_sme:
     metadata:
       name: Cyber SME Automated Pricing Model
-      description: Cyber liability model for SME segment - automated underwriting
-        for small businesses
+      description: Cyber liability model for SME segment - automated underwriting for small businesses
       version: 2.3.0
       product_types:
       - cyber_liability
@@ -1376,7 +1373,7 @@ cyber:
       inference_utility_function: tls_configuration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1408,7 +1405,7 @@ cyber:
       inference_utility_function: email_authentication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1441,7 +1438,7 @@ cyber:
       inference_utility_function: security_headers_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1545,7 +1542,7 @@ cyber:
       inference_utility_function: dnssec_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1567,7 +1564,7 @@ cyber:
       inference_utility_function: waf_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1589,7 +1586,7 @@ cyber:
       inference_utility_function: cdn_usage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: technical_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -1708,7 +1705,7 @@ cyber:
         impact: MODIFIER
         default_cat: SMALL
       three_layer_assessment:
-      - id: technical_security
+      - id: technical_infrastructure
         label: Technical Security
         description: Core security posture signals
         risk:
@@ -2015,8 +2012,7 @@ cyber:
         required_in_input: false
     direct_queries:
     - id: hipaa_risk_assessment
-      question: Has a NIST CSF-aligned HIPAA risk analysis been completed in the past
-        12 months?
+      question: Has a NIST CSF-aligned HIPAA risk analysis been completed in the past 12 months?
       query_condition:
       - return: true
         action: REFER
@@ -2052,7 +2048,7 @@ cyber:
       inference_utility_function: connected_medical_device_security_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2074,7 +2070,7 @@ cyber:
       inference_utility_function: ehr_system_resilience_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2096,7 +2092,7 @@ cyber:
       inference_utility_function: hipaa_compliance_depth_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2124,7 +2120,7 @@ cyber:
       inference_utility_function: clinical_system_segmentation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2146,7 +2142,7 @@ cyber:
       inference_utility_function: phi_data_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -2165,7 +2161,7 @@ cyber:
       inference_utility_function: hhs_breach_portal_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: health_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2187,16 +2183,15 @@ cyber:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: health_data_security
+      - id: technical_infrastructure
         label: Health Data Security
-        description: 'Healthcare-specific data security signals: PHI, medical devices,
-          EHR, HIPAA'
+        description: 'Healthcare-specific data security signals: PHI, medical devices, EHR, HIPAA'
         risk:
-          weight: 0.3
+          weight: 0.5
         loss:
-          weight: 0.3
+          weight: 0.55
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -2206,15 +2201,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -2238,15 +2224,6 @@ cyber:
         description: ''
         risk:
           weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.05
         loss:
           weight: 0.1
         exposure:
@@ -2625,7 +2602,7 @@ cyber:
       inference_utility_function: payment_system_architecture_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2647,7 +2624,7 @@ cyber:
       inference_utility_function: swift_controls_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2669,7 +2646,7 @@ cyber:
       inference_utility_function: pci_compliance_depth_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2697,7 +2674,7 @@ cyber:
       inference_utility_function: transaction_fraud_controls_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2719,7 +2696,7 @@ cyber:
       inference_utility_function: core_banking_resilience_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2741,7 +2718,7 @@ cyber:
       inference_utility_function: regulatory_examination_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_system_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2761,15 +2738,15 @@ cyber:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: financial_system_security
+      - id: technical_infrastructure
         label: Financial System Security
         description: Payment systems, regulatory compliance, transaction controls
         risk:
-          weight: 0.3
+          weight: 0.5
         loss:
-          weight: 0.3
+          weight: 0.55
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -2779,15 +2756,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -2811,15 +2779,6 @@ cyber:
         description: ''
         risk:
           weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.05
         loss:
           weight: 0.1
         exposure:
@@ -3166,7 +3125,7 @@ cyber:
       inference_utility_function: ot_network_segmentation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: ot_ics_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -3194,7 +3153,7 @@ cyber:
       inference_utility_function: scada_security_posture_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: ot_ics_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3216,7 +3175,7 @@ cyber:
       inference_utility_function: safety_instrumented_system_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: ot_ics_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3235,7 +3194,7 @@ cyber:
       inference_utility_function: ot_patching_cadence_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: ot_ics_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3254,7 +3213,7 @@ cyber:
       inference_utility_function: nerc_cip_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: ot_ics_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3271,15 +3230,15 @@ cyber:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: ot_ics_security
+      - id: technical_infrastructure
         label: OT/ICS Security
         description: Operational technology and industrial control system security
         risk:
-          weight: 0.35
+          weight: 0.6
         loss:
-          weight: 0.35
+          weight: 0.6
         exposure:
-          weight: 0.25
+          weight: 0.55
       - id: network_authority
         label: Network Authority
         description: ''
@@ -3289,15 +3248,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -3318,15 +3268,6 @@ cyber:
           weight: 0.15
       - id: corporate_footprint
         label: Corporate Footprint
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
         description: ''
         risk:
           weight: 0.1
@@ -3665,7 +3606,7 @@ cyber:
       inference_utility_function: secure_sdlc_maturity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3693,7 +3634,7 @@ cyber:
       inference_utility_function: sbom_coverage_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3709,7 +3650,7 @@ cyber:
       inference_utility_function: tenant_isolation_strength_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3728,7 +3669,7 @@ cyber:
       inference_utility_function: dependency_vulnerability_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3744,7 +3685,7 @@ cyber:
       inference_utility_function: api_security_posture_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3763,7 +3704,7 @@ cyber:
       inference_utility_function: incident_notification_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: product_supply_chain_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3777,15 +3718,15 @@ cyber:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: product_supply_chain_security
+      - id: technical_infrastructure
         label: Product & Supply Chain Security
         description: Software product security, SDLC, supply chain, tenant isolation
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -3795,15 +3736,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -3829,15 +3761,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -4171,7 +4094,7 @@ cyber:
       inference_utility_function: user_authentication_strength_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4187,7 +4110,7 @@ cyber:
       inference_utility_function: data_retention_practices_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4206,7 +4129,7 @@ cyber:
       inference_utility_function: credential_breach_monitoring_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4222,7 +4145,7 @@ cyber:
       inference_utility_function: content_moderation_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -4238,7 +4161,7 @@ cyber:
       inference_utility_function: user_data_encryption_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4254,7 +4177,7 @@ cyber:
       inference_utility_function: third_party_data_sharing_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: platform_user_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4268,15 +4191,15 @@ cyber:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: platform_user_security
+      - id: technical_infrastructure
         label: Platform User Security
         description: User data protection, content moderation, platform integrity
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -4286,15 +4209,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -4320,15 +4234,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -4659,7 +4564,7 @@ cyber:
       inference_utility_function: production_ot_segmentation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: manufacturing_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4687,7 +4592,7 @@ cyber:
       inference_utility_function: production_recovery_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: manufacturing_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4703,7 +4608,7 @@ cyber:
       inference_utility_function: ip_protection_controls_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: manufacturing_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4719,7 +4624,7 @@ cyber:
       inference_utility_function: supply_chain_digital_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: manufacturing_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4738,7 +4643,7 @@ cyber:
       inference_utility_function: ransomware_preparedness_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: manufacturing_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4755,15 +4660,15 @@ cyber:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: manufacturing_operations_security
+      - id: technical_infrastructure
         label: Manufacturing Operations Security
         description: OT/IT convergence, production continuity, IP protection
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -4773,15 +4678,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -4807,15 +4703,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -5145,7 +5032,7 @@ cyber:
       inference_utility_function: point_to_point_encryption_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5164,7 +5051,7 @@ cyber:
       inference_utility_function: ecommerce_security_posture_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5186,7 +5073,7 @@ cyber:
       inference_utility_function: store_network_isolation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5205,7 +5092,7 @@ cyber:
       inference_utility_function: loyalty_data_protection_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5221,7 +5108,7 @@ cyber:
       inference_utility_function: pci_assessment_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5240,7 +5127,7 @@ cyber:
       inference_utility_function: access_provisioning_automation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: retail_operations_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -5254,15 +5141,15 @@ cyber:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: retail_operations_security
+      - id: technical_infrastructure
         label: Retail Operations Security
         description: PCI compliance, payment security, e-commerce, store networks
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -5272,15 +5159,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -5306,15 +5184,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -5644,7 +5513,7 @@ cyber:
       inference_utility_function: essential_services_continuity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5666,7 +5535,7 @@ cyber:
       inference_utility_function: legacy_system_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -5682,7 +5551,7 @@ cyber:
       inference_utility_function: ms_isac_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5698,7 +5567,7 @@ cyber:
       inference_utility_function: citizen_data_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -5714,7 +5583,7 @@ cyber:
       inference_utility_function: ransomware_payment_governance_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5730,7 +5599,7 @@ cyber:
       inference_utility_function: cyber_incident_response_maturity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: public_sector_cyber_posture
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5743,16 +5612,15 @@ cyber:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: public_sector_cyber_posture
+      - id: technical_infrastructure
         label: Public Sector Cyber Posture
-        description: Government/education cyber security, essential services, legacy
-          systems
+        description: Government/education cyber security, essential services, legacy systems
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -5762,15 +5630,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -5796,15 +5655,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -6110,8 +5960,7 @@ cyber:
         applied: 1.2
         note: DMARC not at enforcement
     - id: ethical_walls_capability_query
-      question: Are information barriers (ethical walls) implemented between client
-        matters?
+      question: Are information barriers (ethical walls) implemented between client matters?
       query_condition:
       - return: true
         action: FLAG
@@ -6139,7 +5988,7 @@ cyber:
       inference_utility_function: client_data_classification_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -6158,7 +6007,7 @@ cyber:
       inference_utility_function: ethical_wall_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6174,7 +6023,7 @@ cyber:
       inference_utility_function: email_security_posture_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -6190,7 +6039,7 @@ cyber:
       inference_utility_function: client_data_encryption_at_rest_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6206,7 +6055,7 @@ cyber:
       inference_utility_function: wire_transfer_controls_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6221,7 +6070,7 @@ cyber:
       inference_utility_function: remote_access_security_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: professional_data_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6235,15 +6084,15 @@ cyber:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: professional_data_security
+      - id: technical_infrastructure
         label: Professional Data Security
         description: Client confidentiality, ethical walls, privileged communication
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.6
         exposure:
-          weight: 0.2
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         description: ''
@@ -6253,15 +6102,6 @@ cyber:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
       - id: public_record
         label: Public Record
         description: ''
@@ -6287,15 +6127,6 @@ cyber:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: security_posture
-        label: Security Posture
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:

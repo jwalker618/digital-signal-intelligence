@@ -258,16 +258,20 @@ def _assess_sub_config(
                     ))
                     continue
                 if cat_id not in CANONICAL_CATEGORIES:
+                    # V6/E9 (follow-up 2): canonical taxonomy enforced
+                    # after the taxonomy_migrate tool cleared all
+                    # non-canonical ids. Severity promoted to error.
                     findings.append(Finding(
-                        severity="warning",
+                        severity="error",
                         category="canonical_category",
                         path=path,
                         scope=scope,
                         message=(
                             f"three_layer_assessment id '{cat_id}' is not in the "
                             "canonical V6 category list "
-                            f"({sorted(CANONICAL_CATEGORIES)}); E9 will harden this "
-                            "check to an error."
+                            f"({sorted(CANONICAL_CATEGORIES)}). Run "
+                            "`python infrastructure/admin/taxonomy_migrate.py --write` "
+                            "to resolve."
                         ),
                     ))
 

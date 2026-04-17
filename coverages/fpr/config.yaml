@@ -2,7 +2,7 @@ financial_political_risk:
   fpr_trade_credit:
     metadata:
       name: DSI Trade Credit Insurance Model
-      description: Trade credit — buyer default, insolvency, protracted default, political risk on receivables
+      description: "Trade credit \u2014 buyer default, insolvency, protracted default, political risk on receivables"
       version: 2.3.0
       product_types:
       - trade_credit
@@ -82,7 +82,7 @@ financial_political_risk:
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -103,7 +103,7 @@ financial_political_risk:
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -122,7 +122,7 @@ financial_political_risk:
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -143,7 +143,7 @@ financial_political_risk:
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -162,7 +162,7 @@ financial_political_risk:
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -177,7 +177,7 @@ financial_political_risk:
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -193,7 +193,7 @@ financial_political_risk:
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: political_risk
+        group_id: public_record
         source: metadata.sovereign_risk_rating
         features:
         - cat: LOW
@@ -212,7 +212,7 @@ financial_political_risk:
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -233,7 +233,7 @@ financial_political_risk:
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -248,7 +248,7 @@ financial_political_risk:
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -267,7 +267,7 @@ financial_political_risk:
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -286,7 +286,7 @@ financial_political_risk:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: trade_credit_risk
+      - id: structured_data
         label: Trade Credit Risk
         description: Buyer creditworthiness, payment behaviour, country risk, concentration, trade terms
         risk:
@@ -295,15 +295,15 @@ financial_political_risk:
           weight: 0.4
         exposure:
           weight: 0.35
-      - id: political_risk
+      - id: public_record
         label: Political Risk
         description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
         risk:
-          weight: 0.1
+          weight: 0.25
         loss:
-          weight: 0.1
+          weight: 0.25
         exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -313,22 +313,13 @@ financial_political_risk:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.15
         loss:
           weight: 0.2
-        exposure:
-          weight: 0.15
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
         exposure:
           weight: 0.15
     risk_tier_bands:
@@ -624,7 +615,7 @@ financial_political_risk:
   fpr_political_risk:
     metadata:
       name: DSI Political Risk & Violence Model
-      description: Political risk — expropriation, currency inconvertibility, political violence, contract frustration
+      description: "Political risk \u2014 expropriation, currency inconvertibility, political violence, contract frustration"
       version: 2.3.0
       product_types:
       - political_risk
@@ -689,7 +680,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: Local partner — may mitigate or amplify risk
+        note: "Local partner \u2014 may mitigate or amplify risk"
     - id: resource_extraction
       question: Is this a natural resource extraction investment (oil, gas, mining)?
       query_condition:
@@ -697,13 +688,13 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: Resource extraction — elevated nationalisation risk
+        note: "Resource extraction \u2014 elevated nationalisation risk"
     signal_registry:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: political_risk
+        group_id: public_record
         source: metadata.sovereign_risk_rating
         features:
         - cat: LOW
@@ -722,7 +713,7 @@ financial_political_risk:
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -743,7 +734,7 @@ financial_political_risk:
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -758,7 +749,7 @@ financial_political_risk:
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -777,7 +768,7 @@ financial_political_risk:
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -796,15 +787,15 @@ financial_political_risk:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: political_risk
+      - id: public_record
         label: Political Risk
         description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
         risk:
-          weight: 0.45
+          weight: 0.65
         loss:
-          weight: 0.45
+          weight: 0.7
         exposure:
-          weight: 0.4
+          weight: 0.6
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -814,7 +805,7 @@ financial_political_risk:
           weight: 0.15
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -823,24 +814,6 @@ financial_political_risk:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
     risk_tier_bands:
       bands:
       - id: 1
@@ -1151,7 +1124,7 @@ financial_political_risk:
   fpr_surety:
     metadata:
       name: DSI Surety & Contract Bond Model
-      description: Surety bonds — performance, payment, bid, maintenance; contractor financial strength focus
+      description: "Surety bonds \u2014 performance, payment, bid, maintenance; contractor financial strength focus"
       version: 2.3.0
       product_types:
       - surety_bond
@@ -1216,7 +1189,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: Government contract — Miller Act bond
+        note: "Government contract \u2014 Miller Act bond"
     - id: joint_venture
       question: Is this a joint venture project with shared bonding obligations?
       query_condition:
@@ -1224,13 +1197,13 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: JV bonding — partner credit exposure
+        note: "JV bonding \u2014 partner credit exposure"
     signal_registry:
     - id: principal_financial_strength
       inference_utility_function: principal_financial_strength_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: surety_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1245,7 +1218,7 @@ financial_political_risk:
       inference_utility_function: project_execution_track_record_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: surety_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1260,7 +1233,7 @@ financial_political_risk:
       inference_utility_function: backlog_to_capacity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: surety_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1284,7 +1257,7 @@ financial_political_risk:
       inference_utility_function: bond_default_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: surety_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1305,7 +1278,7 @@ financial_political_risk:
       inference_utility_function: obligee_complexity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: surety_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1319,7 +1292,7 @@ financial_political_risk:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: surety_risk
+      - id: structured_data
         label: Surety & Bond Risk
         description: Principal financial strength, project execution capability, bonding capacity, default history
         risk:
@@ -1337,7 +1310,7 @@ financial_political_risk:
           weight: 0.2
         exposure:
           weight: 0.3
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -1346,7 +1319,7 @@ financial_political_risk:
           weight: 0.2
         exposure:
           weight: 0.2
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
@@ -1645,7 +1618,7 @@ financial_political_risk:
   fpr_kidnap_ransom:
     metadata:
       name: DSI Kidnap & Ransom Model
-      description: K&R — kidnap, ransom, extortion, detention, hijack; crisis response included
+      description: "K&R \u2014 kidnap, ransom, extortion, detention, hijack; crisis response included"
       version: 2.3.0
       product_types:
       - kidnap_ransom
@@ -1713,7 +1686,7 @@ financial_political_risk:
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: political_risk
+        group_id: public_record
         source: metadata.sovereign_risk_rating
         features:
         - cat: LOW
@@ -1732,7 +1705,7 @@ financial_political_risk:
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1753,7 +1726,7 @@ financial_political_risk:
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1768,7 +1741,7 @@ financial_political_risk:
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1787,7 +1760,7 @@ financial_political_risk:
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1808,7 +1781,7 @@ financial_political_risk:
       inference_utility_function: travel_exposure_profile_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: kidnap_ransom_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1824,7 +1797,7 @@ financial_political_risk:
       inference_utility_function: country_threat_level_basefunction
       proxy_tier: INFERRED_PROXY
       categories:
-        group_id: kidnap_ransom_risk
+        group_id: public_record
         source: metadata.kr_threat_level
         features:
         - cat: LOW
@@ -1843,7 +1816,7 @@ financial_political_risk:
       inference_utility_function: executive_protection_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: kidnap_ransom_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1858,7 +1831,7 @@ financial_political_risk:
       inference_utility_function: crisis_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: kidnap_ransom_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1870,7 +1843,7 @@ financial_political_risk:
       inference_utility_function: expatriate_population_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: kidnap_ransom_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1884,24 +1857,15 @@ financial_political_risk:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: kidnap_ransom_risk
+      - id: public_record
         label: Kidnap & Ransom Risk
         description: Travel exposure, country threat, executive protection, crisis response capability
         risk:
-          weight: 0.45
+          weight: 0.7
         loss:
-          weight: 0.4
+          weight: 0.65
         exposure:
-          weight: 0.35
-      - id: political_risk
-        label: Political Risk
-        description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
+          weight: 0.6
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -1911,7 +1875,7 @@ financial_political_risk:
           weight: 0.2
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -1920,15 +1884,6 @@ financial_political_risk:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
     risk_tier_bands:
       bands:
       - id: 1
@@ -2218,7 +2173,7 @@ financial_political_risk:
   fpr_sme:
     metadata:
       name: DSI Financial & Political Risk SME Model
-      description: Simplified FPR for smaller exposures — trade credit + political risk combined
+      description: "Simplified FPR for smaller exposures \u2014 trade credit + political risk combined"
       version: 2.3.0
       product_types:
       - trade_credit
@@ -2277,7 +2232,7 @@ financial_political_risk:
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -2298,7 +2253,7 @@ financial_political_risk:
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2317,7 +2272,7 @@ financial_political_risk:
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2338,7 +2293,7 @@ financial_political_risk:
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2357,7 +2312,7 @@ financial_political_risk:
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2372,7 +2327,7 @@ financial_political_risk:
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: trade_credit_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2388,7 +2343,7 @@ financial_political_risk:
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: political_risk
+        group_id: public_record
         source: metadata.sovereign_risk_rating
         features:
         - cat: LOW
@@ -2407,7 +2362,7 @@ financial_political_risk:
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2428,7 +2383,7 @@ financial_political_risk:
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2443,7 +2398,7 @@ financial_political_risk:
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2462,7 +2417,7 @@ financial_political_risk:
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: political_risk
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2481,7 +2436,7 @@ financial_political_risk:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: trade_credit_risk
+      - id: structured_data
         label: Trade Credit Risk
         description: Buyer creditworthiness, payment behaviour, country risk, concentration, trade terms
         risk:
@@ -2490,15 +2445,15 @@ financial_political_risk:
           weight: 0.3
         exposure:
           weight: 0.25
-      - id: political_risk
+      - id: public_record
         label: Political Risk
         description: Sovereign risk, expropriation, currency inconvertibility, contract frustration, political violence
         risk:
-          weight: 0.25
+          weight: 0.35
         loss:
-          weight: 0.25
+          weight: 0.35
         exposure:
-          weight: 0.25
+          weight: 0.35
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2508,7 +2463,7 @@ financial_political_risk:
           weight: 0.15
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2517,15 +2472,6 @@ financial_political_risk:
           weight: 0.2
         exposure:
           weight: 0.15
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
     risk_tier_bands:
       bands:
       - id: 1

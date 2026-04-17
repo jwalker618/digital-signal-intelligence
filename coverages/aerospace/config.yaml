@@ -310,7 +310,7 @@ aerospace:
       inference_utility_function: accident_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -340,7 +340,7 @@ aerospace:
       inference_utility_function: incident_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -355,7 +355,7 @@ aerospace:
       inference_utility_function: accident_rate_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -370,7 +370,7 @@ aerospace:
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -396,7 +396,7 @@ aerospace:
       inference_utility_function: investigation_finding_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -408,7 +408,7 @@ aerospace:
       inference_utility_function: certificate_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -434,7 +434,7 @@ aerospace:
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -460,7 +460,7 @@ aerospace:
       inference_utility_function: iosa_audit_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -472,7 +472,7 @@ aerospace:
       inference_utility_function: ramp_inspection_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -484,7 +484,7 @@ aerospace:
       inference_utility_function: eu_safety_list_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -510,7 +510,7 @@ aerospace:
       inference_utility_function: state_safety_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -518,7 +518,7 @@ aerospace:
       inference_utility_function: certification_transparency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -526,7 +526,7 @@ aerospace:
       inference_utility_function: otp_score_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -538,7 +538,7 @@ aerospace:
       inference_utility_function: dispatch_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -550,7 +550,7 @@ aerospace:
       inference_utility_function: crew_experience_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -565,7 +565,7 @@ aerospace:
       inference_utility_function: training_indicators_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -577,7 +577,7 @@ aerospace:
       inference_utility_function: operational_complexity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.15
@@ -593,7 +593,7 @@ aerospace:
       inference_utility_function: growth_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.15
@@ -609,7 +609,7 @@ aerospace:
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.3
@@ -628,7 +628,7 @@ aerospace:
       inference_utility_function: fleet_homogeneity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -644,7 +644,7 @@ aerospace:
       inference_utility_function: aircraft_generation_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -659,7 +659,7 @@ aerospace:
       inference_utility_function: order_backlog_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -671,7 +671,7 @@ aerospace:
       inference_utility_function: maintenance_indicators_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -683,7 +683,7 @@ aerospace:
       inference_utility_function: supply_chain_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -691,7 +691,7 @@ aerospace:
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -703,7 +703,7 @@ aerospace:
       inference_utility_function: public_financials_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -715,7 +715,7 @@ aerospace:
       inference_utility_function: market_position_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: financial_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -727,7 +727,7 @@ aerospace:
       inference_utility_function: government_support_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -739,7 +739,7 @@ aerospace:
       inference_utility_function: conflict_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: route_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.3
@@ -769,7 +769,7 @@ aerospace:
       inference_utility_function: challenging_airports_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: route_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.2
@@ -781,7 +781,7 @@ aerospace:
       inference_utility_function: highrisk_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: route_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.25
@@ -796,7 +796,7 @@ aerospace:
       inference_utility_function: weather_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: route_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.15
@@ -808,7 +808,7 @@ aerospace:
       inference_utility_function: terrain_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: route_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.1
@@ -820,7 +820,7 @@ aerospace:
       inference_utility_function: management_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -832,7 +832,7 @@ aerospace:
       inference_utility_function: safety_leadership_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -847,7 +847,7 @@ aerospace:
       inference_utility_function: safety_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -859,7 +859,7 @@ aerospace:
       inference_utility_function: corporate_structure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -871,7 +871,7 @@ aerospace:
       inference_utility_function: industry_engagement_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -918,11 +918,11 @@ aerospace:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: safety_record
+      - id: public_record
         label: Safety Record
         description: Historical safety performance from public databases
         risk:
-          weight: 0.3
+          weight: 0.5
           score_conditions:
           - threshold: 30
             comparison: <=
@@ -940,39 +940,14 @@ aerospace:
             applied: 0.85
             note: Excellent safety record - modifier applied
         loss:
-          weight: 0.4
+          weight: 0.6
         exposure:
-          weight: 0.1
-      - id: regulatory_compliance
-        label: Regulatory Compliance
-        description: Certificate status, enforcement actions, audit results
-        risk:
           weight: 0.2
-          score_conditions:
-          - threshold: 35
-            comparison: <=
-            action: REFER
-            override: 5
-            note: Severe regulatory deficiencies
-          - threshold: 50
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Material regulatory concerns
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.85
-            note: Excellent regulatory compliance - modifier applied
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.1
-      - id: operational_quality
+      - id: technical_infrastructure
         label: Operational Quality
         description: Observable operational metrics
         risk:
-          weight: 0.15
+          weight: 0.3
           score_conditions:
           - threshold: 20
             comparison: <=
@@ -980,25 +955,10 @@ aerospace:
             applied: 0.9
             note: Excellent operational quality - modifier applied
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
-      - id: fleet_quality
-        label: Fleet Quality
-        description: Aircraft age, composition, maintenance indicators
-        risk:
-          weight: 0.1
-          score_conditions:
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.9
-            note: Excellent fleet quality - modifier applied
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.35
-      - id: financial_stability
+          weight: 0.6
+      - id: behavioural
         label: Financial Stability
         description: Public financial indicators
         risk:
@@ -1013,27 +973,7 @@ aerospace:
           weight: 0.03
         exposure:
           weight: 0.1
-      - id: route_risk
-        label: Route Risk
-        description: Geographic and operational risk exposure
-        risk:
-          weight: 0.05
-          score_conditions:
-          - threshold: 30
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Elevated route risk
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.85
-            note: Excellent route risk - modifier applied
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.1
-      - id: corporate_governance
+      - id: corporate_footprint
         label: Corporate Governance
         description: Management quality and safety culture indicators
         risk:
@@ -1549,7 +1489,7 @@ aerospace:
       inference_utility_function: accident_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1575,7 +1515,7 @@ aerospace:
       inference_utility_function: incident_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1587,7 +1527,7 @@ aerospace:
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1605,7 +1545,7 @@ aerospace:
       inference_utility_function: investigation_finding_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_record
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1617,7 +1557,7 @@ aerospace:
       inference_utility_function: certificate_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1640,7 +1580,7 @@ aerospace:
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1663,7 +1603,7 @@ aerospace:
       inference_utility_function: ramp_inspection_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1675,7 +1615,7 @@ aerospace:
       inference_utility_function: state_safety_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1683,7 +1623,7 @@ aerospace:
       inference_utility_function: crew_experience_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1698,7 +1638,7 @@ aerospace:
       inference_utility_function: training_indicators_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1710,7 +1650,7 @@ aerospace:
       inference_utility_function: operational_complexity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.2
@@ -1722,7 +1662,7 @@ aerospace:
       inference_utility_function: growth_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.15
@@ -1734,7 +1674,7 @@ aerospace:
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.4
@@ -1749,7 +1689,7 @@ aerospace:
       inference_utility_function: fleet_homogeneity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1761,7 +1701,7 @@ aerospace:
       inference_utility_function: maintenance_indicators_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1773,7 +1713,7 @@ aerospace:
       inference_utility_function: management_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.4
@@ -1785,7 +1725,7 @@ aerospace:
       inference_utility_function: safety_leadership_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1800,7 +1740,7 @@ aerospace:
       inference_utility_function: corporate_structure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: corporate_governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1827,11 +1767,11 @@ aerospace:
         impact: MODIFIER
         default_cat: OTHER
       three_layer_assessment:
-      - id: safety_record
+      - id: public_record
         label: Safety Record
         description: Historical safety performance
         risk:
-          weight: 0.35
+          weight: 0.6
           score_conditions:
           - threshold: 30
             comparison: <=
@@ -1844,34 +1784,14 @@ aerospace:
             override: 4
             note: Significant safety concerns
         loss:
-          weight: 0.45
+          weight: 0.65
         exposure:
-          weight: 0.1
-      - id: regulatory_compliance
-        label: Regulatory Compliance
-        description: Certificate and enforcement status
-        risk:
-          weight: 0.25
-          score_conditions:
-          - threshold: 35
-            comparison: <=
-            action: REFER
-            override: 5
-            note: Severe regulatory deficiencies
-          - threshold: 50
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Material regulatory concerns
-        loss:
           weight: 0.2
-        exposure:
-          weight: 0.1
-      - id: operational_quality
+      - id: technical_infrastructure
         label: Operational Quality
         description: Crew and operational standards
         risk:
-          weight: 0.2
+          weight: 0.35
           score_conditions:
           - threshold: 25
             comparison: <=
@@ -1879,25 +1799,10 @@ aerospace:
             applied: 0.9
             note: Excellent operational quality
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
-      - id: fleet_quality
-        label: Fleet Quality
-        description: Aircraft condition and maintenance
-        risk:
-          weight: 0.15
-          score_conditions:
-          - threshold: 25
-            comparison: <=
-            action: MODIFIER
-            applied: 0.9
-            note: Excellent fleet quality
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.55
-      - id: corporate_governance
+          weight: 0.7
+      - id: corporate_footprint
         label: Corporate Governance
         description: Management and safety culture
         risk:
@@ -2176,7 +2081,7 @@ aerospace:
   aerospace_space:
     metadata:
       name: DSI Space Insurance Model
-      description: Space risk — launch vehicles, satellites, in-orbit operations
+      description: "Space risk \u2014 launch vehicles, satellites, in-orbit operations"
       version: 2.3.0
       product_types:
       - space_launch
@@ -2227,7 +2132,7 @@ aerospace:
         action: REFER
         override: 4
         applied: null
-        note: Novel technology — limited heritage
+        note: "Novel technology \u2014 limited heritage"
     - id: constellation_member
       question: Is this satellite part of a large constellation (>20 units)?
       query_condition:
@@ -2243,7 +2148,7 @@ aerospace:
         action: FLAG
         override: null
         applied: null
-        note: Rideshare launch — co-passenger risk
+        note: "Rideshare launch \u2014 co-passenger risk"
     - id: deorbit_plan
       question: Does the operator have a compliant debris mitigation/deorbit plan?
       query_condition:
@@ -2257,7 +2162,7 @@ aerospace:
       inference_utility_function: launch_vehicle_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: space_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -2282,7 +2187,7 @@ aerospace:
       inference_utility_function: satellite_technology_maturity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: space_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2297,7 +2202,7 @@ aerospace:
       inference_utility_function: orbital_debris_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: space_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2316,7 +2221,7 @@ aerospace:
       inference_utility_function: in_orbit_anomaly_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: space_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2331,7 +2236,7 @@ aerospace:
       inference_utility_function: ground_segment_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: space_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2344,16 +2249,16 @@ aerospace:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: space_risk
+      - id: technical_infrastructure
         label: Space Risk
         description: Launch vehicle reliability, satellite technology, orbital debris, in-orbit anomaly history
         risk:
-          weight: 0.45
+          weight: 0.55
         loss:
-          weight: 0.45
+          weight: 0.55
         exposure:
-          weight: 0.35
-      - id: regulatory_framework
+          weight: 0.45
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
@@ -2371,7 +2276,7 @@ aerospace:
           weight: 0.2
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2380,15 +2285,6 @@ aerospace:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: fleet_category
-        label: Fleet Category
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
     risk_tier_bands:
       bands:
       - id: 1
@@ -2691,7 +2587,7 @@ aerospace:
   aerospace_rotary:
     metadata:
       name: DSI Rotary Wing Aviation Model
-      description: Helicopter operations — mission-specific, EMS, offshore, utility, corporate
+      description: "Helicopter operations \u2014 mission-specific, EMS, offshore, utility, corporate"
       version: 2.3.0
       product_types: &id002
       - aviation_hull
@@ -2733,7 +2629,7 @@ aerospace:
         action: FLAG
         override: null
         applied: null
-        note: NVG operations — specialised risk profile
+        note: "NVG operations \u2014 specialised risk profile"
     - id: ems_response_area
       question: Does the EMS programme operate in mountainous or over-water terrain?
       query_condition:
@@ -2763,7 +2659,7 @@ aerospace:
       inference_utility_function: mission_profile_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: rotary_wing_risk
+        group_id: technical_infrastructure
         source: metadata.rotary_mission_profile
         features:
         - cat: CORPORATE
@@ -2791,7 +2687,7 @@ aerospace:
       inference_utility_function: rotary_pilot_experience_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: rotary_wing_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2806,7 +2702,7 @@ aerospace:
       inference_utility_function: rotary_maintenance_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: rotary_wing_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2821,7 +2717,7 @@ aerospace:
       inference_utility_function: landing_zone_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: rotary_wing_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2840,7 +2736,7 @@ aerospace:
       inference_utility_function: passenger_liability_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: rotary_wing_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2854,42 +2750,24 @@ aerospace:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: rotary_wing_risk
+      - id: technical_infrastructure
         label: Rotary Wing Risk
         description: Helicopter mission profile, pilot experience, maintenance programme, landing zone quality
         risk:
-          weight: 0.35
+          weight: 0.45
         loss:
-          weight: 0.35
+          weight: 0.45
         exposure:
-          weight: 0.25
-      - id: iosa_status
+          weight: 0.4
+      - id: public_record
         label: Iosa Status
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.25
         loss:
-          weight: 0.1
+          weight: 0.2
         exposure:
-          weight: 0.1
-      - id: regulatory_framework
-        label: Regulatory Framework
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
-      - id: fleet_size
-        label: Fleet Size
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
+          weight: 0.25
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2899,7 +2777,7 @@ aerospace:
           weight: 0.2
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -3196,7 +3074,7 @@ aerospace:
   aerospace_unmanned:
     metadata:
       name: DSI Unmanned Aircraft Systems Model
-      description: UAS/drone operations — VLOS, BVLOS, autonomous, commercial drone fleets
+      description: "UAS/drone operations \u2014 VLOS, BVLOS, autonomous, commercial drone fleets"
       version: 2.3.0
       product_types: *id002
       applicable_markets: *id001
@@ -3234,7 +3112,7 @@ aerospace:
         action: FLAG
         override: null
         applied: null
-        note: Delivery operations — dropped object risk
+        note: "Delivery operations \u2014 dropped object risk"
     - id: incident_history
       question: Any flyaway, lost-link, or third-party impact incidents in the past 24 months?
       query_condition:
@@ -3248,20 +3126,20 @@ aerospace:
       inference_utility_function: uas_operational_scope_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: unmanned_systems
+        group_id: technical_infrastructure
         source: metadata.uas_operational_scope
         features:
         - cat: VLOS_RURAL
-          label: Visual Line of Sight — Rural
+          label: "Visual Line of Sight \u2014 Rural"
           applied: 0.7
         - cat: VLOS_URBAN
-          label: Visual Line of Sight — Urban
+          label: "Visual Line of Sight \u2014 Urban"
           applied: 0.9
         - cat: BVLOS_RURAL
-          label: Beyond VLOS — Rural
+          label: "Beyond VLOS \u2014 Rural"
           applied: 1.1
         - cat: BVLOS_URBAN
-          label: Beyond VLOS — Urban
+          label: "Beyond VLOS \u2014 Urban"
           applied: 1.4
         - cat: AUTONOMOUS
           label: Autonomous Operations
@@ -3270,7 +3148,7 @@ aerospace:
       inference_utility_function: uas_regulatory_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: unmanned_systems
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3282,7 +3160,7 @@ aerospace:
       inference_utility_function: airspace_integration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: unmanned_systems
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3297,7 +3175,7 @@ aerospace:
       inference_utility_function: uas_payload_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: unmanned_systems
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3313,7 +3191,7 @@ aerospace:
       inference_utility_function: uas_fleet_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: unmanned_systems
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3331,16 +3209,16 @@ aerospace:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: unmanned_systems
+      - id: technical_infrastructure
         label: Unmanned Aircraft Systems
-        description: UAS/drone operations — BVLOS capability, airspace integration, payload risk, regulatory compliance
+        description: "UAS/drone operations \u2014 BVLOS capability, airspace integration, payload risk, regulatory compliance"
         risk:
-          weight: 0.4
+          weight: 0.5
         loss:
-          weight: 0.4
+          weight: 0.55
         exposure:
-          weight: 0.35
-      - id: regulatory_framework
+          weight: 0.5
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
@@ -3358,20 +3236,11 @@ aerospace:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: fleet_size
-        label: Fleet Size
-        description: ''
-        risk:
-          weight: 0.1
         loss:
           weight: 0.15
         exposure:
@@ -3664,7 +3533,7 @@ aerospace:
   aerospace_mro:
     metadata:
       name: DSI Aerospace MRO Liability Model
-      description: MRO facility liability — workmanship, hangarkeepers, products/completed operations
+      description: "MRO facility liability \u2014 workmanship, hangarkeepers, products/completed operations"
       version: 2.3.0
       product_types: *id002
       applicable_markets: *id001
@@ -3730,7 +3599,7 @@ aerospace:
       inference_utility_function: mro_certification_scope_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: mro_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3746,7 +3615,7 @@ aerospace:
       inference_utility_function: workmanship_claims_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: mro_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3767,7 +3636,7 @@ aerospace:
       inference_utility_function: hangarkeepers_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: mro_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3783,7 +3652,7 @@ aerospace:
       inference_utility_function: quality_system_maturity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: mro_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3798,7 +3667,7 @@ aerospace:
       inference_utility_function: parts_traceability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: mro_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3817,16 +3686,16 @@ aerospace:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: mro_risk
+      - id: technical_infrastructure
         label: MRO Facility Risk
         description: MRO workmanship liability, hangarkeepers exposure, certification compliance, product return risk
         risk:
-          weight: 0.4
+          weight: 0.5
         loss:
-          weight: 0.4
+          weight: 0.55
         exposure:
-          weight: 0.3
-      - id: regulatory_framework
+          weight: 0.45
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
@@ -3844,20 +3713,11 @@ aerospace:
           weight: 0.2
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: fleet_category
-        label: Fleet Category
-        description: ''
-        risk:
-          weight: 0.1
         loss:
           weight: 0.15
         exposure:
@@ -4150,7 +4010,7 @@ aerospace:
   aerospace_high_value:
     metadata:
       name: DSI Aerospace High Value Fleet Model
-      description: High-value aviation fleet — airlines, major operators, hull value >$500M
+      description: "High-value aviation fleet \u2014 airlines, major operators, hull value >$500M"
       version: 2.3.0
       product_types: *id002
       applicable_markets: *id001
@@ -4208,42 +4068,24 @@ aerospace:
     signal_registry: []
     groups:
       three_layer_assessment:
-      - id: iosa_status
+      - id: public_record
         label: Iosa Status
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.4
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.1
-      - id: regulatory_framework
-        label: Regulatory Framework
-        description: ''
-        risk:
-          weight: 0.2
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: fleet_size
+          weight: 0.25
+      - id: technical_infrastructure
         label: Fleet Size
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.2
-      - id: fleet_category
-        label: Fleet Category
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
+          weight: 0.35
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -4253,7 +4095,7 @@ aerospace:
           weight: 0.25
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:

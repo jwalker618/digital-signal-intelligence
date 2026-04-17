@@ -2,7 +2,7 @@ commercial_casualty:
   casualty_gl:
     metadata:
       name: DSI Commercial General Liability Model
-      description: Commercial general liability — premises, operations, products/completed ops
+      description: "Commercial general liability \u2014 premises, operations, products/completed ops"
       version: 2.3.0
       product_types:
       - general_liability
@@ -85,7 +85,7 @@ commercial_casualty:
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: gl_class_risk
+        group_id: structured_data
         source: metadata.gl_class_code
         features:
         - cat: LOW
@@ -104,7 +104,7 @@ commercial_casualty:
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -119,7 +119,7 @@ commercial_casualty:
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -143,7 +143,7 @@ commercial_casualty:
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -159,7 +159,7 @@ commercial_casualty:
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -175,7 +175,7 @@ commercial_casualty:
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -196,7 +196,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -212,7 +212,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -227,7 +227,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -239,7 +239,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -259,7 +259,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -272,24 +272,15 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: gl_class_risk
+      - id: structured_data
         label: General Liability Class Risk
         description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
         risk:
-          weight: 0.3
+          weight: 0.55
         loss:
-          weight: 0.3
+          weight: 0.55
         exposure:
-          weight: 0.2
-      - id: premises_operations
-        label: Premises & Operations
-        description: Public access, security measures, incident response, contractual controls
-        risk:
-          weight: 0.25
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.2
+          weight: 0.4
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -299,7 +290,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -308,24 +299,15 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.2
         loss:
-          weight: 0.1
+          weight: 0.25
         exposure:
-          weight: 0.1
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
+          weight: 0.25
     risk_tier_bands:
       bands:
       - id: 1
@@ -645,7 +627,7 @@ commercial_casualty:
   casualty_wc:
     metadata:
       name: DSI Workers Compensation Model
-      description: Workers compensation — payroll-based, experience mod driven, state-specific
+      description: "Workers compensation \u2014 payroll-based, experience mod driven, state-specific"
       version: 2.3.0
       product_types:
       - workers_compensation
@@ -703,7 +685,7 @@ commercial_casualty:
         action: REFER
         override: 3
         applied: null
-        note: High experience mod — loss-driven
+        note: "High experience mod \u2014 loss-driven"
     - id: multi_state
       question: Are employees located in more than 10 states?
       query_condition:
@@ -711,7 +693,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: Multi-state WC — jurisdictional complexity
+        note: "Multi-state WC \u2014 jurisdictional complexity"
     - id: seasonal_workforce
       question: Does the workforce include >30% seasonal or temporary workers?
       query_condition:
@@ -725,7 +707,7 @@ commercial_casualty:
       inference_utility_function: experience_modification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: workplace_safety
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -750,7 +732,7 @@ commercial_casualty:
       inference_utility_function: osha_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: workplace_safety
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -768,7 +750,7 @@ commercial_casualty:
       inference_utility_function: safety_programme_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: workplace_safety
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -783,7 +765,7 @@ commercial_casualty:
       inference_utility_function: return_to_work_programme_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: workplace_safety
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -795,7 +777,7 @@ commercial_casualty:
       inference_utility_function: occupational_disease_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: workplace_safety
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -817,7 +799,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -833,7 +815,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -848,7 +830,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -860,7 +842,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -880,7 +862,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -893,16 +875,16 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: workplace_safety
+      - id: public_record
         label: Workplace Safety
         description: OSHA compliance, experience modification, safety programmes, injury patterns
         risk:
-          weight: 0.4
+          weight: 0.55
         loss:
-          weight: 0.4
+          weight: 0.6
         exposure:
-          weight: 0.2
-      - id: premises_operations
+          weight: 0.4
+      - id: structured_data
         label: Premises & Operations
         description: Public access, security measures, incident response, contractual controls
         risk:
@@ -920,7 +902,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -929,15 +911,6 @@ commercial_casualty:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.2
     risk_tier_bands:
       bands:
       - id: 1
@@ -1228,7 +1201,7 @@ commercial_casualty:
   casualty_auto:
     metadata:
       name: DSI Commercial Auto Liability Model
-      description: Commercial auto fleet liability — fleet-value based, driver quality, telematics
+      description: "Commercial auto fleet liability \u2014 fleet-value based, driver quality, telematics"
       version: 2.3.0
       product_types:
       - commercial_auto
@@ -1285,7 +1258,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: Driver shortage — retention/quality risk
+        note: "Driver shortage \u2014 retention/quality risk"
     - id: prior_fatality
       question: Any at-fault fatality accidents in the past 5 years?
       query_condition:
@@ -1307,7 +1280,7 @@ commercial_casualty:
       inference_utility_function: fleet_composition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         source: metadata.fleet_composition
         features:
         - cat: LIGHT
@@ -1329,7 +1302,7 @@ commercial_casualty:
       inference_utility_function: driver_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -1344,7 +1317,7 @@ commercial_casualty:
       inference_utility_function: telematics_adoption_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1359,7 +1332,7 @@ commercial_casualty:
       inference_utility_function: route_hazard_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1378,7 +1351,7 @@ commercial_casualty:
       inference_utility_function: accident_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1399,7 +1372,7 @@ commercial_casualty:
       inference_utility_function: fleet_maintenance_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: auto_fleet_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1411,7 +1384,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1427,7 +1400,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1442,7 +1415,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1454,7 +1427,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1474,7 +1447,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1487,24 +1460,15 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: auto_fleet_risk
+      - id: structured_data
         label: Auto Fleet Risk
         description: Fleet composition, driver quality, telematics, route hazard, accident frequency
         risk:
-          weight: 0.4
+          weight: 0.5
         loss:
+          weight: 0.5
+        exposure:
           weight: 0.4
-        exposure:
-          weight: 0.3
-      - id: premises_operations
-        label: Premises & Operations
-        description: Public access, security measures, incident response, contractual controls
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -1514,7 +1478,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -1523,24 +1487,15 @@ commercial_casualty:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.2
         loss:
-          weight: 0.15
+          weight: 0.25
         exposure:
-          weight: 0.15
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.25
     risk_tier_bands:
       bands:
       - id: 1
@@ -1832,7 +1787,7 @@ commercial_casualty:
   casualty_umbrella:
     metadata:
       name: DSI Umbrella & Excess Liability Model
-      description: Umbrella/excess liability — underlying-premium based, tower position, nuclear verdict exposure
+      description: "Umbrella/excess liability \u2014 underlying-premium based, tower position, nuclear verdict exposure"
       version: 2.3.0
       product_types:
       - umbrella_excess
@@ -1897,13 +1852,13 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: Lead umbrella position — higher frequency exposure
+        note: "Lead umbrella position \u2014 higher frequency exposure"
     signal_registry:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: gl_class_risk
+        group_id: structured_data
         source: metadata.gl_class_code
         features:
         - cat: LOW
@@ -1922,7 +1877,7 @@ commercial_casualty:
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1937,7 +1892,7 @@ commercial_casualty:
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1961,7 +1916,7 @@ commercial_casualty:
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1977,7 +1932,7 @@ commercial_casualty:
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1993,7 +1948,7 @@ commercial_casualty:
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2014,7 +1969,7 @@ commercial_casualty:
       inference_utility_function: underlying_programme_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: umbrella_exposure
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -2029,7 +1984,7 @@ commercial_casualty:
       inference_utility_function: attachment_point_adequacy_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: umbrella_exposure
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2044,7 +1999,7 @@ commercial_casualty:
       inference_utility_function: nuclear_verdict_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: umbrella_exposure
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2070,7 +2025,7 @@ commercial_casualty:
       inference_utility_function: tower_position_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: umbrella_exposure
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2086,7 +2041,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2102,7 +2057,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2117,7 +2072,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2129,7 +2084,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2149,7 +2104,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2162,33 +2117,15 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: umbrella_exposure
+      - id: structured_data
         label: Umbrella & Excess Exposure
         description: Underlying programme quality, attachment adequacy, stacking, nuclear verdict exposure
         risk:
-          weight: 0.35
+          weight: 0.6
         loss:
-          weight: 0.35
+          weight: 0.6
         exposure:
-          weight: 0.3
-      - id: gl_class_risk
-        label: General Liability Class Risk
-        description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: premises_operations
-        label: Premises & Operations
-        description: Public access, security measures, incident response, contractual controls
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.55
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2198,7 +2135,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2207,7 +2144,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: litigation_history
+      - id: public_record
         label: Litigation History
         description: ''
         risk:
@@ -2264,7 +2201,7 @@ commercial_casualty:
           action: REFER
           application:
             method: MULTIPLIER
-            applied: 0.70
+            applied: 0.7
             basis: underlying_premium
       - id: 5
         label: DECLINE
@@ -2508,7 +2445,7 @@ commercial_casualty:
   casualty_environmental:
     metadata:
       name: DSI Environmental Liability Model
-      description: Environmental liability — pollution, remediation, regulatory defence, third-party claims
+      description: "Environmental liability \u2014 pollution, remediation, regulatory defence, third-party claims"
       version: 2.3.0
       product_types:
       - environmental_liability
@@ -2550,7 +2487,7 @@ commercial_casualty:
         action: REFER
         override: 4
         applied: null
-        note: Known contamination — pre-existing conditions
+        note: "Known contamination \u2014 pre-existing conditions"
     - id: superfund_prp
       question: Is the insured a named PRP at any CERCLA/Superfund site?
       query_condition:
@@ -2566,7 +2503,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: UST presence — leak exposure
+        note: "UST presence \u2014 leak exposure"
     - id: manufacturing_operations
       question: Does the insured operate manufacturing with chemical processes?
       query_condition:
@@ -2574,7 +2511,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: Chemical manufacturing — pollution exposure
+        note: "Chemical manufacturing \u2014 pollution exposure"
     - id: phase_i_current
       question: Has a Phase I ESA been completed within the past 3 years for all insured sites?
       query_condition:
@@ -2588,7 +2525,7 @@ commercial_casualty:
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: gl_class_risk
+        group_id: structured_data
         source: metadata.gl_class_code
         features:
         - cat: LOW
@@ -2607,7 +2544,7 @@ commercial_casualty:
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2622,7 +2559,7 @@ commercial_casualty:
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2646,7 +2583,7 @@ commercial_casualty:
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2662,7 +2599,7 @@ commercial_casualty:
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2678,7 +2615,7 @@ commercial_casualty:
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2699,7 +2636,7 @@ commercial_casualty:
       inference_utility_function: pollution_conditions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_liability
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2720,7 +2657,7 @@ commercial_casualty:
       inference_utility_function: ust_ast_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_liability
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2735,7 +2672,7 @@ commercial_casualty:
       inference_utility_function: regulatory_enforcement_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_liability
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2756,7 +2693,7 @@ commercial_casualty:
       inference_utility_function: waste_management_practices_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: environmental_liability
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2771,7 +2708,7 @@ commercial_casualty:
       inference_utility_function: third_party_site_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: environmental_liability
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2793,7 +2730,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2809,7 +2746,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2824,7 +2761,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2836,7 +2773,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2856,7 +2793,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2869,33 +2806,24 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: environmental_liability
+      - id: public_record
         label: Environmental Liability
         description: Pollution conditions, remediation history, tank compliance, regulatory exposure
         risk:
-          weight: 0.4
+          weight: 0.55
         loss:
-          weight: 0.4
+          weight: 0.6
         exposure:
-          weight: 0.3
-      - id: gl_class_risk
+          weight: 0.45
+      - id: structured_data
         label: General Liability Class Risk
         description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
         risk:
-          weight: 0.1
+          weight: 0.2
         loss:
-          weight: 0.1
+          weight: 0.2
         exposure:
-          weight: 0.1
-      - id: premises_operations
-        label: Premises & Operations
-        description: Public access, security measures, incident response, contractual controls
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
+          weight: 0.25
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2905,7 +2833,7 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2914,15 +2842,6 @@ commercial_casualty:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: regulatory_standing
-        label: Regulatory Standing
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -3215,7 +3134,7 @@ commercial_casualty:
   casualty_sme:
     metadata:
       name: DSI Casualty SME Model
-      description: Small-to-medium casualty — revenue under $5M, simplified GL + products
+      description: "Small-to-medium casualty \u2014 revenue under $5M, simplified GL + products"
       version: 2.3.0
       product_types:
       - general_liability
@@ -3274,7 +3193,7 @@ commercial_casualty:
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: gl_class_risk
+        group_id: structured_data
         source: metadata.gl_class_code
         features:
         - cat: LOW
@@ -3293,7 +3212,7 @@ commercial_casualty:
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3308,7 +3227,7 @@ commercial_casualty:
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3332,7 +3251,7 @@ commercial_casualty:
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3348,7 +3267,7 @@ commercial_casualty:
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3364,7 +3283,7 @@ commercial_casualty:
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
       three_layer_assessment:
-        group_id: gl_class_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3385,7 +3304,7 @@ commercial_casualty:
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3401,7 +3320,7 @@ commercial_casualty:
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3416,7 +3335,7 @@ commercial_casualty:
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3428,7 +3347,7 @@ commercial_casualty:
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3448,7 +3367,7 @@ commercial_casualty:
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: premises_operations
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3461,24 +3380,15 @@ commercial_casualty:
             weight: 0.2
     groups:
       three_layer_assessment:
-      - id: gl_class_risk
+      - id: structured_data
         label: General Liability Class Risk
         description: ISO GL class code, premises hazard, products/completed operations, contractual exposure
         risk:
-          weight: 0.35
+          weight: 0.6
         loss:
-          weight: 0.35
+          weight: 0.6
         exposure:
-          weight: 0.25
-      - id: premises_operations
-        label: Premises & Operations
-        description: Public access, security measures, incident response, contractual controls
-        risk:
-          weight: 0.25
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.25
+          weight: 0.5
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -3488,7 +3398,7 @@ commercial_casualty:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -3497,7 +3407,7 @@ commercial_casualty:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:

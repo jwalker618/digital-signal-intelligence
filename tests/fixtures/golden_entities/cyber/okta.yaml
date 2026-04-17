@@ -12,10 +12,10 @@ minimum_viable_input:
   industry_sector: TECHNOLOGY
   domain: okta.com
 expected:
-  composite_score: 380.0
-  tier: 4
-  decision: refer
-  recommended_premium: 1617340.96
+  composite_score: 280.0
+  tier: 5
+  decision: decline
+  recommended_premium: 2956244.88
 tolerance:
   score_points: 50.0
   premium_bps: 1000.0

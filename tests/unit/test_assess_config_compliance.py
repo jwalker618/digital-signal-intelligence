@@ -59,7 +59,7 @@ def test_assess_sub_config_flags_empty_three_layer_assessment():
     assert any("three_layer_assessment" in m for m in msgs)
 
 
-def test_assess_sub_config_warns_on_non_canonical_category():
+def test_assess_sub_config_errors_on_non_canonical_category():
     findings = acc._assess_sub_config(
         "cyber_general",
         {
@@ -82,10 +82,12 @@ def test_assess_sub_config_warns_on_non_canonical_category():
         path="coverages/cyber/config.yaml",
     )
     non_canonical = [f for f in findings if f.category == "canonical_category"]
-    # Only the non-canonical id should produce a warning.
+    # Only the non-canonical id should produce a finding. V6/E9 post-
+    # migration promoted severity from warning → error.
     assert len(non_canonical) == 1
-    assert non_canonical[0].severity == "warning"
+    assert non_canonical[0].severity == "error"
     assert "custom_nonstandard_category" in non_canonical[0].message
+    assert "taxonomy_migrate" in non_canonical[0].message
 
 
 def test_baseline_round_trip(tmp_path: Path):
