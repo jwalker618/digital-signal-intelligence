@@ -211,6 +211,102 @@ coverages:
         product_type: standard
         industry_sector: AUTOMOTIVE
         domain: tesla.com
+    - entity_id: meta_platforms
+      name: Meta Platforms, Inc.
+      config_id: do_public
+      domain: meta.com
+      registry_id: US-Delaware-0001326801
+      minimum_viable_input:
+        revenue: 134902000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: meta.com
+    - entity_id: netflix
+      name: Netflix, Inc.
+      config_id: do_public
+      domain: netflix.com
+      registry_id: US-Delaware-0001065280
+      minimum_viable_input:
+        revenue: 33723000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MEDIA
+        domain: netflix.com
+    - entity_id: pfizer
+      name: Pfizer Inc.
+      config_id: do_public
+      domain: pfizer.com
+      registry_id: US-Delaware-0000078003
+      minimum_viable_input:
+        revenue: 58496000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: PHARMACEUTICALS
+        domain: pfizer.com
+    - entity_id: boeing_do
+      name: The Boeing Company (D&O)
+      config_id: do_public
+      domain: boeing.com
+      registry_id: US-Delaware-0000012927
+      minimum_viable_input:
+        revenue: 77794000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: boeing.com
+    - entity_id: nvidia
+      name: NVIDIA Corporation
+      config_id: do_public
+      domain: nvidia.com
+      registry_id: US-Delaware-0001045810
+      minimum_viable_input:
+        revenue: 60922000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: nvidia.com
+    - entity_id: stripe_do
+      name: Stripe, Inc.
+      config_id: do_pe_backed
+      domain: stripe.com
+      registry_id: US-Delaware-0001745814
+      minimum_viable_input:
+        revenue: 14400000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: stripe.com
+    - entity_id: databricks
+      name: Databricks, Inc.
+      config_id: do_pe_backed
+      domain: databricks.com
+      registry_id: US-Delaware-0001601082
+      minimum_viable_input:
+        revenue: 2400000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: databricks.com
+    - entity_id: nonprofit_pbs
+      name: Public Broadcasting Service
+      config_id: do_nonprofit
+      domain: pbs.org
+      registry_id: US-Virginia-0000000001
+      minimum_viable_input:
+        revenue: 354000000
+        limit: 10000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: NONPROFIT_MEDIA
+        domain: pbs.org
 
   energy:
     - entity_id: exxonmobil

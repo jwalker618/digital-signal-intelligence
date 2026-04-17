@@ -1,0 +1,22 @@
+entity_id: nonprofit_pbs
+name: Public Broadcasting Service
+coverage: do
+config_id: do_nonprofit
+domain: pbs.org
+registry_id: US-Virginia-0000000001
+minimum_viable_input:
+  revenue: 354000000
+  limit: 10000000
+  deductible: 250000
+  product_type: standard
+  industry_sector: NONPROFIT_MEDIA
+  domain: pbs.org
+expected:
+  composite_score: 460.0
+  tier: 5
+  decision: decline
+  recommended_premium: 15736.84
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
