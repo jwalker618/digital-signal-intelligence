@@ -27,3 +27,4 @@ from . import wc  # V6/B2
 from . import prodlib  # V6/B3
 from . import env_liab  # V6/B4
 from . import construction  # V6/B5
+from . import event  # V6/B6

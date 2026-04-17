@@ -1,0 +1,24 @@
+entity_id: comic_con
+name: San Diego Comic-Con International
+coverage: event
+config_id: event_conference
+domain: comic-con.org
+registry_id: US-California-SDCC0001
+minimum_viable_input:
+  gross_ticket_revenue: 35000000
+  limit: 25000000
+  deductible: 500000
+  product_type: event_cancellation
+  event_type: conference
+  venue_country: US
+  event_name: SDCC 2026
+  domain: comic-con.org
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 8280.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

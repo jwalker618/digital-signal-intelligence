@@ -1892,3 +1892,145 @@ coverages:
         contractor_type: general_contractor
         project_value: 1500000
         domain: mapleleafhomes.example
+
+  event:
+    - entity_id: live_nation
+      name: Live Nation Entertainment, Inc.
+      config_id: event_concert
+      domain: livenationentertainment.com
+      registry_id: US-Delaware-0001335258
+      minimum_viable_input:
+        gross_ticket_revenue: 22749000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: Live Nation 2026 Global Tours
+        domain: livenationentertainment.com
+    - entity_id: aeg_live
+      name: AEG Presents
+      config_id: event_concert
+      domain: aegworldwide.com
+      registry_id: US-California-AEG000001
+      minimum_viable_input:
+        gross_ticket_revenue: 8500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: AEG 2026 Season
+        domain: aegworldwide.com
+    - entity_id: nfl
+      name: National Football League
+      config_id: event_sports
+      domain: nfl.com
+      registry_id: US-New_York-NFL00000001
+      minimum_viable_input:
+        gross_ticket_revenue: 20000000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: US
+        event_name: NFL 2026 Season
+        domain: nfl.com
+    - entity_id: msg_sports
+      name: Madison Square Garden Sports Corp.
+      config_id: event_sports
+      domain: themadisonsquaregardencompany.com
+      registry_id: US-Delaware-0001636519
+      minimum_viable_input:
+        gross_ticket_revenue: 1000000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: US
+        event_name: MSG Sports 2026
+        domain: themadisonsquaregardencompany.com
+    - entity_id: formula_one
+      name: Formula One World Championship Ltd
+      config_id: event_sports
+      domain: formula1.com
+      registry_id: UK-London-00112769
+      minimum_viable_input:
+        gross_ticket_revenue: 3200000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: UK
+        event_name: F1 2026 World Championship
+        domain: formula1.com
+    - entity_id: sxsw
+      name: South by Southwest
+      config_id: event_conference
+      domain: sxsw.com
+      registry_id: US-Texas-SXSW001
+      minimum_viable_input:
+        gross_ticket_revenue: 80000000
+        limit: 25000000
+        deductible: 500000
+        product_type: event_cancellation
+        event_type: conference
+        venue_country: US
+        event_name: SXSW 2026
+        domain: sxsw.com
+    - entity_id: comic_con
+      name: San Diego Comic-Con International
+      config_id: event_conference
+      domain: comic-con.org
+      registry_id: US-California-SDCC0001
+      minimum_viable_input:
+        gross_ticket_revenue: 35000000
+        limit: 25000000
+        deductible: 500000
+        product_type: event_cancellation
+        event_type: conference
+        venue_country: US
+        event_name: SDCC 2026
+        domain: comic-con.org
+    - entity_id: bbc_sport
+      name: BBC Sport (Broadcast production)
+      config_id: event_broadcast
+      domain: bbc.co.uk
+      registry_id: UK-London-0000000100
+      minimum_viable_input:
+        gross_ticket_revenue: 250000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: broadcast
+        venue_country: UK
+        event_name: BBC 2026 Sport Broadcasts
+        domain: bbc.co.uk
+    - entity_id: espn_broadcast
+      name: ESPN, Inc.
+      config_id: event_broadcast
+      domain: espn.com
+      registry_id: US-Delaware-0000820775
+      minimum_viable_input:
+        gross_ticket_revenue: 20000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: broadcast
+        venue_country: US
+        event_name: ESPN 2026 live programming
+        domain: espn.com
+    - entity_id: local_festival_sme
+      name: Harbor Music Festival LLC (SME)
+      config_id: event_sme
+      domain: harborfest.example
+      registry_id: US-Massachusetts-LLC00055566
+      minimum_viable_input:
+        gross_ticket_revenue: 450000
+        limit: 2000000
+        deductible: 25000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: Harbor Music Festival 2026
+        domain: harborfest.example
