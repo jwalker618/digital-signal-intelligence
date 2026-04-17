@@ -26,7 +26,7 @@ preserved across sessions.
 | 1.1 | `ProductionExtractor.extract()` builds + persists `Provenance` on every successful extraction | **DONE** | (next) |
 | 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | **DONE** | (next) |
 | 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | **DONE** | (next) |
-| 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | PENDING | — |
+| 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | **DONE** | (next) |
 | 1.5 | C3 OpenTelemetry end-to-end smoke with `DSI_OTEL_ENABLED=true` | PENDING | — |
 | 1.6 | E10 physical stub move — **BLOCKED** until A1–A8 complete (inference functions still import stubs) | BLOCKED | — |
 
@@ -83,6 +83,23 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### 1.4 — Example dsi-demo overlay
+
+`coverages/cyber/overlays/dsi-demo.yaml` committed as the first real
+tenant overlay. Tightens `cyber_general` guardrails (modifier_cap
+2.5→2.0, max_premium_to_limit_ratio 0.35→0.25) and shifts
+`technical_infrastructure` risk weight 0.35→0.45.
+
+Live-smoke integration test
+`tests/integration/test_dsi_demo_overlay.py` walks
+`get_config("cyber", "cyber_general", tenant_id="dsi-demo")` and
+asserts:
+- Guardrail overrides visible in the returned config.
+- Base config untouched (no in-place mutation).
+- Weight shift in three_layer_assessment visible.
+- `_overlay_version` + `_overlay_tenant_id` stamps present for audit.
+- Unknown tenant is a no-op (base config returned).
 
 ### 1.3 — POST /api/v1/admin/rate-filing/generate
 

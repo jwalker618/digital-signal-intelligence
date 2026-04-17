@@ -1,0 +1,32 @@
+# V6/E4 — Example tenant overlay for the `dsi-demo` tenant.
+#
+# Overlays may only adjust: `groups`, `guardrails`, `pricing`, and
+# `metadata.routing_constraints`. Attempting to modify signal_registry
+# or tier bands raises OverlayValidationError at load time.
+#
+# Resolve via: infrastructure.models.compiler.get_config(
+#     "cyber", "cyber_general", tenant_id="dsi-demo"
+# )
+#
+# Tight guardrails + slightly higher Technical-Infrastructure weight
+# reflect a risk-averse broker posture for the demo tenant. Real tenant
+# overlays live in a separate tenants repo; this file is a committed
+# example so the integration path stays exercised in CI.
+
+_overlay_version: "dsi-demo-2026Q2-v1"
+
+cyber:
+  cyber_general:
+    # Tighter guardrails — this tenant caps exposure at 25% of limit.
+    guardrails:
+      max_premium_to_limit_ratio: 0.25
+      max_premium_to_revenue_ratio: 0.0015
+      modifier_cap: 2.0
+
+    # Over-weight the technical-infrastructure dimension; Risk weight
+    # shifts from 0.35 → 0.45 to reflect the demo tenant's stricter
+    # stance on patch hygiene + vuln exposure.
+    groups:
+      three_layer_assessment:
+        - id: technical_infrastructure
+          risk: { weight: 0.45 }
