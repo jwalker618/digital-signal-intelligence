@@ -23,7 +23,7 @@ preserved across sessions.
 
 | # | Item | Status | Commit |
 |---|------|--------|--------|
-| 1.1 | `ProductionExtractor.extract()` builds + persists `Provenance` on every successful extraction | PENDING | — |
+| 1.1 | `ProductionExtractor.extract()` builds + persists `Provenance` on every successful extraction | **DONE** | (next) |
 | 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | PENDING | — |
 | 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | PENDING | — |
 | 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | PENDING | — |
@@ -83,3 +83,26 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### 1.1 — Provenance persistence wiring
+
+`ProductionExtractor.extract()` now builds a `Provenance` on every
+successful extraction and attaches the dict payload to
+`result.metadata["provenance"]`. Failures are non-blocking (logged
+only). New `infrastructure/db/provenance_store.py` module exposes:
+
+- `persist_provenance(db, signal_id, model_version_id, assessment_id,
+  provenance)` — idempotent `INSERT … ON CONFLICT (self_hash) DO NOTHING`.
+- `persist_chain(db, assessment_id, edges)` — idempotent edge writer.
+- `persist_extractor_result(db, signal_id, mvid, aid, extractor_result)`
+  — one-liner that reads the attached provenance dict, rebuilds the
+  `Provenance` object (hash re-derived from the stored payload), and
+  persists it.
+
+4 new tests in `tests/unit/test_provenance_store.py` validate the
+INSERT shape + round-trip with a stub Session.
+
+Wiring the orchestrator to call `persist_extractor_result` for every
+signal in the scoring pipeline is a follow-up inside the workflow
+engine — the infrastructure is ready.
+
