@@ -1212,3 +1212,145 @@ coverages:
         product_type: standard
         industry_sector: REAL_ESTATE
         domain: kilroyrealty.com
+
+  medprof:
+    - entity_id: hca_healthcare
+      name: HCA Healthcare, Inc.
+      config_id: medprof_hospital
+      domain: hcahealthcare.com
+      registry_id: US-Delaware-0000860730
+      minimum_viable_input:
+        revenue: 64968000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 294000
+        facility_type: hospital
+        annual_patient_encounters: 37500000
+        domain: hcahealthcare.com
+    - entity_id: ascension_health
+      name: Ascension Health
+      config_id: medprof_hospital
+      domain: ascension.org
+      registry_id: US-Missouri-430670344
+      minimum_viable_input:
+        revenue: 28500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 142000
+        facility_type: hospital
+        annual_patient_encounters: 18000000
+        domain: ascension.org
+    - entity_id: tenet_healthcare
+      name: Tenet Healthcare Corporation
+      config_id: medprof_hospital
+      domain: tenethealth.com
+      registry_id: US-Nevada-0000070318
+      minimum_viable_input:
+        revenue: 20548000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 102000
+        facility_type: hospital
+        annual_patient_encounters: 10000000
+        domain: tenethealth.com
+    - entity_id: kaiser_permanente
+      name: Kaiser Permanente
+      config_id: medprof_hospital
+      domain: kaiserpermanente.org
+      registry_id: US-California-K0123456
+      minimum_viable_input:
+        revenue: 100800000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 240000
+        facility_type: hospital
+        annual_patient_encounters: 45000000
+        domain: kaiserpermanente.org
+    - entity_id: northwell_health
+      name: Northwell Health
+      config_id: medprof_hospital
+      domain: northwell.edu
+      registry_id: US-New_York-NW123456
+      minimum_viable_input:
+        revenue: 18100000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 85000
+        facility_type: hospital
+        annual_patient_encounters: 8000000
+        domain: northwell.edu
+    - entity_id: cleveland_clinic
+      name: Cleveland Clinic
+      config_id: medprof_hospital
+      domain: clevelandclinic.org
+      registry_id: US-Ohio-341047370
+      minimum_viable_input:
+        revenue: 14700000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 72000
+        facility_type: hospital
+        annual_patient_encounters: 11000000
+        domain: clevelandclinic.org
+    - entity_id: teladoc_health
+      name: Teladoc Health, Inc.
+      config_id: medprof_telehealth
+      domain: teladochealth.com
+      registry_id: US-Delaware-0001477449
+      minimum_viable_input:
+        revenue: 2602000000
+        limit: 15000000
+        deductible: 250000
+        product_type: telehealth_mpl
+        employee_count: 5500
+        facility_type: telehealth
+        annual_patient_encounters: 20000000
+        domain: teladochealth.com
+    - entity_id: brookdale_senior
+      name: Brookdale Senior Living Inc.
+      config_id: medprof_nursing_home
+      domain: brookdale.com
+      registry_id: US-Delaware-0001332349
+      minimum_viable_input:
+        revenue: 2966000000
+        limit: 15000000
+        deductible: 250000
+        product_type: nursing_home_mpl
+        employee_count: 28000
+        facility_type: ltc
+        annual_patient_encounters: 75000
+        domain: brookdale.com
+    - entity_id: genesis_healthcare
+      name: Genesis Healthcare, Inc.
+      config_id: medprof_nursing_home
+      domain: genesishcc.com
+      registry_id: US-Pennsylvania-0001350653
+      minimum_viable_input:
+        revenue: 3500000000
+        limit: 15000000
+        deductible: 250000
+        product_type: nursing_home_mpl
+        employee_count: 70000
+        facility_type: ltc
+        annual_patient_encounters: 200000
+        domain: genesishcc.com
+    - entity_id: mednax_physicians
+      name: Pediatrix Medical Group
+      config_id: medprof_physician_group
+      domain: pediatrix.com
+      registry_id: US-Florida-0000893949
+      minimum_viable_input:
+        revenue: 1980000000
+        limit: 15000000
+        deductible: 250000
+        product_type: physician_mpl
+        employee_count: 8000
+        facility_type: physician_group
+        annual_patient_encounters: 2000000
+        domain: pediatrix.com

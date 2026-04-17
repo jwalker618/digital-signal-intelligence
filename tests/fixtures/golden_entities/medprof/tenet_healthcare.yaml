@@ -1,0 +1,24 @@
+entity_id: tenet_healthcare
+name: Tenet Healthcare Corporation
+coverage: medprof
+config_id: medprof_hospital
+domain: tenethealth.com
+registry_id: US-Nevada-0000070318
+minimum_viable_input:
+  revenue: 20548000000
+  limit: 25000000
+  deductible: 500000
+  product_type: hospital_mpl
+  employee_count: 102000
+  facility_type: hospital
+  annual_patient_encounters: 10000000
+  domain: tenethealth.com
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 5796.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

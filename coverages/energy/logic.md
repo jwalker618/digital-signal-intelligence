@@ -1,5 +1,5 @@
 # DSI Logic Document: `ENERGY`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -23,12 +23,10 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Safety Performance | 0.30 | 0.35 | 0.10 |
-| Environmental Compliance | 0.20 | 0.25 | 0.10 |
+| Safety Performance | 0.50 | 0.60 | 0.20 |
 | Operational Telemetry | 0.10 | 0.10 | 0.20 |
 | Financial Stability | 0.10 | 0.05 | 0.20 |
-| Asset Portfolio | 0.10 | 0.15 | 0.30 |
-| Corporate Footprint | 0.05 | 0.03 | 0.03 |
+| Asset Portfolio | 0.15 | 0.18 | 0.33 |
 | Structured Data | 0.05 | 0.02 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -41,13 +39,11 @@ This configuration contains **47 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
+- `public_record`: 13 signals
+- `corporate_footprint`: 11 signals
 - `network_authority`: 7 signals
-- `safety_performance`: 7 signals
-- `environmental_compliance`: 6 signals
-- `corporate_footprint`: 6 signals
-- `operational_telemetry`: 5 signals
-- `financial_stability`: 5 signals
-- `asset_portfolio`: 5 signals
+- `technical_infrastructure`: 5 signals
+- `behavioural`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
@@ -63,17 +59,15 @@ This configuration contains **47 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Performance | 0.75 | 0.30 | 0.35 | 0.10 |
-| 2 | Environmental Compliance | 0.55 | 0.20 | 0.25 | 0.10 |
-| 3 | Asset Portfolio | 0.55 | 0.10 | 0.15 | 0.30 |
-| 4 | Operational Telemetry | 0.40 | 0.10 | 0.10 | 0.20 |
-| 5 | Financial Stability | 0.35 | 0.10 | 0.05 | 0.20 |
-| 6 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 7 | Corporate Footprint | 0.11 | 0.05 | 0.03 | 0.03 |
-| 8 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
+| 1 | Safety Performance | 1.30 | 0.50 | 0.60 | 0.20 |
+| 2 | Asset Portfolio | 0.66 | 0.15 | 0.18 | 0.33 |
+| 3 | Operational Telemetry | 0.40 | 0.10 | 0.10 | 0.20 |
+| 4 | Financial Stability | 0.35 | 0.10 | 0.05 | 0.20 |
+| 5 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 6 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
 
-**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.75
-**Secondary Driver:** `Environmental Compliance` with combined weight of 0.55
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 1.30
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.66
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -102,8 +96,7 @@ This configuration contains **47 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.00 |
-| Safety Performance | 0.25 | 0.35 | 0.00 |
-| Environmental Compliance | 0.15 | 0.20 | 0.00 |
+| Safety Performance | 0.40 | 0.55 | 0.00 |
 | Deepwater Operations | 0.20 | 0.15 | 0.35 |
 | Financial Stability | 0.10 | 0.05 | 0.15 |
 | Asset Portfolio | 0.20 | 0.20 | 0.50 |
@@ -117,12 +110,11 @@ This configuration contains **35 signals** distributed as follows:
 - `INFERRED_PROXY` (21 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_performance`: 7 signals
+- `public_record`: 11 signals
 - `network_authority`: 6 signals
-- `deepwater_operations`: 5 signals
-- `financial_stability`: 5 signals
-- `asset_portfolio`: 5 signals
-- `environmental_compliance`: 4 signals
+- `technical_infrastructure`: 5 signals
+- `behavioural`: 5 signals
+- `corporate_footprint`: 5 signals
 - `operator_type`: 1 signals
 - `water_depth_class`: 1 signals
 - `geographic_focus`: 1 signals
@@ -137,15 +129,14 @@ This configuration contains **35 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Asset Portfolio | 0.90 | 0.20 | 0.20 | 0.50 |
-| 2 | Deepwater Operations | 0.70 | 0.20 | 0.15 | 0.35 |
-| 3 | Safety Performance | 0.60 | 0.25 | 0.35 | 0.00 |
-| 4 | Environmental Compliance | 0.35 | 0.15 | 0.20 | 0.00 |
-| 5 | Financial Stability | 0.30 | 0.10 | 0.05 | 0.15 |
-| 6 | Network Authority | 0.15 | 0.10 | 0.05 | 0.00 |
+| 1 | Safety Performance | 0.95 | 0.40 | 0.55 | 0.00 |
+| 2 | Asset Portfolio | 0.90 | 0.20 | 0.20 | 0.50 |
+| 3 | Deepwater Operations | 0.70 | 0.20 | 0.15 | 0.35 |
+| 4 | Financial Stability | 0.30 | 0.10 | 0.05 | 0.15 |
+| 5 | Network Authority | 0.15 | 0.10 | 0.05 | 0.00 |
 
-**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 0.90
-**Secondary Driver:** `Deepwater Operations` with combined weight of 0.70
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.95
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.90
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -173,12 +164,10 @@ This configuration contains **35 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.03 |
-| Safety Performance | 0.25 | 0.30 | 0.10 |
-| Environmental Compliance | 0.20 | 0.20 | 0.10 |
+| Safety Performance | 0.45 | 0.50 | 0.20 |
 | Operational Telemetry | 0.15 | 0.15 | 0.25 |
 | Financial Stability | 0.10 | 0.07 | 0.17 |
-| Asset Portfolio | 0.10 | 0.15 | 0.25 |
-| Corporate Footprint | 0.10 | 0.08 | 0.08 |
+| Asset Portfolio | 0.20 | 0.23 | 0.33 |
 | Structured Data | 0.05 | 0.02 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -190,13 +179,11 @@ This configuration contains **49 signals** distributed as follows:
 - `INFERRED_PROXY` (30 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_performance`: 7 signals
-- `environmental_compliance`: 7 signals
+- `public_record`: 14 signals
+- `corporate_footprint`: 12 signals
 - `network_authority`: 6 signals
-- `operational_telemetry`: 6 signals
-- `asset_portfolio`: 6 signals
-- `corporate_footprint`: 6 signals
-- `financial_stability`: 5 signals
+- `technical_infrastructure`: 6 signals
+- `behavioural`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
@@ -212,17 +199,15 @@ This configuration contains **49 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Performance | 0.65 | 0.25 | 0.30 | 0.10 |
-| 2 | Operational Telemetry | 0.55 | 0.15 | 0.15 | 0.25 |
-| 3 | Environmental Compliance | 0.50 | 0.20 | 0.20 | 0.10 |
-| 4 | Asset Portfolio | 0.50 | 0.10 | 0.15 | 0.25 |
-| 5 | Financial Stability | 0.34 | 0.10 | 0.07 | 0.17 |
-| 6 | Corporate Footprint | 0.26 | 0.10 | 0.08 | 0.08 |
-| 7 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
-| 8 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
+| 1 | Safety Performance | 1.15 | 0.45 | 0.50 | 0.20 |
+| 2 | Asset Portfolio | 0.76 | 0.20 | 0.23 | 0.33 |
+| 3 | Operational Telemetry | 0.55 | 0.15 | 0.15 | 0.25 |
+| 4 | Financial Stability | 0.34 | 0.10 | 0.07 | 0.17 |
+| 5 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
+| 6 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
 
-**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.65
-**Secondary Driver:** `Operational Telemetry` with combined weight of 0.55
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 1.15
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.76
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -250,12 +235,10 @@ This configuration contains **49 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.03 |
-| Safety Performance | 0.30 | 0.35 | 0.10 |
-| Environmental Compliance | 0.20 | 0.20 | 0.15 |
+| Safety Performance | 0.50 | 0.55 | 0.25 |
 | Operational Telemetry | 0.15 | 0.15 | 0.20 |
 | Financial Stability | 0.10 | 0.07 | 0.15 |
-| Asset Portfolio | 0.10 | 0.10 | 0.30 |
-| Corporate Footprint | 0.05 | 0.05 | 0.05 |
+| Asset Portfolio | 0.15 | 0.15 | 0.35 |
 | Structured Data | 0.05 | 0.05 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -267,13 +250,11 @@ This configuration contains **52 signals** distributed as follows:
 - `INFERRED_PROXY` (32 signals): Medium confidence
 
 **Signal Count by Group:**
-- `environmental_compliance`: 8 signals
-- `operational_telemetry`: 8 signals
-- `asset_portfolio`: 7 signals
+- `public_record`: 14 signals
+- `corporate_footprint`: 13 signals
+- `technical_infrastructure`: 8 signals
 - `network_authority`: 6 signals
-- `safety_performance`: 6 signals
-- `corporate_footprint`: 6 signals
-- `financial_stability`: 5 signals
+- `behavioural`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
@@ -289,17 +270,15 @@ This configuration contains **52 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Performance | 0.75 | 0.30 | 0.35 | 0.10 |
-| 2 | Environmental Compliance | 0.55 | 0.20 | 0.20 | 0.15 |
+| 1 | Safety Performance | 1.30 | 0.50 | 0.55 | 0.25 |
+| 2 | Asset Portfolio | 0.65 | 0.15 | 0.15 | 0.35 |
 | 3 | Operational Telemetry | 0.50 | 0.15 | 0.15 | 0.20 |
-| 4 | Asset Portfolio | 0.50 | 0.10 | 0.10 | 0.30 |
-| 5 | Financial Stability | 0.32 | 0.10 | 0.07 | 0.15 |
-| 6 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
-| 7 | Structured Data | 0.12 | 0.05 | 0.05 | 0.02 |
-| 8 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
+| 4 | Financial Stability | 0.32 | 0.10 | 0.07 | 0.15 |
+| 5 | Structured Data | 0.12 | 0.05 | 0.05 | 0.02 |
+| 6 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
 
-**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.75
-**Secondary Driver:** `Environmental Compliance` with combined weight of 0.55
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 1.30
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -327,12 +306,10 @@ This configuration contains **52 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.03 |
-| Safety Performance | 0.15 | 0.15 | 0.07 |
-| Environmental Compliance | 0.20 | 0.20 | 0.10 |
+| Safety Performance | 0.35 | 0.35 | 0.17 |
 | Operational Telemetry | 0.20 | 0.25 | 0.25 |
 | Financial Stability | 0.15 | 0.10 | 0.25 |
-| Asset Portfolio | 0.15 | 0.20 | 0.25 |
-| Corporate Footprint | 0.05 | 0.05 | 0.03 |
+| Asset Portfolio | 0.20 | 0.25 | 0.28 |
 | Structured Data | 0.05 | 0.02 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -344,13 +321,11 @@ This configuration contains **48 signals** distributed as follows:
 - `INFERRED_PROXY` (30 signals): Medium confidence
 
 **Signal Count by Group:**
-- `asset_portfolio`: 7 signals
+- `corporate_footprint`: 13 signals
+- `public_record`: 12 signals
 - `network_authority`: 6 signals
-- `safety_performance`: 6 signals
-- `environmental_compliance`: 6 signals
-- `operational_telemetry`: 6 signals
-- `corporate_footprint`: 6 signals
-- `financial_stability`: 5 signals
+- `technical_infrastructure`: 6 signals
+- `behavioural`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
@@ -366,17 +341,15 @@ This configuration contains **48 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Operational Telemetry | 0.70 | 0.20 | 0.25 | 0.25 |
-| 2 | Asset Portfolio | 0.60 | 0.15 | 0.20 | 0.25 |
-| 3 | Environmental Compliance | 0.50 | 0.20 | 0.20 | 0.10 |
+| 1 | Safety Performance | 0.87 | 0.35 | 0.35 | 0.17 |
+| 2 | Asset Portfolio | 0.73 | 0.20 | 0.25 | 0.28 |
+| 3 | Operational Telemetry | 0.70 | 0.20 | 0.25 | 0.25 |
 | 4 | Financial Stability | 0.50 | 0.15 | 0.10 | 0.25 |
-| 5 | Safety Performance | 0.37 | 0.15 | 0.15 | 0.07 |
-| 6 | Corporate Footprint | 0.13 | 0.05 | 0.05 | 0.03 |
-| 7 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
-| 8 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
+| 5 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
+| 6 | Structured Data | 0.09 | 0.05 | 0.02 | 0.02 |
 
-**Primary Assessment Driver:** `Operational Telemetry` with combined weight of 0.70
-**Secondary Driver:** `Asset Portfolio` with combined weight of 0.60
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.87
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.73
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -404,12 +377,10 @@ This configuration contains **48 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.03 |
-| Safety Performance | 0.30 | 0.35 | 0.10 |
-| Environmental Compliance | 0.10 | 0.10 | 0.07 |
+| Safety Performance | 0.40 | 0.45 | 0.17 |
 | Operational Telemetry | 0.15 | 0.15 | 0.20 |
 | Financial Stability | 0.10 | 0.07 | 0.15 |
-| Asset Portfolio | 0.15 | 0.15 | 0.35 |
-| Corporate Footprint | 0.10 | 0.10 | 0.05 |
+| Asset Portfolio | 0.25 | 0.25 | 0.40 |
 | Structured Data | 0.05 | 0.05 | 0.05 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -421,13 +392,11 @@ This configuration contains **49 signals** distributed as follows:
 - `INFERRED_PROXY` (31 signals): Medium confidence
 
 **Signal Count by Group:**
-- `asset_portfolio`: 7 signals
+- `corporate_footprint`: 13 signals
+- `public_record`: 12 signals
 - `network_authority`: 6 signals
-- `safety_performance`: 6 signals
-- `environmental_compliance`: 6 signals
-- `operational_telemetry`: 6 signals
-- `financial_stability`: 6 signals
-- `corporate_footprint`: 6 signals
+- `technical_infrastructure`: 6 signals
+- `behavioural`: 6 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
@@ -443,17 +412,15 @@ This configuration contains **49 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Performance | 0.75 | 0.30 | 0.35 | 0.10 |
-| 2 | Asset Portfolio | 0.65 | 0.15 | 0.15 | 0.35 |
+| 1 | Safety Performance | 1.02 | 0.40 | 0.45 | 0.17 |
+| 2 | Asset Portfolio | 0.90 | 0.25 | 0.25 | 0.40 |
 | 3 | Operational Telemetry | 0.50 | 0.15 | 0.15 | 0.20 |
 | 4 | Financial Stability | 0.32 | 0.10 | 0.07 | 0.15 |
-| 5 | Environmental Compliance | 0.27 | 0.10 | 0.10 | 0.07 |
-| 6 | Corporate Footprint | 0.25 | 0.10 | 0.10 | 0.05 |
-| 7 | Structured Data | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
+| 5 | Structured Data | 0.15 | 0.05 | 0.05 | 0.05 |
+| 6 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
 
-**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.75
-**Secondary Driver:** `Asset Portfolio` with combined weight of 0.65
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 1.02
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.90
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -483,11 +450,9 @@ This configuration contains **49 signals** distributed as follows:
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.02 |
 | Safety Performance | 0.15 | 0.15 | 0.10 |
-| Construction Quality | 0.20 | 0.25 | 0.15 |
-| Operational Telemetry | 0.15 | 0.15 | 0.18 |
+| Construction Quality | 0.35 | 0.40 | 0.33 |
 | Financial Stability | 0.10 | 0.10 | 0.15 |
-| Asset Portfolio | 0.20 | 0.15 | 0.35 |
-| Corporate Footprint | 0.10 | 0.12 | 0.03 |
+| Asset Portfolio | 0.30 | 0.27 | 0.38 |
 | Structured Data | 0.05 | 0.05 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -500,13 +465,11 @@ This configuration contains **46 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `financial_stability`: 7 signals
+- `corporate_footprint`: 12 signals
+- `technical_infrastructure`: 8 signals
+- `behavioural`: 7 signals
 - `network_authority`: 6 signals
-- `safety_performance`: 6 signals
-- `asset_portfolio`: 6 signals
-- `corporate_footprint`: 6 signals
-- `construction_quality`: 5 signals
-- `operational_telemetry`: 3 signals
+- `public_record`: 6 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `foundation_type`: 1 signals
@@ -523,17 +486,15 @@ This configuration contains **46 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Asset Portfolio | 0.70 | 0.20 | 0.15 | 0.35 |
-| 2 | Construction Quality | 0.60 | 0.20 | 0.25 | 0.15 |
-| 3 | Operational Telemetry | 0.48 | 0.15 | 0.15 | 0.18 |
-| 4 | Safety Performance | 0.40 | 0.15 | 0.15 | 0.10 |
-| 5 | Financial Stability | 0.35 | 0.10 | 0.10 | 0.15 |
-| 6 | Corporate Footprint | 0.25 | 0.10 | 0.12 | 0.03 |
-| 7 | Structured Data | 0.12 | 0.05 | 0.05 | 0.02 |
-| 8 | Network Authority | 0.10 | 0.05 | 0.03 | 0.02 |
+| 1 | Construction Quality | 1.08 | 0.35 | 0.40 | 0.33 |
+| 2 | Asset Portfolio | 0.95 | 0.30 | 0.27 | 0.38 |
+| 3 | Safety Performance | 0.40 | 0.15 | 0.15 | 0.10 |
+| 4 | Financial Stability | 0.35 | 0.10 | 0.10 | 0.15 |
+| 5 | Structured Data | 0.12 | 0.05 | 0.05 | 0.02 |
+| 6 | Network Authority | 0.10 | 0.05 | 0.03 | 0.02 |
 
-**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 0.70
-**Secondary Driver:** `Construction Quality` with combined weight of 0.60
+**Primary Assessment Driver:** `Construction Quality` with combined weight of 1.08
+**Secondary Driver:** `Asset Portfolio` with combined weight of 0.95
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -563,11 +524,9 @@ This configuration contains **46 signals** distributed as follows:
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.03 |
 | Safety Performance | 0.10 | 0.10 | 0.05 |
-| Construction Quality | 0.10 | 0.12 | 0.07 |
-| Operational Telemetry | 0.20 | 0.20 | 0.25 |
+| Construction Quality | 0.30 | 0.32 | 0.32 |
 | Financial Stability | 0.15 | 0.12 | 0.15 |
-| Asset Portfolio | 0.25 | 0.23 | 0.38 |
-| Corporate Footprint | 0.10 | 0.13 | 0.05 |
+| Asset Portfolio | 0.35 | 0.36 | 0.43 |
 | Structured Data | 0.05 | 0.07 | 0.02 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -580,13 +539,11 @@ This configuration contains **45 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
+- `corporate_footprint`: 12 signals
+- `technical_infrastructure`: 9 signals
 - `network_authority`: 6 signals
-- `financial_stability`: 6 signals
-- `asset_portfolio`: 6 signals
-- `corporate_footprint`: 6 signals
-- `safety_performance`: 5 signals
-- `operational_telemetry`: 5 signals
-- `construction_quality`: 4 signals
+- `behavioural`: 6 signals
+- `public_record`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `technology_type`: 1 signals
@@ -603,17 +560,15 @@ This configuration contains **45 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Asset Portfolio | 0.86 | 0.25 | 0.23 | 0.38 |
-| 2 | Operational Telemetry | 0.65 | 0.20 | 0.20 | 0.25 |
+| 1 | Asset Portfolio | 1.14 | 0.35 | 0.36 | 0.43 |
+| 2 | Construction Quality | 0.94 | 0.30 | 0.32 | 0.32 |
 | 3 | Financial Stability | 0.42 | 0.15 | 0.12 | 0.15 |
-| 4 | Construction Quality | 0.29 | 0.10 | 0.12 | 0.07 |
-| 5 | Corporate Footprint | 0.28 | 0.10 | 0.13 | 0.05 |
-| 6 | Safety Performance | 0.25 | 0.10 | 0.10 | 0.05 |
-| 7 | Structured Data | 0.14 | 0.05 | 0.07 | 0.02 |
-| 8 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
+| 4 | Safety Performance | 0.25 | 0.10 | 0.10 | 0.05 |
+| 5 | Structured Data | 0.14 | 0.05 | 0.07 | 0.02 |
+| 6 | Network Authority | 0.11 | 0.05 | 0.03 | 0.03 |
 
-**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 0.86
-**Secondary Driver:** `Operational Telemetry` with combined weight of 0.65
+**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 1.14
+**Secondary Driver:** `Construction Quality` with combined weight of 0.94
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -643,11 +598,9 @@ This configuration contains **45 signals** distributed as follows:
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.03 | 0.02 |
 | Safety Performance | 0.15 | 0.15 | 0.10 |
-| Construction Quality | 0.15 | 0.20 | 0.10 |
-| Operational Telemetry | 0.10 | 0.10 | 0.15 |
+| Construction Quality | 0.25 | 0.30 | 0.25 |
 | Financial Stability | 0.10 | 0.07 | 0.13 |
-| Asset Portfolio | 0.30 | 0.25 | 0.35 |
-| Corporate Footprint | 0.10 | 0.13 | 0.10 |
+| Asset Portfolio | 0.40 | 0.38 | 0.45 |
 | Structured Data | 0.05 | 0.07 | 0.05 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -660,13 +613,11 @@ This configuration contains **52 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `asset_portfolio`: 9 signals
+- `corporate_footprint`: 15 signals
+- `technical_infrastructure`: 11 signals
 - `network_authority`: 7 signals
-- `safety_performance`: 7 signals
-- `construction_quality`: 6 signals
-- `corporate_footprint`: 6 signals
-- `operational_telemetry`: 5 signals
-- `financial_stability`: 5 signals
+- `public_record`: 7 signals
+- `behavioural`: 5 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `battery_chemistry`: 1 signals
@@ -683,17 +634,15 @@ This configuration contains **52 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Asset Portfolio | 0.90 | 0.30 | 0.25 | 0.35 |
-| 2 | Construction Quality | 0.45 | 0.15 | 0.20 | 0.10 |
+| 1 | Asset Portfolio | 1.23 | 0.40 | 0.38 | 0.45 |
+| 2 | Construction Quality | 0.80 | 0.25 | 0.30 | 0.25 |
 | 3 | Safety Performance | 0.40 | 0.15 | 0.15 | 0.10 |
-| 4 | Operational Telemetry | 0.35 | 0.10 | 0.10 | 0.15 |
-| 5 | Corporate Footprint | 0.33 | 0.10 | 0.13 | 0.10 |
-| 6 | Financial Stability | 0.30 | 0.10 | 0.07 | 0.13 |
-| 7 | Structured Data | 0.17 | 0.05 | 0.07 | 0.05 |
-| 8 | Network Authority | 0.10 | 0.05 | 0.03 | 0.02 |
+| 4 | Financial Stability | 0.30 | 0.10 | 0.07 | 0.13 |
+| 5 | Structured Data | 0.17 | 0.05 | 0.07 | 0.05 |
+| 6 | Network Authority | 0.10 | 0.05 | 0.03 | 0.02 |
 
-**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 0.90
-**Secondary Driver:** `Construction Quality` with combined weight of 0.45
+**Primary Assessment Driver:** `Asset Portfolio` with combined weight of 1.23
+**Secondary Driver:** `Construction Quality` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -721,12 +670,10 @@ This configuration contains **52 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Safety Performance | 0.30 | 0.35 | 0.10 |
-| Environmental Compliance | 0.20 | 0.20 | 0.10 |
+| Safety Performance | 0.50 | 0.55 | 0.20 |
 | Operational Telemetry | 0.15 | 0.15 | 0.25 |
 | Financial Stability | 0.20 | 0.15 | 0.30 |
-| Asset Portfolio | 0.10 | 0.10 | 0.20 |
-| Corporate Footprint | 0.05 | 0.05 | 0.05 |
+| Asset Portfolio | 0.15 | 0.15 | 0.25 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -737,12 +684,10 @@ This configuration contains **25 signals** distributed as follows:
 - `INFERRED_PROXY` (11 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_performance`: 5 signals
-- `financial_stability`: 5 signals
-- `environmental_compliance`: 3 signals
-- `operational_telemetry`: 3 signals
-- `asset_portfolio`: 3 signals
-- `corporate_footprint`: 3 signals
+- `public_record`: 8 signals
+- `corporate_footprint`: 6 signals
+- `behavioural`: 5 signals
+- `technical_infrastructure`: 3 signals
 - `operator_type`: 1 signals
 - `operation_segment`: 1 signals
 - `geographic_focus`: 1 signals
@@ -757,14 +702,12 @@ This configuration contains **25 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Performance | 0.75 | 0.30 | 0.35 | 0.10 |
+| 1 | Safety Performance | 1.25 | 0.50 | 0.55 | 0.20 |
 | 2 | Financial Stability | 0.65 | 0.20 | 0.15 | 0.30 |
 | 3 | Operational Telemetry | 0.55 | 0.15 | 0.15 | 0.25 |
-| 4 | Environmental Compliance | 0.50 | 0.20 | 0.20 | 0.10 |
-| 5 | Asset Portfolio | 0.40 | 0.10 | 0.10 | 0.20 |
-| 6 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 4 | Asset Portfolio | 0.55 | 0.15 | 0.15 | 0.25 |
 
-**Primary Assessment Driver:** `Safety Performance` with combined weight of 0.75
+**Primary Assessment Driver:** `Safety Performance` with combined weight of 1.25
 **Secondary Driver:** `Financial Stability` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)

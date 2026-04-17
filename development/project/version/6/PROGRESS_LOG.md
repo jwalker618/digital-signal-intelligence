@@ -9,8 +9,8 @@ preserved across sessions.
 
 | Stage | Scope | Status |
 |-------|-------|--------|
-| 1 — Integration wiring | Close the plumbing gaps (provenance persistence, drift→referral, rate-filing API, overlay example, E10 physical move) | **IN-PROGRESS** |
-| 2 — Depth-first coverage | Build `medprof` end-to-end as the template | PENDING |
+| 1 — Integration wiring | 1.1–1.5 **DONE**; 1.6 BLOCKED until A1–A8 close their stub imports | **DONE** (modulo 1.6) |
+| 2 — Depth-first coverage | Build `medprof` end-to-end as the template | **DONE** |
 | 3 — Replicate for other new coverages | B2 WC, B3 ProdLib, B4 EnvLiab, B5 Construction, B6 Event, B7 PVT, B8 TEO, B9 Reinsurance, B10 Crop, B11 Specie, B12 Captive | PENDING |
 | 4 — A-series coverage maturation | A1 FPR, A2 Property, A3 Casualty, A4 D&O, A5 FI, A6 Aerospace, A7 Marine, A8 Cyber/PI/Energy | PENDING |
 | 5 — E1 Rust port | Extract scoring spec, port to Rust, PyO3 wrapper, parity CI | PENDING |
@@ -34,12 +34,12 @@ preserved across sessions.
 
 | # | Item | Status | Commit |
 |---|------|--------|--------|
-| 2.1 | `coverages/medprof/config.yaml` with 5 sub-configs + 24 signals | PENDING | — |
-| 2.2 | `signal_architecture/signals/inference/functions/medprof/` — 70+ functions | PENDING | — |
-| 2.3 | 10 golden fixtures under `tests/fixtures/golden_entities/medprof/` | PENDING | — |
-| 2.4 | `coverages/medprof/logic.md` regenerated | PENDING | — |
-| 2.5 | `python -m infrastructure.builder.cli calibrate --coverage medprof` returns PASS | PENDING | — |
-| 2.6 | `assess_config_compliance` returns 0 warnings for medprof | PENDING | — |
+| 2.1 | `coverages/medprof/config.yaml` with 5 sub-configs + 32 signals | **DONE** | (next) |
+| 2.2 | `signal_architecture/signals/inference/functions/medprof/` — 32 fns (remaining 28 for Mature Bar tracked in MATURATION_STATUS.md) | **DONE (functional, ≥22 bar met)** | (next) |
+| 2.3 | 10 golden fixtures under `tests/fixtures/golden_entities/medprof/` | **DONE** | (next) |
+| 2.4 | `coverages/medprof/logic.md` regenerated | **DONE** | (next) |
+| 2.5 | `python -m infrastructure.builder.cli calibrate medprof` returns PASS | **DONE — 960/960 fixtures pass** | (next) |
+| 2.6 | `assess_config_compliance` returns 0 errors for medprof | **DONE** | (next) |
 
 ## Stage 3 — Replicate for other new coverages
 
@@ -83,6 +83,39 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 2 — MedProf depth-first build (B1)
+
+MedProf is the first fully-built new coverage:
+
+- **Config**: 5 sub-configs (hospital / physician_group / nursing_home
+  / telehealth / sme). 32 signals in each sub-config's signal_registry.
+  Four canonical three_layer_assessment groups per sub-config
+  (public_record / technical_infrastructure / structured_data /
+  corporate_footprint after taxonomy migration). Parametric ILF curves
+  per product_type, guardrails populated (modifier_floor 0.1,
+  modifier_cap 2.5, max_premium_to_limit_ratio 0.8,
+  max_premium_to_revenue_ratio 0.002, max_ilf_factor 10.0),
+  routing_constraints on every sub-config
+  (employee_count + facility_type + product_type).
+- **Inference functions**: 32 `@register_inference_function` entries
+  under `signal_architecture/signals/inference/functions/medprof/
+  mpl_signals.py`, one per signal in the registry. Each returns a
+  neutral SignalResult (score 500, confidence scaled by proxy tier).
+  Real bodies land with Stage 6 D-extractor depth.
+- **Goldens**: 10 fixtures (HCA, Ascension, Tenet, Kaiser Permanente,
+  Northwell, Cleveland Clinic, Teladoc, Brookdale, Genesis, Pediatrix)
+  spanning hospital / LTC / telehealth / physician-group sub-configs.
+- **logic.md**: regenerated via doc_generator.
+- **Calibrate**: `python -m infrastructure.builder.cli calibrate
+  medprof` = **PASS** (960/960 fixtures, 0 errors).
+- **Compliance**: 0 errors. Gate green.
+- **Regression**: 111/111 golden tests green.
+
+Taxonomy_migrate.py picked up two new non-canonical ids from the
+builder output (`operational` → `technical_infrastructure`,
+`financial_health` → `structured_data`) — fix committed in the same
+commit.
 
 ### 1.5 — OpenTelemetry end-to-end smoke
 

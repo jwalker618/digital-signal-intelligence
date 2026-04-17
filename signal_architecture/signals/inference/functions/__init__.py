@@ -22,3 +22,4 @@ from . import cyber
 from . import do
 from . import energy
 from . import cross_coverage
+from . import medprof  # V6/B1
