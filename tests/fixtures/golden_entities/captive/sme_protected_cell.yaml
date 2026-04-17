@@ -1,0 +1,23 @@
+entity_id: sme_protected_cell
+name: Small Business Protected Cell
+coverage: captive
+config_id: captive_cell_protected
+domain: pcc-platform.example
+registry_id: GG-Guernsey-GG-PCC-047
+minimum_viable_input:
+  parent_revenue: 85000000
+  limit: 10000000
+  deductible: 100000
+  product_type: cell_protected_captive
+  captive_structure: protected_cell
+  domicile: GG
+  domain: pcc-platform.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 11223.42
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

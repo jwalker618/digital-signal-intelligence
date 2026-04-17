@@ -11,7 +11,7 @@ preserved across sessions.
 |-------|-------|--------|
 | 1 — Integration wiring | 1.1–1.5 **DONE**; 1.6 BLOCKED until A1–A8 close their stub imports | **DONE** (modulo 1.6) |
 | 2 — Depth-first coverage | Build `medprof` end-to-end as the template | **DONE** |
-| 3 — Replicate for other new coverages | B2 WC, B3 ProdLib, B4 EnvLiab, B5 Construction, B6 Event, B7 PVT, B8 TEO, B9 Reinsurance, B10 Crop, B11 Specie, B12 Captive | PENDING |
+| 3 — Replicate for other new coverages | B2 WC, B3 ProdLib, B4 EnvLiab, B5 Construction, B6 Event, B7 PVT, B8 TEO, B9 Reinsurance, B10 Crop, B11 Specie, B12 Captive | **DONE** |
 | 4 — A-series coverage maturation | A1 FPR, A2 Property, A3 Casualty, A4 D&O, A5 FI, A6 Aerospace, A7 Marine, A8 Cyber/PI/Energy | PENDING |
 | 5 — E1 Rust port | Extract scoring spec, port to Rust, PyO3 wrapper, parity CI | PENDING |
 | 6 — D-extractor depth | 72 extractors → full field extraction + replayed HTTP tests | PENDING |
@@ -60,7 +60,7 @@ time so each coverage is a clean rollback point.
 | 3.8 | B9 Reinsurance | **DONE** | 32 | 10 | PASS | PASS |
 | 3.9 | B10 Crop | **DONE** | 26 | 10 | PASS | PASS |
 | 3.10 | B11 Specie | **DONE** | 33 | 10 | PASS | PASS |
-| 3.11 | B12 Captive | PENDING | — | — | — | — |
+| 3.11 | B12 Captive | **DONE** | 32 | 10 | PASS | PASS |
 
 ## Stage 4 — A-series maturation
 

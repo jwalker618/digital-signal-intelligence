@@ -2684,3 +2684,135 @@ coverages:
         product_type: fine_art_gallery
         specie_type: fine_art
         domain: luminousgallery.example
+
+  captive:
+    - entity_id: walmart_captive
+      name: Walmart Single-Parent Captive
+      config_id: captive_single_parent
+      domain: walmart.com
+      registry_id: BM-Hamilton-WMT-CAP
+      minimum_viable_input:
+        parent_revenue: 648125000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: walmart.com
+    - entity_id: mcdonalds_captive
+      name: McDonald's Single-Parent Captive
+      config_id: captive_single_parent
+      domain: mcdonalds.com
+      registry_id: BM-Hamilton-MCD-CAP
+      minimum_viable_input:
+        parent_revenue: 25494000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: mcdonalds.com
+    - entity_id: exxon_captive
+      name: Ancon Insurance Company (ExxonMobil captive)
+      config_id: captive_single_parent
+      domain: exxonmobil.com
+      registry_id: US-Vermont-VT-ANCON
+      minimum_viable_input:
+        parent_revenue: 344582000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: US-VT
+        domain: exxonmobil.com
+    - entity_id: toyota_captive
+      name: Toyota Financial Services Insurance
+      config_id: captive_single_parent
+      domain: toyota-global.com
+      registry_id: KY-Cayman-KY-TOYOTA
+      minimum_viable_input:
+        parent_revenue: 274497000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: KY
+        domain: toyota-global.com
+    - entity_id: mars_captive
+      name: Mars Inc Captive
+      config_id: captive_single_parent
+      domain: mars.com
+      registry_id: BM-Hamilton-MARS-001
+      minimum_viable_input:
+        parent_revenue: 45000000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: mars.com
+    - entity_id: koch_captive
+      name: Koch Industries Captive Insurance Co
+      config_id: captive_single_parent
+      domain: kochind.com
+      registry_id: US-Vermont-VT-KOCH
+      minimum_viable_input:
+        parent_revenue: 125000000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: US-VT
+        domain: kochind.com
+    - entity_id: novartis_captive
+      name: Novartis International Reinsurance
+      config_id: captive_single_parent
+      domain: novartis.com
+      registry_id: JE-Jersey-JE-NOVARTIS
+      minimum_viable_input:
+        parent_revenue: 50545000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: JE
+        domain: novartis.com
+    - entity_id: chiropractic_group_rrg
+      name: American Chiropractic Network RRG
+      config_id: captive_risk_retention_group
+      domain: acn-rrg.example
+      registry_id: US-Vermont-VT-ACN-RRG
+      minimum_viable_input:
+        parent_revenue: 180000000
+        limit: 25000000
+        deductible: 500000
+        product_type: risk_retention_group
+        captive_structure: rrg
+        domicile: US-VT
+        domain: acn-rrg.example
+    - entity_id: industrial_group_captive
+      name: Industrial Insurance Group Captive
+      config_id: captive_group
+      domain: industrialgroup.example
+      registry_id: BM-Hamilton-IGC-001
+      minimum_viable_input:
+        parent_revenue: 2500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: group_captive
+        captive_structure: group
+        domicile: BM
+        domain: industrialgroup.example
+    - entity_id: sme_protected_cell
+      name: Small Business Protected Cell #47
+      config_id: captive_cell_protected
+      domain: pcc-platform.example
+      registry_id: GG-Guernsey-GG-PCC-047
+      minimum_viable_input:
+        parent_revenue: 85000000
+        limit: 10000000
+        deductible: 100000
+        product_type: cell_protected_captive
+        captive_structure: protected_cell
+        domicile: GG
+        domain: pcc-platform.example
