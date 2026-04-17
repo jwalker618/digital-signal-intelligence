@@ -1,0 +1,44 @@
+coverage_line: captive
+coverage_key: captive
+phase: v6_b12
+description: "V6/B12 — Captive / Alternative Risk Transfer"
+version: "1.0.0"
+
+default_product_types:
+  - single_parent_captive
+  - group_captive
+  - risk_retention_group
+  - cell_protected_captive
+
+default_markets: [us, bm, ky, je, gg]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: captive_structure
+  - field: domicile
+  - field: parent_revenue
+
+routing_field: captive_structure
+
+configurations:
+  - name: captive_single_parent
+    model_specificity: 1
+    routing_constraints: [{ field: captive_structure, operator: "==", value: single_parent }]
+  - name: captive_group
+    model_specificity: 1
+    routing_constraints: [{ field: captive_structure, operator: "==", value: group }]
+  - name: captive_risk_retention_group
+    model_specificity: 2
+    routing_constraints: [{ field: captive_structure, operator: "==", value: rrg }]
+  - name: captive_cell_protected
+    model_specificity: 2
+    routing_constraints: [{ field: captive_structure, operator: "==", value: protected_cell }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}
