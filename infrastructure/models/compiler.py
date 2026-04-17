@@ -219,6 +219,8 @@ def get_config(
     coverage_id: str,
     config_id: Optional[str] = None,
     allow_quarantined: bool = False,
+    *,
+    tenant_id: Optional[str] = None,
 ) -> CoverageConfig:
     """
     Get a compiled CoverageConfig.
@@ -229,6 +231,12 @@ def get_config(
                    If None, defaults to {coverage_id}_general.
         allow_quarantined: If True, return config even if quarantined.
                           For testing/diagnostics only.
+        tenant_id: V6/E4 — when set, deep-merges the tenant overlay at
+                   ``coverages/{coverage}/overlays/{tenant_id}.yaml``
+                   onto the base config before returning. Overlays may
+                   only touch ``groups``, ``guardrails``, ``pricing``,
+                   and ``metadata.routing_constraints``. Missing
+                   overlay is a no-op.
 
     Returns:
         Compiled CoverageConfig model with O(1) attribute access
@@ -237,17 +245,13 @@ def get_config(
         ConfigNotFoundError: If coverage or config not found
         ConfigQuarantinedError: If config is quarantined and
             allow_quarantined is False
+        OverlayValidationError: If the tenant overlay touches a
+            disallowed section.
 
     Example:
         config = get_config("cyber", "cyber_general")
-
-        # O(1) attribute access (no dict lookups)
-        base_limit = config.pricing.base_limit_reference
-        min_premium = config.metadata.min_premium
-
-        # Type-safe methods
-        tier = config.get_tier_for_score(750.0)
-        ilf = config.get_ilf("standard", 5_000_000)
+        # Tenant-scoped access:
+        config = get_config("cyber", "cyber_general", tenant_id="acme")
     """
     coverage = get_coverage(coverage_id)
 
@@ -269,7 +273,35 @@ def get_config(
             reason = gate.get_quarantine_reason(coverage_id, config_id)
             raise ConfigQuarantinedError(coverage_id, config_id, reason)
 
-    return coverage.configurations[config_id]
+    base = coverage.configurations[config_id]
+
+    if tenant_id is None:
+        return base
+
+    # V6/E4 — apply per-tenant overlay (deep merge into base, then
+    # re-compile through the same Pydantic path so downstream consumers
+    # get an identical CoverageConfig shape).
+    from infrastructure.models.overlay_loader import apply_overlay
+
+    inner_dict = base.model_dump(mode="python", by_alias=True)
+    base_wrapped = {coverage_id: {config_id: inner_dict}}
+    result = apply_overlay(
+        base_wrapped, coverage_id, config_id, tenant_id,
+    )
+    if result.overlay_path is None:
+        # No overlay file on disk — return the base untouched.
+        return base
+    merged_inner = result.merged_config[coverage_id][config_id]
+    merged_config = CoverageConfig(**merged_inner)
+    # Stamp the overlay version on the config so audit trails can
+    # capture which overlay was active. Use setattr because the
+    # Pydantic model is frozen-by-default on some paths.
+    try:
+        object.__setattr__(merged_config, "_overlay_version", result.overlay_version)
+        object.__setattr__(merged_config, "_overlay_tenant_id", tenant_id)
+    except Exception:
+        pass
+    return merged_config
 
 
 # Flag to track whether the health gate has been initialized.
