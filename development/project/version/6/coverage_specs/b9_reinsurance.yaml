@@ -1,0 +1,47 @@
+coverage_line: reinsurance
+coverage_key: reinsurance
+phase: v6_b9
+description: "V6/B9 — Reinsurance Treaty + Facultative"
+version: "1.0.0"
+
+default_product_types:
+  - treaty_proportional
+  - treaty_xol
+  - treaty_aggregate
+  - facultative_single_risk
+
+default_markets: [global]
+default_currency: USD
+default_min_premium: 100000
+
+default_minimum_viable_input:
+  - field: cedent_name
+  - field: treaty_type
+  - field: subject_business
+  - field: limit
+
+routing_field: treaty_type
+
+configurations:
+  - name: reins_treaty_proportional
+    model_specificity: 1
+    routing_constraints: [{ field: treaty_type, operator: "==", value: proportional }]
+  - name: reins_treaty_excess_of_loss
+    model_specificity: 1
+    routing_constraints: [{ field: treaty_type, operator: "==", value: xol }]
+  - name: reins_treaty_aggregate
+    model_specificity: 2
+    routing_constraints: [{ field: treaty_type, operator: "==", value: aggregate_stop_loss }]
+  - name: reins_facultative
+    model_specificity: 1
+    routing_constraints: [{ field: treaty_type, operator: "==", value: facultative }]
+  - name: reins_sme
+    model_specificity: 3
+    routing_constraints: [{ field: limit, operator: "<", value: 25000000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}
