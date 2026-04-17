@@ -1,0 +1,23 @@
+entity_id: parametric_farm_ag
+name: ParaFarm Agronomics Ltd
+coverage: crop
+config_id: crop_parametric_weather
+domain: parafarm.example
+registry_id: UK-London-PF00012345
+minimum_viable_input:
+  acreage: 15000
+  limit: 10000000
+  deductible: 100000
+  product_type: parametric_weather
+  crop_type: wheat
+  state_country: UK-ENG
+  domain: parafarm.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

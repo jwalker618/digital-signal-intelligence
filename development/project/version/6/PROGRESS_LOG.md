@@ -58,7 +58,7 @@ time so each coverage is a clean rollback point.
 | 3.6 | B7 PVT | **DONE** | 26 | 10 | PASS | PASS |
 | 3.7 | B8 TEO | **DONE** | 34 | 10 | PASS | PASS |
 | 3.8 | B9 Reinsurance | **DONE** | 32 | 10 | PASS | PASS |
-| 3.9 | B10 Crop | PENDING | — | — | — | — |
+| 3.9 | B10 Crop | **DONE** | 26 | 10 | PASS | PASS |
 | 3.10 | B11 Specie | PENDING | — | — | — | — |
 | 3.11 | B12 Captive | PENDING | — | — | — | — |
 

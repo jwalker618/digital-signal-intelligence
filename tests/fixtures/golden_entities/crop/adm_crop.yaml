@@ -1,0 +1,23 @@
+entity_id: adm_crop
+name: Archer-Daniels-Midland Company
+coverage: crop
+config_id: crop_multi_peril
+domain: adm.com
+registry_id: US-Delaware-0000007084
+minimum_viable_input:
+  acreage: 500000
+  limit: 100000000
+  deductible: 1000000
+  product_type: multi_peril_crop_insurance
+  crop_type: soybean
+  state_country: US-IL
+  domain: adm.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

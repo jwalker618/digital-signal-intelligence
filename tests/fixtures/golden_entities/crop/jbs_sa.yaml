@@ -1,0 +1,23 @@
+entity_id: jbs_sa
+name: JBS S.A.
+coverage: crop
+config_id: crop_livestock
+domain: jbs.com.br
+registry_id: BR-Sao_Paulo-02916265
+minimum_viable_input:
+  acreage: 150000
+  limit: 50000000
+  deductible: 1000000
+  product_type: livestock_mortality
+  crop_type: livestock
+  state_country: BR-MT
+  domain: jbs.com.br
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

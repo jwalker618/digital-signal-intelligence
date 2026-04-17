@@ -1,0 +1,23 @@
+entity_id: tyson_livestock
+name: Tyson Foods (livestock operations)
+coverage: crop
+config_id: crop_livestock
+domain: tysonfoods.com
+registry_id: US-Delaware-0000100493
+minimum_viable_input:
+  acreage: 100000
+  limit: 50000000
+  deductible: 1000000
+  product_type: livestock_mortality
+  crop_type: livestock
+  state_country: US-AR
+  domain: tysonfoods.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

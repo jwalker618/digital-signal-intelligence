@@ -1,0 +1,23 @@
+entity_id: land_olakes
+name: Land O'Lakes, Inc.
+coverage: crop
+config_id: crop_multi_peril
+domain: landolakes.com
+registry_id: US-Minnesota-LO000001
+minimum_viable_input:
+  acreage: 280000
+  limit: 75000000
+  deductible: 1000000
+  product_type: multi_peril_crop_insurance
+  crop_type: corn
+  state_country: US-MN
+  domain: landolakes.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

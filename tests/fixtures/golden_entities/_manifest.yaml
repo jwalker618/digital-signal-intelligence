@@ -2430,3 +2430,135 @@ coverages:
         treaty_type: proportional
         subject_business: homeowners
         domain: regionalmutualre.example
+
+  crop:
+    - entity_id: adm_crop
+      name: Archer-Daniels-Midland Company
+      config_id: crop_multi_peril
+      domain: adm.com
+      registry_id: US-Delaware-0000007084
+      minimum_viable_input:
+        acreage: 500000
+        limit: 100000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: soybean
+        state_country: US-IL
+        domain: adm.com
+    - entity_id: cargill
+      name: Cargill, Incorporated
+      config_id: crop_multi_peril
+      domain: cargill.com
+      registry_id: US-Minnesota-0000017230
+      minimum_viable_input:
+        acreage: 750000
+        limit: 150000000
+        deductible: 2500000
+        product_type: multi_peril_crop_insurance
+        crop_type: corn
+        state_country: US-IA
+        domain: cargill.com
+    - entity_id: bunge
+      name: Bunge Global SA
+      config_id: crop_multi_peril
+      domain: bunge.com
+      registry_id: CH-Geneva-CHE-228.400.003
+      minimum_viable_input:
+        acreage: 400000
+        limit: 100000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: soybean
+        state_country: BR-MT
+        domain: bunge.com
+    - entity_id: corteva
+      name: Corteva, Inc.
+      config_id: crop_yield_protection
+      domain: corteva.com
+      registry_id: US-Delaware-0001755672
+      minimum_viable_input:
+        acreage: 350000
+        limit: 75000000
+        deductible: 1000000
+        product_type: yield_protection
+        crop_type: corn
+        state_country: US-IA
+        domain: corteva.com
+    - entity_id: land_olakes
+      name: Land O'Lakes, Inc.
+      config_id: crop_multi_peril
+      domain: landolakes.com
+      registry_id: US-Minnesota-LO000001
+      minimum_viable_input:
+        acreage: 280000
+        limit: 75000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: corn
+        state_country: US-MN
+        domain: landolakes.com
+    - entity_id: chs_inc
+      name: CHS Inc.
+      config_id: crop_multi_peril
+      domain: chsinc.com
+      registry_id: US-Minnesota-CHS00001
+      minimum_viable_input:
+        acreage: 320000
+        limit: 75000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: wheat
+        state_country: US-ND
+        domain: chsinc.com
+    - entity_id: tyson_livestock
+      name: Tyson Foods (livestock operations)
+      config_id: crop_livestock
+      domain: tysonfoods.com
+      registry_id: US-Delaware-0000100493
+      minimum_viable_input:
+        acreage: 100000
+        limit: 50000000
+        deductible: 1000000
+        product_type: livestock_mortality
+        crop_type: livestock
+        state_country: US-AR
+        domain: tysonfoods.com
+    - entity_id: jbs_sa
+      name: JBS S.A.
+      config_id: crop_livestock
+      domain: jbs.com.br
+      registry_id: BR-Sao_Paulo-02916265
+      minimum_viable_input:
+        acreage: 150000
+        limit: 50000000
+        deductible: 1000000
+        product_type: livestock_mortality
+        crop_type: livestock
+        state_country: BR-MT
+        domain: jbs.com.br
+    - entity_id: parametric_farm_ag
+      name: ParaFarm Agronomics Ltd
+      config_id: crop_parametric_weather
+      domain: parafarm.example
+      registry_id: UK-London-PF00012345
+      minimum_viable_input:
+        acreage: 15000
+        limit: 10000000
+        deductible: 100000
+        product_type: parametric_weather
+        crop_type: wheat
+        state_country: UK-ENG
+        domain: parafarm.example
+    - entity_id: small_orchard
+      name: Blossom Hill Orchard (SME)
+      config_id: crop_sme
+      domain: blossomhill.example
+      registry_id: US-California-SB00012321
+      minimum_viable_input:
+        acreage: 85
+        limit: 1000000
+        deductible: 10000
+        product_type: multi_peril_crop_insurance
+        crop_type: apple
+        state_country: US-CA
+        domain: blossomhill.example

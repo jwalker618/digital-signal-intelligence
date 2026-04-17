@@ -1,0 +1,23 @@
+entity_id: small_orchard
+name: Blossom Hill Orchard (SME)
+coverage: crop
+config_id: crop_sme
+domain: blossomhill.example
+registry_id: US-California-SB00012321
+minimum_viable_input:
+  acreage: 85
+  limit: 1000000
+  deductible: 10000
+  product_type: multi_peril_crop_insurance
+  crop_type: apple
+  state_country: US-CA
+  domain: blossomhill.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
