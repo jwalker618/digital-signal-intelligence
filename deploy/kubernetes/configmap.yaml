@@ -106,5 +106,18 @@ data:
   DSI_DISABLE_SUPERFUND: "false"
   DSI_DISABLE_NRC: "false"
 
+  # V6/D6 — Sector telemetry extractor kill-switches.
+  DSI_DISABLE_OPENSKY: "false"
+  DSI_DISABLE_ICAO: "false"
+  DSI_DISABLE_ASIAS: "false"
+  DSI_DISABLE_AIS_HUB: "false"
+  DSI_DISABLE_MARINE_CADASTRE: "false"
+  DSI_DISABLE_EMSA: "false"
+  DSI_DISABLE_PARIS_MOU: "false"
+  DSI_DISABLE_TOKYO_MOU: "false"
+  DSI_DISABLE_PHMSA: "false"
+  DSI_DISABLE_BSEE: "false"
+  DSI_DISABLE_NERC: "false"
+
   # V6/C3 — OpenTelemetry. Enable on production to emit spans.
   DSI_OTEL_ENABLED: "false"

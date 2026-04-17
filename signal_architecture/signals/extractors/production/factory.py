@@ -436,6 +436,29 @@ def _load_d4_ip_extractors():
         _registry.register_production(name, cls)
 
 
+def _load_d6_sector_extractors():
+    """V6/D6 — sector-telemetry extractors (11 across aviation/maritime/energy)."""
+    try:
+        from . import sector as sec
+    except ImportError as e:
+        logger.debug(f"Could not load D6 sector extractors: {e}")
+        return
+    for name, cls in (
+        ("sector.opensky", sec.OpenSkyExtractor),
+        ("sector.icao_registry", sec.ICAORegistryExtractor),
+        ("sector.asias", sec.ASIASExtractor),
+        ("sector.ais_hub", sec.AISHubExtractor),
+        ("sector.marine_cadastre", sec.MarineCadastreExtractor),
+        ("sector.emsa_thetis", sec.EMSAExtractor),
+        ("sector.paris_mou", sec.ParisMoUExtractor),
+        ("sector.tokyo_mou", sec.TokyoMoUExtractor),
+        ("sector.phmsa", sec.PHMSAExtractor),
+        ("sector.bsee_detail", sec.BSEEDetailExtractor),
+        ("sector.nerc_violations", sec.NERCVioExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
 def _load_d5_climate_extractors():
     """V6/D5 — climate / environment extractors (11)."""
     try:
@@ -468,6 +491,7 @@ _load_d2_stack_extractors()
 _load_d3_litigation_extractors()
 _load_d4_ip_extractors()
 _load_d5_climate_extractors()
+_load_d6_sector_extractors()
 
 
 # Register loaders for known extractor types
