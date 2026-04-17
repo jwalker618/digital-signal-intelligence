@@ -6,7 +6,7 @@ finishing) — see
 
 | Target | Current | Status |
 |--------|---------|--------|
-| 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 11 | ⏳ 3 new subs deferred to A8-deep |
+| 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 12 (incl. aiml_vendor) | ⏳ 2 remaining deferred to A8-deep |
 | ≥ 40 unique signal IDs in primary registry | 102 | ✅ |
 | ≥ 80 coverage-specific inference functions | 95 | ✅ |
 | `expectation_level` on every scored signal | partial | ⏳ retrofit |
@@ -29,11 +29,29 @@ wired into `cyber_technology` (6 → 10 signals) and
 Real bodies wire in with Stage 6 once the AIIDR (AI Incident Database)
 extractor ships and model-card scrape heuristics are validated.
 
+## New sub-config — `cyber_aiml_vendor` (A8-deep follow-up)
+
+Landed as a full sub-config (~440 lines: metadata, direct_queries,
+signal_registry, groups, tier bands, pricing, guardrails). Routed on
+`industry_sector in {AI_VENDOR, ML_VENDOR, AIML_PLATFORM}`.
+
+Registry includes the 4 AI-governance signals + 3 cross-inherited
+cyber infrastructure signals:
+- `model_card_quality`, `training_data_provenance`,
+  `ai_governance_disclosure`, `ai_incident_history`.
+- `secure_sdlc_maturity`, `email_security_posture`,
+  `remote_access_security`.
+
+Pricing uses tightened guardrails (modifier_cap 3.0 vs 2.5 for other
+cyber sub-configs) and a slightly richer ILF curve (max_ilf 5.5 vs
+5.0) to reflect the thicker-tail risk profile of AI incidents.
+
+Calibrate PASS (2,952 fixtures, 0 errors); compliance strict PASS.
+
 ## Remaining A8 backlog — deferred to A8-deep
 
-`cyber_saas_platform`, `cyber_aiml_vendor`, `cyber_media_tech`
-sub-configs. Each needs ~500 lines of dedicated scaffolding (metadata,
-signal_registry, groups, tier bands, pricing, guardrails).
+`cyber_saas_platform` and `cyber_media_tech` sub-configs. Each needs
+~450 lines of dedicated scaffolding.
 
 ## Next up
 

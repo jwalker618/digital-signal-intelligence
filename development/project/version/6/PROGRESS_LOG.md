@@ -112,6 +112,25 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### A8-deep follow-up — cyber_aiml_vendor sub-config
+
+Brings `cyber` from 11 → 12 sub-configs by adding `cyber_aiml_vendor`
+as the first of the three A8-deep sub-configs (the other two —
+`cyber_saas_platform` and `cyber_media_tech` — remain deferred).
+
+~440 lines appended to `coverages/cyber/config.yaml`: metadata with
+`industry_sector in {AI_VENDOR, ML_VENDOR, AIML_PLATFORM}` routing,
+4 direct-queries on AI-governance posture, a 7-signal registry (the
+four A8 AI-governance signals + three cross-inherited cyber
+infrastructure signals), 5-group three-layer-assessment weights,
+5-band risk/loss tiers, exposure size + complexity bands, ILF curves
+per product_type, and guardrails (modifier_cap 3.0, max_ilf_factor
+12.0 — slightly loosened vs peers to reflect AI-incident tail).
+
+Verification: calibrate cyber PASS on all 12 sub-configs (31,296
+fixtures, 0 errors), 221/221 goldens green, compliance strict PASS
+(no new baseline findings).
+
 ### Stage 6 pilot — deepened 3 D3 extractors
 
 CourtListener / OSHA / FMCSA moved from reachability probes to
