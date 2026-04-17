@@ -6,7 +6,7 @@
 | ≥ 40 signals primary registry | 118 | ✅ |
 | ≥ 80 inference functions | 90 | ✅ |
 | Nuclear + hydrogen signals (A8 spec) | 5/5 | ✅ (Stage 4.11) |
-| `expectation_level` on every scored signal | partial | ⏳ |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | Guardrails populated | present | ✅ |
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage energy` returns PASS | **PASS** (Stage 4.11) | ✅ |

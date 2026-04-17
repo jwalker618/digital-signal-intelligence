@@ -9,7 +9,7 @@ finishing) — see
 | 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 12 (incl. aiml_vendor) | ⏳ 2 remaining deferred to A8-deep |
 | ≥ 40 unique signal IDs in primary registry | 102 | ✅ |
 | ≥ 80 coverage-specific inference functions | 95 | ✅ |
-| `expectation_level` on every scored signal | partial | ⏳ retrofit |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ |
 | Guardrails populated | present | ✅ |

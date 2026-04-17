@@ -9,7 +9,7 @@ Tracks progress against the V6 Mature Bar (A3 in
 | ≥ 26 unique signal IDs in primary registry | 48 | ✅ |
 | ≥ 80 coverage-specific inference functions | 48 | ⏳ 32 to add |
 | Primary config ≥ 40 scored signals | 20 (casualty_environmental primary) | ⏳ 20 to add |
-| `expectation_level` on every scored signal | partial | ⏳ retrofit |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ umbrella + env |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |

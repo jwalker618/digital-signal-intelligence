@@ -47,6 +47,7 @@ env_liab:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -66,6 +67,7 @@ env_liab:
     - id: security_disclosure
       inference_utility_function: security_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -85,6 +87,7 @@ env_liab:
     - id: leadership_visibility
       inference_utility_function: leadership_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -104,6 +107,7 @@ env_liab:
     - id: social_presence
       inference_utility_function: social_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -123,6 +127,7 @@ env_liab:
     - id: brand_reputation
       inference_utility_function: brand_reputation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -142,6 +147,7 @@ env_liab:
     - id: media_coverage
       inference_utility_function: media_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -161,6 +167,7 @@ env_liab:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -180,6 +187,7 @@ env_liab:
     - id: customer_quality
       inference_utility_function: customer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -204,6 +212,7 @@ env_liab:
     - id: partner_ecosystem
       inference_utility_function: partner_ecosystem_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -228,6 +237,7 @@ env_liab:
     - id: certification_status
       inference_utility_function: certification_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -252,6 +262,7 @@ env_liab:
     - id: vendor_relationships
       inference_utility_function: vendor_relationships_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -276,6 +287,7 @@ env_liab:
     - id: industry_associations
       inference_utility_function: industry_associations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -300,6 +312,7 @@ env_liab:
     - id: supply_chain_visibility
       inference_utility_function: supply_chain_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -324,6 +337,7 @@ env_liab:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -339,6 +353,7 @@ env_liab:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -354,6 +369,7 @@ env_liab:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -369,6 +385,7 @@ env_liab:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -384,6 +401,7 @@ env_liab:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -399,6 +417,7 @@ env_liab:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -414,6 +433,7 @@ env_liab:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -429,6 +449,7 @@ env_liab:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -449,6 +470,7 @@ env_liab:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -469,6 +491,7 @@ env_liab:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -489,6 +512,7 @@ env_liab:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -509,6 +533,7 @@ env_liab:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -529,6 +554,7 @@ env_liab:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -990,6 +1016,7 @@ env_liab:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1009,6 +1036,7 @@ env_liab:
     - id: security_disclosure
       inference_utility_function: security_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1028,6 +1056,7 @@ env_liab:
     - id: leadership_visibility
       inference_utility_function: leadership_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1047,6 +1076,7 @@ env_liab:
     - id: social_presence
       inference_utility_function: social_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1066,6 +1096,7 @@ env_liab:
     - id: brand_reputation
       inference_utility_function: brand_reputation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1085,6 +1116,7 @@ env_liab:
     - id: media_coverage
       inference_utility_function: media_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1104,6 +1136,7 @@ env_liab:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1123,6 +1156,7 @@ env_liab:
     - id: customer_quality
       inference_utility_function: customer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1147,6 +1181,7 @@ env_liab:
     - id: partner_ecosystem
       inference_utility_function: partner_ecosystem_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1171,6 +1206,7 @@ env_liab:
     - id: certification_status
       inference_utility_function: certification_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1195,6 +1231,7 @@ env_liab:
     - id: vendor_relationships
       inference_utility_function: vendor_relationships_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1219,6 +1256,7 @@ env_liab:
     - id: industry_associations
       inference_utility_function: industry_associations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1243,6 +1281,7 @@ env_liab:
     - id: supply_chain_visibility
       inference_utility_function: supply_chain_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1267,6 +1306,7 @@ env_liab:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1282,6 +1322,7 @@ env_liab:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1297,6 +1338,7 @@ env_liab:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1312,6 +1354,7 @@ env_liab:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1327,6 +1370,7 @@ env_liab:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1342,6 +1386,7 @@ env_liab:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1357,6 +1402,7 @@ env_liab:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1372,6 +1418,7 @@ env_liab:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1392,6 +1439,7 @@ env_liab:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1412,6 +1460,7 @@ env_liab:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1432,6 +1481,7 @@ env_liab:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1452,6 +1502,7 @@ env_liab:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1472,6 +1523,7 @@ env_liab:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1933,6 +1985,7 @@ env_liab:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1952,6 +2005,7 @@ env_liab:
     - id: security_disclosure
       inference_utility_function: security_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1971,6 +2025,7 @@ env_liab:
     - id: leadership_visibility
       inference_utility_function: leadership_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1990,6 +2045,7 @@ env_liab:
     - id: social_presence
       inference_utility_function: social_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2009,6 +2065,7 @@ env_liab:
     - id: brand_reputation
       inference_utility_function: brand_reputation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2028,6 +2085,7 @@ env_liab:
     - id: media_coverage
       inference_utility_function: media_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2047,6 +2105,7 @@ env_liab:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2066,6 +2125,7 @@ env_liab:
     - id: customer_quality
       inference_utility_function: customer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2090,6 +2150,7 @@ env_liab:
     - id: partner_ecosystem
       inference_utility_function: partner_ecosystem_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2114,6 +2175,7 @@ env_liab:
     - id: certification_status
       inference_utility_function: certification_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2138,6 +2200,7 @@ env_liab:
     - id: vendor_relationships
       inference_utility_function: vendor_relationships_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2162,6 +2225,7 @@ env_liab:
     - id: industry_associations
       inference_utility_function: industry_associations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2186,6 +2250,7 @@ env_liab:
     - id: supply_chain_visibility
       inference_utility_function: supply_chain_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2210,6 +2275,7 @@ env_liab:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2225,6 +2291,7 @@ env_liab:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2240,6 +2307,7 @@ env_liab:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2255,6 +2323,7 @@ env_liab:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2270,6 +2339,7 @@ env_liab:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2285,6 +2355,7 @@ env_liab:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2300,6 +2371,7 @@ env_liab:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2315,6 +2387,7 @@ env_liab:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2335,6 +2408,7 @@ env_liab:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2355,6 +2429,7 @@ env_liab:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2375,6 +2450,7 @@ env_liab:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2395,6 +2471,7 @@ env_liab:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2415,6 +2492,7 @@ env_liab:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2876,6 +2954,7 @@ env_liab:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2895,6 +2974,7 @@ env_liab:
     - id: security_disclosure
       inference_utility_function: security_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2914,6 +2994,7 @@ env_liab:
     - id: leadership_visibility
       inference_utility_function: leadership_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2933,6 +3014,7 @@ env_liab:
     - id: social_presence
       inference_utility_function: social_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2952,6 +3034,7 @@ env_liab:
     - id: brand_reputation
       inference_utility_function: brand_reputation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2971,6 +3054,7 @@ env_liab:
     - id: media_coverage
       inference_utility_function: media_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2990,6 +3074,7 @@ env_liab:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3009,6 +3094,7 @@ env_liab:
     - id: customer_quality
       inference_utility_function: customer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3033,6 +3119,7 @@ env_liab:
     - id: partner_ecosystem
       inference_utility_function: partner_ecosystem_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3057,6 +3144,7 @@ env_liab:
     - id: certification_status
       inference_utility_function: certification_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3081,6 +3169,7 @@ env_liab:
     - id: vendor_relationships
       inference_utility_function: vendor_relationships_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3105,6 +3194,7 @@ env_liab:
     - id: industry_associations
       inference_utility_function: industry_associations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3129,6 +3219,7 @@ env_liab:
     - id: supply_chain_visibility
       inference_utility_function: supply_chain_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3153,6 +3244,7 @@ env_liab:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3168,6 +3260,7 @@ env_liab:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3183,6 +3276,7 @@ env_liab:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3198,6 +3292,7 @@ env_liab:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3213,6 +3308,7 @@ env_liab:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3228,6 +3324,7 @@ env_liab:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3243,6 +3340,7 @@ env_liab:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3258,6 +3356,7 @@ env_liab:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3278,6 +3377,7 @@ env_liab:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3298,6 +3398,7 @@ env_liab:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3318,6 +3419,7 @@ env_liab:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3338,6 +3440,7 @@ env_liab:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3358,6 +3461,7 @@ env_liab:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3822,6 +3926,7 @@ env_liab:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3841,6 +3946,7 @@ env_liab:
     - id: security_disclosure
       inference_utility_function: security_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3860,6 +3966,7 @@ env_liab:
     - id: leadership_visibility
       inference_utility_function: leadership_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3879,6 +3986,7 @@ env_liab:
     - id: social_presence
       inference_utility_function: social_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3898,6 +4006,7 @@ env_liab:
     - id: brand_reputation
       inference_utility_function: brand_reputation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3917,6 +4026,7 @@ env_liab:
     - id: media_coverage
       inference_utility_function: media_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3936,6 +4046,7 @@ env_liab:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3955,6 +4066,7 @@ env_liab:
     - id: customer_quality
       inference_utility_function: customer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -3979,6 +4091,7 @@ env_liab:
     - id: partner_ecosystem
       inference_utility_function: partner_ecosystem_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4003,6 +4116,7 @@ env_liab:
     - id: certification_status
       inference_utility_function: certification_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4027,6 +4141,7 @@ env_liab:
     - id: vendor_relationships
       inference_utility_function: vendor_relationships_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4051,6 +4166,7 @@ env_liab:
     - id: industry_associations
       inference_utility_function: industry_associations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4075,6 +4191,7 @@ env_liab:
     - id: supply_chain_visibility
       inference_utility_function: supply_chain_visibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4099,6 +4216,7 @@ env_liab:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4114,6 +4232,7 @@ env_liab:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4129,6 +4248,7 @@ env_liab:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4144,6 +4264,7 @@ env_liab:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4159,6 +4280,7 @@ env_liab:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4174,6 +4296,7 @@ env_liab:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4189,6 +4312,7 @@ env_liab:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4204,6 +4328,7 @@ env_liab:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4224,6 +4349,7 @@ env_liab:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4244,6 +4370,7 @@ env_liab:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4264,6 +4391,7 @@ env_liab:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4284,6 +4412,7 @@ env_liab:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4304,6 +4433,7 @@ env_liab:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:

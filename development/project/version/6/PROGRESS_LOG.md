@@ -112,6 +112,31 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### expectation_level retrofit across 22 coverages
+
+3,205 `expectation_level: UNIVERSAL` entries added to every scored
+signal across all 22 coverages that was missing the field. Purely a
+documentation-level change — the scorer in
+`layers/risk/scorer.py` already treats a missing `expectation_level`
+as UNIVERSAL (Phase 10 default), so numerical output is unchanged.
+
+Insertion done via a regex-based appender (`/tmp/retrofit_expectation.py`):
+for every `- id:` / `inference_utility_function:` / `proxy_tier:`
+triple, insert `      expectation_level: UNIVERSAL` on the line
+following `proxy_tier` unless the field is already set.
+
+Per-coverage touchups: aerospace +104, captive +128, casualty +91,
+construction +130, crop +130, cyber +124, do +107, energy +453,
+env_liab +130, event +165, fi +92, fpr +51, marine +124,
+medprof +160, pi +102, prodlib +165, property +185, pvt +104,
+reinsurance +160, specie +132, teo +170, wc +198.
+
+12 MATURATION_STATUS.md files updated to mark the "⏳ retrofit" row
+as ✅ (Stage 4.11-fu).
+
+Verification: calibrate PASS on all 135 sub-configs across all 22
+coverages, 221/221 goldens green, compliance strict PASS.
+
 ### A8-deep follow-up — cyber_aiml_vendor sub-config
 
 Brings `cyber` from 11 → 12 sub-configs by adding `cyber_aiml_vendor`

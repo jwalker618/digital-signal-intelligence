@@ -9,7 +9,7 @@ Tracks progress against the V6 Mature Bar (A7 in
 | ≥ 30 unique signal IDs in primary registry | 81 | ✅ |
 | ≥ 80 coverage-specific inference functions | 46 | ⏳ 34 to add |
 | Primary config ≥ 40 scored signals | 50 (marine_general) | ✅ |
-| `expectation_level` on every scored signal | partial | ⏳ |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ STS + offshore |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |

@@ -84,6 +84,7 @@ commercial_casualty:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.gl_class_code
@@ -103,6 +104,7 @@ commercial_casualty:
     - id: premises_condition
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -118,6 +120,7 @@ commercial_casualty:
     - id: products_completed_ops
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -142,6 +145,7 @@ commercial_casualty:
     - id: contractual_liability
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -158,6 +162,7 @@ commercial_casualty:
     - id: subcontractor_management
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -174,6 +179,7 @@ commercial_casualty:
     - id: litigation_environment
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -195,6 +201,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -211,6 +218,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -226,6 +234,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -238,6 +247,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -258,6 +268,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -273,6 +284,7 @@ commercial_casualty:
     - id: premises_occupancy_class
       inference_utility_function: premises_occupancy_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -285,6 +297,7 @@ commercial_casualty:
     - id: crowd_density_proxy
       inference_utility_function: crowd_density_proxy_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -297,6 +310,7 @@ commercial_casualty:
     - id: slip_fall_benchmark
       inference_utility_function: slip_fall_benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -309,6 +323,7 @@ commercial_casualty:
     - id: guest_injury_disclosure_trail
       inference_utility_function: guest_injury_disclosure_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -754,6 +769,7 @@ commercial_casualty:
     - id: experience_modification
       inference_utility_function: experience_modification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -779,6 +795,7 @@ commercial_casualty:
     - id: osha_compliance
       inference_utility_function: osha_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -797,6 +814,7 @@ commercial_casualty:
     - id: safety_programme_quality
       inference_utility_function: safety_programme_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -812,6 +830,7 @@ commercial_casualty:
     - id: return_to_work_programme
       inference_utility_function: return_to_work_programme_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -824,6 +843,7 @@ commercial_casualty:
     - id: occupational_disease_exposure
       inference_utility_function: occupational_disease_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -846,6 +866,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -862,6 +883,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -877,6 +899,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -889,6 +912,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -909,6 +933,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1327,6 +1352,7 @@ commercial_casualty:
     - id: fleet_composition
       inference_utility_function: fleet_composition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.fleet_composition
@@ -1349,6 +1375,7 @@ commercial_casualty:
     - id: driver_quality
       inference_utility_function: driver_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1364,6 +1391,7 @@ commercial_casualty:
     - id: telematics_adoption
       inference_utility_function: telematics_adoption_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1379,6 +1407,7 @@ commercial_casualty:
     - id: route_hazard
       inference_utility_function: route_hazard_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1398,6 +1427,7 @@ commercial_casualty:
     - id: accident_frequency
       inference_utility_function: accident_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1419,6 +1449,7 @@ commercial_casualty:
     - id: fleet_maintenance
       inference_utility_function: fleet_maintenance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1431,6 +1462,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1447,6 +1479,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1462,6 +1495,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1474,6 +1508,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1494,6 +1529,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1509,6 +1545,7 @@ commercial_casualty:
     - id: fmcsa_sms_basic_scores
       inference_utility_function: fmcsa_sms_basic_scores_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1521,6 +1558,7 @@ commercial_casualty:
     - id: dot_inspection_history
       inference_utility_function: dot_inspection_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1533,6 +1571,7 @@ commercial_casualty:
     - id: csa_crash_indicator
       inference_utility_function: csa_crash_indicator_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1548,6 +1587,7 @@ commercial_casualty:
     - id: fleet_telematics_benchmark
       inference_utility_function: fleet_telematics_benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1560,6 +1600,7 @@ commercial_casualty:
     - id: vehicle_age_distribution
       inference_utility_function: vehicle_age_distribution_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1572,6 +1613,7 @@ commercial_casualty:
     - id: driver_hos_compliance
       inference_utility_function: driver_hos_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1980,6 +2022,7 @@ commercial_casualty:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.gl_class_code
@@ -1999,6 +2042,7 @@ commercial_casualty:
     - id: premises_condition
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2014,6 +2058,7 @@ commercial_casualty:
     - id: products_completed_ops
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2038,6 +2083,7 @@ commercial_casualty:
     - id: contractual_liability
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2054,6 +2100,7 @@ commercial_casualty:
     - id: subcontractor_management
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2070,6 +2117,7 @@ commercial_casualty:
     - id: litigation_environment
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2091,6 +2139,7 @@ commercial_casualty:
     - id: underlying_programme_quality
       inference_utility_function: underlying_programme_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2106,6 +2155,7 @@ commercial_casualty:
     - id: attachment_point_adequacy
       inference_utility_function: attachment_point_adequacy_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2121,6 +2171,7 @@ commercial_casualty:
     - id: nuclear_verdict_exposure
       inference_utility_function: nuclear_verdict_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2147,6 +2198,7 @@ commercial_casualty:
     - id: tower_position
       inference_utility_function: tower_position_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2163,6 +2215,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2179,6 +2232,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2194,6 +2248,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2206,6 +2261,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2226,6 +2282,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2241,6 +2298,7 @@ commercial_casualty:
     - id: underlying_schedule_consistency
       inference_utility_function: underlying_schedule_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2253,6 +2311,7 @@ commercial_casualty:
     - id: attachment_point_coherence
       inference_utility_function: attachment_point_coherence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2265,6 +2324,7 @@ commercial_casualty:
     - id: lead_carrier_quality
       inference_utility_function: lead_carrier_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2683,6 +2743,7 @@ commercial_casualty:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.gl_class_code
@@ -2702,6 +2763,7 @@ commercial_casualty:
     - id: premises_condition
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2717,6 +2779,7 @@ commercial_casualty:
     - id: products_completed_ops
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2741,6 +2804,7 @@ commercial_casualty:
     - id: contractual_liability
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2757,6 +2821,7 @@ commercial_casualty:
     - id: subcontractor_management
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2773,6 +2838,7 @@ commercial_casualty:
     - id: litigation_environment
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2794,6 +2860,7 @@ commercial_casualty:
     - id: pollution_conditions
       inference_utility_function: pollution_conditions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2815,6 +2882,7 @@ commercial_casualty:
     - id: ust_ast_compliance
       inference_utility_function: ust_ast_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2830,6 +2898,7 @@ commercial_casualty:
     - id: regulatory_enforcement_history
       inference_utility_function: regulatory_enforcement_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2851,6 +2920,7 @@ commercial_casualty:
     - id: waste_management_practices
       inference_utility_function: waste_management_practices_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2866,6 +2936,7 @@ commercial_casualty:
     - id: third_party_site_exposure
       inference_utility_function: third_party_site_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2888,6 +2959,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2904,6 +2976,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2919,6 +2992,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2931,6 +3005,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2951,6 +3026,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2966,6 +3042,7 @@ commercial_casualty:
     - id: epa_echo_violation_depth
       inference_utility_function: epa_echo_violation_depth_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2981,6 +3058,7 @@ commercial_casualty:
     - id: superfund_proximity
       inference_utility_function: superfund_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2993,6 +3071,7 @@ commercial_casualty:
     - id: tri_reportable_volume
       inference_utility_function: tri_reportable_volume_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3008,6 +3087,7 @@ commercial_casualty:
     - id: state_dep_action_history
       inference_utility_function: state_dep_action_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3405,6 +3485,7 @@ commercial_casualty:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.gl_class_code
@@ -3424,6 +3505,7 @@ commercial_casualty:
     - id: premises_condition
       inference_utility_function: premises_condition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3439,6 +3521,7 @@ commercial_casualty:
     - id: products_completed_ops
       inference_utility_function: products_completed_ops_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3463,6 +3546,7 @@ commercial_casualty:
     - id: contractual_liability
       inference_utility_function: contractual_liability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3479,6 +3563,7 @@ commercial_casualty:
     - id: subcontractor_management
       inference_utility_function: subcontractor_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3495,6 +3580,7 @@ commercial_casualty:
     - id: litigation_environment
       inference_utility_function: litigation_environment_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3516,6 +3602,7 @@ commercial_casualty:
     - id: public_access_volume
       inference_utility_function: public_access_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3532,6 +3619,7 @@ commercial_casualty:
     - id: security_measures
       inference_utility_function: security_measures_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3547,6 +3635,7 @@ commercial_casualty:
     - id: incident_response_capability
       inference_utility_function: incident_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3559,6 +3648,7 @@ commercial_casualty:
     - id: alcohol_service
       inference_utility_function: alcohol_service_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3579,6 +3669,7 @@ commercial_casualty:
     - id: multi_location_complexity
       inference_utility_function: multi_location_complexity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:

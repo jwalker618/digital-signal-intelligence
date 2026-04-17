@@ -91,6 +91,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -131,6 +132,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -177,6 +179,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -214,6 +217,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -229,6 +233,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -241,6 +246,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -253,6 +259,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -268,6 +275,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -276,6 +284,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -288,6 +297,7 @@ energy:
     - id: customer_quality
       inference_utility_function: offtake_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -300,6 +310,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -321,6 +332,7 @@ energy:
     - id: osha_violations
       inference_utility_function: osha_violations_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -347,6 +359,7 @@ energy:
     - id: bsee_incident
       inference_utility_function: bsee_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -368,6 +381,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -394,6 +408,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -415,6 +430,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -448,6 +464,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -460,6 +477,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -486,6 +504,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -519,6 +538,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -531,6 +551,7 @@ energy:
     - id: flaring
       inference_utility_function: flaring_intensity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -543,6 +564,7 @@ energy:
     - id: methane
       inference_utility_function: methane_emissions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -558,6 +580,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -570,6 +593,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -586,6 +610,7 @@ energy:
     - id: facility_activity
       inference_utility_function: facility_activity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -598,6 +623,7 @@ energy:
     - id: well_integrity
       inference_utility_function: well_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -613,6 +639,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -625,6 +652,7 @@ energy:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -637,6 +665,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -649,6 +678,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -661,6 +691,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -683,6 +714,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -695,6 +727,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -718,6 +751,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -737,6 +771,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -753,6 +788,7 @@ energy:
     - id: complexity
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -772,6 +808,7 @@ energy:
     - id: decommissioning
       inference_utility_function: decomissioning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -788,6 +825,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -796,6 +834,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_comms_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -808,6 +847,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -816,6 +856,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -828,6 +869,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -836,6 +878,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -844,6 +887,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -856,6 +900,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -864,6 +909,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -879,6 +925,7 @@ energy:
     - id: credit
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -891,6 +938,7 @@ energy:
     - id: electrolyser_technology_maturity
       inference_utility_function: electrolyser_technology_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -903,6 +951,7 @@ energy:
     - id: offtake_counterparty_quality
       inference_utility_function: offtake_counterparty_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1531,6 +1580,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -1559,6 +1609,7 @@ energy:
     - id: water_depth_class
       inference_utility_function: water_depth_class_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: water_depth_class
         source: metadata.water_depth_class
@@ -1581,6 +1632,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -1609,6 +1661,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1624,6 +1677,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1636,6 +1690,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1651,6 +1706,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1663,6 +1719,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1671,6 +1728,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1679,6 +1737,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1700,6 +1759,7 @@ energy:
     - id: bsee_incident
       inference_utility_function: bsee_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1721,6 +1781,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1742,6 +1803,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1760,6 +1822,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1781,6 +1844,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1793,6 +1857,7 @@ energy:
     - id: bop_reliability
       inference_utility_function: bop_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1811,6 +1876,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1832,6 +1898,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1853,6 +1920,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1865,6 +1933,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1877,6 +1946,7 @@ energy:
     - id: subsea_integrity
       inference_utility_function: subsea_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1896,6 +1966,7 @@ energy:
     - id: dynamic_positioning
       inference_utility_function: dynamic_positioning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1911,6 +1982,7 @@ energy:
     - id: mooring_integrity
       inference_utility_function: mooring_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1930,6 +2002,7 @@ energy:
     - id: riser_integrity
       inference_utility_function: riser_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1945,6 +2018,7 @@ energy:
     - id: hurricane_preparedness
       inference_utility_function: hurricane_preparedness_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1961,6 +2035,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1973,6 +2048,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1985,6 +2061,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1997,6 +2074,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -2015,6 +2093,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -2027,6 +2106,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2046,6 +2126,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2062,6 +2143,7 @@ energy:
     - id: platform_complexity
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2081,6 +2163,7 @@ energy:
     - id: decommissioning
       inference_utility_function: decomissioning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2097,6 +2180,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2657,6 +2741,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -2685,6 +2770,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -2698,6 +2784,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -2723,6 +2810,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2738,6 +2826,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2750,6 +2839,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2765,6 +2855,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2777,6 +2868,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2785,6 +2877,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -2793,6 +2886,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2814,6 +2908,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2835,6 +2930,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2853,6 +2949,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2874,6 +2971,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2886,6 +2984,7 @@ energy:
     - id: h2s_exposure
       inference_utility_function: h2s_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2909,6 +3008,7 @@ energy:
     - id: state_regulatory_compliance
       inference_utility_function: state_regulatory_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2935,6 +3035,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2956,6 +3057,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2977,6 +3079,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2989,6 +3092,7 @@ energy:
     - id: flaring
       inference_utility_function: flaring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3001,6 +3105,7 @@ energy:
     - id: methane
       inference_utility_function: methane_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3013,6 +3118,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3025,6 +3131,7 @@ energy:
     - id: produced_water_management
       inference_utility_function: produced_water_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3046,6 +3153,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3062,6 +3170,7 @@ energy:
     - id: well_integrity
       inference_utility_function: well_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3081,6 +3190,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3097,6 +3207,7 @@ energy:
     - id: facility_activity
       inference_utility_function: facility_activity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3109,6 +3220,7 @@ energy:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3125,6 +3237,7 @@ energy:
     - id: artificial_lift_reliability
       inference_utility_function: artificial_lift_reliability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3144,6 +3257,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -3156,6 +3270,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -3168,6 +3283,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -3180,6 +3296,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -3198,6 +3315,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -3210,6 +3328,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3229,6 +3348,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3245,6 +3365,7 @@ energy:
     - id: technology_profile
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3264,6 +3385,7 @@ energy:
     - id: decommissioning
       inference_utility_function: decomissioning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3280,6 +3402,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3288,6 +3411,7 @@ energy:
     - id: well_vintage_profile
       inference_utility_function: well_vintage_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3313,6 +3437,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3325,6 +3450,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_communication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3337,6 +3463,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3349,6 +3476,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3361,6 +3489,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3373,6 +3502,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3381,6 +3511,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3393,6 +3524,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3405,6 +3537,7 @@ energy:
     - id: credit
       inference_utility_function: credit_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3956,6 +4089,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -3984,6 +4118,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -3997,6 +4132,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -4019,6 +4155,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4034,6 +4171,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4046,6 +4184,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4061,6 +4200,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4073,6 +4213,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4081,6 +4222,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -4089,6 +4231,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4110,6 +4253,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4131,6 +4275,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4149,6 +4294,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4170,6 +4316,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4182,6 +4329,7 @@ energy:
     - id: osha_violations
       inference_utility_function: osha_violations_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4203,6 +4351,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4224,6 +4373,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4245,6 +4395,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4257,6 +4408,7 @@ energy:
     - id: flaring
       inference_utility_function: flaring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4269,6 +4421,7 @@ energy:
     - id: methane
       inference_utility_function: methane_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4277,6 +4430,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4289,6 +4443,7 @@ energy:
     - id: water_recycling_rate
       inference_utility_function: water_recycling_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4310,6 +4465,7 @@ energy:
     - id: induced_seismicity_score
       inference_utility_function: induced_seismicity_score_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4336,6 +4492,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4352,6 +4509,7 @@ energy:
     - id: well_integrity
       inference_utility_function: well_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4371,6 +4529,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4387,6 +4546,7 @@ energy:
     - id: facility_activity
       inference_utility_function: facility_activity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4399,6 +4559,7 @@ energy:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4411,6 +4572,7 @@ energy:
     - id: frac_fleet_quality
       inference_utility_function: frac_fleet_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4436,6 +4598,7 @@ energy:
     - id: completion_efficiency
       inference_utility_function: completion_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4461,6 +4624,7 @@ energy:
     - id: pad_drilling_intensity
       inference_utility_function: pad_drilling_intensity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4480,6 +4644,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -4492,6 +4657,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -4504,6 +4670,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -4516,6 +4683,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -4534,6 +4702,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -4546,6 +4715,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4565,6 +4735,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4581,6 +4752,7 @@ energy:
     - id: technology_profile
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4597,6 +4769,7 @@ energy:
     - id: decommissioning
       inference_utility_function: decomissioning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4609,6 +4782,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4617,6 +4791,7 @@ energy:
     - id: well_spacing_optimisation
       inference_utility_function: well_spacing_optimisation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4642,6 +4817,7 @@ energy:
     - id: complexity
       inference_utility_function: complexity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4661,6 +4837,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4673,6 +4850,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_communication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4685,6 +4863,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4697,6 +4876,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4709,6 +4889,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4721,6 +4902,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -4729,6 +4911,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4741,6 +4924,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4753,6 +4937,7 @@ energy:
     - id: credit
       inference_utility_function: credit_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -5291,6 +5476,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -5316,6 +5502,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -5335,6 +5522,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -5357,6 +5545,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5372,6 +5561,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5384,6 +5574,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5399,6 +5590,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5411,6 +5603,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5419,6 +5612,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -5427,6 +5621,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5448,6 +5643,7 @@ energy:
     - id: phmsa_compliance
       inference_utility_function: phmsa_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5474,6 +5670,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5489,6 +5686,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5507,6 +5705,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5528,6 +5727,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5540,6 +5740,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5561,6 +5762,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5582,6 +5784,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5594,6 +5797,7 @@ energy:
     - id: methane
       inference_utility_function: methane_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5606,6 +5810,7 @@ energy:
     - id: flaring
       inference_utility_function: flaring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5618,6 +5823,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -5630,6 +5836,7 @@ energy:
     - id: inline_inspection
       inference_utility_function: inline_inspection_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5655,6 +5862,7 @@ energy:
     - id: cathodic_protection
       inference_utility_function: cathodic_protection_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5680,6 +5888,7 @@ energy:
     - id: scada_maturity
       inference_utility_function: scada_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5696,6 +5905,7 @@ energy:
     - id: throughput_consistency
       inference_utility_function: throughput_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5712,6 +5922,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5728,6 +5939,7 @@ energy:
     - id: facility_activity
       inference_utility_function: facility_activity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5740,6 +5952,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -5752,6 +5965,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -5764,6 +5978,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -5776,6 +5991,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -5794,6 +6010,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -5806,6 +6023,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5825,6 +6043,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5841,6 +6060,7 @@ energy:
     - id: technology_profile
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5857,6 +6077,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5865,6 +6086,7 @@ energy:
     - id: right_of_way
       inference_utility_function: right_of_way_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5890,6 +6112,7 @@ energy:
     - id: pipeline_vintage
       inference_utility_function: pipeline_vintage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5915,6 +6138,7 @@ energy:
     - id: complexity
       inference_utility_function: complexity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5934,6 +6158,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5946,6 +6171,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_communication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5958,6 +6184,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5970,6 +6197,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5982,6 +6210,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5990,6 +6219,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -5998,6 +6228,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -6010,6 +6241,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -6022,6 +6254,7 @@ energy:
     - id: credit
       inference_utility_function: credit_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -6034,6 +6267,7 @@ energy:
     - id: nrc_inspection_findings
       inference_utility_function: nrc_inspection_findings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6049,6 +6283,7 @@ energy:
     - id: nrc_enforcement_action_history
       inference_utility_function: nrc_enforcement_action_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6061,6 +6296,7 @@ energy:
     - id: decommissioning_trust_funding
       inference_utility_function: decommissioning_trust_funding_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -6575,6 +6811,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -6603,6 +6840,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -6619,6 +6857,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -6644,6 +6883,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6659,6 +6899,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6671,6 +6912,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6686,6 +6928,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6698,6 +6941,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6706,6 +6950,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -6714,6 +6959,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6735,6 +6981,7 @@ energy:
     - id: psm_audit_findings
       inference_utility_function: psm_audit_findings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6761,6 +7008,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6782,6 +7030,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6800,6 +7049,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6821,6 +7071,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6833,6 +7084,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6854,6 +7106,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6869,6 +7122,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6881,6 +7135,7 @@ energy:
     - id: flaring
       inference_utility_function: flaring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6893,6 +7148,7 @@ energy:
     - id: methane
       inference_utility_function: methane_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6901,6 +7157,7 @@ energy:
     - id: remediation
       inference_utility_function: remediation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -6913,6 +7170,7 @@ energy:
     - id: mechanical_integrity
       inference_utility_function: mechanical_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6938,6 +7196,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6954,6 +7213,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6970,6 +7230,7 @@ energy:
     - id: facility_activity
       inference_utility_function: facility_activity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6982,6 +7243,7 @@ energy:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6998,6 +7260,7 @@ energy:
     - id: scada_maturity
       inference_utility_function: scada_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -7014,6 +7277,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7026,6 +7290,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7038,6 +7303,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7050,6 +7316,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7068,6 +7335,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7080,6 +7348,7 @@ energy:
     - id: bi_exposure_ratio
       inference_utility_function: bi_exposure_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -7102,6 +7371,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7121,6 +7391,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7137,6 +7408,7 @@ energy:
     - id: technology_profile
       inference_utility_function: technology_profile_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7153,6 +7425,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7161,6 +7434,7 @@ energy:
     - id: turnaround_compliance
       inference_utility_function: turnaround_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7191,6 +7465,7 @@ energy:
     - id: feedstock_complexity
       inference_utility_function: feedstock_complexity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7216,6 +7491,7 @@ energy:
     - id: process_unit_count
       inference_utility_function: process_unit_count_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7232,6 +7508,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7244,6 +7521,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_communication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7256,6 +7534,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7268,6 +7547,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7280,6 +7560,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7288,6 +7569,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -7296,6 +7578,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -7308,6 +7591,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -7320,6 +7604,7 @@ energy:
     - id: credit
       inference_utility_function: credit_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -7846,6 +8131,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -7871,6 +8157,7 @@ energy:
     - id: foundation_type
       inference_utility_function: foundation_type_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: foundation_type
         source: metadata.foundation_type
@@ -7899,6 +8186,7 @@ energy:
     - id: construction_phase
       inference_utility_function: construction_phase_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: construction_phase
         source: metadata.construction_phase
@@ -7924,6 +8212,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -7949,6 +8238,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -7964,6 +8254,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -7976,6 +8267,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -7991,6 +8283,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -8003,6 +8296,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -8011,6 +8305,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -8019,6 +8314,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8040,6 +8336,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8061,6 +8358,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8079,6 +8377,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8100,6 +8399,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8112,6 +8412,7 @@ energy:
     - id: crew_transfer_safety
       inference_utility_function: crew_transfer_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -8127,6 +8428,7 @@ energy:
     - id: epc_contractor_quality
       inference_utility_function: epc_contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8148,6 +8450,7 @@ energy:
     - id: commissioning_defects
       inference_utility_function: commissioning_defects_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8169,6 +8472,7 @@ energy:
     - id: epc_track_record
       inference_utility_function: epc_track_record_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8184,6 +8488,7 @@ energy:
     - id: supply_chain_quality
       inference_utility_function: supply_chain_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8199,6 +8504,7 @@ energy:
     - id: installation_vessel_quality
       inference_utility_function: installation_vessel_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8214,6 +8520,7 @@ energy:
     - id: capacity_factor
       inference_utility_function: capacity_factor_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8232,6 +8539,7 @@ energy:
     - id: grid_interconnection
       inference_utility_function: grid_interconnection_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8244,6 +8552,7 @@ energy:
     - id: degradation_rate
       inference_utility_function: degradation_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -8256,6 +8565,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8268,6 +8578,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8280,6 +8591,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8292,6 +8604,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8310,6 +8623,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8322,6 +8636,7 @@ energy:
     - id: ppa_quality
       inference_utility_function: ppa_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8340,6 +8655,7 @@ energy:
     - id: offtake_contract_quality
       inference_utility_function: offtake_contract_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -8352,6 +8668,7 @@ energy:
     - id: technology_maturity
       inference_utility_function: technology_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8378,6 +8695,7 @@ energy:
     - id: warranty_coverage
       inference_utility_function: warranty_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8396,6 +8714,7 @@ energy:
     - id: natcat_exposure
       inference_utility_function: natcat_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8421,6 +8740,7 @@ energy:
     - id: turbine_platform_generation
       inference_utility_function: turbine_platform_generation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8440,6 +8760,7 @@ energy:
     - id: cable_route_risk
       inference_utility_function: cable_route_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8459,6 +8780,7 @@ energy:
     - id: marine_weather_exposure
       inference_utility_function: marine_weather_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8478,6 +8800,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8486,6 +8809,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_comms_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8498,6 +8822,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8506,6 +8831,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8518,6 +8844,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8530,6 +8857,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -8538,6 +8866,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -8546,6 +8875,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -8561,6 +8891,7 @@ energy:
     - id: credit
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -9162,6 +9493,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -9184,6 +9516,7 @@ energy:
     - id: technology_type
       inference_utility_function: technology_type_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technology_type
         source: metadata.technology_type
@@ -9203,6 +9536,7 @@ energy:
     - id: construction_phase
       inference_utility_function: construction_phase_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: construction_phase
         source: metadata.construction_phase
@@ -9228,6 +9562,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -9253,6 +9588,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9268,6 +9604,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9280,6 +9617,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9295,6 +9633,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9307,6 +9646,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9315,6 +9655,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -9323,6 +9664,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -9344,6 +9686,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -9365,6 +9708,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -9383,6 +9727,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -9404,6 +9749,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -9416,6 +9762,7 @@ energy:
     - id: epc_contractor_quality
       inference_utility_function: epc_contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9437,6 +9784,7 @@ energy:
     - id: commissioning_defects
       inference_utility_function: commissioning_defects_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9458,6 +9806,7 @@ energy:
     - id: epc_track_record
       inference_utility_function: epc_track_record_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9473,6 +9822,7 @@ energy:
     - id: supply_chain_quality
       inference_utility_function: supply_chain_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9488,6 +9838,7 @@ energy:
     - id: capacity_factor
       inference_utility_function: capacity_factor_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9506,6 +9857,7 @@ energy:
     - id: grid_interconnection
       inference_utility_function: grid_interconnection_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9518,6 +9870,7 @@ energy:
     - id: degradation_rate
       inference_utility_function: degradation_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9530,6 +9883,7 @@ energy:
     - id: inverter_reliability
       inference_utility_function: inverter_reliability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9548,6 +9902,7 @@ energy:
     - id: curtailment_rate
       inference_utility_function: curtailment_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -9566,6 +9921,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9578,6 +9934,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9590,6 +9947,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9602,6 +9960,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9620,6 +9979,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9632,6 +9992,7 @@ energy:
     - id: ppa_quality
       inference_utility_function: ppa_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -9650,6 +10011,7 @@ energy:
     - id: technology_maturity
       inference_utility_function: technology_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9676,6 +10038,7 @@ energy:
     - id: warranty_coverage
       inference_utility_function: warranty_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9694,6 +10057,7 @@ energy:
     - id: natcat_exposure
       inference_utility_function: natcat_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9719,6 +10083,7 @@ energy:
     - id: hail_exposure
       inference_utility_function: hail_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9749,6 +10114,7 @@ energy:
     - id: panel_technology_vintage
       inference_utility_function: panel_technology_vintage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9770,6 +10136,7 @@ energy:
     - id: portfolio_geographic_spread
       inference_utility_function: portfolio_geographic_spread_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9789,6 +10156,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9797,6 +10165,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_comms_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9809,6 +10178,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9817,6 +10187,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9829,6 +10200,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9841,6 +10213,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -9849,6 +10222,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -9857,6 +10231,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -9872,6 +10247,7 @@ energy:
     - id: credit
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -10442,6 +10818,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -10467,6 +10844,7 @@ energy:
     - id: battery_chemistry
       inference_utility_function: battery_chemistry_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: battery_chemistry
         source: metadata.battery_chemistry
@@ -10492,6 +10870,7 @@ energy:
     - id: construction_phase
       inference_utility_function: construction_phase_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: construction_phase
         source: metadata.construction_phase
@@ -10517,6 +10896,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -10539,6 +10919,7 @@ energy:
     - id: partner_quality
       inference_utility_function: partner_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10554,6 +10935,7 @@ energy:
     - id: contractor_quality
       inference_utility_function: contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10566,6 +10948,7 @@ energy:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10578,6 +10961,7 @@ energy:
     - id: insurance_history
       inference_utility_function: insurance_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10593,6 +10977,7 @@ energy:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10601,6 +10986,7 @@ energy:
     - id: regulator_relationship
       inference_utility_function: regulator_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10613,6 +10999,7 @@ energy:
     - id: customer_quality
       inference_utility_function: offtake_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -10625,6 +11012,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10646,6 +11034,7 @@ energy:
     - id: osha_violations
       inference_utility_function: osha_violations_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10667,6 +11056,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10688,6 +11078,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10706,6 +11097,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10727,6 +11119,7 @@ energy:
     - id: near_miss
       inference_utility_function: nearmiss_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10739,6 +11132,7 @@ energy:
     - id: safety_standard_compliance
       inference_utility_function: safety_standard_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -10760,6 +11154,7 @@ energy:
     - id: technology_maturity
       inference_utility_function: technology_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10775,6 +11170,7 @@ energy:
     - id: epc_contractor_quality
       inference_utility_function: epc_contractor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10790,6 +11186,7 @@ energy:
     - id: warranty_coverage
       inference_utility_function: warranty_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10802,6 +11199,7 @@ energy:
     - id: commissioning_defects
       inference_utility_function: commissioning_defects_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10823,6 +11221,7 @@ energy:
     - id: epc_track_record
       inference_utility_function: epc_track_record_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10835,6 +11234,7 @@ energy:
     - id: supply_chain_quality
       inference_utility_function: supply_chain_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10850,6 +11250,7 @@ energy:
     - id: capacity_factor
       inference_utility_function: capacity_factor_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10866,6 +11267,7 @@ energy:
     - id: grid_interconnection
       inference_utility_function: grid_interconnection_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10878,6 +11280,7 @@ energy:
     - id: degradation_rate
       inference_utility_function: degradation_rate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10893,6 +11296,7 @@ energy:
     - id: bms_sophistication
       inference_utility_function: bms_sophistication_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10914,6 +11318,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -10930,6 +11335,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -10942,6 +11348,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -10954,6 +11361,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -10976,6 +11384,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -10988,6 +11397,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -11006,6 +11416,7 @@ energy:
     - id: thermal_management_system
       inference_utility_function: thermal_management_system_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11027,6 +11438,7 @@ energy:
     - id: fire_suppression_capability
       inference_utility_function: fire_suppression_capability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11045,6 +11457,7 @@ energy:
     - id: hydrogen_storage_pressure
       inference_utility_function: hydrogen_storage_pressure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11063,6 +11476,7 @@ energy:
     - id: cell_format_maturity
       inference_utility_function: cell_format_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11075,6 +11489,7 @@ energy:
     - id: electrolyser_technology
       inference_utility_function: electrolyser_technology_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11090,6 +11505,7 @@ energy:
     - id: natcat_exposure
       inference_utility_function: natcat_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11106,6 +11522,7 @@ energy:
     - id: ppa_quality
       inference_utility_function: ppa_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11118,6 +11535,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11133,6 +11551,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11149,6 +11568,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_comms_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11161,6 +11581,7 @@ energy:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11169,6 +11590,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11181,6 +11603,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11189,6 +11612,7 @@ energy:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11197,6 +11621,7 @@ energy:
     - id: hse_leadership
       inference_utility_function: hse_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -11209,6 +11634,7 @@ energy:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -11217,6 +11643,7 @@ energy:
     - id: benchmark
       inference_utility_function: benchmark_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -11232,6 +11659,7 @@ energy:
     - id: credit
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -11727,6 +12155,7 @@ energy:
     - id: operator_type
       inference_utility_function: operator_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -11746,6 +12175,7 @@ energy:
     - id: operation_segment
       inference_utility_function: operation_segment_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operation_segment
         source: metadata.operation_segment
@@ -11792,6 +12222,7 @@ energy:
     - id: geographic_focus
       inference_utility_function: geographic_focus_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: geographic_focus
         source: metadata.geographic_focus
@@ -11811,6 +12242,7 @@ energy:
     - id: osha_trir
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11832,6 +12264,7 @@ energy:
     - id: osha_violations
       inference_utility_function: osha_trir_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11853,6 +12286,7 @@ energy:
     - id: process_safety
       inference_utility_function: process_safety_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11874,6 +12308,7 @@ energy:
     - id: fatality
       inference_utility_function: fatality_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11892,6 +12327,7 @@ energy:
     - id: major_incident
       inference_utility_function: major_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11913,6 +12349,7 @@ energy:
     - id: epa_violation
       inference_utility_function: epa_violation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11934,6 +12371,7 @@ energy:
     - id: spill_history
       inference_utility_function: spill_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11955,6 +12393,7 @@ energy:
     - id: emissions_compliance
       inference_utility_function: emissions_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -11967,6 +12406,7 @@ energy:
     - id: production_consistency
       inference_utility_function: production_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -11983,6 +12423,7 @@ energy:
     - id: well_integrity
       inference_utility_function: well_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -11998,6 +12439,7 @@ energy:
     - id: maintenance_pattern
       inference_utility_function: maintenance_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -12010,6 +12452,7 @@ energy:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -12022,6 +12465,7 @@ energy:
     - id: leverage
       inference_utility_function: leverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -12034,6 +12478,7 @@ energy:
     - id: aro_coverage
       inference_utility_function: aro_coverage_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -12052,6 +12497,7 @@ energy:
     - id: capex_trend
       inference_utility_function: capex_trend_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -12064,6 +12510,7 @@ energy:
     - id: restructuring
       inference_utility_function: restructuring_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -12082,6 +12529,7 @@ energy:
     - id: asset_age
       inference_utility_function: asset_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -12097,6 +12545,7 @@ energy:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -12113,6 +12562,7 @@ energy:
     - id: permit_status
       inference_utility_function: permit_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -12121,6 +12571,7 @@ energy:
     - id: safety_communication
       inference_utility_function: safety_comms_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -12133,6 +12584,7 @@ energy:
     - id: technical_hiring
       inference_utility_function: technical_hiring_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -12145,6 +12597,7 @@ energy:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:

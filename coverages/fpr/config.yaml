@@ -81,6 +81,7 @@ financial_political_risk:
     - id: buyer_creditworthiness
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -102,6 +103,7 @@ financial_political_risk:
     - id: payment_terms_exposure
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -121,6 +123,7 @@ financial_political_risk:
     - id: buyer_concentration
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -142,6 +145,7 @@ financial_political_risk:
     - id: country_risk_exposure
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -161,6 +165,7 @@ financial_political_risk:
     - id: trade_dispute_frequency
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -176,6 +181,7 @@ financial_political_risk:
     - id: sector_cyclicality
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -192,6 +198,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -211,6 +218,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -232,6 +240,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -247,6 +256,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -266,6 +276,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -287,6 +298,7 @@ financial_political_risk:
     - id: sector_credit_spread
       inference_utility_function: sector_credit_spread_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -708,6 +720,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -727,6 +740,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -748,6 +762,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -763,6 +778,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -782,6 +798,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -803,6 +820,7 @@ financial_political_risk:
     - id: acled_incident_density
       inference_utility_function: acled_incident_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -818,6 +836,7 @@ financial_political_risk:
     - id: wb_wgi_score
       inference_utility_function: wb_wgi_score_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -833,6 +852,7 @@ financial_political_risk:
     - id: ofac_country_tier
       inference_utility_function: ofac_country_tier_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -848,6 +868,7 @@ financial_political_risk:
     - id: capital_controls_watchlist
       inference_utility_function: capital_controls_watchlist_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -863,6 +884,7 @@ financial_political_risk:
     - id: bit_treaty_coverage
       inference_utility_function: bit_treaty_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1292,6 +1314,7 @@ financial_political_risk:
     - id: principal_financial_strength
       inference_utility_function: principal_financial_strength_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1307,6 +1330,7 @@ financial_political_risk:
     - id: project_execution_track_record
       inference_utility_function: project_execution_track_record_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1322,6 +1346,7 @@ financial_political_risk:
     - id: backlog_to_capacity
       inference_utility_function: backlog_to_capacity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1346,6 +1371,7 @@ financial_political_risk:
     - id: bond_default_history
       inference_utility_function: bond_default_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1367,6 +1393,7 @@ financial_political_risk:
     - id: obligee_complexity
       inference_utility_function: obligee_complexity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1775,6 +1802,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -1794,6 +1822,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1815,6 +1844,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1830,6 +1860,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1849,6 +1880,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1870,6 +1902,7 @@ financial_political_risk:
     - id: travel_exposure_profile
       inference_utility_function: travel_exposure_profile_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1886,6 +1919,7 @@ financial_political_risk:
     - id: country_threat_level
       inference_utility_function: country_threat_level_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.kr_threat_level
@@ -1905,6 +1939,7 @@ financial_political_risk:
     - id: executive_protection
       inference_utility_function: executive_protection_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1920,6 +1955,7 @@ financial_political_risk:
     - id: crisis_response_capability
       inference_utility_function: crisis_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1932,6 +1968,7 @@ financial_political_risk:
     - id: expatriate_population
       inference_utility_function: expatriate_population_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1948,6 +1985,7 @@ financial_political_risk:
     - id: acled_kfr_rate_country
       inference_utility_function: acled_kfr_rate_country_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1963,6 +2001,7 @@ financial_political_risk:
     - id: travel_pattern_density
       inference_utility_function: travel_pattern_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1978,6 +2017,7 @@ financial_political_risk:
     - id: executive_exposure_footprint
       inference_utility_function: executive_exposure_footprint_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2366,6 +2406,7 @@ financial_political_risk:
     - id: buyer_creditworthiness
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2387,6 +2428,7 @@ financial_political_risk:
     - id: payment_terms_exposure
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2406,6 +2448,7 @@ financial_political_risk:
     - id: buyer_concentration
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2427,6 +2470,7 @@ financial_political_risk:
     - id: country_risk_exposure
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2446,6 +2490,7 @@ financial_political_risk:
     - id: trade_dispute_frequency
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2461,6 +2506,7 @@ financial_political_risk:
     - id: sector_cyclicality
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2477,6 +2523,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -2496,6 +2543,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2517,6 +2565,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2532,6 +2581,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2551,6 +2601,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:

@@ -83,6 +83,7 @@ commercial_property:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_class
@@ -108,6 +109,7 @@ commercial_property:
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -127,6 +129,7 @@ commercial_property:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -142,6 +145,7 @@ commercial_property:
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -157,6 +161,7 @@ commercial_property:
     - id: electrical_system_quality
       inference_utility_function: electrical_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -172,6 +177,7 @@ commercial_property:
     - id: renovation_history
       inference_utility_function: renovation_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -188,6 +194,7 @@ commercial_property:
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.occupancy_hazard_grade
@@ -207,6 +214,7 @@ commercial_property:
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -223,6 +231,7 @@ commercial_property:
     - id: contents_value_density
       inference_utility_function: contents_value_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -239,6 +248,7 @@ commercial_property:
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -256,6 +266,7 @@ commercial_property:
     - id: housekeeping_quality
       inference_utility_function: housekeeping_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -268,6 +279,7 @@ commercial_property:
     - id: wind_zone
       inference_utility_function: wind_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -297,6 +309,7 @@ commercial_property:
     - id: earthquake_zone
       inference_utility_function: earthquake_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -326,6 +339,7 @@ commercial_property:
     - id: flood_zone
       inference_utility_function: flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -350,6 +364,7 @@ commercial_property:
     - id: wildfire_zone
       inference_utility_function: wildfire_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -375,6 +390,7 @@ commercial_property:
     - id: convective_storm_exposure
       inference_utility_function: convective_storm_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -390,6 +406,7 @@ commercial_property:
     - id: geographic_concentration
       inference_utility_function: geographic_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -405,6 +422,7 @@ commercial_property:
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.sprinkler_coverage
@@ -424,6 +442,7 @@ commercial_property:
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -439,6 +458,7 @@ commercial_property:
     - id: fire_department_response
       inference_utility_function: fire_department_response_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -456,6 +476,7 @@ commercial_property:
     - id: fire_separation
       inference_utility_function: fire_separation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -468,6 +489,7 @@ commercial_property:
     - id: water_supply_adequacy
       inference_utility_function: water_supply_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -480,6 +502,7 @@ commercial_property:
     - id: revenue_concentration
       inference_utility_function: revenue_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -501,6 +524,7 @@ commercial_property:
     - id: recovery_time_estimate
       inference_utility_function: recovery_time_estimate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -517,6 +541,7 @@ commercial_property:
     - id: supply_chain_dependency
       inference_utility_function: supply_chain_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -533,6 +558,7 @@ commercial_property:
     - id: contingent_bi_exposure
       inference_utility_function: contingent_bi_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -554,6 +580,7 @@ commercial_property:
     - id: business_continuity_planning
       inference_utility_function: business_continuity_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -566,6 +593,7 @@ commercial_property:
     - id: fema_flood_zone
       inference_utility_function: fema_flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -581,6 +609,7 @@ commercial_property:
     - id: noaa_hail_history
       inference_utility_function: noaa_hail_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -596,6 +625,7 @@ commercial_property:
     - id: usfs_wildfire_hazard
       inference_utility_function: usfs_wildfire_hazard_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -611,6 +641,7 @@ commercial_property:
     - id: usgs_seismic_vs30
       inference_utility_function: usgs_seismic_vs30_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -623,6 +654,7 @@ commercial_property:
     - id: nhc_track_proximity
       inference_utility_function: nhc_track_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -638,6 +670,7 @@ commercial_property:
     - id: iso_caf_bceg_code_compliance
       inference_utility_function: iso_caf_bceg_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -650,6 +683,7 @@ commercial_property:
     - id: energy_star_score
       inference_utility_function: energy_star_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -662,6 +696,7 @@ commercial_property:
     - id: building_permit_trail
       inference_utility_function: building_permit_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -674,6 +709,7 @@ commercial_property:
     - id: overhead_imagery_condition_score
       inference_utility_function: overhead_imagery_condition_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -686,6 +722,7 @@ commercial_property:
     - id: nfip_participation
       inference_utility_function: nfip_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1139,6 +1176,7 @@ commercial_property:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_class
@@ -1164,6 +1202,7 @@ commercial_property:
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1183,6 +1222,7 @@ commercial_property:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1198,6 +1238,7 @@ commercial_property:
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1213,6 +1254,7 @@ commercial_property:
     - id: electrical_system_quality
       inference_utility_function: electrical_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1228,6 +1270,7 @@ commercial_property:
     - id: renovation_history
       inference_utility_function: renovation_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1244,6 +1287,7 @@ commercial_property:
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.occupancy_hazard_grade
@@ -1263,6 +1307,7 @@ commercial_property:
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1279,6 +1324,7 @@ commercial_property:
     - id: contents_value_density
       inference_utility_function: contents_value_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1295,6 +1341,7 @@ commercial_property:
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1312,6 +1359,7 @@ commercial_property:
     - id: housekeeping_quality
       inference_utility_function: housekeeping_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1324,6 +1372,7 @@ commercial_property:
     - id: wind_zone
       inference_utility_function: wind_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1353,6 +1402,7 @@ commercial_property:
     - id: earthquake_zone
       inference_utility_function: earthquake_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1382,6 +1432,7 @@ commercial_property:
     - id: flood_zone
       inference_utility_function: flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1406,6 +1457,7 @@ commercial_property:
     - id: wildfire_zone
       inference_utility_function: wildfire_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1431,6 +1483,7 @@ commercial_property:
     - id: convective_storm_exposure
       inference_utility_function: convective_storm_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1446,6 +1499,7 @@ commercial_property:
     - id: geographic_concentration
       inference_utility_function: geographic_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1461,6 +1515,7 @@ commercial_property:
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.sprinkler_coverage
@@ -1480,6 +1535,7 @@ commercial_property:
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1495,6 +1551,7 @@ commercial_property:
     - id: fire_department_response
       inference_utility_function: fire_department_response_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1512,6 +1569,7 @@ commercial_property:
     - id: fire_separation
       inference_utility_function: fire_separation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1524,6 +1582,7 @@ commercial_property:
     - id: water_supply_adequacy
       inference_utility_function: water_supply_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1536,6 +1595,7 @@ commercial_property:
     - id: revenue_concentration
       inference_utility_function: revenue_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1557,6 +1617,7 @@ commercial_property:
     - id: recovery_time_estimate
       inference_utility_function: recovery_time_estimate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1573,6 +1634,7 @@ commercial_property:
     - id: supply_chain_dependency
       inference_utility_function: supply_chain_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1589,6 +1651,7 @@ commercial_property:
     - id: contingent_bi_exposure
       inference_utility_function: contingent_bi_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1610,6 +1673,7 @@ commercial_property:
     - id: business_continuity_planning
       inference_utility_function: business_continuity_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1622,6 +1686,7 @@ commercial_property:
     - id: fema_flood_zone
       inference_utility_function: fema_flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1637,6 +1702,7 @@ commercial_property:
     - id: noaa_hail_history
       inference_utility_function: noaa_hail_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1652,6 +1718,7 @@ commercial_property:
     - id: usfs_wildfire_hazard
       inference_utility_function: usfs_wildfire_hazard_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1667,6 +1734,7 @@ commercial_property:
     - id: usgs_seismic_vs30
       inference_utility_function: usgs_seismic_vs30_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1679,6 +1747,7 @@ commercial_property:
     - id: nhc_track_proximity
       inference_utility_function: nhc_track_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1694,6 +1763,7 @@ commercial_property:
     - id: iso_caf_bceg_code_compliance
       inference_utility_function: iso_caf_bceg_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1706,6 +1776,7 @@ commercial_property:
     - id: energy_star_score
       inference_utility_function: energy_star_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1718,6 +1789,7 @@ commercial_property:
     - id: building_permit_trail
       inference_utility_function: building_permit_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1730,6 +1802,7 @@ commercial_property:
     - id: overhead_imagery_condition_score
       inference_utility_function: overhead_imagery_condition_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1742,6 +1815,7 @@ commercial_property:
     - id: nfip_participation
       inference_utility_function: nfip_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2176,6 +2250,7 @@ commercial_property:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_class
@@ -2201,6 +2276,7 @@ commercial_property:
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2220,6 +2296,7 @@ commercial_property:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2235,6 +2312,7 @@ commercial_property:
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2250,6 +2328,7 @@ commercial_property:
     - id: electrical_system_quality
       inference_utility_function: electrical_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2265,6 +2344,7 @@ commercial_property:
     - id: renovation_history
       inference_utility_function: renovation_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2281,6 +2361,7 @@ commercial_property:
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.occupancy_hazard_grade
@@ -2300,6 +2381,7 @@ commercial_property:
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2316,6 +2398,7 @@ commercial_property:
     - id: contents_value_density
       inference_utility_function: contents_value_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2332,6 +2415,7 @@ commercial_property:
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2349,6 +2433,7 @@ commercial_property:
     - id: housekeeping_quality
       inference_utility_function: housekeeping_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2361,6 +2446,7 @@ commercial_property:
     - id: wind_zone
       inference_utility_function: wind_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2390,6 +2476,7 @@ commercial_property:
     - id: earthquake_zone
       inference_utility_function: earthquake_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2419,6 +2506,7 @@ commercial_property:
     - id: flood_zone
       inference_utility_function: flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2443,6 +2531,7 @@ commercial_property:
     - id: wildfire_zone
       inference_utility_function: wildfire_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2468,6 +2557,7 @@ commercial_property:
     - id: convective_storm_exposure
       inference_utility_function: convective_storm_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2483,6 +2573,7 @@ commercial_property:
     - id: geographic_concentration
       inference_utility_function: geographic_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2498,6 +2589,7 @@ commercial_property:
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.sprinkler_coverage
@@ -2517,6 +2609,7 @@ commercial_property:
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2532,6 +2625,7 @@ commercial_property:
     - id: fire_department_response
       inference_utility_function: fire_department_response_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2549,6 +2643,7 @@ commercial_property:
     - id: fire_separation
       inference_utility_function: fire_separation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2561,6 +2656,7 @@ commercial_property:
     - id: water_supply_adequacy
       inference_utility_function: water_supply_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2573,6 +2669,7 @@ commercial_property:
     - id: revenue_concentration
       inference_utility_function: revenue_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2594,6 +2691,7 @@ commercial_property:
     - id: recovery_time_estimate
       inference_utility_function: recovery_time_estimate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2610,6 +2708,7 @@ commercial_property:
     - id: supply_chain_dependency
       inference_utility_function: supply_chain_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2626,6 +2725,7 @@ commercial_property:
     - id: contingent_bi_exposure
       inference_utility_function: contingent_bi_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2647,6 +2747,7 @@ commercial_property:
     - id: business_continuity_planning
       inference_utility_function: business_continuity_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2659,6 +2760,7 @@ commercial_property:
     - id: fema_flood_zone
       inference_utility_function: fema_flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2674,6 +2776,7 @@ commercial_property:
     - id: noaa_hail_history
       inference_utility_function: noaa_hail_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2689,6 +2792,7 @@ commercial_property:
     - id: usfs_wildfire_hazard
       inference_utility_function: usfs_wildfire_hazard_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2704,6 +2808,7 @@ commercial_property:
     - id: usgs_seismic_vs30
       inference_utility_function: usgs_seismic_vs30_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2716,6 +2821,7 @@ commercial_property:
     - id: nhc_track_proximity
       inference_utility_function: nhc_track_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2731,6 +2837,7 @@ commercial_property:
     - id: iso_caf_bceg_code_compliance
       inference_utility_function: iso_caf_bceg_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2743,6 +2850,7 @@ commercial_property:
     - id: energy_star_score
       inference_utility_function: energy_star_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2755,6 +2863,7 @@ commercial_property:
     - id: building_permit_trail
       inference_utility_function: building_permit_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2767,6 +2876,7 @@ commercial_property:
     - id: overhead_imagery_condition_score
       inference_utility_function: overhead_imagery_condition_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2779,6 +2889,7 @@ commercial_property:
     - id: nfip_participation
       inference_utility_function: nfip_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3223,6 +3334,7 @@ commercial_property:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_class
@@ -3248,6 +3360,7 @@ commercial_property:
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3267,6 +3380,7 @@ commercial_property:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3282,6 +3396,7 @@ commercial_property:
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3297,6 +3412,7 @@ commercial_property:
     - id: electrical_system_quality
       inference_utility_function: electrical_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3312,6 +3428,7 @@ commercial_property:
     - id: renovation_history
       inference_utility_function: renovation_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3328,6 +3445,7 @@ commercial_property:
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.occupancy_hazard_grade
@@ -3347,6 +3465,7 @@ commercial_property:
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3363,6 +3482,7 @@ commercial_property:
     - id: contents_value_density
       inference_utility_function: contents_value_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3379,6 +3499,7 @@ commercial_property:
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3396,6 +3517,7 @@ commercial_property:
     - id: housekeeping_quality
       inference_utility_function: housekeeping_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3408,6 +3530,7 @@ commercial_property:
     - id: wind_zone
       inference_utility_function: wind_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3437,6 +3560,7 @@ commercial_property:
     - id: earthquake_zone
       inference_utility_function: earthquake_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3466,6 +3590,7 @@ commercial_property:
     - id: flood_zone
       inference_utility_function: flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3490,6 +3615,7 @@ commercial_property:
     - id: wildfire_zone
       inference_utility_function: wildfire_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3515,6 +3641,7 @@ commercial_property:
     - id: convective_storm_exposure
       inference_utility_function: convective_storm_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3530,6 +3657,7 @@ commercial_property:
     - id: geographic_concentration
       inference_utility_function: geographic_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3545,6 +3673,7 @@ commercial_property:
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.sprinkler_coverage
@@ -3564,6 +3693,7 @@ commercial_property:
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3579,6 +3709,7 @@ commercial_property:
     - id: fire_department_response
       inference_utility_function: fire_department_response_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3596,6 +3727,7 @@ commercial_property:
     - id: fire_separation
       inference_utility_function: fire_separation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3608,6 +3740,7 @@ commercial_property:
     - id: water_supply_adequacy
       inference_utility_function: water_supply_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3620,6 +3753,7 @@ commercial_property:
     - id: revenue_concentration
       inference_utility_function: revenue_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3641,6 +3775,7 @@ commercial_property:
     - id: recovery_time_estimate
       inference_utility_function: recovery_time_estimate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3657,6 +3792,7 @@ commercial_property:
     - id: supply_chain_dependency
       inference_utility_function: supply_chain_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3673,6 +3809,7 @@ commercial_property:
     - id: contingent_bi_exposure
       inference_utility_function: contingent_bi_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3694,6 +3831,7 @@ commercial_property:
     - id: business_continuity_planning
       inference_utility_function: business_continuity_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3706,6 +3844,7 @@ commercial_property:
     - id: fema_flood_zone
       inference_utility_function: fema_flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3721,6 +3860,7 @@ commercial_property:
     - id: noaa_hail_history
       inference_utility_function: noaa_hail_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3736,6 +3876,7 @@ commercial_property:
     - id: usfs_wildfire_hazard
       inference_utility_function: usfs_wildfire_hazard_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3751,6 +3892,7 @@ commercial_property:
     - id: usgs_seismic_vs30
       inference_utility_function: usgs_seismic_vs30_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3763,6 +3905,7 @@ commercial_property:
     - id: nhc_track_proximity
       inference_utility_function: nhc_track_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3778,6 +3921,7 @@ commercial_property:
     - id: iso_caf_bceg_code_compliance
       inference_utility_function: iso_caf_bceg_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3790,6 +3934,7 @@ commercial_property:
     - id: energy_star_score
       inference_utility_function: energy_star_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3802,6 +3947,7 @@ commercial_property:
     - id: building_permit_trail
       inference_utility_function: building_permit_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3814,6 +3960,7 @@ commercial_property:
     - id: overhead_imagery_condition_score
       inference_utility_function: overhead_imagery_condition_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3826,6 +3973,7 @@ commercial_property:
     - id: nfip_participation
       inference_utility_function: nfip_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4228,6 +4376,7 @@ commercial_property:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_class
@@ -4253,6 +4402,7 @@ commercial_property:
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4272,6 +4422,7 @@ commercial_property:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4287,6 +4438,7 @@ commercial_property:
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4302,6 +4454,7 @@ commercial_property:
     - id: electrical_system_quality
       inference_utility_function: electrical_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4317,6 +4470,7 @@ commercial_property:
     - id: renovation_history
       inference_utility_function: renovation_history_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4333,6 +4487,7 @@ commercial_property:
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: structured_data
         source: metadata.occupancy_hazard_grade
@@ -4352,6 +4507,7 @@ commercial_property:
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4368,6 +4524,7 @@ commercial_property:
     - id: contents_value_density
       inference_utility_function: contents_value_density_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4384,6 +4541,7 @@ commercial_property:
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4401,6 +4559,7 @@ commercial_property:
     - id: housekeeping_quality
       inference_utility_function: housekeeping_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4413,6 +4572,7 @@ commercial_property:
     - id: wind_zone
       inference_utility_function: wind_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4442,6 +4602,7 @@ commercial_property:
     - id: earthquake_zone
       inference_utility_function: earthquake_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4471,6 +4632,7 @@ commercial_property:
     - id: flood_zone
       inference_utility_function: flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4495,6 +4657,7 @@ commercial_property:
     - id: wildfire_zone
       inference_utility_function: wildfire_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4520,6 +4683,7 @@ commercial_property:
     - id: convective_storm_exposure
       inference_utility_function: convective_storm_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4535,6 +4699,7 @@ commercial_property:
     - id: geographic_concentration
       inference_utility_function: geographic_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4550,6 +4715,7 @@ commercial_property:
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.sprinkler_coverage
@@ -4569,6 +4735,7 @@ commercial_property:
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4584,6 +4751,7 @@ commercial_property:
     - id: fire_department_response
       inference_utility_function: fire_department_response_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4601,6 +4769,7 @@ commercial_property:
     - id: fire_separation
       inference_utility_function: fire_separation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4613,6 +4782,7 @@ commercial_property:
     - id: water_supply_adequacy
       inference_utility_function: water_supply_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4625,6 +4795,7 @@ commercial_property:
     - id: revenue_concentration
       inference_utility_function: revenue_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4646,6 +4817,7 @@ commercial_property:
     - id: recovery_time_estimate
       inference_utility_function: recovery_time_estimate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4662,6 +4834,7 @@ commercial_property:
     - id: supply_chain_dependency
       inference_utility_function: supply_chain_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4678,6 +4851,7 @@ commercial_property:
     - id: contingent_bi_exposure
       inference_utility_function: contingent_bi_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4699,6 +4873,7 @@ commercial_property:
     - id: business_continuity_planning
       inference_utility_function: business_continuity_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -4711,6 +4886,7 @@ commercial_property:
     - id: fema_flood_zone
       inference_utility_function: fema_flood_zone_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4726,6 +4902,7 @@ commercial_property:
     - id: noaa_hail_history
       inference_utility_function: noaa_hail_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4741,6 +4918,7 @@ commercial_property:
     - id: usfs_wildfire_hazard
       inference_utility_function: usfs_wildfire_hazard_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4756,6 +4934,7 @@ commercial_property:
     - id: usgs_seismic_vs30
       inference_utility_function: usgs_seismic_vs30_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4768,6 +4947,7 @@ commercial_property:
     - id: nhc_track_proximity
       inference_utility_function: nhc_track_proximity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4783,6 +4963,7 @@ commercial_property:
     - id: iso_caf_bceg_code_compliance
       inference_utility_function: iso_caf_bceg_code_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4795,6 +4976,7 @@ commercial_property:
     - id: energy_star_score
       inference_utility_function: energy_star_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4807,6 +4989,7 @@ commercial_property:
     - id: building_permit_trail
       inference_utility_function: building_permit_trail_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4819,6 +5002,7 @@ commercial_property:
     - id: overhead_imagery_condition_score
       inference_utility_function: overhead_imagery_condition_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4831,6 +5015,7 @@ commercial_property:
     - id: nfip_participation
       inference_utility_function: nfip_participation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:

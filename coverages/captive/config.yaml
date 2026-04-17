@@ -61,6 +61,7 @@ captive:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -76,6 +77,7 @@ captive:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -91,6 +93,7 @@ captive:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -106,6 +109,7 @@ captive:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -121,6 +125,7 @@ captive:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -136,6 +141,7 @@ captive:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -151,6 +157,7 @@ captive:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -166,6 +173,7 @@ captive:
     - id: regulatory_filings
       inference_utility_function: regulatory_filings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -186,6 +194,7 @@ captive:
     - id: enforcement_actions
       inference_utility_function: enforcement_actions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -206,6 +215,7 @@ captive:
     - id: license_status
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -226,6 +236,7 @@ captive:
     - id: compliance_certifications
       inference_utility_function: compliance_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -246,6 +257,7 @@ captive:
     - id: privacy_compliance
       inference_utility_function: privacy_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -266,6 +278,7 @@ captive:
     - id: industry_regulations
       inference_utility_function: industry_regulations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -286,6 +299,7 @@ captive:
     - id: board_composition
       inference_utility_function: board_composition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -306,6 +320,7 @@ captive:
     - id: leadership_stability
       inference_utility_function: leadership_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -326,6 +341,7 @@ captive:
     - id: executive_experience
       inference_utility_function: executive_experience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -346,6 +362,7 @@ captive:
     - id: governance_disclosure
       inference_utility_function: governance_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -366,6 +383,7 @@ captive:
     - id: audit_committee
       inference_utility_function: audit_committee_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -386,6 +404,7 @@ captive:
     - id: compensation_practices
       inference_utility_function: compensation_practices_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -406,6 +425,7 @@ captive:
     - id: vulnerability_management
       inference_utility_function: vulnerability_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -421,6 +441,7 @@ captive:
     - id: incident_response
       inference_utility_function: incident_response_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -436,6 +457,7 @@ captive:
     - id: security_certifications
       inference_utility_function: security_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -451,6 +473,7 @@ captive:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -466,6 +489,7 @@ captive:
     - id: security_budget
       inference_utility_function: security_budget_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -481,6 +505,7 @@ captive:
     - id: security_team
       inference_utility_function: security_team_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -496,6 +521,7 @@ captive:
     - id: penetration_testing
       inference_utility_function: penetration_testing_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -511,6 +537,7 @@ captive:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -531,6 +558,7 @@ captive:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -551,6 +579,7 @@ captive:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -571,6 +600,7 @@ captive:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -591,6 +621,7 @@ captive:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -611,6 +642,7 @@ captive:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1069,6 +1101,7 @@ captive:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1084,6 +1117,7 @@ captive:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1099,6 +1133,7 @@ captive:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1114,6 +1149,7 @@ captive:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1129,6 +1165,7 @@ captive:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1144,6 +1181,7 @@ captive:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1159,6 +1197,7 @@ captive:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1174,6 +1213,7 @@ captive:
     - id: regulatory_filings
       inference_utility_function: regulatory_filings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1194,6 +1234,7 @@ captive:
     - id: enforcement_actions
       inference_utility_function: enforcement_actions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1214,6 +1255,7 @@ captive:
     - id: license_status
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1234,6 +1276,7 @@ captive:
     - id: compliance_certifications
       inference_utility_function: compliance_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1254,6 +1297,7 @@ captive:
     - id: privacy_compliance
       inference_utility_function: privacy_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1274,6 +1318,7 @@ captive:
     - id: industry_regulations
       inference_utility_function: industry_regulations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1294,6 +1339,7 @@ captive:
     - id: board_composition
       inference_utility_function: board_composition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1314,6 +1360,7 @@ captive:
     - id: leadership_stability
       inference_utility_function: leadership_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1334,6 +1381,7 @@ captive:
     - id: executive_experience
       inference_utility_function: executive_experience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1354,6 +1402,7 @@ captive:
     - id: governance_disclosure
       inference_utility_function: governance_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1374,6 +1423,7 @@ captive:
     - id: audit_committee
       inference_utility_function: audit_committee_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1394,6 +1444,7 @@ captive:
     - id: compensation_practices
       inference_utility_function: compensation_practices_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1414,6 +1465,7 @@ captive:
     - id: vulnerability_management
       inference_utility_function: vulnerability_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1429,6 +1481,7 @@ captive:
     - id: incident_response
       inference_utility_function: incident_response_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1444,6 +1497,7 @@ captive:
     - id: security_certifications
       inference_utility_function: security_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1459,6 +1513,7 @@ captive:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1474,6 +1529,7 @@ captive:
     - id: security_budget
       inference_utility_function: security_budget_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1489,6 +1545,7 @@ captive:
     - id: security_team
       inference_utility_function: security_team_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1504,6 +1561,7 @@ captive:
     - id: penetration_testing
       inference_utility_function: penetration_testing_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1519,6 +1577,7 @@ captive:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1539,6 +1598,7 @@ captive:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1559,6 +1619,7 @@ captive:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1579,6 +1640,7 @@ captive:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1599,6 +1661,7 @@ captive:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1619,6 +1682,7 @@ captive:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2077,6 +2141,7 @@ captive:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2092,6 +2157,7 @@ captive:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2107,6 +2173,7 @@ captive:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2122,6 +2189,7 @@ captive:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2137,6 +2205,7 @@ captive:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2152,6 +2221,7 @@ captive:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2167,6 +2237,7 @@ captive:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2182,6 +2253,7 @@ captive:
     - id: regulatory_filings
       inference_utility_function: regulatory_filings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2202,6 +2274,7 @@ captive:
     - id: enforcement_actions
       inference_utility_function: enforcement_actions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2222,6 +2295,7 @@ captive:
     - id: license_status
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2242,6 +2316,7 @@ captive:
     - id: compliance_certifications
       inference_utility_function: compliance_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2262,6 +2337,7 @@ captive:
     - id: privacy_compliance
       inference_utility_function: privacy_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2282,6 +2358,7 @@ captive:
     - id: industry_regulations
       inference_utility_function: industry_regulations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2302,6 +2379,7 @@ captive:
     - id: board_composition
       inference_utility_function: board_composition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2322,6 +2400,7 @@ captive:
     - id: leadership_stability
       inference_utility_function: leadership_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2342,6 +2421,7 @@ captive:
     - id: executive_experience
       inference_utility_function: executive_experience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2362,6 +2442,7 @@ captive:
     - id: governance_disclosure
       inference_utility_function: governance_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2382,6 +2463,7 @@ captive:
     - id: audit_committee
       inference_utility_function: audit_committee_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2402,6 +2484,7 @@ captive:
     - id: compensation_practices
       inference_utility_function: compensation_practices_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2422,6 +2505,7 @@ captive:
     - id: vulnerability_management
       inference_utility_function: vulnerability_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2437,6 +2521,7 @@ captive:
     - id: incident_response
       inference_utility_function: incident_response_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2452,6 +2537,7 @@ captive:
     - id: security_certifications
       inference_utility_function: security_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2467,6 +2553,7 @@ captive:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2482,6 +2569,7 @@ captive:
     - id: security_budget
       inference_utility_function: security_budget_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2497,6 +2585,7 @@ captive:
     - id: security_team
       inference_utility_function: security_team_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2512,6 +2601,7 @@ captive:
     - id: penetration_testing
       inference_utility_function: penetration_testing_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2527,6 +2617,7 @@ captive:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2547,6 +2638,7 @@ captive:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2567,6 +2659,7 @@ captive:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2587,6 +2680,7 @@ captive:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2607,6 +2701,7 @@ captive:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2627,6 +2722,7 @@ captive:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3085,6 +3181,7 @@ captive:
     - id: revenue_growth
       inference_utility_function: revenue_growth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3100,6 +3197,7 @@ captive:
     - id: profitability
       inference_utility_function: profitability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3115,6 +3213,7 @@ captive:
     - id: liquidity_ratio
       inference_utility_function: liquidity_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3130,6 +3229,7 @@ captive:
     - id: debt_ratio
       inference_utility_function: debt_ratio_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3145,6 +3245,7 @@ captive:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3160,6 +3261,7 @@ captive:
     - id: stock_performance
       inference_utility_function: stock_performance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3175,6 +3277,7 @@ captive:
     - id: funding_status
       inference_utility_function: funding_status_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3190,6 +3293,7 @@ captive:
     - id: regulatory_filings
       inference_utility_function: regulatory_filings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3210,6 +3314,7 @@ captive:
     - id: enforcement_actions
       inference_utility_function: enforcement_actions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3230,6 +3335,7 @@ captive:
     - id: license_status
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3250,6 +3356,7 @@ captive:
     - id: compliance_certifications
       inference_utility_function: compliance_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3270,6 +3377,7 @@ captive:
     - id: privacy_compliance
       inference_utility_function: privacy_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3290,6 +3398,7 @@ captive:
     - id: industry_regulations
       inference_utility_function: industry_regulations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3310,6 +3419,7 @@ captive:
     - id: board_composition
       inference_utility_function: board_composition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3330,6 +3440,7 @@ captive:
     - id: leadership_stability
       inference_utility_function: leadership_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3350,6 +3461,7 @@ captive:
     - id: executive_experience
       inference_utility_function: executive_experience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3370,6 +3482,7 @@ captive:
     - id: governance_disclosure
       inference_utility_function: governance_disclosure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3390,6 +3503,7 @@ captive:
     - id: audit_committee
       inference_utility_function: audit_committee_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3410,6 +3524,7 @@ captive:
     - id: compensation_practices
       inference_utility_function: compensation_practices_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -3430,6 +3545,7 @@ captive:
     - id: vulnerability_management
       inference_utility_function: vulnerability_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3445,6 +3561,7 @@ captive:
     - id: incident_response
       inference_utility_function: incident_response_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3460,6 +3577,7 @@ captive:
     - id: security_certifications
       inference_utility_function: security_certifications_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3475,6 +3593,7 @@ captive:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3490,6 +3609,7 @@ captive:
     - id: security_budget
       inference_utility_function: security_budget_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3505,6 +3625,7 @@ captive:
     - id: security_team
       inference_utility_function: security_team_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3520,6 +3641,7 @@ captive:
     - id: penetration_testing
       inference_utility_function: penetration_testing_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3535,6 +3657,7 @@ captive:
     - id: business_continuity
       inference_utility_function: business_continuity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3555,6 +3678,7 @@ captive:
     - id: disaster_recovery
       inference_utility_function: disaster_recovery_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3575,6 +3699,7 @@ captive:
     - id: operational_resilience
       inference_utility_function: operational_resilience_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3595,6 +3720,7 @@ captive:
     - id: technology_stack
       inference_utility_function: technology_stack_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3615,6 +3741,7 @@ captive:
     - id: process_maturity
       inference_utility_function: process_maturity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3635,6 +3762,7 @@ captive:
     - id: quality_management
       inference_utility_function: quality_management_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:

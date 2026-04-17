@@ -9,7 +9,7 @@ the initial build; remaining items tracked below.
 | ≥ 22 unique signal IDs in primary registry | 32 | ✅ |
 | ≥ 60 coverage-specific inference functions | 32 | ⏳ +28 derived functions planned |
 | Primary config ≥ 40 scored signals | 32 | ⏳ +8 to reach 40 |
-| `expectation_level` on every scored signal | partial | ⏳ retrofit |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | 5/5 | ✅ |
 | Parametric ILF curves per product_type | auto-generated | ✅ |
 | Guardrails populated (floor/cap/ratios) | all 5 sub-configs | ✅ |
