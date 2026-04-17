@@ -1,0 +1,54 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — V6 Phase B3: Product Liability / Recall
+# =============================================================================
+
+coverage_line: prodlib
+coverage_key: prodlib
+phase: v6_b3
+description: "V6/B3 — Product Liability / Recall"
+version: "1.0.0"
+
+default_product_types:
+  - product_liability
+  - recall_expense
+
+default_markets: [us, eu]
+default_currency: USD
+default_min_premium: 15000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: product_category
+  - field: annual_units_distributed
+  - field: limit
+
+routing_field: product_category
+
+configurations:
+  - name: prodlib_consumer_goods
+    model_specificity: 1
+    description: "CPSC-regulated consumer goods."
+    routing_constraints: [{ field: product_category, operator: "==", value: consumer_goods }]
+  - name: prodlib_medical_device
+    model_specificity: 1
+    description: "FDA-regulated medical devices."
+    routing_constraints: [{ field: product_category, operator: "==", value: medical_device }]
+  - name: prodlib_auto_parts
+    model_specificity: 1
+    description: "NHTSA-regulated auto parts."
+    routing_constraints: [{ field: product_category, operator: "==", value: auto_parts }]
+  - name: prodlib_food_bev
+    model_specificity: 1
+    description: "USDA FSIS / FDA-regulated food + beverage."
+    routing_constraints: [{ field: product_category, operator: "==", value: food_bev }]
+  - name: prodlib_sme
+    model_specificity: 3
+    description: "Sub-scale manufacturers / distributors."
+    routing_constraints: [{ field: annual_units_distributed, operator: "<", value: 100000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}
