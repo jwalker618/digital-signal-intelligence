@@ -57,6 +57,38 @@ jobs:
           path: rust/dsi-core/target/release/libdsi_core.*
           if-no-files-found: ignore
 
+  rust-scoring-parity:
+    name: Rust↔Python scoring parity + p99 benchmark
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ needs.setup.outputs.run-version }}
+
+      - name: Install maturin + pytest
+        run: pip install maturin pytest
+
+      - name: Build + install dsi-core wheel
+        working-directory: rust/dsi-core
+        run: |
+          maturin build --release
+          pip install target/wheels/dsi_core-*.whl
+
+      - name: Parity test (Rust vs Python compute_composite)
+        run: pytest tests/unit/test_scoring_parity.py -q
+
+      - name: p99 benchmark (blocking — target < 5 ms)
+        run: pytest tests/unit/test_scoring_benchmark.py -s
+
+
   test:
     name: Run Tests
     needs: setup
