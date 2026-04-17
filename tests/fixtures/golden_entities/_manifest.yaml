@@ -41,6 +41,100 @@ coverages:
         product_type: standard
         industry_sector: AEROSPACE
         domain: airbus.com
+    - entity_id: lockheed_martin
+      name: Lockheed Martin Corporation
+      domain: lockheedmartin.com
+      registry_id: US-Maryland-0000936468
+      minimum_viable_input:
+        revenue: 67571000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: DEFENSE
+        domain: lockheedmartin.com
+    - entity_id: raytheon
+      name: RTX Corporation
+      domain: rtx.com
+      registry_id: US-Delaware-0000101829
+      minimum_viable_input:
+        revenue: 68920000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: DEFENSE
+        domain: rtx.com
+    - entity_id: spacex
+      name: Space Exploration Technologies Corp.
+      config_id: aerospace_space
+      domain: spacex.com
+      registry_id: US-Delaware-0001181412
+      minimum_viable_input:
+        revenue: 9000000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SPACE
+        domain: spacex.com
+    - entity_id: blue_origin
+      name: Blue Origin, LLC
+      config_id: aerospace_space
+      domain: blueorigin.com
+      registry_id: US-Delaware-0001678895
+      minimum_viable_input:
+        revenue: 500000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SPACE
+        domain: blueorigin.com
+    - entity_id: bell_helicopter
+      name: Bell Textron Inc.
+      config_id: aerospace_rotary
+      domain: bellflight.com
+      registry_id: US-Delaware-0000217346
+      minimum_viable_input:
+        revenue: 3250000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: ROTORCRAFT
+        domain: bellflight.com
+    - entity_id: skydio
+      name: Skydio, Inc.
+      config_id: aerospace_unmanned
+      domain: skydio.com
+      registry_id: US-Delaware-0001636027
+      minimum_viable_input:
+        revenue: 125000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: UAS
+        domain: skydio.com
+    - entity_id: aar_corp
+      name: AAR Corp.
+      config_id: aerospace_mro
+      domain: aarcorp.com
+      registry_id: US-Delaware-0000001750
+      minimum_viable_input:
+        revenue: 2200000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MRO
+        domain: aarcorp.com
+    - entity_id: virgin_galactic
+      name: Virgin Galactic Holdings, Inc.
+      config_id: aerospace_space
+      domain: virgingalactic.com
+      registry_id: US-Delaware-0001706946
+      minimum_viable_input:
+        revenue: 7000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: SPACE
+        domain: virgingalactic.com
 
   casualty:
     - entity_id: walmart

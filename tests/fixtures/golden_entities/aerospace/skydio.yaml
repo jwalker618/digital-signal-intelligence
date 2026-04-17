@@ -1,0 +1,22 @@
+entity_id: skydio
+name: Skydio, Inc.
+coverage: aerospace
+config_id: aerospace_unmanned
+domain: skydio.com
+registry_id: US-Delaware-0001636027
+minimum_viable_input:
+  revenue: 125000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: UAS
+  domain: skydio.com
+expected:
+  composite_score: 340.0
+  tier: 5
+  decision: decline
+  recommended_premium: 5359.69
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
