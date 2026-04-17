@@ -112,6 +112,34 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Stage 6 batch 2 — 5 more D3 extractors deepened
+
+Extractor deepening continues — 5 more D3 extractors moved from
+reachability probes to field-level parsing. Total D3 deepenings now
+8 of 18 (≈44%).
+
+- **StanfordSCACExtractor**: filing count, most-recent + first-filed
+  dates, outcome breakdown (settled/dismissed/pending), per-row
+  sample.
+- **FINRABrokerCheckExtractor**: JSON-API first (firm hits, firm-name
+  matches, CRD numbers, total disclosures); falls back to the HTML
+  probe when the JSON endpoint fails.
+- **NHTSARecallsExtractor**: aggregates 3 model-years (2022-2024),
+  returns per-year counts + component-type top-5 +
+  consequence-phrase top-3 + NHTSA campaign-ID sample.
+- **CPSCRecallsExtractor**: hazard-type top-5, product-type top-5,
+  injury + death totals, total units-recalled, most-recent-recall
+  date.
+- **FDARecallsExtractor**: Class I/II/III classification breakdown,
+  per-year recall histogram, distribution-pattern top-3.
+
+5 new monkeypatched tests in `tests/unit/test_extractors_d3.py`
+(12 total). All D3 registry + kill-switch + free-tier contracts
+still pass.
+
+Verification: 12/12 D3 tests pass, 221/221 goldens green, compliance
+strict PASS.
+
 ### Stage 5.2-5.5 — Rust port, PyO3 wrapper, parity, p99 benchmark
 
 Full Rust fast-path landed for the pure scoring algorithm.

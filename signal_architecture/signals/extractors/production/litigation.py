@@ -128,15 +128,63 @@ class StanfordSCACExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 604_800
     KILL_SWITCH_ENV = "DSI_DISABLE_SCAC"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the SCAC filings-search HTML for: filing-count, most-recent
+    # filing date, first-filed date, outcome breakdown (settled /
+    # dismissed / pending), and sector distribution.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text(f"https://securities.stanford.edu/filings.html?company={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        rows = re.findall(r"<tr[^>]*>.*?</tr>", txt, flags=re.DOTALL | re.IGNORECASE)
+        filing_dates: list[str] = []
+        outcomes: Counter = Counter()
+        filing_rows: list[dict] = []
+        for row in rows:
+            cells = re.findall(r"<td[^>]*>(.*?)</td>", row, flags=re.DOTALL | re.IGNORECASE)
+            if len(cells) < 3:
+                continue
+            stripped = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
+            date_match = next(
+                (c for c in stripped if re.match(r"\d{2}/\d{2}/\d{4}|\d{4}-\d{2}-\d{2}", c or "")),
+                None,
+            )
+            if not date_match:
+                continue
+            filing_dates.append(date_match)
+            row_text = " ".join(stripped).lower()
+            if "settled" in row_text:
+                outcomes["settled"] += 1
+            elif "dismiss" in row_text:
+                outcomes["dismissed"] += 1
+            elif "pending" in row_text or "active" in row_text:
+                outcomes["pending"] += 1
+            filing_rows.append({
+                "date": date_match,
+                "cells": stripped[:5],
+            })
+
+        def _date_key(d: str) -> str:
+            if re.match(r"\d{4}-", d):
+                return d
+            return d[-4:] + d[:2] + d[3:5]
+
+        most_recent = max(filing_dates, key=_date_key) if filing_dates else ""
+        first_filed = min(filing_dates, key=_date_key) if filing_dates else ""
+
         return self._create_success_result({
             "page_reachable": bool(txt),
             "mentions_company": q.lower() in txt.lower(),
+            "filing_count": len(filing_dates),
+            "most_recent_filing": most_recent,
+            "first_filed": first_filed,
+            "outcome_breakdown": dict(outcomes),
+            "filing_rows_sample": filing_rows[:5],
         })
 
 
@@ -164,13 +212,49 @@ class FINRABrokerCheckExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 604_800
     KILL_SWITCH_ENV = "DSI_DISABLE_FINRA"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the BrokerCheck JSON endpoint for: firm hits count, CRD
+    # numbers, disclosure counts (if surfaced), firm-name matches.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
-            txt = _text(f"https://brokercheck.finra.org/search/genericsearch?q={q}")
+            data = _json(
+                f"https://api.brokercheck.finra.org/search/firm?hl=true&nrows=12&query={q}&r=25&sort=score+desc"
+            )
         except httpx.HTTPError as e:
-            return self._create_error_result(str(e))
-        return self._create_success_result({"endpoint_reachable": bool(txt)})
+            # Fallback: HTML probe when the JSON API isn't reachable.
+            try:
+                txt = _text(f"https://brokercheck.finra.org/search/genericsearch?q={q}")
+            except httpx.HTTPError as ee:
+                return self._create_error_result(str(ee))
+            return self._create_success_result({
+                "endpoint_reachable": bool(txt),
+                "mentions_company": q.lower() in (txt or "").lower(),
+            })
+
+        hits = (data.get("hits") or {}).get("hits") or []
+        firm_names = []
+        crd_numbers = []
+        total_disclosures = 0
+        for h in hits:
+            src = h.get("_source", {}) or {}
+            firm_names.append(src.get("firm_name") or src.get("org_name") or "")
+            crd = src.get("firm_source_id") or src.get("ind_source_id") or ""
+            if crd:
+                crd_numbers.append(str(crd))
+            disclosures = src.get("firm_disclosure_count") or src.get("ind_disclosure_count") or 0
+            try:
+                total_disclosures += int(disclosures)
+            except (TypeError, ValueError):
+                pass
+
+        return self._create_success_result({
+            "endpoint_reachable": True,
+            "firm_hits": len(hits),
+            "firm_names_top": firm_names[:5],
+            "crd_numbers_top": crd_numbers[:5],
+            "total_disclosures_hit": total_disclosures,
+        })
 
 
 class SECIAPDExtractor(_LitigationBase):
@@ -415,16 +499,43 @@ class NHTSARecallsExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_NHTSA"
 
+    # V6/Stage-6 field-depth expansion.
+    # Aggregates across 3 recent model years, returning per-year recall
+    # counts plus component-type + consequence-type breakdowns.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
-        try:
-            data = _json(
-                f"https://api.nhtsa.gov/recalls/recallsByVehicle?make={q}&modelYear=2024"
-            )
-        except httpx.HTTPError as e:
-            return self._create_error_result(str(e))
+        per_year: dict[int, int] = {}
+        component_counter: Counter = Counter()
+        consequence_counter: Counter = Counter()
+        nhtsa_ids: list[str] = []
+        for year in (2024, 2023, 2022):
+            try:
+                data = _json(
+                    f"https://api.nhtsa.gov/recalls/recallsByVehicle?make={q}&modelYear={year}"
+                )
+            except httpx.HTTPError:
+                continue
+            per_year[year] = int(data.get("Count") or 0)
+            for r in (data.get("results") or [])[:25]:
+                component = r.get("Component") or ""
+                if component:
+                    component_counter[component.split(":")[0].strip()] += 1
+                consequence = r.get("Consequence") or ""
+                if consequence:
+                    # first phrase of the consequence string
+                    consequence_counter[consequence.split(".")[0][:60]] += 1
+                nhtsa_id = r.get("NHTSACampaignNumber")
+                if nhtsa_id:
+                    nhtsa_ids.append(str(nhtsa_id))
+
+        total = sum(per_year.values())
         return self._create_success_result({
-            "recall_count": data.get("Count"),
+            "recall_count": total,
+            "recalls_per_year": per_year,
+            "component_top": component_counter.most_common(5),
+            "consequence_top": consequence_counter.most_common(3),
+            "nhtsa_campaign_ids_sample": nhtsa_ids[:10],
         })
 
 
@@ -437,7 +548,11 @@ class CPSCRecallsExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_CPSC"
 
+    # V6/Stage-6 field-depth expansion.
+    # Hazard-type + product-type + injury-count aggregations from the
+    # CPSC Recall REST endpoint.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             data = _json(
@@ -445,8 +560,42 @@ class CPSCRecallsExtractor(_LitigationBase):
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        recalls = data if isinstance(data, list) else []
+        hazard_counter: Counter = Counter()
+        product_counter: Counter = Counter()
+        injuries_total = 0
+        deaths_total = 0
+        units_total = 0
+        recall_dates: list[str] = []
+        for r in recalls:
+            for h in r.get("Hazards", []) or []:
+                name = h.get("Name") or ""
+                if name:
+                    hazard_counter[name] += 1
+            for p in r.get("Products", []) or []:
+                name = p.get("Type") or p.get("Name") or ""
+                if name:
+                    product_counter[name] += 1
+            for i in r.get("Injuries", []) or []:
+                injuries_total += int(i.get("Count") or 0)
+            deaths_total += int(r.get("NumberOfDeaths") or 0) or 0
+            units = r.get("NumberOfUnits") or 0
+            try:
+                units_total += int(str(units).replace(",", "")) if units else 0
+            except ValueError:
+                pass
+            date = r.get("RecallDate") or ""
+            if date:
+                recall_dates.append(str(date)[:10])
         return self._create_success_result({
-            "result_count": len(data) if isinstance(data, list) else 0,
+            "result_count": len(recalls),
+            "hazard_top": hazard_counter.most_common(5),
+            "product_top": product_counter.most_common(5),
+            "injuries_total": injuries_total,
+            "deaths_total": deaths_total,
+            "units_recalled_total": units_total,
+            "most_recent_recall": max(recall_dates) if recall_dates else "",
         })
 
 
@@ -455,16 +604,43 @@ class FDARecallsExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_FDA"
 
+    # V6/Stage-6 field-depth expansion.
+    # Returns classification breakdown (I/II/III), distribution-pattern
+    # aggregation, and per-year recall histogram from the FDA food
+    # enforcement endpoint.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             data = _json(
-                f"https://api.fda.gov/food/enforcement.json?search=recalling_firm:{q}&limit=10"
+                f"https://api.fda.gov/food/enforcement.json?search=recalling_firm:{q}&limit=100"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        meta = (data.get("meta") or {}).get("results") or {}
+        total = int(meta.get("total") or 0)
+        results = data.get("results") or []
+        class_counter: Counter = Counter()
+        year_counter: Counter = Counter()
+        distribution_counter: Counter = Counter()
+        for r in results:
+            classification = r.get("classification") or ""
+            if classification:
+                class_counter[classification] += 1
+            date = r.get("recall_initiation_date") or ""
+            if len(date) >= 4:
+                year_counter[date[:4]] += 1
+            pattern = (r.get("distribution_pattern") or "")[:60]
+            if pattern:
+                distribution_counter[pattern] += 1
+
         return self._create_success_result({
-            "enforcement_hits": (data.get("meta", {}) or {}).get("results", {}).get("total"),
+            "enforcement_hits": total,
+            "classification_breakdown": dict(class_counter),
+            "recalls_per_year": dict(sorted(year_counter.items())),
+            "distribution_pattern_top": distribution_counter.most_common(3),
+            "result_sample_count": len(results),
         })
 
 
