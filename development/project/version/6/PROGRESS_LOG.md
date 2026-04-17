@@ -78,7 +78,7 @@ concrete list of new signals + inference functions.
 | 4.7 | A4 D&O — add 14 new governance signals to do_public | **DONE** |
 | 4.8 | A5 FI — add 18 new signals across bank/insurer/fintech/crypto | **DONE** |
 | 4.9 | A6 Aerospace — add 10 new signals across 5 depth-starved sub-configs | **DONE** |
-| 4.9 | A7 Marine — add 13 new signals | PENDING |
+| 4.10b | A7 Marine — add 10 new AIS / port-state signals across 5 sub-configs | **DONE** |
 | 4.9 | A8 — Cyber + PI + Energy finishing | PENDING |
 | **4.10** | Promote calibrate from advisory to **BLOCKING** | **DONE** |
 
@@ -111,6 +111,39 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.10b — A7 Marine signal expansion
+
+(Renumbered from 4.9 to 4.10b since 4.10 was already used for the
+Config Health Gate calibrate promotion.)
+
+10 new signal IDs added across 5 depth-starved marine sub-configs
+(marine unique-ID count 71 → 81, mature bar ≥ 30 ✅):
+
+- `marine_tanker` (+4): `ais_dark_activity_rate`,
+  `ais_spoofing_signal`, `paris_mou_detention_history`,
+  `sts_transfer_density`.
+- `marine_cargo` (+4): `paris_mou_detention_history`,
+  `tokyo_mou_detention_history`, `flag_of_convenience_proxy`,
+  `vessel_age_profile_curve`.
+- `marine_offshore` (+3): `class_society_transfer_frequency`,
+  `imo_cic_campaign_results`, `vessel_age_profile_curve`.
+- `marine_war_risk` (+3): `piracy_corridor_exposure`,
+  `ais_dark_activity_rate`, `flag_of_convenience_proxy`.
+- `marine_high_value` (+4): `paris_mou_detention_history`,
+  `tokyo_mou_detention_history`, `vessel_age_profile_curve`,
+  `class_society_transfer_frequency`.
+
+Signals reused across sub-configs where semantically aligned —
+`paris_mou_detention_history` and `vessel_age_profile_curve` register
+in 3 sub-configs each with context-specific weights.
+
+Inference module `a7_maturation_signals.py` registers 10 neutral
+scaffolds. Real bodies wire in with Stage 6 (AIS Hub, Marine Cadastre,
+EMSA THETIS, Paris MoU, Tokyo MoU, IMO GISIS deep, IMB piracy feed).
+
+Verification: calibrate marine PASS on all 7 sub-configs (24,276
+fixtures, 0 errors), 221/221 goldens green, compliance strict PASS.
 
 ### Stage 4.9 — A6 Aerospace signal expansion
 

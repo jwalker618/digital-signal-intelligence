@@ -2229,6 +2229,63 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: tokyo_mou_detention_history
+      inference_utility_function: tokyo_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: flag_of_convenience_proxy
+      inference_utility_function: flag_of_convenience_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -2797,6 +2854,60 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: ais_dark_activity_rate
+      inference_utility_function: ais_dark_activity_rate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: ais_spoofing_signal
+      inference_utility_function: ais_spoofing_signal_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: sts_transfer_density
+      inference_utility_function: sts_transfer_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -3369,6 +3480,45 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: class_society_transfer_frequency
+      inference_utility_function: class_society_transfer_frequency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: imo_cic_campaign_results
+      inference_utility_function: imo_cic_campaign_results_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -3831,6 +3981,45 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: piracy_corridor_exposure
+      inference_utility_function: piracy_corridor_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.06
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: ais_dark_activity_rate
+      inference_utility_function: ais_dark_activity_rate_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: flag_of_convenience_proxy
+      inference_utility_function: flag_of_convenience_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: behavioural
@@ -4279,6 +4468,63 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: tokyo_mou_detention_history
+      inference_utility_function: tokyo_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: class_society_transfer_frequency
+      inference_utility_function: class_society_transfer_frequency_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
