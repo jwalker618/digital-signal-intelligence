@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { api, fmtDate, fmtRelative } from "@/lib/api";
+import { formatNumber, formatPercent } from "@/lib/format";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type {
   DriftAlert,
@@ -101,8 +102,8 @@ export default function WorldEnginePage() {
       </header>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 
@@ -118,7 +119,7 @@ export default function WorldEnginePage() {
                 {maturity.active_relationships} relationships
               </div>
               <div className="text-xs opacity-60 mt-2">
-                coverage {(maturity.coverage_ratio * 100).toFixed(1)}%
+                coverage {formatPercent(maturity.coverage_ratio, 1)}
               </div>
             </>
           ) : (
@@ -226,10 +227,10 @@ export default function WorldEnginePage() {
                 </td>
                 <td className="py-1 px-3 text-xs">{r.relationship_type}</td>
                 <td className="py-1 px-3 text-right tabular-nums">
-                  {r.strength.toFixed(2)}
+                  {formatNumber(r.strength, 2)}
                 </td>
                 <td className="py-1 px-3 text-right tabular-nums">
-                  {(r.confidence * 100).toFixed(0)}%
+                  {formatPercent(r.confidence)}
                 </td>
                 <td className="py-1 px-3 text-right tabular-nums">
                   {r.evidence_count}

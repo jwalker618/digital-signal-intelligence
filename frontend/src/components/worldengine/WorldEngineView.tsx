@@ -12,10 +12,10 @@ import {
   ResponsiveContainer, Cell
 } from "recharts";
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatCurrency, formatPercent } from "@/lib/format";
+import { tooltipStyle } from "@/lib/chartConfig";
 
 const TIER_COLORS = ['var(--dsi-positive)', 'var(--dsi-info)', 'var(--dsi-warning)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
-const tooltipStyle = { backgroundColor: 'var(--dsi-chart-tooltip-bg)', borderColor: 'var(--dsi-chart-tooltip-border)', color: '#f8fafc', borderRadius: '8px', fontSize: '12px' };
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
   'High': 'text-dsi-negative',
@@ -72,7 +72,7 @@ export default function WorldEngineView() {
   }, [submissions]);
 
   const tierChartData = Object.entries(portfolio.tierDist).map(([t, c]) => ({ tier: `Tier ${t}`, count: c, tierNum: Number(t) })).sort((a, b) => a.tierNum - b.tierNum);
-  const covChartData = Object.entries(portfolio.covDist).map(([c, n]) => ({ coverage: c, count: n, pct: ((n / (portfolio.count || 1)) * 100).toFixed(0) })).sort((a, b) => b.count - a.count);
+  const covChartData = Object.entries(portfolio.covDist).map(([c, n]) => ({ coverage: c, count: n, pct: formatNumber((n / (portfolio.count || 1)) * 100) })).sort((a, b) => b.count - a.count);
 
   // Shock result — recalculates when active shocks change
   const shockResult: ShockResult | null = useMemo(() => {
@@ -124,10 +124,10 @@ export default function WorldEngineView() {
           <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Total Submissions</span><span className="text-xl font-black text-dsi-selected">{portfolio.count}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">${(portfolio.totalPremium / 1000000).toFixed(1)}M</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNumber(portfolio.avgScore, 0)}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Approval Rate</span><span className="text-xl font-black text-dsi-positive">{portfolio.count > 0 ? ((portfolio.decDist['approve'] || 0) / portfolio.count * 100).toFixed(0) : 0}%</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-warning">{portfolio.count > 0 ? ((portfolio.decDist['refer'] || 0) / portfolio.count * 100).toFixed(0) : 0}%</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNumber(portfolio.avgScore)}</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Approval Rate</span><span className="text-xl font-black text-dsi-positive">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-warning">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span></div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
@@ -177,7 +177,7 @@ export default function WorldEngineView() {
                   <div className="flex items-center gap-2 mb-0.5">
                     <span className="text-sm font-bold">{es.name}</span>
                     <span className={`text-[10px] font-bold ${LIKELIHOOD_COLOR[es.likelihood_label] || 'opacity-50'}`}>
-                      {(es.likelihood * 100).toFixed(0)}% {es.likelihood_label}
+                      {formatPercent(es.likelihood)} {es.likelihood_label}
                     </span>
                   </div>
                   <p className="text-xs opacity-60 line-clamp-1">{es.description}</p>
@@ -277,8 +277,8 @@ export default function WorldEngineView() {
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-warning">{shockResult.total_affected}</span></div>
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Tier Migrations</span><span className="text-xl font-black text-dsi-negative">{shockResult.tier_migrations}</span></div>
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Decision Changes</span><span className="text-xl font-black text-dsi-negative">{shockResult.decision_changes}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>{shockResult.premium_delta > 0 ? '+' : ''}${(shockResult.premium_delta / 1000).toFixed(0)}K</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Change</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>{shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${((shockResult.premium_delta / shockResult.aggregate_premium_before) * 100).toFixed(1)}%` : 'N/A'}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>{`${shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K`}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Change</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>{shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span></div>
               </div>
 
               {/* Before/After charts */}
@@ -354,7 +354,7 @@ export default function WorldEngineView() {
                         </td>
                         <td className="py-2 px-2 text-right">
                           {item.premium_delta !== 0
-                            ? <span className={item.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}>{item.premium_delta > 0 ? '+' : ''}${item.premium_delta.toLocaleString()}</span>
+                            ? <span className={item.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}>{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
                             : <span className="opacity-30">—</span>}
                         </td>
                         <td className="py-2 px-2 text-xs opacity-50 truncate max-w-[150px]" title={item.shocks_applied.join(', ')}>

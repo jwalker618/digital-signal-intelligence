@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, Download, Filter } from "lucide-react";
 
 import { api, fmtDate } from "@/lib/api";
+import { formatNumber } from "@/lib/format";
 import { StateDiffViewer } from "@/components/shared/StateDiffViewer";
 import type { AuditEventRow } from "@/types/admin";
 
@@ -154,8 +155,8 @@ export default function AuditPage() {
       </section>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 
@@ -196,7 +197,7 @@ export default function AuditPage() {
                       {e.user_id ? e.user_id.slice(0, 8) : "—"}
                     </td>
                     <td className="py-1 px-3 tabular-nums text-xs">
-                      {e.duration_ms ? `${e.duration_ms.toFixed(0)} ms` : "—"}
+                      {e.duration_ms ? `${formatNumber(e.duration_ms)} ms` : "—"}
                     </td>
                   </tr>
                   {open && (

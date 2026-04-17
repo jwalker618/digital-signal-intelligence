@@ -88,7 +88,7 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   return (
     <>
       {warning && !isPublic && (
-        <div className="fixed top-2 right-2 z-50 bg-amber-600/90 text-white text-sm px-3 py-2 rounded shadow">
+        <div className="fixed top-2 right-2 z-50 bg-dsi-warning/90 text-dsi-background text-sm px-3 py-2 rounded shadow">
           {warning}
         </div>
       )}

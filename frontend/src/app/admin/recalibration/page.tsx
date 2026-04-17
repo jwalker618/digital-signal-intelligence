@@ -68,8 +68,8 @@ export default function RecalibrationPage() {
       </header>
 
       {error && (
-        <div className="border-2 border-red-500 rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-red-400" /> {error}
+        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
         </div>
       )}
 

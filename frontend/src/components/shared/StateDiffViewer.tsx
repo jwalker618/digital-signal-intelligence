@@ -69,7 +69,7 @@ export function StateDiffViewer({
             <tr
               key={k}
               className={`border-t border-dsi-outline/20 ${
-                changed ? "bg-amber-500/5" : ""
+                changed ? "bg-dsi-warning/5" : ""
               }`}
             >
               <td className="py-1 pr-2 align-top">{k}</td>

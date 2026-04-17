@@ -1,25 +1,62 @@
 "use client";
 
-import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
-import StickyHeader from "@/components/shared/StickyHeader";
-import { FileText, Building2, DollarSign, ArrowRightLeft, Calendar, Activity } from "lucide-react";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { KpiTile } from "@/components/base/content/primatives";
+import { FileText, Building2, DollarSign, ArrowRightLeft, Calendar } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber, formatDate, formatText } from "@/lib/format";
+
+interface WaterfallRow {
+  label: string;
+  value: React.ReactNode;
+  highlight?: boolean;
+  sub?: boolean;
+  accent?: boolean;
+}
+
+const rowClass = (row: WaterfallRow) => {
+  if (row.accent) return "bg-dsi-selected/10 border border-dsi-selected/20";
+  if (row.highlight) return "bg-dsi-background/30 font-semibold";
+  if (row.sub) return "pl-6 opacity-70";
+  return "";
+};
 
 export default function CommercialTermsTab() {
   const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-
   const ct = activeCommercial;
   const deductions = ct.deductions || {};
-  const taxesAndLevies = ct.taxes_and_levies || {};
+
+  const pickRate = (rate: number | null | undefined, fallback: number | null | undefined) =>
+    rate != null ? formatPercent(rate) : formatPercent(fallback);
+
+  const waterfallRows: WaterfallRow[] = [
+    { label: "Technical Premium (USD)", value: formatCurrency(ct.technical_premium_usd) },
+    {
+      label: "Technical Premium (Local)",
+      value: ct.technical_premium_local ? `${ct.base_currency || ""} ${formatNumber(ct.technical_premium_local)}` : "-",
+    },
+    {
+      label: "Total Commission",
+      value: ct.total_commission != null ? `- ${formatCurrency(ct.total_commission)}` : "-",
+      sub: true,
+    },
+    { label: "Net Premium", value: formatCurrency(ct.net_premium), highlight: true },
+    {
+      label: "Total Taxes & Levies",
+      value: ct.total_taxes != null ? `+ ${formatCurrency(ct.total_taxes)}` : "-",
+      sub: true,
+    },
+    { label: "Gross Premium", value: formatCurrency(ct.gross_premium), highlight: true },
+    { label: "Offered Premium", value: formatCurrency(ct.offered_premium), highlight: true, accent: true },
+  ];
 
   return (
-    <div className="w-full no-scrollbar border-collapse animate-in fade-in duration-500 pb-12 pt-3">
-      <StickyHeader
+    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
+      <KeyDetailsBar
         status={activeQuote?.status}
         validFrom={activeQuote?.valid_from}
         validUntil={activeQuote?.valid_until}
@@ -29,138 +66,81 @@ export default function CommercialTermsTab() {
         quoteCode={activeQuote?.quote_code}
       />
 
-      {/* Entity Identity */}
       <SectionCard icon={Building2} title="Entity Identity">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Entity Name</span>
-            <span className="font-bold">{ct.entity_name || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Entity ID</span>
-            <span className="font-bold">{ct.entity_id || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Market</span>
-            <span className="font-bold uppercase">{ct.entity_market || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Base Currency</span>
-            <span className="font-bold">{ct.base_currency || "USD"}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Entity Name" value={ct.entity_name || "N/A"} />
+          <KpiTile label="Entity ID" value={ct.entity_id || "N/A"} />
+          <KpiTile label="Market" value={formatText(ct.entity_market, "upper", "N/A")} />
+          <KpiTile label="Base Currency" value={ct.base_currency || "USD"} />
         </div>
       </SectionCard>
 
-      {/* Premium Waterfall */}
       <SectionCard icon={DollarSign} title="Premium Waterfall">
-        <div className="px-dsi-pad py-4">
-          <div className="space-y-3">
-            {[
-              { label: "Technical Premium (USD)", value: formatCurrency(ct.technical_premium_usd) },
-              { label: "Technical Premium (Local)", value: ct.technical_premium_local ? `${ct.base_currency || ""} ${formatNumber(ct.technical_premium_local)}` : "-" },
-              { label: "Total Commission", value: ct.total_commission != null ? `- ${formatCurrency(ct.total_commission)}` : "-", sub: true },
-              { label: "Net Premium", value: formatCurrency(ct.net_premium), highlight: true },
-              { label: "Total Taxes & Levies", value: ct.total_taxes != null ? `+ ${formatCurrency(ct.total_taxes)}` : "-", sub: true },
-              { label: "Gross Premium", value: formatCurrency(ct.gross_premium), highlight: true },
-              { label: "Offered Premium", value: formatCurrency(ct.offered_premium), highlight: true, accent: true },
-            ].map((row) => (
-              <div
-                key={row.label}
-                className={`flex justify-between items-center py-2 px-3 rounded text-sm ${
-                  row.accent ? "bg-dsi-selected/10 border border-dsi-selected/20" :
-                  row.highlight ? "bg-dsi-background/30 font-semibold" :
-                  row.sub ? "pl-6 opacity-70" : ""
-                }`}
-              >
-                <span>{row.label}</span>
-                <span className={`font-bold ${row.accent ? "text-dsi-selected text-lg" : ""}`}>{row.value}</span>
-              </div>
-            ))}
-          </div>
+        <div className="flex flex-col gap-3 px-dsi-pad py-4">
+          {waterfallRows.map((row) => (
+            <div
+              key={row.label}
+              className={`flex justify-between items-center py-2 px-3 rounded text-sm ${rowClass(row)}`}
+            >
+              <span>{row.label}</span>
+              <span className={`font-bold ${row.accent ? "text-dsi-selected text-lg" : ""}`}>
+                {row.value}
+              </span>
+            </div>
+          ))}
         </div>
       </SectionCard>
 
-      {/* Commission Structure */}
       <SectionCard icon={FileText} title="Commission Structure">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Brokerage</span>
-            <span className="font-bold">{deductions.brokerage_rate != null ? formatPercent(deductions.brokerage_rate) : formatPercent(deductions.brokerage)}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Overrider</span>
-            <span className="font-bold">{deductions.overrider_rate != null ? formatPercent(deductions.overrider_rate) : formatPercent(deductions.overrider)}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Profit Commission</span>
-            <span className="font-bold">{deductions.profit_commission_rate != null ? formatPercent(deductions.profit_commission_rate) : formatPercent(deductions.profit_commission)}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Total Commission</span>
-            <span className="font-bold">{formatCurrency(ct.total_commission)}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Brokerage" value={pickRate(deductions.brokerage_rate, deductions.brokerage)} />
+          <KpiTile label="Overrider" value={pickRate(deductions.overrider_rate, deductions.overrider)} />
+          <KpiTile
+            label="Profit Commission"
+            value={pickRate(deductions.profit_commission_rate, deductions.profit_commission)}
+          />
+          <KpiTile label="Total Commission" value={formatCurrency(ct.total_commission)} />
         </div>
       </SectionCard>
 
-      {/* FX Context */}
       <SectionCard icon={ArrowRightLeft} title="FX Context">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Base Currency</span>
-            <span className="font-bold">{ct.base_currency || "USD"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">FX Rate to USD</span>
-            <span className="font-bold">{ct.fx_rate_to_usd != null ? formatNumber(ct.fx_rate_to_usd, 4) : "1.0000"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Rate Source</span>
-            <span className="font-bold">{ct.fx_rate_source || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Rate Date</span>
-            <span className="font-bold">{ct.fx_rate_date ? formatDate(ct.fx_rate_date) : "N/A"}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Base Currency" value={ct.base_currency || "USD"} />
+          <KpiTile
+            label="FX Rate to USD"
+            value={ct.fx_rate_to_usd != null ? formatNumber(ct.fx_rate_to_usd, 4) : "1.0000"}
+          />
+          <KpiTile label="Rate Source" value={ct.fx_rate_source || "N/A"} />
+          <KpiTile label="Rate Date" value={formatDate(ct.fx_rate_date, "en-GB", "N/A")} />
         </div>
       </SectionCard>
 
-      {/* Distribution */}
       <SectionCard icon={FileText} title="Distribution Structure">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Distribution Type</span>
-            <span className="font-bold uppercase">{ct.distribution_type || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Signed Line</span>
-            <span className="font-bold">{ct.signed_line != null ? formatPercent(ct.signed_line) : "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Role</span>
-            <span className="font-bold uppercase">{ct.role || "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Lead Loading</span>
-            <span className="font-bold">{ct.lead_loading_factor != null ? `${ct.lead_loading_factor}x` : "N/A"}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Distribution Type" value={formatText(ct.distribution_type, "upper", "N/A")} />
+          <KpiTile
+            label="Signed Line"
+            value={ct.signed_line != null ? formatPercent(ct.signed_line) : "N/A"}
+          />
+          <KpiTile label="Role" value={formatText(ct.role, "upper", "N/A")} />
+          <KpiTile
+            label="Lead Loading"
+            value={ct.lead_loading_factor != null ? `${ct.lead_loading_factor}x` : "N/A"}
+          />
         </div>
       </SectionCard>
 
-      {/* Offered Premium & Discretion */}
       <SectionCard icon={DollarSign} title="Offered Premium">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
           <div>
             <span className="opacity-50 block text-xs mb-0.5">Offered Premium</span>
             <span className="font-bold text-dsi-selected text-lg">{formatCurrency(ct.offered_premium)}</span>
           </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Discretion</span>
-            <span className="font-bold">{ct.offered_premium_discretion != null ? formatPercent(ct.offered_premium_discretion) : "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Minimum Premium</span>
-            <span className="font-bold">{formatCurrency(ct.minimum_gross_premium)}</span>
-          </div>
+          <KpiTile
+            label="Discretion"
+            value={ct.offered_premium_discretion != null ? formatPercent(ct.offered_premium_discretion) : "N/A"}
+          />
+          <KpiTile label="Minimum Premium" value={formatCurrency(ct.minimum_gross_premium)} />
           <div>
             <span className="opacity-50 block text-xs mb-0.5">At Minimum?</span>
             <span className={`font-bold ${ct.at_minimum_premium ? "text-dsi-warning" : ""}`}>
@@ -175,32 +155,18 @@ export default function CommercialTermsTab() {
           )}
           {ct.offered_premium_set_at && (
             <div className="col-span-full">
-              <span className="opacity-50 block text-xs mb-0.5">Set At</span>
-              <span className="font-bold">{formatDate(ct.offered_premium_set_at)}</span>
+              <KpiTile label="Set At" value={formatDate(ct.offered_premium_set_at, "en-GB", "N/A")} />
             </div>
           )}
         </div>
       </SectionCard>
 
-      {/* Written / Earned Period */}
       <SectionCard icon={Calendar} title="Written / Earned Period">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4 text-sm">
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Written Date</span>
-            <span className="font-bold">{ct.written_date ? formatDate(ct.written_date) : "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Earned Start</span>
-            <span className="font-bold">{ct.earned_start ? formatDate(ct.earned_start) : "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Earned End</span>
-            <span className="font-bold">{ct.earned_end ? formatDate(ct.earned_end) : "N/A"}</span>
-          </div>
-          <div>
-            <span className="opacity-50 block text-xs mb-0.5">Earned Method</span>
-            <span className="font-bold uppercase">{ct.earned_method || "N/A"}</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+          <KpiTile label="Written Date" value={formatDate(ct.written_date, "en-GB", "N/A")} />
+          <KpiTile label="Earned Start" value={formatDate(ct.earned_start, "en-GB", "N/A")} />
+          <KpiTile label="Earned End" value={formatDate(ct.earned_end, "en-GB", "N/A")} />
+          <KpiTile label="Earned Method" value={formatText(ct.earned_method, "upper", "N/A")} />
         </div>
       </SectionCard>
     </div>
