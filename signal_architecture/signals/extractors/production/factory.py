@@ -419,6 +419,23 @@ def _load_d2_stack_extractors():
         _registry.register_production(name, cls)
 
 
+def _load_d4_ip_extractors():
+    """V6/D4 — IP / innovation extractors (5)."""
+    try:
+        from . import ip as ip_mod
+    except ImportError as e:
+        logger.debug(f"Could not load D4 IP extractors: {e}")
+        return
+    for name, cls in (
+        ("ip.uspto", ip_mod.USPTOExtractor),
+        ("ip.epo_ops", ip_mod.EPOOpsExtractor),
+        ("ip.openalex", ip_mod.OpenAlexExtractor),
+        ("ip.crossref", ip_mod.CrossRefExtractor),
+        ("ip.semantic_scholar", ip_mod.SemanticScholarExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
 def _load_d5_climate_extractors():
     """V6/D5 — climate / environment extractors (11)."""
     try:
@@ -449,6 +466,7 @@ _load_d1_identity_extractors()
 _load_d1_sentiment_extractors()
 _load_d2_stack_extractors()
 _load_d3_litigation_extractors()
+_load_d4_ip_extractors()
 _load_d5_climate_extractors()
 
 

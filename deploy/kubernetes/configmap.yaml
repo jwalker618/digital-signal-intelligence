@@ -86,6 +86,13 @@ data:
   DSI_DISABLE_BUILTWITH: "false"
   DSI_DISABLE_HTTPARCHIVE: "false"
 
+  # V6/D4 — IP / innovation extractor kill-switches.
+  DSI_DISABLE_USPTO: "false"
+  DSI_DISABLE_EPO: "false"
+  DSI_DISABLE_OPENALEX: "false"
+  DSI_DISABLE_CROSSREF: "false"
+  DSI_DISABLE_SEMANTIC_SCHOLAR: "false"
+
   # V6/D5 — Climate / environment extractor kill-switches.
   DSI_DISABLE_FEMA_FLOOD: "false"
   DSI_DISABLE_NOAA_CDO: "false"
