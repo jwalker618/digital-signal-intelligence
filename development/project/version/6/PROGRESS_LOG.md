@@ -79,7 +79,7 @@ concrete list of new signals + inference functions.
 | 4.8 | A5 FI — add 18 new signals across bank/insurer/fintech/crypto | **DONE** |
 | 4.9 | A6 Aerospace — add 10 new signals across 5 depth-starved sub-configs | **DONE** |
 | 4.10b | A7 Marine — add 10 new AIS / port-state signals across 5 sub-configs | **DONE** |
-| 4.9 | A8 — Cyber + PI + Energy finishing | PENDING |
+| 4.11 | A8 — Cyber + PI + Energy signal finishing (new sub-configs deferred to A8-deep) | **DONE** |
 | **4.10** | Promote calibrate from advisory to **BLOCKING** | **DONE** |
 
 ## Stage 5 — E1 Rust port
@@ -111,6 +111,39 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.11 — A8 Cyber/PI/Energy signal finishing
+
+14 new signal IDs landed across the three already-mature coverages,
+wired into existing sub-configs. The 7 spec'd new sub-configs
+(`cyber_saas_platform`, `cyber_aiml_vendor`, `cyber_media_tech`,
+`pi_clinical_research`, `pi_media_tech`, `energy_hydrogen`,
+`energy_nuclear`) are deferred to A8-deep — each needs ~500 lines of
+config scaffolding (metadata, signal_registry, groups, tier bands,
+pricing, guardrails).
+
+- Cyber (+4): `model_card_quality`, `training_data_provenance`,
+  `ai_governance_disclosure`, `ai_incident_history` added to
+  `cyber_technology` (6 → 10) and subset to `cyber_digital_platform`
+  (6 → 8). Source: A8 AI-vendor-governance spec.
+- PI (+5): `irb_registration`, `clinical_trial_registry_compliance`,
+  `good_clinical_practice_score` added to `pi_legal_specialist`
+  (5 → 8); `defamation_exposure`, `content_moderation_posture` added
+  to `pi_technology` (6 → 8).
+- Energy (+5): `nrc_inspection_findings`,
+  `nrc_enforcement_action_history`, `decommissioning_trust_funding`
+  added to `energy_midstream` (48 → 51);
+  `electrolyser_technology_maturity`, `offtake_counterparty_quality`
+  added to `energy_general` (47 → 49).
+
+Inference functions register as neutral scaffolds in each coverage's
+`a8_maturation_signals.py`. Real bodies wire in with Stage 6 (AIIDR,
+OHRP/FDA IRB registry, ClinicalTrials.gov, CourtListener defamation,
+NRC ADAMS, EPA TRI extractors).
+
+Verification: calibrate cyber/pi/energy PASS on all 34 sub-configs
+across the three coverages, 221/221 goldens green, compliance strict
+PASS (no new findings vs baseline).
 
 ### Stage 4.10b — A7 Marine signal expansion
 
