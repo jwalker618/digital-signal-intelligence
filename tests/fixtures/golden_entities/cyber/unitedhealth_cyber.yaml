@@ -1,0 +1,22 @@
+entity_id: unitedhealth_cyber
+name: UnitedHealth Group Incorporated
+coverage: cyber
+config_id: cyber_healthcare
+domain: unitedhealthgroup.com
+registry_id: US-Delaware-0000731766
+minimum_viable_input:
+  revenue: 371622000000
+  limit: 100000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: HEALTHCARE
+  domain: unitedhealthgroup.com
+expected:
+  composite_score: 300.0
+  tier: 5
+  decision: decline
+  recommended_premium: 63467504.48
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

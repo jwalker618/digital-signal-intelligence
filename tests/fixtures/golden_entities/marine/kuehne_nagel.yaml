@@ -1,0 +1,22 @@
+entity_id: kuehne_nagel
+name: Kuehne + Nagel International AG
+coverage: marine
+config_id: marine_cargo
+domain: kuehne-nagel.com
+registry_id: CH-Schindellegi-CHE-107.526.597
+minimum_viable_input:
+  revenue: 24567000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: LOGISTICS
+  domain: kuehne-nagel.com
+expected:
+  composite_score: 220.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13750.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

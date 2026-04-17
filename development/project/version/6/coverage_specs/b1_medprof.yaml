@@ -1,0 +1,94 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — V6 Phase B1: Medical Professional Liability
+# =============================================================================
+#
+# Skeleton. Fill in sub-config weights + signal-group weights before
+# running the expansion pipeline. Reference specs under
+# development/project/version/5/phase_*.yaml.
+#
+# Usage (once filled):
+#   python -m infrastructure.builder.cli expand \
+#       --spec development/project/version/6/coverage_specs/b1_medprof.yaml \
+#       --write
+#
+# =============================================================================
+
+coverage_line: medprof
+coverage_key: medprof
+phase: v6_b1
+description: "V6/B1 — Medical Professional Liability"
+version: "1.0.0"
+
+default_product_types:
+  - hospital_mpl
+  - physician_mpl
+  - nursing_home_mpl
+  - telehealth_mpl
+
+default_markets: [us, uk]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: entity_name
+    description: Legal name
+  - field: employee_count
+    description: Total headcount (routes between hospital / physician_group / sme)
+  - field: facility_type
+    description: "One of: hospital, physician_group, ltc, telehealth, solo"
+  - field: limit
+    description: Requested limit in USD
+  - field: annual_patient_encounters
+    description: Used for exposure scaling
+
+routing_field: facility_type
+
+# -----------------------------------------------------------------------------
+# Sub-config skeletons (weights, tier bands, pricing anchors to be filled in)
+# -----------------------------------------------------------------------------
+configurations:
+  - name: medprof_hospital
+    model_specificity: 1
+    description: "Acute-care / teaching hospitals."
+    routing_constraints:
+      - { field: employee_count, operator: ">=", value: 500 }
+  - name: medprof_physician_group
+    model_specificity: 2
+    description: "Multi-specialty physician groups (20-500 employees)."
+    routing_constraints:
+      - { field: employee_count, operator: "<", value: 500 }
+      - { field: employee_count, operator: ">=", value: 20 }
+  - name: medprof_nursing_home
+    model_specificity: 2
+    description: "LTC / SNF / assisted living."
+    routing_constraints:
+      - { field: facility_type, operator: "==", value: ltc }
+  - name: medprof_telehealth
+    model_specificity: 2
+    description: "Telehealth / digital-first providers."
+    routing_constraints:
+      - { field: product_type, operator: "==", value: telehealth_mpl }
+  - name: medprof_sme
+    model_specificity: 3
+    description: "Solo + small-group practice."
+    routing_constraints:
+      - { field: employee_count, operator: "<", value: 20 }
+
+# -----------------------------------------------------------------------------
+# Signal registry (24 IDs — see SPEC.md)
+# -----------------------------------------------------------------------------
+# TODO(v6/b1): fill signal_registry with extractor + aggregator refs,
+# three_layer_assessment groups, and weight allocation. Reference
+# development/project/version/5/phase_7_fi_expansion_spec.yaml for the
+# full schema.
+signal_registry: []
+
+# -----------------------------------------------------------------------------
+# Weights + tier bands + pricing
+# -----------------------------------------------------------------------------
+# TODO(v6/b1): populate
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}

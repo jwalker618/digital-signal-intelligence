@@ -1,0 +1,22 @@
+entity_id: shell_energy
+name: Shell plc
+coverage: energy
+config_id: energy_upstream_deepwater
+domain: shell.com
+registry_id: UK-London-04366849
+minimum_viable_input:
+  revenue: 316621000000
+  limit: 250000000
+  deductible: 10000000
+  product_type: standard
+  industry_sector: OIL_GAS
+  domain: shell.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 354900.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

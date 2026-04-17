@@ -1,0 +1,47 @@
+{
+  "_comment": "V6 Phase 43 (E8) — Evidence Dashboard. Mirrors the JSON served by GET /api/v1/admin/evidence. Panels reference Prometheus metrics emitted by the real-signal telemetry exporter.",
+  "schemaVersion": 39,
+  "title": "DSI — Evidence Dashboard",
+  "tags": ["dsi", "evidence", "commercial"],
+  "refresh": "5m",
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Real signal % (avg across coverages, 30d)",
+      "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+      "targets": [{"expr": "avg(dsi_coverage_real_signal_pct)"}]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Coverages at Mature (green)",
+      "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+      "targets": [{"expr": "count(dsi_coverage_last_golden_check_status == 1)"}]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Monthly extractor cost (USD, 30d)",
+      "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+      "targets": [{"expr": "sum(dsi_extractor_cost_usd_monthly)"}]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Referral rate (avg, 30d)",
+      "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+      "targets": [{"expr": "avg(dsi_coverage_referral_rate_30d)"}]
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Per-coverage evidence",
+      "gridPos": {"h": 20, "w": 24, "x": 0, "y": 4},
+      "targets": [{
+        "expr": "dsi_coverage_evidence",
+        "format": "table"
+      }]
+    }
+  ]
+}

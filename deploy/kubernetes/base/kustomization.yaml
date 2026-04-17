@@ -1,0 +1,16 @@
+# V6 Phase 4 (C1) — base kustomize layer.
+# Overlays (staging/production) select either deployment.yaml (legacy) or
+# rollout.yaml (Argo Rollouts) via an overlay-specific resource list.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../namespace.yaml
+  - ../configmap.yaml
+  - ../service.yaml
+  - ../ingress.yaml
+  - ../hpa.yaml
+
+commonLabels:
+  app.kubernetes.io/name: dsi
+  app.kubernetes.io/managed-by: kustomize

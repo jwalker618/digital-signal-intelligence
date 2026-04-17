@@ -115,6 +115,16 @@ class DSIMetrics:
             registry=reg,
         )
 
+        # V6 Phase 6 (C3): active coverage/config version per pod.
+        # Lets on-call determine which compiled config is serving traffic.
+        self.config_version_active = Gauge(
+            "dsi_config_version_active",
+            "Active config version per coverage/config on this pod "
+            "(1=active, 0=stale).",
+            labelnames=("coverage", "config", "version"),
+            registry=reg,
+        )
+
         self.info = Info(
             "dsi",
             "DSI platform information",

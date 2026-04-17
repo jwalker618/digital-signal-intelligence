@@ -1,0 +1,48 @@
+coverage_line: crop
+coverage_key: crop
+phase: v6_b10
+description: "V6/B10 — Crop / Parametric Weather"
+version: "1.0.0"
+
+default_product_types:
+  - multi_peril_crop_insurance
+  - yield_protection
+  - parametric_weather
+  - livestock_mortality
+
+default_markets: [us, au, br, eu]
+default_currency: USD
+default_min_premium: 5000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: crop_type
+  - field: acreage
+  - field: state_country
+  - field: limit
+
+routing_field: crop_type
+
+configurations:
+  - name: crop_multi_peril
+    model_specificity: 1
+    routing_constraints: [{ field: crop_type, operator: "!=", value: null }]
+  - name: crop_yield_protection
+    model_specificity: 2
+    routing_constraints: [{ field: product_type, operator: "==", value: yield_protection }]
+  - name: crop_parametric_weather
+    model_specificity: 1
+    routing_constraints: [{ field: product_type, operator: "==", value: parametric_weather }]
+  - name: crop_livestock
+    model_specificity: 2
+    routing_constraints: [{ field: crop_type, operator: "==", value: livestock }]
+  - name: crop_sme
+    model_specificity: 3
+    routing_constraints: [{ field: acreage, operator: "<", value: 1000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}

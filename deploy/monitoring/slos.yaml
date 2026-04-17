@@ -1,0 +1,79 @@
+# V6 Phase 6 (C3) — DSI Four-Gold-Signal SLOs.
+#
+# Format: Sloth (https://sloth.dev/). Rendered into Prometheus rules via:
+#   sloth generate -i slos.yaml -o prom/slos.rules.yaml
+#
+# The four gold signals per Google SRE:
+#   latency | traffic | errors | saturation
+# Each SLO has burn-rate alerts (14.4× / 1h, 6× / 6h) per the standard
+# multi-window multi-burn-rate pattern.
+version: "prometheus/v1"
+service: dsi-api
+labels:
+  owner: "dsi-oncall"
+  tier: "platform"
+slos:
+  - name: availability
+    objective: 99.5
+    description: Proportion of successful (non-5xx) HTTP requests over 30d.
+    sli:
+      events:
+        error_query: |
+          sum(rate(http_requests_total{app="dsi-api",status=~"5.."}[{{.window}}]))
+        total_query: |
+          sum(rate(http_requests_total{app="dsi-api"}[{{.window}}]))
+    alerting:
+      name: DSIAvailabilityBurn
+      page_alert:
+        labels: { severity: page }
+      ticket_alert:
+        labels: { severity: ticket }
+
+  - name: assess-latency-p95
+    objective: 95
+    description: p95 latency of /api/v1/assess under 5s over 30d.
+    sli:
+      events:
+        error_query: |
+          sum(rate(http_request_duration_seconds_bucket{app="dsi-api",route="/api/v1/assess",le="5"}[{{.window}}]))
+        total_query: |
+          sum(rate(http_request_duration_seconds_count{app="dsi-api",route="/api/v1/assess"}[{{.window}}]))
+    alerting:
+      name: DSIAssessLatencyBurn
+      page_alert:
+        labels: { severity: page }
+      ticket_alert:
+        labels: { severity: ticket }
+
+  - name: error-rate
+    objective: 99.5
+    description: Non-error responses (<0.5% error) over 30d.
+    sli:
+      events:
+        error_query: |
+          sum(rate(http_requests_total{app="dsi-api",status=~"5..|4[2-9].|429"}[{{.window}}]))
+        total_query: |
+          sum(rate(http_requests_total{app="dsi-api"}[{{.window}}]))
+    alerting:
+      name: DSIErrorRateBurn
+      page_alert:
+        labels: { severity: page }
+      ticket_alert:
+        labels: { severity: ticket }
+
+  - name: db-saturation
+    objective: 80
+    description: PostgreSQL connection pool saturation below 80%.
+    sli:
+      events:
+        error_query: |
+          sum(pg_stat_activity_count{app="dsi-api",state="active"}) > bool
+          (0.8 * sum(pg_settings_max_connections))
+        total_query: |
+          sum(up{app="dsi-api"})
+    alerting:
+      name: DSIDbSaturationBurn
+      page_alert:
+        labels: { severity: page }
+      ticket_alert:
+        labels: { severity: ticket }

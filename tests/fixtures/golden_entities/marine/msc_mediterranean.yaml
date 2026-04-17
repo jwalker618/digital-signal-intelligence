@@ -1,0 +1,21 @@
+entity_id: msc_mediterranean
+name: MSC Mediterranean Shipping Company
+coverage: marine
+domain: msc.com
+registry_id: CH-Geneva-CHE-121.459.065
+minimum_viable_input:
+  revenue: 86400000000
+  limit: 100000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: SHIPPING
+  domain: msc.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 35000.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

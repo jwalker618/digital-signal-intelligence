@@ -1,0 +1,54 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — V6 Phase B4: Environmental Impairment
+# =============================================================================
+
+coverage_line: env_liab
+coverage_key: env_liab
+phase: v6_b4
+description: "V6/B4 — Environmental Impairment (standalone)"
+version: "1.0.0"
+
+default_product_types:
+  - environmental_impairment
+  - site_pollution
+
+default_markets: [us]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: facility_type
+  - field: naics_2digit
+  - field: limit
+
+routing_field: facility_type
+
+configurations:
+  - name: env_industrial
+    model_specificity: 1
+    description: "Chemical / industrial manufacturing with TRI reporting."
+    routing_constraints: [{ field: facility_type, operator: "==", value: industrial }]
+  - name: env_waste_mgmt
+    model_specificity: 1
+    description: "Waste management / landfills / treatment."
+    routing_constraints: [{ field: facility_type, operator: "==", value: waste_mgmt }]
+  - name: env_real_estate
+    model_specificity: 2
+    description: "Real estate / brownfield redevelopment."
+    routing_constraints: [{ field: facility_type, operator: "==", value: real_estate }]
+  - name: env_energy_midstream_xwalk
+    model_specificity: 2
+    description: "Cross-walk to energy_midstream for pipeline operators."
+    routing_constraints: [{ field: facility_type, operator: "==", value: energy_midstream }]
+  - name: env_sme
+    model_specificity: 3
+    description: "Small facilities — streamlined."
+    routing_constraints: [{ field: naics_2digit, operator: "IN", value: ["44", "45", "72"] }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}

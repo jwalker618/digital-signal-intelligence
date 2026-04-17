@@ -1,6 +1,11 @@
 """
 DSI Comprehensive Bench Seed Script
 ====================================
+
+.. deprecated:: V6/C4 (April 2026)
+   Invoke via ``python -m seed bench`` instead. This root-level script
+   stays for compatibility through Q1-Q3 and is removed by C4-final.
+
 Seeds the database with realistic, end-to-end data covering every coverage,
 configuration, tier, decision path, signal group, and UI component.
 
@@ -5262,8 +5267,26 @@ def seed_data(
     finally:
         db.close()
 
+def run(
+    *,
+    include_synthetic: bool = False,
+    synthetic_only: bool = False,
+    synthetic_count: int = 1000,
+    synthetic_seed: int = 42,
+) -> int:
+    """V6/C4 entry point used by ``python -m seed bench``."""
+    seed_data(
+        include_synthetic=include_synthetic or synthetic_only,
+        synthetic_only=synthetic_only,
+        synthetic_count=synthetic_count,
+        synthetic_seed=synthetic_seed,
+    )
+    return 0
+
+
 if __name__ == "__main__":
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser(description="DSI Bench Seed Script")
     parser.add_argument("--synthetic", action="store_true",
@@ -5276,9 +5299,9 @@ if __name__ == "__main__":
                         help="Random seed for reproducibility (default: 42)")
     args = parser.parse_args()
 
-    seed_data(
-        include_synthetic=args.synthetic or args.synthetic_only,
+    sys.exit(run(
+        include_synthetic=args.synthetic,
         synthetic_only=args.synthetic_only,
         synthetic_count=args.count,
         synthetic_seed=args.seed,
-    )
+    ))

@@ -138,6 +138,9 @@ data/
 *.json
 !setup.json
 !config.json
+!development/project/version/**/*.json
+!tests/fixtures/**/*.json
+!deploy/monitoring/grafana/*.json
 logs/
 *.log
 temp/

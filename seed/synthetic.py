@@ -494,6 +494,21 @@ def generate_synthetic_companies(
 # STANDALONE EXECUTION (dry-run / preview)
 # =============================================================================
 
+
+def run(*, coverage: Optional[str] = None, n: int = 1000, seed: int = 42) -> int:
+    """V6/C4 entry point used by ``python -m seed synthetic``.
+
+    ``coverage`` filter is honoured at summary time; full DB integration
+    matures alongside C4-final follow-ups.
+    """
+    companies = generate_synthetic_companies(count=n, seed=seed)
+    if coverage:
+        companies = [c for c in companies if c.get("coverage") == coverage]
+    print(f"generated {len(companies)} synthetic companies "
+          f"(seed={seed}, coverage_filter={coverage!r})")
+    return 0
+
+
 if __name__ == "__main__":
     import argparse
     import sys

@@ -293,7 +293,7 @@ financial_institutions:
       inference_utility_function: examination_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -319,7 +319,7 @@ financial_institutions:
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -349,7 +349,7 @@ financial_institutions:
       inference_utility_function: informal_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -361,7 +361,7 @@ financial_institutions:
       inference_utility_function: cra_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -373,7 +373,7 @@ financial_institutions:
       inference_utility_function: bsa_aml_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -399,7 +399,7 @@ financial_institutions:
       inference_utility_function: fair_lending_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -414,7 +414,7 @@ financial_institutions:
       inference_utility_function: consumer_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -426,7 +426,7 @@ financial_institutions:
       inference_utility_function: capital_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -453,7 +453,7 @@ financial_institutions:
       inference_utility_function: asset_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -474,7 +474,7 @@ financial_institutions:
       inference_utility_function: liquidity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -486,7 +486,7 @@ financial_institutions:
       inference_utility_function: earnings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -498,7 +498,7 @@ financial_institutions:
       inference_utility_function: concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: negative
           weight: 0.1
@@ -514,7 +514,7 @@ financial_institutions:
       inference_utility_function: interest_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: negative
           weight: 0.1
@@ -526,7 +526,7 @@ financial_institutions:
       inference_utility_function: growth_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -538,7 +538,7 @@ financial_institutions:
       inference_utility_function: board_independence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -553,7 +553,7 @@ financial_institutions:
       inference_utility_function: board_expertise_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -565,7 +565,7 @@ financial_institutions:
       inference_utility_function: executive_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -577,7 +577,7 @@ financial_institutions:
       inference_utility_function: risk_committee_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -592,7 +592,7 @@ financial_institutions:
       inference_utility_function: audit_committee_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -604,7 +604,7 @@ financial_institutions:
       inference_utility_function: related_party_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: governance
+        group_id: corporate_footprint
         risk:
           correlation_direction: negative
           weight: 0.1
@@ -619,7 +619,7 @@ financial_institutions:
       inference_utility_function: cfpb_complaint_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -638,7 +638,7 @@ financial_institutions:
       inference_utility_function: bbb_complaint_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -650,7 +650,7 @@ financial_institutions:
       inference_utility_function: litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -671,7 +671,7 @@ financial_institutions:
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -692,7 +692,7 @@ financial_institutions:
       inference_utility_function: operational_incidents_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -707,7 +707,7 @@ financial_institutions:
       inference_utility_function: tls_configuration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -722,7 +722,7 @@ financial_institutions:
       inference_utility_function: email_authentication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -734,7 +734,7 @@ financial_institutions:
       inference_utility_function: security_headers_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -746,7 +746,7 @@ financial_institutions:
       inference_utility_function: network_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -765,7 +765,7 @@ financial_institutions:
       inference_utility_function: cve_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -786,7 +786,7 @@ financial_institutions:
       inference_utility_function: security_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -946,7 +946,7 @@ financial_institutions:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_compliance
+      - id: public_record
         label: Regulatory Compliance
         description: Examination results, enforcement actions, compliance ratings
         risk:
@@ -966,7 +966,7 @@ financial_institutions:
           weight: 0.25
         exposure:
           weight: 0.1
-      - id: financial_condition
+      - id: behavioural
         label: Financial Condition
         description: Capital, asset quality, liquidity, earnings (CAMELS proxies)
         risk:
@@ -986,11 +986,11 @@ financial_institutions:
           weight: 0.3
         exposure:
           weight: 0.25
-      - id: governance
+      - id: corporate_footprint
         label: Corporate Governance
         description: Board composition, executive stability, committee quality
         risk:
-          weight: 0.15
+          weight: 0.2
           score_conditions:
           - threshold: 85
             comparison: '>='
@@ -1003,14 +1003,14 @@ financial_institutions:
             applied: 1.15
             note: Weak governance loading
         loss:
-          weight: 0.15
+          weight: 0.18
         exposure:
-          weight: 0.1
-      - id: operational_risk
+          weight: 0.25
+      - id: technical_infrastructure
         label: Operational Risk
         description: Complaints, litigation, breach history, incidents
         risk:
-          weight: 0.1
+          weight: 0.2
           score_conditions:
           - threshold: 35
             comparison: <=
@@ -1018,44 +1018,9 @@ financial_institutions:
             override: 4
             note: Elevated operational risk
         loss:
-          weight: 0.1
+          weight: 0.2
         exposure:
-          weight: 0.1
-      - id: cyber_security
-        label: Cyber Security
-        description: Observable technical security posture
-        risk:
-          weight: 0.1
-          score_conditions:
-          - threshold: 35
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Cyber security deficiencies
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: corporate_footprint
-        label: Corporate Footprint
-        description: Transparency, disclosure, investor relations
-        risk:
-          weight: 0.05
-          score_conditions:
-          - threshold: 80
-            comparison: '>='
-            action: MODIFIER
-            applied: 0.95
-            note: Strong transparency credit
-          - threshold: 35
-            comparison: <=
-            action: MODIFIER
-            applied: 1.1
-            note: Poor transparency loading
-        loss:
-          weight: 0.03
-        exposure:
-          weight: 0.15
+          weight: 0.2
       - id: structured_data
         label: Structured Data
         description: Third-party ratings and benchmarks
@@ -1539,7 +1504,7 @@ financial_institutions:
       inference_utility_function: examination_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.6
@@ -1557,7 +1522,7 @@ financial_institutions:
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.4
@@ -1575,7 +1540,7 @@ financial_institutions:
       inference_utility_function: capital_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1597,7 +1562,7 @@ financial_institutions:
       inference_utility_function: asset_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: financial_condition
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1613,7 +1578,7 @@ financial_institutions:
       inference_utility_function: tls_configuration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1625,7 +1590,7 @@ financial_institutions:
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: cyber_security
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1643,7 +1608,7 @@ financial_institutions:
       inference_utility_function: litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 1.0
@@ -1658,7 +1623,7 @@ financial_institutions:
         impact: MODIFIER
         default_cat: OTHER
       three_layer_assessment:
-      - id: regulatory_compliance
+      - id: public_record
         label: Regulatory Compliance
         risk:
           weight: 0.35
@@ -1666,7 +1631,7 @@ financial_institutions:
           weight: 0.3
         exposure:
           weight: 0.1
-      - id: financial_condition
+      - id: behavioural
         label: Financial Condition
         risk:
           weight: 0.35
@@ -1674,22 +1639,14 @@ financial_institutions:
           weight: 0.3
         exposure:
           weight: 0.4
-      - id: cyber_security
+      - id: technical_infrastructure
         label: Cyber Security
         risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.2
-      - id: operational_risk
-        label: Operational Risk
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
           weight: 0.3
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.5
     risk_tier_bands:
       bands:
       - id: 1
@@ -1934,7 +1891,7 @@ financial_institutions:
   fi_bank:
     metadata:
       name: DSI FI Banking Specialist Model
-      description: Regulated banks — commercial, community, savings; capital adequacy and loan quality focus
+      description: "Regulated banks \u2014 commercial, community, savings; capital adequacy and loan quality focus"
       version: 2.3.0
       product_types: &id001
       - financial_institution_bond
@@ -2011,13 +1968,13 @@ financial_institutions:
         action: FLAG
         override: null
         applied: null
-        note: Recent M&A — integration risk
+        note: "Recent M&A \u2014 integration risk"
     signal_registry:
     - id: capital_adequacy
       inference_utility_function: capital_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: banking_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2033,7 +1990,7 @@ financial_institutions:
       inference_utility_function: loan_portfolio_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: banking_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2054,7 +2011,7 @@ financial_institutions:
       inference_utility_function: regulatory_exam_results_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: banking_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2075,7 +2032,7 @@ financial_institutions:
       inference_utility_function: bsa_aml_compliance_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: banking_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2096,7 +2053,7 @@ financial_institutions:
       inference_utility_function: interest_rate_sensitivity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: banking_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2110,24 +2067,24 @@ financial_institutions:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: banking_risk
+      - id: structured_data
         label: Banking Risk
-        description: Bank-specific risk — capital adequacy, loan quality, regulatory exam results, BSA/AML compliance
+        description: "Bank-specific risk \u2014 capital adequacy, loan quality, regulatory exam results, BSA/AML compliance"
         risk:
           weight: 0.4
         loss:
           weight: 0.4
         exposure:
           weight: 0.3
-      - id: regulatory_framework
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2137,20 +2094,11 @@ financial_institutions:
           weight: 0.15
         exposure:
           weight: 0.25
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
         loss:
           weight: 0.15
         exposure:
@@ -2440,7 +2388,7 @@ financial_institutions:
   fi_insurer:
     metadata:
       name: DSI FI Insurance Company Model
-      description: Insurance companies — solvency, reserve adequacy, reinsurance quality, regulatory compliance
+      description: "Insurance companies \u2014 solvency, reserve adequacy, reinsurance quality, regulatory compliance"
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -2490,15 +2438,15 @@ financial_institutions:
     signal_registry: []
     groups:
       three_layer_assessment:
-      - id: regulatory_framework
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
-          weight: 0.3
+          weight: 0.5
         loss:
-          weight: 0.25
+          weight: 0.5
         exposure:
-          weight: 0.2
+          weight: 0.45
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2508,20 +2456,11 @@ financial_institutions:
           weight: 0.25
         exposure:
           weight: 0.3
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.25
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.25
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.2
         loss:
           weight: 0.25
         exposure:
@@ -2811,7 +2750,7 @@ financial_institutions:
   fi_fintech:
     metadata:
       name: DSI FI Fintech & Digital Banking Model
-      description: Fintech companies — digital banking, payments, lending platforms, neobanks
+      description: "Fintech companies \u2014 digital banking, payments, lending platforms, neobanks"
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -2841,7 +2780,7 @@ financial_institutions:
         action: REFER
         override: 5
         applied: null
-        note: Licensing gaps — regulatory risk
+        note: "Licensing gaps \u2014 regulatory risk"
     - id: cfpb_complaint
       question: Has the company been subject to CFPB enforcement or investigation?
       query_condition:
@@ -2857,7 +2796,7 @@ financial_institutions:
         action: FLAG
         override: null
         applied: null
-        note: Partner bank change — continuity risk
+        note: "Partner bank change \u2014 continuity risk"
     - id: data_breach
       question: Has the company experienced a customer data breach in the past 3 years?
       query_condition:
@@ -2871,7 +2810,7 @@ financial_institutions:
       inference_utility_function: regulatory_licensing_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2889,7 +2828,7 @@ financial_institutions:
       inference_utility_function: crypto_asset_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2914,7 +2853,7 @@ financial_institutions:
       inference_utility_function: platform_technology_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2929,7 +2868,7 @@ financial_institutions:
       inference_utility_function: consumer_protection_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2949,7 +2888,7 @@ financial_institutions:
       inference_utility_function: partner_bank_dependency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2963,24 +2902,24 @@ financial_institutions:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: fintech_risk
+      - id: structured_data
         label: Fintech & Digital Risk
-        description: Fintech-specific risk — regulatory uncertainty, crypto exposure, platform risk, licensing
+        description: "Fintech-specific risk \u2014 regulatory uncertainty, crypto exposure, platform risk, licensing"
         risk:
           weight: 0.4
         loss:
           weight: 0.35
         exposure:
           weight: 0.3
-      - id: regulatory_framework
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2990,7 +2929,7 @@ financial_institutions:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2999,15 +2938,6 @@ financial_institutions:
           weight: 0.2
         exposure:
           weight: 0.2
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -3354,7 +3284,7 @@ financial_institutions:
         action: FLAG
         override: null
         applied: null
-        note: DeFi protocol risk — smart contract vulnerability
+        note: "DeFi protocol risk \u2014 smart contract vulnerability"
     - id: stablecoin_exposure
       question: Does the company issue or hold significant stablecoin reserves?
       query_condition:
@@ -3368,7 +3298,7 @@ financial_institutions:
       inference_utility_function: regulatory_licensing_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3381,7 +3311,7 @@ financial_institutions:
       inference_utility_function: crypto_asset_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3401,7 +3331,7 @@ financial_institutions:
       inference_utility_function: platform_technology_risk_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3416,7 +3346,7 @@ financial_institutions:
       inference_utility_function: consumer_protection_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3432,7 +3362,7 @@ financial_institutions:
       inference_utility_function: partner_bank_dependency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fintech_risk
+        group_id: structured_data
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -3446,24 +3376,24 @@ financial_institutions:
             weight: 0.15
     groups:
       three_layer_assessment:
-      - id: fintech_risk
+      - id: structured_data
         label: Fintech & Digital Risk
-        description: Fintech-specific risk — regulatory uncertainty, crypto exposure, platform risk, licensing
+        description: "Fintech-specific risk \u2014 regulatory uncertainty, crypto exposure, platform risk, licensing"
         risk:
           weight: 0.45
         loss:
           weight: 0.4
         exposure:
           weight: 0.35
-      - id: regulatory_framework
+      - id: public_record
         label: Regulatory Framework
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -3473,20 +3403,11 @@ financial_institutions:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: firm_stability
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
           weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
         loss:
           weight: 0.15
         exposure:

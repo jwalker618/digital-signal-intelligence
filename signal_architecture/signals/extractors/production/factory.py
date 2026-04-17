@@ -317,6 +317,200 @@ def _load_tls_extractors():
         logger.debug(f"Could not load TLS extractors: {e}")
 
 
+def _load_d1_web_extractors():
+    """V6/D1 — register the ten Universal Web Footprint extractors."""
+    try:
+        from . import web as w
+    except ImportError as e:
+        logger.debug(f"Could not load D1 web extractors: {e}")
+        return
+    pairs = [
+        ("web.github_org", w.GitHubOrgExtractor),
+        ("web.wayback", w.WaybackExtractor),
+        ("web.urlscan", w.URLScanExtractor),
+        ("web.commoncrawl", w.CommonCrawlExtractor),
+        ("web.tranco", w.TrancoRankExtractor),
+        ("web.safebrowsing", w.GoogleSafeBrowsingExtractor),
+        ("web.phishtank", w.PhishTankExtractor),
+        ("web.openphish", w.OpenPhishExtractor),
+        ("web.cloudflare_radar", w.CloudflareRadarExtractor),
+        ("web.google_transparency", w.GoogleTransparencyExtractor),
+    ]
+    for name, cls in pairs:
+        _registry.register_production(name, cls)
+
+
+def _load_d1_identity_extractors():
+    """V6/D1 — identity / breach-exposure extractors."""
+    try:
+        from . import identity as i
+    except ImportError as e:
+        logger.debug(f"Could not load D1 identity extractors: {e}")
+        return
+    for name, cls in (
+        ("identity.hibp", i.HIBPExtractor),
+        ("identity.intelx", i.IntelXExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d1_sentiment_extractors():
+    """V6/D1 — public-sentiment extractors."""
+    try:
+        from . import sentiment as s
+    except ImportError as e:
+        logger.debug(f"Could not load D1 sentiment extractors: {e}")
+        return
+    for name, cls in (
+        ("sentiment.trustpilot", s.TrustpilotScraper),
+        ("sentiment.bbb", s.BBBScraper),
+        ("sentiment.glassdoor", s.GlassdoorScraper),
+        ("sentiment.google_reviews", s.GoogleReviewsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d3_litigation_extractors():
+    """V6/D3 — litigation + regulatory extensions (18 extractors)."""
+    try:
+        from . import litigation as lit
+    except ImportError as e:
+        logger.debug(f"Could not load D3 litigation extractors: {e}")
+        return
+    for name, cls in (
+        ("litigation.courtlistener", lit.CourtListenerExtractor),
+        ("litigation.pacer_rss", lit.PACERRSSExtractor),
+        ("litigation.stanford_scac", lit.StanfordSCACExtractor),
+        ("litigation.sec_litreleases", lit.SECLitigationReleasesExtractor),
+        ("litigation.finra_brokercheck", lit.FINRABrokerCheckExtractor),
+        ("litigation.sec_iapd", lit.SECIAPDExtractor),
+        ("litigation.gdpr_tracker", lit.GDPREnforcementTrackerExtractor),
+        ("litigation.cms_hospital", lit.CMSHospitalCompareExtractor),
+        ("litigation.joint_commission", lit.JointCommissionExtractor),
+        ("litigation.npdb_public", lit.NPDBPublicExtractor),
+        ("litigation.pcaob", lit.PCAOBQSAASVExtractor),
+        ("litigation.osha", lit.OSHAEstablishmentExtractor),
+        ("litigation.fmcsa", lit.FMCSASMSExtractor),
+        ("litigation.nhtsa_recalls", lit.NHTSARecallsExtractor),
+        ("litigation.cpsc_recalls", lit.CPSCRecallsExtractor),
+        ("litigation.fda_recalls", lit.FDARecallsExtractor),
+        ("litigation.eu_safety_gate", lit.EUSafetyGateExtractor),
+        ("litigation.usda_fsis", lit.USDAFSISRecallsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d2_stack_extractors():
+    """V6/D2 — technical/infrastructure extractors (7)."""
+    try:
+        from . import stack as s
+    except ImportError as e:
+        logger.debug(f"Could not load D2 stack extractors: {e}")
+        return
+    for name, cls in (
+        ("stack.shodan", s.ShodanExtractor),
+        ("stack.censys", s.CensysExtractor),
+        ("stack.bgp_ripestat", s.BGPExtractor),
+        ("stack.peeringdb", s.PeeringDBExtractor),
+        ("stack.wappalyzer", s.WappalyzerExtractor),
+        ("stack.builtwith", s.BuiltWithExtractor),
+        ("stack.httparchive", s.HTTPArchiveExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d4_ip_extractors():
+    """V6/D4 — IP / innovation extractors (5)."""
+    try:
+        from . import ip as ip_mod
+    except ImportError as e:
+        logger.debug(f"Could not load D4 IP extractors: {e}")
+        return
+    for name, cls in (
+        ("ip.uspto", ip_mod.USPTOExtractor),
+        ("ip.epo_ops", ip_mod.EPOOpsExtractor),
+        ("ip.openalex", ip_mod.OpenAlexExtractor),
+        ("ip.crossref", ip_mod.CrossRefExtractor),
+        ("ip.semantic_scholar", ip_mod.SemanticScholarExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d7_hiring_extractors():
+    """V6/D7 — hiring / behavioural-derivative extractors (4)."""
+    try:
+        from . import hiring as hi
+    except ImportError as e:
+        logger.debug(f"Could not load D7 hiring extractors: {e}")
+        return
+    for name, cls in (
+        ("hiring.greenhouse", hi.GreenhouseScraper),
+        ("hiring.lever", hi.LeverScraper),
+        ("hiring.ashby", hi.AshbyScraper),
+        ("hiring.google_jobs", hi.GoogleJobsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d6_sector_extractors():
+    """V6/D6 — sector-telemetry extractors (11 across aviation/maritime/energy)."""
+    try:
+        from . import sector as sec
+    except ImportError as e:
+        logger.debug(f"Could not load D6 sector extractors: {e}")
+        return
+    for name, cls in (
+        ("sector.opensky", sec.OpenSkyExtractor),
+        ("sector.icao_registry", sec.ICAORegistryExtractor),
+        ("sector.asias", sec.ASIASExtractor),
+        ("sector.ais_hub", sec.AISHubExtractor),
+        ("sector.marine_cadastre", sec.MarineCadastreExtractor),
+        ("sector.emsa_thetis", sec.EMSAExtractor),
+        ("sector.paris_mou", sec.ParisMoUExtractor),
+        ("sector.tokyo_mou", sec.TokyoMoUExtractor),
+        ("sector.phmsa", sec.PHMSAExtractor),
+        ("sector.bsee_detail", sec.BSEEDetailExtractor),
+        ("sector.nerc_violations", sec.NERCVioExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+def _load_d5_climate_extractors():
+    """V6/D5 — climate / environment extractors (11)."""
+    try:
+        from . import climate as c
+    except ImportError as e:
+        logger.debug(f"Could not load D5 climate extractors: {e}")
+        return
+    for name, cls in (
+        ("climate.fema_flood", c.FEMAFloodExtractor),
+        ("climate.noaa_cdo", c.NOAACDOExtractor),
+        ("climate.usfs_fire_hazard", c.USFSFireHazardExtractor),
+        ("climate.usgs_seismic", c.USGSSeismicExtractor),
+        ("climate.copernicus_sentinel", c.CopernicusSentinelExtractor),
+        ("climate.ecmwf_era5", c.ECMWFERA5Extractor),
+        ("climate.cdp_open", c.CDPOpenDataExtractor),
+        ("climate.energystar", c.ENERGYSTARExtractor),
+        ("climate.epa_tri", c.TRIExtractor),
+        ("climate.epa_superfund", c.SuperfundExtractor),
+        ("climate.nrc_inspections", c.NRCInspectionExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
+# Eagerly register D1 + D2 + D3 extractors on import — they are cheap class
+# refs, no network calls happen until .extract() is invoked.
+_load_d1_web_extractors()
+_load_d1_identity_extractors()
+_load_d1_sentiment_extractors()
+_load_d2_stack_extractors()
+_load_d3_litigation_extractors()
+_load_d4_ip_extractors()
+_load_d5_climate_extractors()
+_load_d6_sector_extractors()
+_load_d7_hiring_extractors()
+
+
 # Register loaders for known extractor types
 _dns_extractors = ['email_auth', 'dnssec', 'dns_records']
 _http_extractors = ['security_headers', 'security_txt', 'waf_presence', 'cdn_usage']

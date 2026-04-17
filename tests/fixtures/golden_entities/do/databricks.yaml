@@ -1,0 +1,22 @@
+entity_id: databricks
+name: Databricks, Inc.
+coverage: do
+config_id: do_pe_backed
+domain: databricks.com
+registry_id: US-Delaware-0001601082
+minimum_viable_input:
+  revenue: 2400000000
+  limit: 25000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: TECHNOLOGY
+  domain: databricks.com
+expected:
+  composite_score: 360.0
+  tier: 5
+  decision: decline
+  recommended_premium: 50177.19
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

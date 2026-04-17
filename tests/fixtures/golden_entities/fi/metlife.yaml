@@ -1,0 +1,22 @@
+entity_id: metlife
+name: MetLife, Inc.
+coverage: fi
+config_id: fi_insurer
+domain: metlife.com
+registry_id: US-Delaware-0001099219
+minimum_viable_input:
+  revenue: 67912000000
+  limit: 100000000
+  deductible: 2500000
+  product_type: standard
+  industry_sector: INSURANCE
+  domain: metlife.com
+expected:
+  composite_score: 500.0
+  tier: 3
+  decision: refer
+  recommended_premium: 30000.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

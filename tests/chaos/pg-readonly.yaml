@@ -1,0 +1,21 @@
+# V6/C5b — flip DB primary to read-only; expect API to degrade to
+# read-only mode, serve cached quotes, no 5xx.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IOChaos
+metadata:
+  name: dsi-pg-readonly
+  namespace: dsi-staging
+spec:
+  action: attrOverride
+  mode: all
+  selector:
+    namespaces: [dsi-staging]
+    labelSelectors:
+      app: postgres
+  volumePath: /var/lib/postgresql/data
+  path: '**/*.conf'
+  attr:
+    perm: 0444
+  duration: 90s
+  scheduler:
+    cron: '@weekly'

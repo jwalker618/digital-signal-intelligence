@@ -1,0 +1,22 @@
+entity_id: sysco
+name: Sysco Corporation
+coverage: casualty
+config_id: casualty_auto
+domain: sysco.com
+registry_id: US-Delaware-0000096021
+minimum_viable_input:
+  revenue: 76324000000
+  limit: 25000000
+  deductible: 250000
+  product_type: standard
+  industry_sector: FOOD_DISTRIBUTION
+  domain: sysco.com
+expected:
+  composite_score: 300.0
+  tier: 5
+  decision: decline
+  recommended_premium: 10554.4
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

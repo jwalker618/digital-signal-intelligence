@@ -1,0 +1,46 @@
+coverage_line: teo
+coverage_key: teo
+phase: v6_b8
+description: "V6/B8 — Tech E&O (standalone)"
+version: "1.0.0"
+
+default_product_types:
+  - tech_eo
+  - cyber_tech_combo
+  - aiml_liability
+
+default_markets: [us, uk, eu]
+default_currency: USD
+default_min_premium: 10000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: business_model
+  - field: revenue
+  - field: limit
+
+routing_field: business_model
+
+configurations:
+  - name: teo_saas
+    model_specificity: 1
+    routing_constraints: [{ field: business_model, operator: "==", value: saas }]
+  - name: teo_aiml_vendor
+    model_specificity: 1
+    routing_constraints: [{ field: business_model, operator: "==", value: aiml_vendor }]
+  - name: teo_systems_integrator
+    model_specificity: 2
+    routing_constraints: [{ field: business_model, operator: "==", value: systems_integrator }]
+  - name: teo_managed_service_provider
+    model_specificity: 2
+    routing_constraints: [{ field: business_model, operator: "==", value: managed_services }]
+  - name: teo_sme
+    model_specificity: 3
+    routing_constraints: [{ field: revenue, operator: "<", value: 25000000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}

@@ -1,0 +1,22 @@
+entity_id: kroger
+name: The Kroger Co.
+coverage: casualty
+config_id: casualty_umbrella
+domain: kroger.com
+registry_id: US-Ohio-0000056873
+minimum_viable_input:
+  revenue: 148258000000
+  limit: 100000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: RETAIL
+  domain: kroger.com
+expected:
+  composite_score: 260.0
+  tier: 5
+  decision: decline
+  recommended_premium: 21978.96
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

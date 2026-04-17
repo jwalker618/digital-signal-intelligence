@@ -312,7 +312,7 @@ marine:
       inference_utility_function: ais_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -333,7 +333,7 @@ marine:
       inference_utility_function: dark_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.25
@@ -363,7 +363,7 @@ marine:
       inference_utility_function: route_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.2
@@ -382,7 +382,7 @@ marine:
       inference_utility_function: psc_regions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -394,7 +394,7 @@ marine:
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -402,7 +402,7 @@ marine:
       inference_utility_function: weather_routing_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -414,7 +414,7 @@ marine:
       inference_utility_function: psc_detention_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -435,7 +435,7 @@ marine:
       inference_utility_function: psc_deficiency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -447,7 +447,7 @@ marine:
       inference_utility_function: class_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -473,7 +473,7 @@ marine:
       inference_utility_function: ism_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -496,7 +496,7 @@ marine:
       inference_utility_function: casualty_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -521,7 +521,7 @@ marine:
       inference_utility_function: totalloss_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -542,7 +542,7 @@ marine:
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.3
@@ -561,7 +561,7 @@ marine:
       inference_utility_function: fleet_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -573,7 +573,7 @@ marine:
       inference_utility_function: vessel_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -588,7 +588,7 @@ marine:
       inference_utility_function: crew_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -600,7 +600,7 @@ marine:
       inference_utility_function: management_consistency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -612,7 +612,7 @@ marine:
       inference_utility_function: sanctions_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: sanctions_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -630,7 +630,7 @@ marine:
       inference_utility_function: ownership_transparency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: sanctions_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -648,7 +648,7 @@ marine:
       inference_utility_function: jurisdiction_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: sanctions_compliance
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.2
@@ -674,7 +674,7 @@ marine:
       inference_utility_function: sts_pattern_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: sanctions_compliance
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.15
@@ -697,7 +697,7 @@ marine:
       inference_utility_function: historical_sanctions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: sanctions_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -709,7 +709,7 @@ marine:
       inference_utility_function: imo_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -721,7 +721,7 @@ marine:
       inference_utility_function: bwm_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -733,7 +733,7 @@ marine:
       inference_utility_function: cii_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -741,7 +741,7 @@ marine:
       inference_utility_function: environmental_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -890,11 +890,11 @@ marine:
           weight: 0.1
         exposure:
           weight: 0.05
-      - id: operational_telemetry
+      - id: technical_infrastructure
         label: Operational Telemetry
         description: AIS behavior patterns, dark activity, route risk
         risk:
-          weight: 0.2
+          weight: 0.3
           score_conditions:
           - threshold: 30
             comparison: <=
@@ -912,14 +912,14 @@ marine:
             applied: 0.85
             note: Excellent operational telemetry - modifier applied
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.15
-      - id: safety_compliance
+          weight: 0.5
+      - id: public_record
         label: Safety Compliance
         description: PSC performance, class status, incident history
         risk:
-          weight: 0.25
+          weight: 0.45
           score_conditions:
           - threshold: 30
             comparison: <=
@@ -937,64 +937,9 @@ marine:
             applied: 0.85
             note: Excellent safety compliance - modifier applied
         loss:
-          weight: 0.35
+          weight: 0.5
         exposure:
-          weight: 0.1
-      - id: fleet_profile
-        label: Fleet Profile
-        description: Fleet age, stability, vessel quality, crew certification
-        risk:
-          weight: 0.1
-          score_conditions:
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.9
-            note: Excellent fleet profile - modifier applied
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.35
-      - id: sanctions_compliance
-        label: Sanctions Compliance
-        description: Sanctions status, ownership transparency, STS patterns
-        risk:
-          weight: 0.15
-          score_conditions:
-          - threshold: 20
-            comparison: <=
-            action: REFER
-            override: 5
-            note: Sanctions exposure - coverage not available
-          - threshold: 40
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Sanctions concerns require review
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.85
-            note: Excellent sanctions compliance - modifier applied
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: environmental
-        label: Environmental Compliance
-        description: IMO 2020, ballast water, CII rating, incidents
-        risk:
-          weight: 0.05
-          score_conditions:
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.9
-            note: Excellent environmental compliance - modifier applied
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.1
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: Transparency, sustainability reporting, safety culture
@@ -1526,7 +1471,7 @@ marine:
       inference_utility_function: psc_detention_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1544,7 +1489,7 @@ marine:
       inference_utility_function: casualty_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1562,7 +1507,7 @@ marine:
       inference_utility_function: ais_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -1584,7 +1529,7 @@ marine:
       inference_utility_function: route_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.35
@@ -1600,7 +1545,7 @@ marine:
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: operational_telemetry
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1616,7 +1561,7 @@ marine:
       inference_utility_function: class_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -1634,7 +1579,7 @@ marine:
       inference_utility_function: ism_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: safety_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1700,7 +1645,7 @@ marine:
       inference_utility_function: fleet_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.5
@@ -1716,7 +1661,7 @@ marine:
       inference_utility_function: crew_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.45
@@ -1732,7 +1677,7 @@ marine:
       inference_utility_function: vessel_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: fleet_profile
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -1755,7 +1700,7 @@ marine:
         impact: MODIFIER
         default_cat: OTHER
       three_layer_assessment:
-      - id: safety_compliance
+      - id: public_record
         label: Safety Compliance
         risk:
           weight: 0.3
@@ -1763,14 +1708,14 @@ marine:
           weight: 0.35
         exposure:
           weight: 0.2
-      - id: operational_telemetry
+      - id: technical_infrastructure
         label: Operational Telemetry
         risk:
-          weight: 0.25
+          weight: 0.45
         loss:
-          weight: 0.25
+          weight: 0.4
         exposure:
-          weight: 0.25
+          weight: 0.5
       - id: network_authority
         label: Network Authority
         risk:
@@ -1779,14 +1724,6 @@ marine:
           weight: 0.25
         exposure:
           weight: 0.3
-      - id: fleet_profile
-        label: Fleet Profile
-        risk:
-          weight: 0.2
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.25
     risk_tier_bands:
       bands:
       - id: 1
@@ -2025,7 +1962,7 @@ marine:
   marine_cargo:
     metadata:
       name: DSI Marine Cargo Specialist Model
-      description: Marine cargo insurance — commodity-specific, transit risk, storage exposure
+      description: "Marine cargo insurance \u2014 commodity-specific, transit risk, storage exposure"
       version: 2.3.0
       product_types:
       - cargo
@@ -2071,7 +2008,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: Hazardous cargo — specialist review
+        note: "Hazardous cargo \u2014 specialist review"
     - id: open_cover
       question: Is this an open cover (blanket) declaration or a specific voyage policy?
       query_condition:
@@ -2079,7 +2016,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: Open cover — accumulation monitoring required
+        note: "Open cover \u2014 accumulation monitoring required"
     - id: war_zone_transit
       question: Does the transit route pass through any Joint War Committee listed areas?
       query_condition:
@@ -2095,13 +2032,13 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: Reefer cargo — cold chain exposure
+        note: "Reefer cargo \u2014 cold chain exposure"
     signal_registry:
     - id: cargo_commodity_class
       inference_utility_function: cargo_commodity_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         source: metadata.cargo_commodity_class
         features:
         - cat: LOW_HAZARD
@@ -2126,7 +2063,7 @@ marine:
       inference_utility_function: packaging_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2141,7 +2078,7 @@ marine:
       inference_utility_function: transit_mode_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         source: metadata.transit_mode
         features:
         - cat: OCEAN_DIRECT
@@ -2163,7 +2100,7 @@ marine:
       inference_utility_function: storage_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2182,7 +2119,7 @@ marine:
       inference_utility_function: theft_pilferage_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2202,7 +2139,7 @@ marine:
       inference_utility_function: temperature_control_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: cargo_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2217,7 +2154,7 @@ marine:
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2242,7 +2179,7 @@ marine:
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2254,7 +2191,7 @@ marine:
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2266,7 +2203,7 @@ marine:
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2284,7 +2221,7 @@ marine:
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2294,51 +2231,33 @@ marine:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: cargo_quality
+      - id: technical_infrastructure
         label: Cargo Quality
         description: Cargo type, packaging, transit mode, storage conditions, and theft/pilferage exposure
         risk:
-          weight: 0.35
+          weight: 0.45
         loss:
-          weight: 0.35
+          weight: 0.45
         exposure:
-          weight: 0.3
-      - id: port_state_compliance
+          weight: 0.4
+      - id: public_record
         label: Port State & Regulatory Compliance
         description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.25
         exposure:
-          weight: 0.1
-      - id: trading_pattern
+          weight: 0.2
+      - id: behavioural
         label: Trading Pattern
         description: ''
         risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
           weight: 0.2
-      - id: fleet_age_band
-        label: Fleet Age Band
-        description: ''
-        risk:
-          weight: 0.1
         loss:
-          weight: 0.1
+          weight: 0.2
         exposure:
-          weight: 0.1
-      - id: flag_state_quality
-        label: Flag State Quality
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2346,15 +2265,6 @@ marine:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: firm_stability
-        label: Firm Stability
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
         exposure:
           weight: 0.1
     risk_tier_bands:
@@ -2650,7 +2560,7 @@ marine:
   marine_tanker:
     metadata:
       name: DSI Marine Tanker Specialist Model
-      description: Tanker fleet hull & liability — crude, product, chemical, gas carriers
+      description: "Tanker fleet hull & liability \u2014 crude, product, chemical, gas carriers"
       version: 2.3.0
       product_types: &id005
       - hull_machinery
@@ -2715,7 +2625,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: STS operations — pollution exposure
+        note: "STS operations \u2014 pollution exposure"
     - id: single_hull
       question: Are any vessels in the fleet single-hull construction?
       query_condition:
@@ -2723,13 +2633,13 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: Single hull tanker — regulatory non-compliance
+        note: "Single hull tanker \u2014 regulatory non-compliance"
     signal_registry:
     - id: tanker_vetting_status
       inference_utility_function: tanker_vetting_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: tanker_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2740,7 +2650,7 @@ marine:
             threshold: 30
             comparison: <=
           - action: FLAG
-            note: Vetting concerns — observations outstanding
+            note: "Vetting concerns \u2014 observations outstanding"
             threshold: 50
             comparison: <=
         loss:
@@ -2754,7 +2664,7 @@ marine:
       inference_utility_function: pollution_liability_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: tanker_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2776,7 +2686,7 @@ marine:
       inference_utility_function: double_hull_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: tanker_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2791,7 +2701,7 @@ marine:
       inference_utility_function: cargo_compatibility_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: tanker_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2806,7 +2716,7 @@ marine:
       inference_utility_function: sts_operations_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: tanker_risk
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2826,7 +2736,7 @@ marine:
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2842,7 +2752,7 @@ marine:
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2854,7 +2764,7 @@ marine:
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2866,7 +2776,7 @@ marine:
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2879,7 +2789,7 @@ marine:
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2889,51 +2799,33 @@ marine:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: tanker_risk
+      - id: technical_infrastructure
         label: Tanker Risk
-        description: Tanker-specific risk — vetting status, pollution exposure, cargo compatibility, hull construction
+        description: "Tanker-specific risk \u2014 vetting status, pollution exposure, cargo compatibility, hull construction"
         risk:
-          weight: 0.3
+          weight: 0.45
         loss:
-          weight: 0.3
+          weight: 0.45
         exposure:
-          weight: 0.25
-      - id: port_state_compliance
+          weight: 0.4
+      - id: public_record
         label: Port State & Regulatory Compliance
         description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.15
+          weight: 0.25
         exposure:
-          weight: 0.15
-      - id: fleet_age_band
-        label: Fleet Age Band
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: flag_state_quality
-        label: Flag State Quality
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: trading_pattern
+          weight: 0.25
+      - id: behavioural
         label: Trading Pattern
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.15
         loss:
-          weight: 0.15
+          weight: 0.2
         exposure:
-          weight: 0.15
+          weight: 0.25
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2941,15 +2833,6 @@ marine:
           weight: 0.1
         loss:
           weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: firm_stability
-        label: Firm Stability
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
         exposure:
           weight: 0.1
     risk_tier_bands:
@@ -3260,7 +3143,7 @@ marine:
   marine_offshore:
     metadata:
       name: DSI Marine Offshore Specialist Model
-      description: Offshore marine units — FPSOs, rigs, OSVs, construction vessels, wind installation
+      description: "Offshore marine units \u2014 FPSOs, rigs, OSVs, construction vessels, wind installation"
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -3302,7 +3185,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: Lay-up status — reduced maintenance risk
+        note: "Lay-up status \u2014 reduced maintenance risk"
     - id: deepwater_operations
       question: Does the unit operate in water depths exceeding 1500 metres?
       query_condition:
@@ -3310,7 +3193,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: Deepwater operations — higher severity potential
+        note: "Deepwater operations \u2014 higher severity potential"
     - id: harsh_environment
       question: Does the unit operate in harsh environment zones (North Sea, Norwegian Sea, sub-Arctic)?
       query_condition:
@@ -3324,7 +3207,7 @@ marine:
       inference_utility_function: unit_type_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: offshore_marine
+        group_id: technical_infrastructure
         source: metadata.offshore_unit_type
         features:
         - cat: FPSO
@@ -3352,7 +3235,7 @@ marine:
       inference_utility_function: mooring_integrity_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: offshore_marine
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3367,7 +3250,7 @@ marine:
       inference_utility_function: dp_system_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: offshore_marine
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3388,7 +3271,7 @@ marine:
       inference_utility_function: metocean_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: offshore_marine
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3407,7 +3290,7 @@ marine:
       inference_utility_function: offshore_class_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: offshore_marine
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3425,7 +3308,7 @@ marine:
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3441,7 +3324,7 @@ marine:
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3453,7 +3336,7 @@ marine:
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3465,7 +3348,7 @@ marine:
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3478,7 +3361,7 @@ marine:
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3488,51 +3371,33 @@ marine:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: offshore_marine
+      - id: technical_infrastructure
         label: Offshore Marine
-        description: Offshore unit risk — FPSO, jack-up, semi-sub, construction vessel, mooring integrity
+        description: "Offshore unit risk \u2014 FPSO, jack-up, semi-sub, construction vessel, mooring integrity"
         risk:
-          weight: 0.35
+          weight: 0.5
         loss:
-          weight: 0.3
+          weight: 0.45
         exposure:
-          weight: 0.3
-      - id: port_state_compliance
+          weight: 0.45
+      - id: public_record
         label: Port State & Regulatory Compliance
         description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.25
         exposure:
-          weight: 0.1
-      - id: fleet_age_band
-        label: Fleet Age Band
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: flag_state_quality
-        label: Flag State Quality
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
-      - id: trading_pattern
+          weight: 0.2
+      - id: behavioural
         label: Trading Pattern
         description: ''
         risk:
-          weight: 0.05
+          weight: 0.1
         loss:
-          weight: 0.1
+          weight: 0.15
         exposure:
-          weight: 0.1
+          weight: 0.2
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -3542,15 +3407,6 @@ marine:
           weight: 0.15
         exposure:
           weight: 0.15
-      - id: firm_stability
-        label: Firm Stability
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.1
     risk_tier_bands:
       bands:
       - id: 1
@@ -3853,7 +3709,7 @@ marine:
   marine_war_risk:
     metadata:
       name: DSI Marine War Risk Specialist Model
-      description: Marine war risk — hull war, strikes, piracy, confiscation, terrorism
+      description: "Marine war risk \u2014 hull war, strikes, piracy, confiscation, terrorism"
       version: 2.3.0
       product_types:
       - war_risks
@@ -3876,7 +3732,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: JWC listed area trading — additional premium required
+        note: "JWC listed area trading \u2014 additional premium required"
     - id: piracy_exposure
       question: Does the trading pattern include high-piracy-risk areas (Gulf of Aden, Gulf of Guinea, Strait of Malacca)?
       query_condition:
@@ -3892,7 +3748,7 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: Sanctions proximity — compliance review
+        note: "Sanctions proximity \u2014 compliance review"
     - id: armed_guards
       question: Does the vessel employ armed security personnel in high-risk areas?
       query_condition:
@@ -3914,7 +3770,7 @@ marine:
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3930,7 +3786,7 @@ marine:
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3942,7 +3798,7 @@ marine:
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3954,7 +3810,7 @@ marine:
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3967,7 +3823,7 @@ marine:
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3977,34 +3833,25 @@ marine:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: trading_pattern
+      - id: behavioural
         label: Trading Pattern
         description: ''
+        risk:
+          weight: 0.45
+        loss:
+          weight: 0.45
+        exposure:
+          weight: 0.45
+      - id: public_record
+        label: Port State & Regulatory Compliance
+        description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
         risk:
           weight: 0.35
         loss:
           weight: 0.3
         exposure:
-          weight: 0.3
-      - id: port_state_compliance
-        label: Port State & Regulatory Compliance
-        description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: flag_state_quality
-        label: Flag State Quality
-        description: ''
-        risk:
-          weight: 0.2
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: fleet_age_band
+          weight: 0.25
+      - id: technical_infrastructure
         label: Fleet Age Band
         description: ''
         risk:
@@ -4015,15 +3862,6 @@ marine:
           weight: 0.15
       - id: corporate_footprint
         label: Corporate Footprint
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
-      - id: firm_stability
-        label: Firm Stability
         description: ''
         risk:
           weight: 0.1
@@ -4320,7 +4158,7 @@ marine:
   marine_high_value:
     metadata:
       name: DSI Marine High Value Fleet Model
-      description: High-value fleet hull & liability — modern tonnage, top-tier operators, fleet value >$1B
+      description: "High-value fleet hull & liability \u2014 modern tonnage, top-tier operators, fleet value >$1B"
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -4380,7 +4218,7 @@ marine:
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4396,7 +4234,7 @@ marine:
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4408,7 +4246,7 @@ marine:
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4420,7 +4258,7 @@ marine:
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4433,7 +4271,7 @@ marine:
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: port_state_compliance
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4443,16 +4281,16 @@ marine:
             weight: 0.1
     groups:
       three_layer_assessment:
-      - id: port_state_compliance
+      - id: public_record
         label: Port State & Regulatory Compliance
         description: PSC detention history, ISM/ISPS audit quality, sanctions screening, class survey status
         risk:
-          weight: 0.25
+          weight: 0.4
         loss:
-          weight: 0.2
+          weight: 0.35
         exposure:
-          weight: 0.15
-      - id: fleet_age_band
+          weight: 0.25
+      - id: technical_infrastructure
         label: Fleet Age Band
         description: ''
         risk:
@@ -4461,24 +4299,15 @@ marine:
           weight: 0.2
         exposure:
           weight: 0.2
-      - id: flag_state_quality
-        label: Flag State Quality
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: trading_pattern
+      - id: behavioural
         label: Trading Pattern
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.2
         loss:
-          weight: 0.15
+          weight: 0.25
         exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -4488,15 +4317,6 @@ marine:
           weight: 0.2
         exposure:
           weight: 0.25
-      - id: firm_stability
-        label: Firm Stability
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1

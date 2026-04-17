@@ -1,0 +1,21 @@
+entity_id: marriott
+name: Marriott International, Inc.
+coverage: property
+domain: marriott.com
+registry_id: US-Delaware-0001048286
+minimum_viable_input:
+  revenue: 23713000000
+  limit: 100000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: HOSPITALITY
+  domain: marriott.com
+expected:
+  composite_score: 140.0
+  tier: 5
+  decision: decline
+  recommended_premium: 21978.96
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

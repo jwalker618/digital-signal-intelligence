@@ -1,0 +1,55 @@
+# =============================================================================
+# DSI Coverage Expansion Spec — V6 Phase B5: Construction / CAR / OCIP
+# =============================================================================
+coverage_line: construction
+coverage_key: construction
+phase: v6_b5
+description: "V6/B5 — Construction / CAR / OCIP"
+version: "1.0.0"
+
+default_product_types:
+  - builders_risk
+  - owner_controlled_insurance_program
+  - contractor_controlled_insurance_program
+  - course_of_construction
+
+default_markets: [us, uk, eu]
+default_currency: USD
+default_min_premium: 25000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: contractor_type
+  - field: project_value
+  - field: limit
+
+routing_field: contractor_type
+
+configurations:
+  - name: con_gc
+    model_specificity: 1
+    description: "General contractor."
+    routing_constraints: [{ field: contractor_type, operator: "==", value: general_contractor }]
+  - name: con_subcontractor
+    model_specificity: 2
+    description: "Specialty trade subcontractor."
+    routing_constraints: [{ field: contractor_type, operator: "==", value: subcontractor }]
+  - name: con_infrastructure
+    model_specificity: 1
+    description: "DOT / USACE heavy civil."
+    routing_constraints: [{ field: contractor_type, operator: "==", value: heavy_civil }]
+  - name: con_energy_xwalk
+    model_specificity: 2
+    description: "Field construction cross-walked to energy."
+    routing_constraints: [{ field: contractor_type, operator: "==", value: energy_field }]
+  - name: con_sme
+    model_specificity: 3
+    description: "Small construction firms (project value < $10M)."
+    routing_constraints: [{ field: project_value, operator: "<", value: 10000000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}

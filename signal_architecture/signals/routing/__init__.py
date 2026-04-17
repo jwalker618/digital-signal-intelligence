@@ -96,6 +96,9 @@ from .multi_source import (
 from .sanctions_aggregator import SanctionsAggregator
 from .corporate_aggregator import CorporateAggregator
 
+# V6/D8 — Cost-aware signal broker
+from .source_router import SignalBrokerV2, SourceSelection
+
 __all__ = [
     # Router
     'JurisdictionRouter',
@@ -137,4 +140,7 @@ __all__ = [
     # Aggregators
     'SanctionsAggregator',
     'CorporateAggregator',
+    # V6/D8 — broker
+    'SignalBrokerV2',
+    'SourceSelection',
 ]

@@ -1,0 +1,15 @@
+# V6/C5b — kill 1 of N API pods; expect HPA recovery within 60s.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: dsi-api-kill-one
+  namespace: dsi-staging
+spec:
+  action: pod-kill
+  mode: one
+  selector:
+    namespaces: [dsi-staging]
+    labelSelectors:
+      app: dsi-api
+  scheduler:
+    cron: '@hourly'

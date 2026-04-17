@@ -398,7 +398,7 @@ professional_indemnity:
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -424,7 +424,7 @@ professional_indemnity:
       inference_utility_function: disciplinary_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -450,7 +450,7 @@ professional_indemnity:
       inference_utility_function: malpractice_record_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -471,7 +471,7 @@ professional_indemnity:
       inference_utility_function: ce_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -479,7 +479,7 @@ professional_indemnity:
       inference_utility_function: speciality_certifications_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -487,7 +487,7 @@ professional_indemnity:
       inference_utility_function: peer_review_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -513,7 +513,7 @@ professional_indemnity:
       inference_utility_function: pcaob_standing_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: regulatory_standing
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -528,7 +528,7 @@ professional_indemnity:
       inference_utility_function: years_inpractice_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -540,7 +540,7 @@ professional_indemnity:
       inference_utility_function: partner_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -562,7 +562,7 @@ professional_indemnity:
       inference_utility_function: staff_retention_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -574,7 +574,7 @@ professional_indemnity:
       inference_utility_function: office_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -582,7 +582,7 @@ professional_indemnity:
       inference_utility_function: financial_stability_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -600,7 +600,7 @@ professional_indemnity:
       inference_utility_function: succession_planning_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: firm_stability
+        group_id: behavioural
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -608,7 +608,7 @@ professional_indemnity:
       inference_utility_function: outcome_patterns_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: practice_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -623,7 +623,7 @@ professional_indemnity:
       inference_utility_function: client_reviews_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: practice_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -635,7 +635,7 @@ professional_indemnity:
       inference_utility_function: work_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: practice_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -650,7 +650,7 @@ professional_indemnity:
       inference_utility_function: fee_dispute_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: practice_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -662,7 +662,7 @@ professional_indemnity:
       inference_utility_function: complaint_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: practice_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -804,7 +804,7 @@ professional_indemnity:
       inference_utility_function: malpractice_suits_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: litigation_history
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.35
@@ -837,7 +837,7 @@ professional_indemnity:
       inference_utility_function: fee_disputes_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: litigation_history
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -849,7 +849,7 @@ professional_indemnity:
       inference_utility_function: regulatory_enforcement_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: litigation_history
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -875,7 +875,7 @@ professional_indemnity:
       inference_utility_function: civil_litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: litigation_history
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -890,7 +890,7 @@ professional_indemnity:
       inference_utility_function: bankruptcy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: litigation_history
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -942,11 +942,11 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: License status, disciplinary history, certifications
         risk:
-          weight: 0.25
+          weight: 0.35
           score_conditions:
           - threshold: 30
             comparison: <=
@@ -964,10 +964,10 @@ professional_indemnity:
             applied: 0.85
             note: Excellent regulatory standing - modifier applied
         loss:
-          weight: 0.25
+          weight: 0.4
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.25
+      - id: behavioural
         label: Firm Stability
         description: Tenure, partner retention, financial health
         risk:
@@ -987,11 +987,11 @@ professional_indemnity:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: Client reviews, outcomes, complaint history
         risk:
-          weight: 0.15
+          weight: 0.25
           score_conditions:
           - threshold: 20
             comparison: <=
@@ -999,24 +999,9 @@ professional_indemnity:
             applied: 0.9
             note: Excellent practice quality - modifier applied
         loss:
-          weight: 0.2
+          weight: 0.3
         exposure:
-          weight: 0.15
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: Digital security posture for client confidentiality
-        risk:
-          weight: 0.1
-          score_conditions:
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.9
-            note: Excellent technical infrastructure - modifier applied
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.25
       - id: corporate_footprint
         label: Corporate Footprint
         description: Website quality, thought leadership, transparency
@@ -1032,31 +1017,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.25
-      - id: litigation_history
-        label: Litigation History
-        description: Malpractice suits, fee disputes, regulatory enforcement
-        risk:
-          weight: 0.1
-          score_conditions:
-          - threshold: 25
-            comparison: <=
-            action: REFER
-            override: 5
-            note: Severe litigation history
-          - threshold: 40
-            comparison: <=
-            action: REFER
-            override: 4
-            note: Significant litigation concerns
-          - threshold: 20
-            comparison: <=
-            action: MODIFIER
-            applied: 0.85
-            note: Excellent litigation history - modifier applied
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -1390,6 +1350,97 @@ professional_indemnity:
         label: Profession Type
         impact: PREMIUM_BASE
         default_cat: OTHER
+      three_layer_assessment:
+      - id: network_authority
+        label: Network Authority
+        description: Peer recognition, client quality, professional relationships
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
+      - id: public_record
+        label: Regulatory Standing
+        description: License status, disciplinary history, certifications
+        risk:
+          weight: 0.35
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical regulatory issues
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant regulatory concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent regulatory standing - modifier applied
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.25
+      - id: behavioural
+        label: Firm Stability
+        description: Tenure, partner retention, financial health
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 35
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Firm stability concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent firm stability - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: technical_infrastructure
+        label: Practice Quality
+        description: Client reviews, outcomes, complaint history
+        risk:
+          weight: 0.25
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent practice quality - modifier applied
+        loss:
+          weight: 0.3
+        exposure:
+          weight: 0.25
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: Website quality, thought leadership, transparency
+        risk:
+          weight: 0.1
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.25
     risk_tier_bands:
       bands:
       - id: 1
@@ -1513,10 +1564,65 @@ professional_indemnity:
       max_premium_to_limit_ratio: 0.15
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
   pi_legal_large:
     metadata:
       name: DSI PI Large Law Firm Pricing Model
-      description: Top-tier corporate/commercial practices — AmLaw 200, Magic Circle
+      description: "Top-tier corporate/commercial practices \u2014 AmLaw 200, Magic Circle"
       version: 2.3.0
       product_types: &id001
       - professional_liability
@@ -1610,7 +1716,7 @@ professional_indemnity:
       inference_utility_function: lateral_hire_volume_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1626,7 +1732,7 @@ professional_indemnity:
       inference_utility_function: prior_acts_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1648,7 +1754,7 @@ professional_indemnity:
       inference_utility_function: conflict_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -1664,7 +1770,7 @@ professional_indemnity:
       inference_utility_function: trust_account_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -1682,7 +1788,7 @@ professional_indemnity:
       inference_utility_function: class_action_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1698,7 +1804,7 @@ professional_indemnity:
       inference_utility_function: partner_departure_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1720,7 +1826,7 @@ professional_indemnity:
       inference_utility_function: matter_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: partner_practice_mix
+        group_id: corporate_footprint
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -1743,16 +1849,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.2
+          weight: 0.35
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.2
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -1761,51 +1867,24 @@ professional_indemnity:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
+          weight: 0.3
+        exposure:
           weight: 0.2
-        exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
         risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.1
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
+          weight: 0.15
         loss:
           weight: 0.15
         exposure:
-          weight: 0.1
-      - id: partner_practice_mix
-        label: Partner Practice Mix
-        description: 'Tail-risk drivers specific to large legal practice: partner churn, conflict exposure, matter concentration'
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.25
+          weight: 0.35
     risk_tier_bands:
       bands:
       - id: 1
@@ -2182,7 +2261,7 @@ professional_indemnity:
       inference_utility_function: case_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: case_portfolio
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2198,7 +2277,7 @@ professional_indemnity:
       inference_utility_function: contingency_fee_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: case_portfolio
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2214,7 +2293,7 @@ professional_indemnity:
       inference_utility_function: trial_success_rate_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: case_portfolio
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2230,7 +2309,7 @@ professional_indemnity:
       inference_utility_function: statute_tracking_compliance_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: case_portfolio
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2252,7 +2331,7 @@ professional_indemnity:
       inference_utility_function: case_value_distribution_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: case_portfolio
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2275,16 +2354,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.25
+          weight: 0.5
         loss:
-          weight: 0.2
+          weight: 0.5
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.6
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2293,24 +2372,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
+          weight: 0.2
+        loss:
+          weight: 0.3
+        exposure:
           weight: 0.15
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2320,24 +2390,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.15
-      - id: case_portfolio
-        label: Case Portfolio
-        description: Concentration and tail risk of specialist practice; single case can define entire risk profile
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.35
     risk_tier_bands:
       bands:
       - id: 1
@@ -2600,10 +2652,16 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_audit:
     metadata:
       name: DSI PI Public Company Audit Model
-      description: Public company audit — Big 4 and mid-tier audit firms
+      description: "Public company audit \u2014 Big 4 and mid-tier audit firms"
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -2685,7 +2743,7 @@ professional_indemnity:
       inference_utility_function: pcaob_inspection_deficiency_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -2707,7 +2765,7 @@ professional_indemnity:
       inference_utility_function: restatement_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -2723,7 +2781,7 @@ professional_indemnity:
       inference_utility_function: going_concern_accuracy_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2739,7 +2797,7 @@ professional_indemnity:
       inference_utility_function: sec_enforcement_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -2761,7 +2819,7 @@ professional_indemnity:
       inference_utility_function: audit_client_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2777,7 +2835,7 @@ professional_indemnity:
       inference_utility_function: audit_partner_rotation_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -2789,7 +2847,7 @@ professional_indemnity:
       inference_utility_function: securities_litigation_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: audit_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -2812,16 +2870,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.3
+          weight: 0.4
         loss:
-          weight: 0.3
+          weight: 0.45
         exposure:
-          weight: 0.15
-      - id: firm_stability
+          weight: 0.25
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -2830,24 +2888,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.4
         loss:
-          weight: 0.1
+          weight: 0.35
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
+          weight: 0.55
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -2857,25 +2906,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: audit_quality
-        label: Audit Quality
-        description: Profession-specific risk drivers with extremely high exposure weight reflecting catastrophic concentration
-          risk
-        risk:
-          weight: 0.2
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.4
     risk_tier_bands:
       bands:
       - id: 1
@@ -3251,16 +3281,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.25
+          weight: 0.35
         loss:
-          weight: 0.25
+          weight: 0.45
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.3
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -3269,24 +3299,15 @@ professional_indemnity:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.2
+          weight: 0.3
         exposure:
-          weight: 0.2
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -3296,15 +3317,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.15
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.2
     risk_tier_bands:
       bands:
       - id: 1
@@ -3552,6 +3564,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_architecture:
     metadata:
       name: DSI PI Architecture & Landscape Design Model
@@ -3630,7 +3648,7 @@ professional_indemnity:
       inference_utility_function: design_defect_claims_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: design_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -3646,7 +3664,7 @@ professional_indemnity:
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: design_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -3668,7 +3686,7 @@ professional_indemnity:
       inference_utility_function: project_complexity_score_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: design_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3684,7 +3702,7 @@ professional_indemnity:
       inference_utility_function: latent_defect_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: design_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3700,7 +3718,7 @@ professional_indemnity:
       inference_utility_function: sustainability_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: design_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -3712,7 +3730,7 @@ professional_indemnity:
       inference_utility_function: pi_construction_phase_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       categories:
-        group_id: design_quality
+        group_id: technical_infrastructure
         source: metadata.construction_phase
         features:
         - cat: PRE_CONSTRUCTION
@@ -3744,16 +3762,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.05
-      - id: firm_stability
+          weight: 0.15
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -3762,24 +3780,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.45
         loss:
-          weight: 0.15
+          weight: 0.5
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
+          weight: 0.6
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -3789,24 +3798,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: design_quality
-        label: Design Quality
-        description: Design work quality as primary risk driver; extremely high exposure weight reflects latent defect long-tail
-        risk:
-          weight: 0.25
-        loss:
-          weight: 0.3
-        exposure:
-          weight: 0.45
     risk_tier_bands:
       bands:
       - id: 1
@@ -4054,6 +4045,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_engineering:
     metadata:
       name: DSI PI Structural/Civil/Geotechnical Engineering Model
@@ -4135,7 +4132,7 @@ professional_indemnity:
       inference_utility_function: structural_failure_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4157,7 +4154,7 @@ professional_indemnity:
       inference_utility_function: pe_license_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4175,7 +4172,7 @@ professional_indemnity:
       inference_utility_function: geotechnical_claim_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4191,7 +4188,7 @@ professional_indemnity:
       inference_utility_function: infrastructure_project_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4207,7 +4204,7 @@ professional_indemnity:
       inference_utility_function: project_size_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -4223,7 +4220,7 @@ professional_indemnity:
       inference_utility_function: remediation_cost_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: engineering_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -4246,16 +4243,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.05
-      - id: firm_stability
+          weight: 0.15
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -4264,24 +4261,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.5
         loss:
-          weight: 0.1
+          weight: 0.5
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
+          weight: 0.65
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -4291,24 +4279,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: engineering_quality
-        label: Engineering Quality
-        description: Dominates all three dimensions with highest combined group weight (1.20); structural failure IS the risk
-        risk:
-          weight: 0.35
-        loss:
-          weight: 0.35
-        exposure:
-          weight: 0.5
     risk_tier_bands:
       bands:
       - id: 1
@@ -4685,7 +4655,7 @@ professional_indemnity:
       inference_utility_function: project_failure_rate_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -4701,7 +4671,7 @@ professional_indemnity:
       inference_utility_function: sla_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4717,7 +4687,7 @@ professional_indemnity:
       inference_utility_function: data_breach_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -4739,7 +4709,7 @@ professional_indemnity:
       inference_utility_function: technology_stack_currency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -4755,7 +4725,7 @@ professional_indemnity:
       inference_utility_function: implementation_methodology_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -4771,7 +4741,7 @@ professional_indemnity:
       inference_utility_function: client_data_encryption_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: delivery_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.1
@@ -4794,16 +4764,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.1
+          weight: 0.25
         exposure:
-          weight: 0.05
-      - id: firm_stability
+          weight: 0.15
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -4812,24 +4782,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.45
         loss:
-          weight: 0.15
+          weight: 0.55
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.15
+          weight: 0.6
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -4839,24 +4800,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: delivery_quality
-        label: Delivery Quality
-        description: Technology PI where risk is in delivery, not advice; high exposure weight reflects project concentration
-        risk:
-          weight: 0.15
-        loss:
-          weight: 0.2
-        exposure:
-          weight: 0.35
     risk_tier_bands:
       bands:
       - id: 1
@@ -5104,6 +5047,12 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_financial_advisory:
     metadata:
       name: DSI PI Wealth Management & IFA Model
@@ -5175,7 +5124,7 @@ professional_indemnity:
       inference_utility_function: suitability_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: advisory_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -5197,7 +5146,7 @@ professional_indemnity:
       inference_utility_function: complaint_per_aum_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: advisory_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5213,7 +5162,7 @@ professional_indemnity:
       inference_utility_function: regulatory_exam_results_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: advisory_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -5229,7 +5178,7 @@ professional_indemnity:
       inference_utility_function: churning_indicators_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: advisory_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5245,7 +5194,7 @@ professional_indemnity:
       inference_utility_function: fee_transparency_score_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: advisory_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -5268,16 +5217,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.25
+          weight: 0.35
         loss:
-          weight: 0.25
+          weight: 0.4
         exposure:
-          weight: 0.15
-      - id: firm_stability
+          weight: 0.25
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -5286,24 +5235,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.35
         loss:
-          weight: 0.2
+          weight: 0.4
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.1
+          weight: 0.5
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -5313,24 +5253,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: advisory_quality
-        label: Advisory Quality
-        description: Suitability failures and systemic mis-selling; high exposure weight reflects systemic risk
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.3
     risk_tier_bands:
       bands:
       - id: 1
@@ -5578,6 +5500,12 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_management_consulting:
     metadata:
       name: DSI PI Strategy & Management Advisory Model
@@ -5640,16 +5568,16 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.25
         loss:
-          weight: 0.15
+          weight: 0.3
         exposure:
-          weight: 0.05
-      - id: firm_stability
+          weight: 0.2
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -5658,24 +5586,15 @@ professional_indemnity:
           weight: 0.15
         exposure:
           weight: 0.2
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.25
+          weight: 0.35
         exposure:
-          weight: 0.15
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.1
-        exposure:
-          weight: 0.15
+          weight: 0.3
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -5685,15 +5604,6 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.2
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -5941,6 +5851,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_real_estate:
     metadata:
       name: DSI PI Surveyors, Valuers & Estate Agents Model
@@ -6012,7 +5928,7 @@ professional_indemnity:
       inference_utility_function: valuation_accuracy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: valuation_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -6028,7 +5944,7 @@ professional_indemnity:
       inference_utility_function: negligent_misstatement_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: valuation_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.25
@@ -6050,7 +5966,7 @@ professional_indemnity:
       inference_utility_function: property_type_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: valuation_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6066,7 +5982,7 @@ professional_indemnity:
       inference_utility_function: market_knowledge_currency_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: valuation_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6082,7 +5998,7 @@ professional_indemnity:
       inference_utility_function: rics_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: valuation_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6111,16 +6027,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.2
+          weight: 0.35
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.2
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -6129,24 +6045,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.15
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.15
+          weight: 0.4
         loss:
-          weight: 0.15
+          weight: 0.45
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
+          weight: 0.55
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -6156,24 +6063,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: valuation_quality
-        label: Valuation Quality
-        description: Risk is accuracy of opinion; single negligent valuation can exceed firm annual revenue
-        risk:
-          weight: 0.2
-        loss:
-          weight: 0.25
-        exposure:
-          weight: 0.4
     risk_tier_bands:
       bands:
       - id: 1
@@ -6421,6 +6310,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_environmental:
     metadata:
       name: DSI PI Environmental Consulting Model
@@ -6492,7 +6387,7 @@ professional_indemnity:
       inference_utility_function: contamination_assessment_accuracy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_assessment_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.3
@@ -6508,7 +6403,7 @@ professional_indemnity:
       inference_utility_function: regulatory_compliance_track_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_assessment_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -6524,7 +6419,7 @@ professional_indemnity:
       inference_utility_function: remediation_effectiveness_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: environmental_assessment_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.2
@@ -6540,7 +6435,7 @@ professional_indemnity:
       inference_utility_function: long_tail_exposure_basefunction
       proxy_tier: INFERRED_PROXY
       three_layer_assessment:
-        group_id: environmental_assessment_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6556,7 +6451,7 @@ professional_indemnity:
       inference_utility_function: cercla_superfund_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       three_layer_assessment:
-        group_id: environmental_assessment_quality
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.15
@@ -6585,16 +6480,16 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: regulatory_standing
+      - id: public_record
         label: Regulatory Standing
         description: ''
         risk:
-          weight: 0.2
+          weight: 0.3
         loss:
-          weight: 0.2
+          weight: 0.35
         exposure:
-          weight: 0.1
-      - id: firm_stability
+          weight: 0.2
+      - id: behavioural
         label: Firm Stability
         description: ''
         risk:
@@ -6603,24 +6498,15 @@ professional_indemnity:
           weight: 0.1
         exposure:
           weight: 0.1
-      - id: practice_quality
+      - id: technical_infrastructure
         label: Practice Quality
         description: ''
         risk:
-          weight: 0.1
+          weight: 0.5
         loss:
-          weight: 0.1
+          weight: 0.45
         exposure:
-          weight: 0.1
-      - id: technical_infrastructure
-        label: Technical Infrastructure
-        description: ''
-        risk:
-          weight: 0.05
-        loss:
-          weight: 0.05
-        exposure:
-          weight: 0.05
+          weight: 0.6
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
@@ -6630,24 +6516,6 @@ professional_indemnity:
           weight: 0.05
         exposure:
           weight: 0.05
-      - id: litigation_history
-        label: Litigation History
-        description: ''
-        risk:
-          weight: 0.1
-        loss:
-          weight: 0.15
-        exposure:
-          weight: 0.1
-      - id: environmental_assessment_quality
-        label: Environmental Assessment Quality
-        description: Extreme long-tail exposure and CERCLA severity; second-highest combined weight (1.10)
-        risk:
-          weight: 0.35
-        loss:
-          weight: 0.3
-        exposure:
-          weight: 0.45
     risk_tier_bands:
       bands:
       - id: 1
@@ -6895,3 +6763,9 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0

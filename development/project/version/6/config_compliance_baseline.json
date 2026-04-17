@@ -1,0 +1,75 @@
+{
+  "_comment": "V6 config-compliance baseline. Pre-V6 known debt lives here so the health gate can start enforcing without blocking on pre-existing issues. Entries are cleared as maturation phases (A1-A8) land.",
+  "findings": [
+    {
+      "path": "coverages/aerospace/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/casualty/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/cyber/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/do/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/energy/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/fi/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/fpr/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/marine/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    },
+    {
+      "path": "coverages/property/config.yaml",
+      "scope": "metadata.minimum_viable_input",
+      "category": "schema.metadata",
+      "severity": "warning",
+      "message": "minimum_viable_input should be a non-empty list"
+    }
+  ]
+}

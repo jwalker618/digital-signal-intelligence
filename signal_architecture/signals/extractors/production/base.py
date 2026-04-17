@@ -10,9 +10,12 @@ Key differences from StubExtractor:
     - Proper error handling and retry logic
     - Rate limiting support
     - Detailed logging
+    - Kill-switch env var per extractor (V6/D1)
+    - OpenTelemetry span per extraction (V6/C3)
 """
 
 import logging
+import os
 import time
 from abc import abstractmethod
 from datetime import datetime, timezone
@@ -23,6 +26,19 @@ from ..base import BaseExtractor
 from ...types import ExtractorResult, InferenceContext
 
 logger = logging.getLogger(__name__)
+
+
+COST_TIER_RANK = {"free": 0, "low": 1, "medium": 2, "high": 3}
+
+
+class _NullCM:
+    """No-op context manager used when OTel is unavailable."""
+
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
 
 T = TypeVar('T')
 
@@ -134,6 +150,36 @@ class ProductionExtractor(BaseExtractor):
     # Cost tier for documentation/budgeting
     COST_TIER: str = "free"  # 'free', 'low', 'medium', 'high'
 
+    # V6 (D1): kill-switch env var. When set to a truthy value the extractor
+    # short-circuits to a neutral "absence-as-signal" result so ops can shed
+    # a broken / noisy / expensive source without a deploy. Subclasses that
+    # want a kill-switch override this.
+    KILL_SWITCH_ENV: Optional[str] = None
+
+    # V6 (D1): environment variable carrying the API key, when applicable.
+    # If set but the env var is unset, extract() returns a neutral-absence
+    # result instead of raising, matching the "framework runs without
+    # paid sources" principle.
+    API_KEY_ENV: Optional[str] = None
+
+    @classmethod
+    def cost_tier_rank(cls) -> int:
+        return COST_TIER_RANK.get(cls.COST_TIER, 99)
+
+    @classmethod
+    def is_disabled(cls) -> bool:
+        if not cls.KILL_SWITCH_ENV:
+            return False
+        return os.environ.get(cls.KILL_SWITCH_ENV, "").strip().lower() in (
+            "1", "true", "yes", "on",
+        )
+
+    @classmethod
+    def has_api_key(cls) -> bool:
+        if not cls.API_KEY_ENV:
+            return True
+        return bool(os.environ.get(cls.API_KEY_ENV, "").strip())
+
     def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize the production extractor.
@@ -204,6 +250,14 @@ class ProductionExtractor(BaseExtractor):
         Returns:
             ExtractorResult with the data
         """
+        # V6 D1: kill-switch — short-circuit to neutral absence.
+        if self.is_disabled():
+            return self._create_neutral_absence(reason="kill_switch_active")
+
+        # V6 D1: paid extractor without an API key — neutral absence.
+        if not self.has_api_key():
+            return self._create_neutral_absence(reason="api_key_missing")
+
         # Check cache first (unless force_refresh)
         if context and not force_refresh:
             cached = self._get_cached(entity_id, context, **kwargs)
@@ -218,9 +272,27 @@ class ProductionExtractor(BaseExtractor):
         self._request_count += 1
         start_time = time.time()
 
+        # V6 C3: open a per-extractor OTel span (no-op when OTel disabled).
         try:
-            # Fetch fresh data
-            result = self._do_extract(entity_id, **kwargs)
+            from infrastructure.api.observability.otel import extractor_span
+        except ImportError:
+            extractor_span = None
+
+        span_cm = (
+            extractor_span(
+                self.SOURCE_NAME,
+                entity_id=entity_id,
+                cost_tier=self.COST_TIER,
+                cache_hit=False,
+            )
+            if extractor_span is not None
+            else _NullCM()
+        )
+
+        try:
+            with span_cm:
+                # Fetch fresh data
+                result = self._do_extract(entity_id, **kwargs)
 
             # Add timing metadata
             elapsed_ms = (time.time() - start_time) * 1000
@@ -273,15 +345,16 @@ class ProductionExtractor(BaseExtractor):
         metadata: Optional[Dict[str, Any]] = None
     ) -> ExtractorResult:
         """Create a successful ExtractorResult."""
+        meta = dict(metadata or {})
+        meta.setdefault("confidence", confidence)
         return ExtractorResult(
             success=True,
             data=data,
             source=self.SOURCE_NAME,
-            timestamp=utcnow(),
+            extracted_at=utcnow(),
             ttl_seconds=self.DEFAULT_TTL_SECONDS,
-            confidence=confidence,
             error=None,
-            metadata=metadata or {},
+            metadata=meta,
         )
 
     def _create_error_result(
@@ -294,11 +367,34 @@ class ProductionExtractor(BaseExtractor):
             success=False,
             data=partial_data or {},
             source=self.SOURCE_NAME,
-            timestamp=utcnow(),
+            extracted_at=utcnow(),
             ttl_seconds=60,  # Short TTL for errors
-            confidence=0.0,
             error=error,
-            metadata={'error_type': type(error).__name__},
+            metadata={
+                'error_type': type(error).__name__,
+                'confidence': 0.0,
+            },
+        )
+
+    def _create_neutral_absence(self, *, reason: str) -> ExtractorResult:
+        """V6 (D1) — signal a known absence without raising.
+
+        Used when a kill-switch is active or a required API key is
+        missing. Downstream inference treats confidence=0 as "no signal",
+        matching the absence-as-signal principle.
+        """
+        return ExtractorResult(
+            success=False,
+            data={},
+            source=f"{self.SOURCE_NAME}:absent",
+            extracted_at=utcnow(),
+            ttl_seconds=300,
+            error=None,
+            metadata={
+                "absence_reason": reason,
+                "cost_tier": self.COST_TIER,
+                "confidence": 0.0,
+            },
         )
 
     def _get_cached(

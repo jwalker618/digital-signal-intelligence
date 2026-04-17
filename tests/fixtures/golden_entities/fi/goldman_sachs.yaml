@@ -1,0 +1,21 @@
+entity_id: goldman_sachs
+name: The Goldman Sachs Group, Inc.
+coverage: fi
+domain: goldmansachs.com
+registry_id: US-Delaware-0000886982
+minimum_viable_input:
+  revenue: 46254000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: standard
+  industry_sector: FINANCIAL_SERVICES
+  domain: goldmansachs.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 32696.78
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

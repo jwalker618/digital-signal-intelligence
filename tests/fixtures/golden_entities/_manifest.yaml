@@ -1,0 +1,1214 @@
+# V6 Golden-Entity Manifest
+#
+# Lists the public entities used as snapshot fixtures for each coverage.
+# Adding an entry here and running:
+#
+#     python tests/fixtures/golden_entities/_generator.py --all
+#
+# will snapshot the current pipeline output into the matching fixture file
+# under tests/fixtures/golden_entities/{coverage}/{entity_id}.yaml.
+#
+# Target per V6 E5: 10 entities × 10 existing coverages = 100 fixtures.
+# This file currently lists 2 entities per coverage as a proof-of-concept
+# scaffold; the remaining 8/coverage land under the A1-A8 maturation phases
+# alongside the sub-config and signal work for each line.
+#
+# Premium tolerance is expressed in basis points (10_000 = 100%). Score
+# tolerance is absolute composite-score points. Keep tolerances tight
+# enough to catch regressions; widen only if the signal is genuinely noisy.
+
+coverages:
+  aerospace:
+    - entity_id: boeing
+      name: The Boeing Company
+      domain: boeing.com
+      registry_id: US-Delaware-0000004401
+      minimum_viable_input:
+        revenue: 77794000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: boeing.com
+    - entity_id: airbus
+      name: Airbus SE
+      domain: airbus.com
+      registry_id: NL-Amsterdam-24288945
+      minimum_viable_input:
+        revenue: 65446000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: airbus.com
+    - entity_id: lockheed_martin
+      name: Lockheed Martin Corporation
+      domain: lockheedmartin.com
+      registry_id: US-Maryland-0000936468
+      minimum_viable_input:
+        revenue: 67571000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: DEFENSE
+        domain: lockheedmartin.com
+    - entity_id: raytheon
+      name: RTX Corporation
+      domain: rtx.com
+      registry_id: US-Delaware-0000101829
+      minimum_viable_input:
+        revenue: 68920000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: DEFENSE
+        domain: rtx.com
+    - entity_id: spacex
+      name: Space Exploration Technologies Corp.
+      config_id: aerospace_space
+      domain: spacex.com
+      registry_id: US-Delaware-0001181412
+      minimum_viable_input:
+        revenue: 9000000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SPACE
+        domain: spacex.com
+    - entity_id: blue_origin
+      name: Blue Origin, LLC
+      config_id: aerospace_space
+      domain: blueorigin.com
+      registry_id: US-Delaware-0001678895
+      minimum_viable_input:
+        revenue: 500000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SPACE
+        domain: blueorigin.com
+    - entity_id: bell_helicopter
+      name: Bell Textron Inc.
+      config_id: aerospace_rotary
+      domain: bellflight.com
+      registry_id: US-Delaware-0000217346
+      minimum_viable_input:
+        revenue: 3250000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: ROTORCRAFT
+        domain: bellflight.com
+    - entity_id: skydio
+      name: Skydio, Inc.
+      config_id: aerospace_unmanned
+      domain: skydio.com
+      registry_id: US-Delaware-0001636027
+      minimum_viable_input:
+        revenue: 125000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: UAS
+        domain: skydio.com
+    - entity_id: aar_corp
+      name: AAR Corp.
+      config_id: aerospace_mro
+      domain: aarcorp.com
+      registry_id: US-Delaware-0000001750
+      minimum_viable_input:
+        revenue: 2200000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MRO
+        domain: aarcorp.com
+    - entity_id: virgin_galactic
+      name: Virgin Galactic Holdings, Inc.
+      config_id: aerospace_space
+      domain: virgingalactic.com
+      registry_id: US-Delaware-0001706946
+      minimum_viable_input:
+        revenue: 7000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: SPACE
+        domain: virgingalactic.com
+
+  casualty:
+    - entity_id: walmart
+      name: Walmart Inc.
+      config_id: casualty_gl
+      domain: walmart.com
+      registry_id: US-Delaware-0000104169
+      minimum_viable_input:
+        revenue: 648125000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: walmart.com
+    - entity_id: fedex
+      name: FedEx Corporation
+      config_id: casualty_auto
+      domain: fedex.com
+      registry_id: US-Delaware-0001048911
+      minimum_viable_input:
+        revenue: 90155000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: TRANSPORTATION
+        domain: fedex.com
+    - entity_id: ups
+      name: United Parcel Service, Inc.
+      config_id: casualty_auto
+      domain: ups.com
+      registry_id: US-Delaware-0001090727
+      minimum_viable_input:
+        revenue: 91009000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TRANSPORTATION
+        domain: ups.com
+    - entity_id: target
+      name: Target Corporation
+      config_id: casualty_gl
+      domain: target.com
+      registry_id: US-Minnesota-0000027419
+      minimum_viable_input:
+        revenue: 107412000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: target.com
+    - entity_id: caterpillar
+      name: Caterpillar Inc.
+      config_id: casualty_gl
+      domain: caterpillar.com
+      registry_id: US-Delaware-0000018230
+      minimum_viable_input:
+        revenue: 67060000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MANUFACTURING
+        domain: caterpillar.com
+    - entity_id: kroger
+      name: The Kroger Co.
+      config_id: casualty_umbrella
+      domain: kroger.com
+      registry_id: US-Ohio-0000056873
+      minimum_viable_input:
+        revenue: 148258000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: kroger.com
+    - entity_id: waste_management
+      name: Waste Management, Inc.
+      config_id: casualty_environmental
+      domain: wm.com
+      registry_id: US-Delaware-0000823768
+      minimum_viable_input:
+        revenue: 20726000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ENVIRONMENTAL_SERVICES
+        domain: wm.com
+    - entity_id: dupont
+      name: DuPont de Nemours, Inc.
+      config_id: casualty_environmental
+      domain: dupont.com
+      registry_id: US-Delaware-0001666700
+      minimum_viable_input:
+        revenue: 12069000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: CHEMICALS
+        domain: dupont.com
+    - entity_id: sysco
+      name: Sysco Corporation
+      config_id: casualty_auto
+      domain: sysco.com
+      registry_id: US-Delaware-0000096021
+      minimum_viable_input:
+        revenue: 76324000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: FOOD_DISTRIBUTION
+        domain: sysco.com
+    - entity_id: costco
+      name: Costco Wholesale Corporation
+      config_id: casualty_gl
+      domain: costco.com
+      registry_id: US-Washington-0000909832
+      minimum_viable_input:
+        revenue: 242290000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: costco.com
+
+  cyber:
+    - entity_id: microsoft
+      name: Microsoft Corporation
+      domain: microsoft.com
+      registry_id: US-Washington-600413485
+      minimum_viable_input:
+        revenue: 211915000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: microsoft.com
+    - entity_id: jpmorgan_chase
+      name: JPMorgan Chase & Co.
+      domain: jpmorganchase.com
+      registry_id: US-Delaware-0000019617
+      minimum_viable_input:
+        revenue: 158104000000
+        limit: 50000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: jpmorganchase.com
+    - entity_id: anthem
+      name: Elevance Health, Inc.
+      config_id: cyber_healthcare
+      domain: elevancehealth.com
+      registry_id: US-Indiana-0001156039
+      minimum_viable_input:
+        revenue: 171340000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: HEALTHCARE
+        domain: elevancehealth.com
+    - entity_id: unitedhealth_cyber
+      name: UnitedHealth Group Incorporated
+      config_id: cyber_healthcare
+      domain: unitedhealthgroup.com
+      registry_id: US-Delaware-0000731766
+      minimum_viable_input:
+        revenue: 371622000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: HEALTHCARE
+        domain: unitedhealthgroup.com
+    - entity_id: amazon_cyber
+      name: Amazon.com, Inc.
+      config_id: cyber_retail
+      domain: amazon.com
+      registry_id: US-Delaware-0001018724
+      minimum_viable_input:
+        revenue: 574785000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: RETAIL
+        domain: amazon.com
+    - entity_id: shopify_cyber
+      name: Shopify Inc.
+      config_id: cyber_digital_platform
+      domain: shopify.com
+      registry_id: CA-Ontario-1692501
+      minimum_viable_input:
+        revenue: 7062000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: shopify.com
+    - entity_id: ge_cyber
+      name: GE Aerospace
+      config_id: cyber_manufacturing
+      domain: geaerospace.com
+      registry_id: US-Delaware-0000040545
+      minimum_viable_input:
+        revenue: 35110000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MANUFACTURING
+        domain: geaerospace.com
+    - entity_id: verisign
+      name: VeriSign, Inc.
+      config_id: cyber_critical_infrastructure
+      domain: verisign.com
+      registry_id: US-Delaware-0001014473
+      minimum_viable_input:
+        revenue: 1560000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: verisign.com
+    - entity_id: state_of_california
+      name: State of California
+      config_id: cyber_public_sector
+      domain: ca.gov
+      registry_id: US-California-GOV-CA
+      minimum_viable_input:
+        revenue: 306000000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: GOVERNMENT
+        domain: ca.gov
+    - entity_id: okta
+      name: Okta, Inc.
+      config_id: cyber_technology
+      domain: okta.com
+      registry_id: US-Delaware-0001660134
+      minimum_viable_input:
+        revenue: 2263000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: okta.com
+
+  do:
+    - entity_id: alphabet
+      name: Alphabet Inc.
+      domain: abc.xyz
+      registry_id: US-Delaware-0001652044
+      minimum_viable_input:
+        revenue: 307394000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: abc.xyz
+    - entity_id: tesla
+      name: Tesla, Inc.
+      domain: tesla.com
+      registry_id: US-Delaware-0001318605
+      minimum_viable_input:
+        revenue: 96773000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AUTOMOTIVE
+        domain: tesla.com
+    - entity_id: meta_platforms
+      name: Meta Platforms, Inc.
+      config_id: do_public
+      domain: meta.com
+      registry_id: US-Delaware-0001326801
+      minimum_viable_input:
+        revenue: 134902000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: meta.com
+    - entity_id: netflix
+      name: Netflix, Inc.
+      config_id: do_public
+      domain: netflix.com
+      registry_id: US-Delaware-0001065280
+      minimum_viable_input:
+        revenue: 33723000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MEDIA
+        domain: netflix.com
+    - entity_id: pfizer
+      name: Pfizer Inc.
+      config_id: do_public
+      domain: pfizer.com
+      registry_id: US-Delaware-0000078003
+      minimum_viable_input:
+        revenue: 58496000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: PHARMACEUTICALS
+        domain: pfizer.com
+    - entity_id: boeing_do
+      name: The Boeing Company (D&O)
+      config_id: do_public
+      domain: boeing.com
+      registry_id: US-Delaware-0000012927
+      minimum_viable_input:
+        revenue: 77794000000
+        limit: 50000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: AEROSPACE
+        domain: boeing.com
+    - entity_id: nvidia
+      name: NVIDIA Corporation
+      config_id: do_public
+      domain: nvidia.com
+      registry_id: US-Delaware-0001045810
+      minimum_viable_input:
+        revenue: 60922000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: nvidia.com
+    - entity_id: stripe_do
+      name: Stripe, Inc.
+      config_id: do_pe_backed
+      domain: stripe.com
+      registry_id: US-Delaware-0001745814
+      minimum_viable_input:
+        revenue: 14400000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: stripe.com
+    - entity_id: databricks
+      name: Databricks, Inc.
+      config_id: do_pe_backed
+      domain: databricks.com
+      registry_id: US-Delaware-0001601082
+      minimum_viable_input:
+        revenue: 2400000000
+        limit: 25000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: databricks.com
+    - entity_id: nonprofit_pbs
+      name: Public Broadcasting Service
+      config_id: do_nonprofit
+      domain: pbs.org
+      registry_id: US-Virginia-0000000001
+      minimum_viable_input:
+        revenue: 354000000
+        limit: 10000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: NONPROFIT_MEDIA
+        domain: pbs.org
+
+  energy:
+    - entity_id: exxonmobil
+      name: Exxon Mobil Corporation
+      domain: exxonmobil.com
+      registry_id: US-NewJersey-0000034088
+      minimum_viable_input:
+        revenue: 344582000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: exxonmobil.com
+    - entity_id: nextera
+      name: NextEra Energy, Inc.
+      domain: nexteraenergy.com
+      registry_id: US-Florida-0000753308
+      minimum_viable_input:
+        revenue: 28114000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: UTILITIES
+        domain: nexteraenergy.com
+    - entity_id: chevron_energy
+      name: Chevron Corporation (Energy)
+      config_id: energy_upstream_deepwater
+      domain: chevron.com
+      registry_id: US-Delaware-0000093410
+      minimum_viable_input:
+        revenue: 200949000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: chevron.com
+    - entity_id: shell_energy
+      name: Shell plc
+      config_id: energy_upstream_deepwater
+      domain: shell.com
+      registry_id: UK-London-04366849
+      minimum_viable_input:
+        revenue: 316621000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: shell.com
+    - entity_id: conocophillips
+      name: ConocoPhillips
+      config_id: energy_upstream_onshore
+      domain: conocophillips.com
+      registry_id: US-Delaware-0001163165
+      minimum_viable_input:
+        revenue: 56141000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: conocophillips.com
+    - entity_id: eog_resources
+      name: EOG Resources, Inc.
+      config_id: energy_upstream_unconventional
+      domain: eogresources.com
+      registry_id: US-Delaware-0000821189
+      minimum_viable_input:
+        revenue: 23649000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: eogresources.com
+    - entity_id: kinder_morgan
+      name: Kinder Morgan, Inc.
+      config_id: energy_midstream
+      domain: kindermorgan.com
+      registry_id: US-Delaware-0001506307
+      minimum_viable_input:
+        revenue: 15334000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: PIPELINE
+        domain: kindermorgan.com
+    - entity_id: valero
+      name: Valero Energy Corporation
+      config_id: energy_downstream
+      domain: valero.com
+      registry_id: US-Delaware-0001035002
+      minimum_viable_input:
+        revenue: 144766000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: REFINING
+        domain: valero.com
+    - entity_id: southern_company
+      name: The Southern Company
+      domain: southerncompany.com
+      registry_id: US-Delaware-0000092122
+      minimum_viable_input:
+        revenue: 25253000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: UTILITIES
+        domain: southerncompany.com
+    - entity_id: first_solar
+      name: First Solar, Inc.
+      domain: firstsolar.com
+      registry_id: US-Delaware-0001274494
+      minimum_viable_input:
+        revenue: 3319000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: RENEWABLES
+        domain: firstsolar.com
+
+  fi:
+    - entity_id: goldman_sachs
+      name: The Goldman Sachs Group, Inc.
+      domain: goldmansachs.com
+      registry_id: US-Delaware-0000886982
+      minimum_viable_input:
+        revenue: 46254000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: goldmansachs.com
+    - entity_id: bank_of_america
+      name: Bank of America Corporation
+      domain: bankofamerica.com
+      registry_id: US-Delaware-0000070858
+      minimum_viable_input:
+        revenue: 171912000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: FINANCIAL_SERVICES
+        domain: bankofamerica.com
+    - entity_id: jpm_fi
+      name: JPMorgan Chase & Co. (FI)
+      config_id: fi_bank
+      domain: jpmorganchase.com
+      registry_id: US-Delaware-0000019617
+      minimum_viable_input:
+        revenue: 158104000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: jpmorganchase.com
+    - entity_id: wells_fargo
+      name: Wells Fargo & Company
+      config_id: fi_bank
+      domain: wellsfargo.com
+      registry_id: US-Delaware-0000072971
+      minimum_viable_input:
+        revenue: 82597000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: wellsfargo.com
+    - entity_id: citigroup
+      name: Citigroup Inc.
+      config_id: fi_bank
+      domain: citi.com
+      registry_id: US-Delaware-0000831001
+      minimum_viable_input:
+        revenue: 78492000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: citi.com
+    - entity_id: metlife
+      name: MetLife, Inc.
+      config_id: fi_insurer
+      domain: metlife.com
+      registry_id: US-Delaware-0001099219
+      minimum_viable_input:
+        revenue: 67912000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: INSURANCE
+        domain: metlife.com
+    - entity_id: prudential
+      name: Prudential Financial, Inc.
+      config_id: fi_insurer
+      domain: prudential.com
+      registry_id: US-New_Jersey-0001137774
+      minimum_viable_input:
+        revenue: 53203000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: INSURANCE
+        domain: prudential.com
+    - entity_id: square_fi
+      name: Block, Inc. (Square)
+      config_id: fi_fintech
+      domain: block.xyz
+      registry_id: US-Delaware-0001512673
+      minimum_viable_input:
+        revenue: 21915000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: FINTECH
+        domain: block.xyz
+    - entity_id: coinbase
+      name: Coinbase Global, Inc.
+      config_id: fi_crypto
+      domain: coinbase.com
+      registry_id: US-Delaware-0001679788
+      minimum_viable_input:
+        revenue: 3108000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: CRYPTO
+        domain: coinbase.com
+    - entity_id: morgan_stanley
+      name: Morgan Stanley
+      config_id: fi_bank
+      domain: morganstanley.com
+      registry_id: US-Delaware-0000895421
+      minimum_viable_input:
+        revenue: 54143000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: morganstanley.com
+
+  fpr:
+    - entity_id: glencore
+      name: Glencore plc
+      config_id: fpr_trade_credit
+      domain: glencore.com
+      registry_id: JE-Jersey-107710
+      minimum_viable_input:
+        revenue: 217827000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: COMMODITY_TRADING
+        domain: glencore.com
+    - entity_id: palantir
+      name: Palantir Technologies Inc.
+      config_id: fpr_political_risk
+      domain: palantir.com
+      registry_id: US-Delaware-0001321655
+      minimum_viable_input:
+        revenue: 2865000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: TECHNOLOGY
+        domain: palantir.com
+    - entity_id: rio_tinto
+      name: Rio Tinto plc
+      config_id: fpr_political_risk
+      domain: riotinto.com
+      registry_id: UK-London-00719885
+      minimum_viable_input:
+        revenue: 54041000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: MINING
+        domain: riotinto.com
+    - entity_id: bp
+      name: BP p.l.c.
+      config_id: fpr_political_risk
+      domain: bp.com
+      registry_id: UK-London-00102498
+      minimum_viable_input:
+        revenue: 210139000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: bp.com
+    - entity_id: total_energies
+      name: TotalEnergies SE
+      config_id: fpr_political_risk
+      domain: totalenergies.com
+      registry_id: FR-Paris-542051180
+      minimum_viable_input:
+        revenue: 218941000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        domain: totalenergies.com
+    - entity_id: fluor_corp
+      name: Fluor Corporation
+      config_id: fpr_surety
+      domain: fluor.com
+      registry_id: US-Delaware-0001124198
+      minimum_viable_input:
+        revenue: 15474000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ENGINEERING_CONSTRUCTION
+        domain: fluor.com
+    - entity_id: bechtel
+      name: Bechtel Corporation
+      config_id: fpr_surety
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        revenue: 17500000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ENGINEERING_CONSTRUCTION
+        domain: bechtel.com
+    - entity_id: caci
+      name: CACI International Inc
+      config_id: fpr_kidnap_ransom
+      domain: caci.com
+      registry_id: US-Delaware-0000017843
+      minimum_viable_input:
+        revenue: 7658000000
+        limit: 10000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: DEFENSE
+        domain: caci.com
+    - entity_id: crh_plc
+      name: CRH plc
+      config_id: fpr_trade_credit
+      domain: crh.com
+      registry_id: IE-Dublin-12965
+      minimum_viable_input:
+        revenue: 33428000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: BUILDING_MATERIALS
+        domain: crh.com
+    - entity_id: archer_daniels_midland
+      name: Archer-Daniels-Midland Company
+      config_id: fpr_trade_credit
+      domain: adm.com
+      registry_id: US-Delaware-0000007084
+      minimum_viable_input:
+        revenue: 93935000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: AGRICULTURE
+        domain: adm.com
+
+  marine:
+    - entity_id: maersk
+      name: A.P. Møller - Mærsk A/S
+      domain: maersk.com
+      registry_id: DK-Copenhagen-22756214
+      minimum_viable_input:
+        revenue: 51100000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: maersk.com
+    - entity_id: carnival
+      name: Carnival Corporation & plc
+      domain: carnivalcorp.com
+      registry_id: US-Panama-0000815097
+      minimum_viable_input:
+        revenue: 21593000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: carnivalcorp.com
+    - entity_id: msc_mediterranean
+      name: MSC Mediterranean Shipping Company
+      domain: msc.com
+      registry_id: CH-Geneva-CHE-121.459.065
+      minimum_viable_input:
+        revenue: 86400000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: msc.com
+    - entity_id: cma_cgm
+      name: CMA CGM S.A.
+      domain: cma-cgm.com
+      registry_id: FR-Marseille-562024422
+      minimum_viable_input:
+        revenue: 46549000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: cma-cgm.com
+    - entity_id: evergreen_marine
+      name: Evergreen Marine Corporation
+      domain: evergreen-marine.com
+      registry_id: TW-Taipei-22099132
+      minimum_viable_input:
+        revenue: 20651000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: SHIPPING
+        domain: evergreen-marine.com
+    - entity_id: royal_caribbean
+      name: Royal Caribbean Cruises Ltd.
+      domain: royalcaribbean.com
+      registry_id: LR-Liberia-0000884887
+      minimum_viable_input:
+        revenue: 13900000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: royalcaribbean.com
+    - entity_id: transocean
+      name: Transocean Ltd.
+      domain: deepwater.com
+      registry_id: CH-Zug-CHE-115.404.306
+      minimum_viable_input:
+        revenue: 2832000000
+        limit: 200000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OFFSHORE_DRILLING
+        domain: deepwater.com
+    - entity_id: valaris
+      name: Valaris Limited
+      domain: valaris.com
+      registry_id: BM-Hamilton-54555
+      minimum_viable_input:
+        revenue: 2041000000
+        limit: 200000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OFFSHORE_DRILLING
+        domain: valaris.com
+    - entity_id: kuehne_nagel
+      name: Kuehne + Nagel International AG
+      config_id: marine_cargo
+      domain: kuehne-nagel.com
+      registry_id: CH-Schindellegi-CHE-107.526.597
+      minimum_viable_input:
+        revenue: 24567000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: LOGISTICS
+        domain: kuehne-nagel.com
+    - entity_id: norwegian_cruise
+      name: Norwegian Cruise Line Holdings Ltd.
+      domain: ncl.com
+      registry_id: BM-Hamilton-0001513761
+      minimum_viable_input:
+        revenue: 8550000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: CRUISE
+        domain: ncl.com
+
+  pi:
+    - entity_id: deloitte
+      name: Deloitte Touche Tohmatsu Limited
+      domain: deloitte.com
+      registry_id: UK-London-OC301151
+      minimum_viable_input:
+        revenue: 64900000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: deloitte.com
+    - entity_id: mckinsey
+      name: McKinsey & Company
+      domain: mckinsey.com
+      registry_id: US-Delaware-0000851170
+      minimum_viable_input:
+        revenue: 16000000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: mckinsey.com
+    - entity_id: pwc
+      name: PricewaterhouseCoopers LLP
+      config_id: pi_accounting
+      domain: pwc.com
+      registry_id: US-Delaware-0000875320
+      minimum_viable_input:
+        revenue: 53100000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ACCOUNTING
+        domain: pwc.com
+    - entity_id: ey
+      name: Ernst & Young Global Limited
+      config_id: pi_accounting
+      domain: ey.com
+      registry_id: UK-London-4328808
+      minimum_viable_input:
+        revenue: 49400000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ACCOUNTING
+        domain: ey.com
+    - entity_id: kirkland_ellis
+      name: Kirkland & Ellis LLP
+      config_id: pi_legal_large
+      domain: kirkland.com
+      registry_id: US-Illinois-LLP00001234
+      minimum_viable_input:
+        revenue: 7200000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: LEGAL
+        domain: kirkland.com
+    - entity_id: latham_watkins
+      name: Latham & Watkins LLP
+      config_id: pi_legal_large
+      domain: lw.com
+      registry_id: US-California-LLP12345
+      minimum_viable_input:
+        revenue: 6500000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: LEGAL
+        domain: lw.com
+    - entity_id: aecom_pi
+      name: AECOM (PI)
+      config_id: pi_architecture
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: ARCHITECTURE_ENGINEERING
+        domain: aecom.com
+    - entity_id: accenture_pi
+      name: Accenture plc
+      config_id: pi_technology
+      domain: accenture.com
+      registry_id: IE-Dublin-471706
+      minimum_viable_input:
+        revenue: 64124000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: accenture.com
+    - entity_id: bain_pi
+      name: Bain & Company
+      config_id: pi_management_consulting
+      domain: bain.com
+      registry_id: US-Massachusetts-MA00067890
+      minimum_viable_input:
+        revenue: 6000000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: PROFESSIONAL_SERVICES
+        domain: bain.com
+    - entity_id: cbre_pi
+      name: CBRE Group, Inc.
+      config_id: pi_real_estate
+      domain: cbre.com
+      registry_id: US-Delaware-0001364742
+      minimum_viable_input:
+        revenue: 32017000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: cbre.com
+
+  property:
+    - entity_id: simon_property
+      name: Simon Property Group, Inc.
+      domain: simon.com
+      registry_id: US-Delaware-0001063761
+      minimum_viable_input:
+        revenue: 5957000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: simon.com
+    - entity_id: marriott
+      name: Marriott International, Inc.
+      domain: marriott.com
+      registry_id: US-Delaware-0001048286
+      minimum_viable_input:
+        revenue: 23713000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: HOSPITALITY
+        domain: marriott.com
+    - entity_id: prologis
+      name: Prologis, Inc.
+      config_id: property_high_value
+      domain: prologis.com
+      registry_id: US-Maryland-0001045609
+      minimum_viable_input:
+        revenue: 8024000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: prologis.com
+    - entity_id: disney
+      name: The Walt Disney Company
+      config_id: property_high_value
+      domain: disney.com
+      registry_id: US-Delaware-0001744489
+      minimum_viable_input:
+        revenue: 88898000000
+        limit: 500000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: ENTERTAINMENT
+        domain: disney.com
+    - entity_id: chevron
+      name: Chevron Corporation
+      config_id: property_cat_exposed
+      domain: chevron.com
+      registry_id: US-Delaware-0000093410
+      minimum_viable_input:
+        revenue: 200949000000
+        limit: 500000000
+        deductible: 10000000
+        product_type: standard
+        industry_sector: OIL_GAS
+        cat_exposed: true
+        domain: chevron.com
+    - entity_id: duke_energy
+      name: Duke Energy Corporation
+      config_id: property_cat_exposed
+      domain: duke-energy.com
+      registry_id: US-Delaware-0001326160
+      minimum_viable_input:
+        revenue: 28765000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: UTILITIES
+        cat_exposed: true
+        domain: duke-energy.com
+    - entity_id: aecom
+      name: AECOM
+      config_id: property_builders_risk
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: ENGINEERING_CONSTRUCTION
+        domain: aecom.com
+    - entity_id: jll
+      name: Jones Lang LaSalle Incorporated
+      config_id: property_general
+      domain: jll.com
+      registry_id: US-Maryland-0001037976
+      minimum_viable_input:
+        revenue: 20762000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: jll.com
+    - entity_id: ashford_trust
+      name: Ashford Hospitality Trust, Inc.
+      config_id: property_sme
+      domain: ahtreit.com
+      registry_id: US-Maryland-0001232582
+      minimum_viable_input:
+        revenue: 1239000000
+        limit: 25000000
+        deductible: 250000
+        product_type: standard
+        industry_sector: HOSPITALITY
+        domain: ahtreit.com
+    - entity_id: kilroy_realty
+      name: Kilroy Realty Corporation
+      config_id: property_general
+      domain: kilroyrealty.com
+      registry_id: US-Maryland-0001493633
+      minimum_viable_input:
+        revenue: 1134000000
+        limit: 100000000
+        deductible: 1000000
+        product_type: standard
+        industry_sector: REAL_ESTATE
+        domain: kilroyrealty.com
