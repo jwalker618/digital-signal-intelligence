@@ -334,6 +334,123 @@ def test_cpsc_deepened_parsing(monkeypatch):
     assert d["most_recent_recall"] == "2024-05-10"
 
 
+def test_sec_iapd_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import (
+        SECIAPDExtractor,
+    )
+    sample_html = """
+    <html><body>
+      <h1>Acme Advisory</h1>
+      <p>CRD: 123456</p>
+      <p>Regulatory AUM: $12.5 billion</p>
+      <p>This firm has 3 disclosures. See disclosures page.</p>
+    </body></html>
+    """
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample_html)
+    monkeypatch.delenv("DSI_DISABLE_IAPD", raising=False)
+
+    r = SECIAPDExtractor().extract("acme.com")
+    assert r.success is True
+    d = r.data
+    assert d["crd_number"] == "123456"
+    assert d["regulatory_aum_usd"] == 12.5e9
+    assert d["disclosure_hit_count"] >= 2
+
+
+def test_gdpr_tracker_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import (
+        GDPREnforcementTrackerExtractor,
+    )
+    sample_html = """
+    <html>ACME penalties: € 50,000,000 (CNIL, Art. 5 GDPR);
+    € 10,000,000 (ICO, Art. 32 GDPR); € 2,500,000 (Garante, Art. 5 GDPR).
+    Other: € 100,000 from AEPD.</html>
+    """
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample_html)
+    monkeypatch.delenv("DSI_DISABLE_GDPR_TRACKER", raising=False)
+
+    r = GDPREnforcementTrackerExtractor().extract("acme.com")
+    assert r.success is True
+    d = r.data
+    assert d["fine_count"] == 4
+    assert d["highest_fine_eur"] == 50000000.0
+    assert d["total_fine_eur"] == 62600000.0
+    assert any(art == "5" for art, _ in d["article_top"])
+
+
+def test_cms_hospital_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import (
+        CMSHospitalCompareExtractor,
+    )
+    sample = {
+        "results": [
+            {"facility_name": "ACME Hospital",
+             "hospital_overall_rating": "4",
+             "hospital_readmission_measures_performance": "Below Average",
+             "safety_group_performance": "Below Average"},
+            {"facility_name": "ACME Surgical Center",
+             "hospital_overall_rating": "3",
+             "hospital_readmission_measures_performance": "Average",
+             "safety_group_performance": "Average"},
+        ],
+    }
+    monkeypatch.setattr(litigation, "_json", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_CMS_HOSPITAL", raising=False)
+
+    r = CMSHospitalCompareExtractor().extract("acme.com")
+    assert r.success is True
+    d = r.data
+    assert d["facility_hit_count"] == 2
+    assert d["avg_overall_rating"] == 3.5
+    assert d["worst_overall_rating"] == 3
+    assert d["best_overall_rating"] == 4
+    assert "Below Average" in d["readmission_signals_sample"]
+
+
+def test_joint_commission_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import (
+        JointCommissionExtractor,
+    )
+    sample_html = """
+    <html>Gold Seal of Approval awarded. Gold Seal. Accreditation: Hospital.
+    Accreditation: Laboratory. Award of distinction for stroke care.</html>
+    """
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample_html)
+    monkeypatch.delenv("DSI_DISABLE_JOINT_COMMISSION", raising=False)
+
+    r = JointCommissionExtractor().extract("acme.com")
+    assert r.success is True
+    d = r.data
+    assert d["gold_seal_count"] == 2
+    assert d["award_of_distinction_hits"] == 1
+    cert_names = [c for c, _ in d["certification_top"]]
+    assert any("Hospital" in c for c in cert_names)
+
+
+def test_pcaob_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import (
+        PCAOBQSAASVExtractor,
+    )
+    sample_html = """
+    <html>acme acme ACME. Part II contains significant deficiency findings.
+    Audit deficiency noted in prior cycle. Part II review completed.</html>
+    """
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample_html)
+    monkeypatch.delenv("DSI_DISABLE_PCAOB", raising=False)
+
+    r = PCAOBQSAASVExtractor().extract("acme.com")
+    assert r.success is True
+    d = r.data
+    assert d["reachable"] is True
+    assert d["firm_mentions"] >= 3
+    assert d["deficiency_phrase_count"] >= 3
+
+
 def test_fda_deepened_parsing(monkeypatch):
     from signal_architecture.signals.extractors.production import litigation
     from signal_architecture.signals.extractors.production.litigation import (

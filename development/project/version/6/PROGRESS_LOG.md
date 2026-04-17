@@ -112,6 +112,35 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Stage 6 batch 3 — 5 more D3 extractors + E10 follow-through
+
+- **SECIAPDExtractor**: parses IAPD summary HTML for CRD + regulatory-
+  AUM (with billion/million/trillion scale detection) + disclosure
+  hit count.
+- **GDPREnforcementTrackerExtractor**: fine-count, total-fine-sum,
+  highest single fine, top-3 articles + authorities
+  (CNIL/AEPD/ICO/Garante/...).
+- **CMSHospitalCompareExtractor**: facility_name-filtered CMS query
+  returning avg/worst/best overall rating, readmission + safety
+  signal samples.
+- **JointCommissionExtractor**: Gold Seal count, certification-type
+  top-5, award-of-distinction hits.
+- **PCAOBQSAASVExtractor**: firm-mention + deficiency-phrase counts
+  on the inspection-reports page.
+
+Total D3 deepenings now 13 of 18 (≈72%). Remaining thin probes:
+PACER RSS, SEC Litigation Releases RSS, NPDB public landing page,
+EU Safety Gate, USDA FSIS — each is a minimal RSS/landing reachability
+probe without a structured body worth parsing beyond the flag.
+
+**E10 follow-through**: `signal_architecture/signals/extractors/
+__init__.py` gutted of stub re-exports (154 → 16 lines). Nothing in
+production code imports from this package's top level, so dropping
+the stub re-exports is safe.
+
+Verification: 17/17 D3 tests pass, 221/221 goldens green, compliance
+strict PASS, stub-import guard PASS.
+
 ### E10 — physical stub move (unblocked + completed)
 
 Stub package relocated from `signal_architecture/signals/extractors/

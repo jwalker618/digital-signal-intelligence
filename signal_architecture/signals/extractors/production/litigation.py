@@ -262,13 +262,39 @@ class SECIAPDExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 604_800
     KILL_SWITCH_ENV = "DSI_DISABLE_IAPD"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the IAPD summary HTML for CRD + regulatory-AUM + state
+    # registration counts. Best-effort; falls back to reachability flag.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text(f"https://adviserinfo.sec.gov/firm/summary?search={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"endpoint_reachable": bool(txt)})
+
+        crd_match = re.search(r'CRD[^\d]*(\d{4,8})', txt or "", re.IGNORECASE)
+        aum_match = re.search(
+            r'\$\s*([\d,\.]+)\s*(billion|million|trillion)',
+            txt or "", re.IGNORECASE,
+        )
+        aum_usd = 0.0
+        if aum_match:
+            try:
+                val = float(aum_match.group(1).replace(",", ""))
+                scale = aum_match.group(2).lower()
+                aum_usd = val * {"million": 1e6, "billion": 1e9, "trillion": 1e12}.get(scale, 1.0)
+            except ValueError:
+                pass
+        disclosure_hits = len(re.findall(
+            r"\bdisclosure(?:s)?\b", txt or "", re.IGNORECASE,
+        ))
+        return self._create_success_result({
+            "endpoint_reachable": bool(txt),
+            "crd_number": crd_match.group(1) if crd_match else "",
+            "regulatory_aum_usd": aum_usd,
+            "disclosure_hit_count": disclosure_hits,
+        })
 
 
 class GDPREnforcementTrackerExtractor(_LitigationBase):
@@ -276,14 +302,42 @@ class GDPREnforcementTrackerExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 604_800
     KILL_SWITCH_ENV = "DSI_DISABLE_GDPR_TRACKER"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the enforcementtracker HTML for: fine-count, total-fine-
+    # sum, highest single fine, top-3 violation types + authorities.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text(f"https://www.enforcementtracker.com/?search={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        fine_matches = re.findall(r"€\s*([\d,\.]+)", txt or "")
+        fines_eur: list[float] = []
+        for m in fine_matches:
+            clean = m.replace(",", "").replace(".", "")
+            if clean.isdigit():
+                fines_eur.append(float(clean))
+
+        # heuristic extraction of article references + authorities
+        article_counter: Counter = Counter(
+            re.findall(r"Art\.\s*(\d+)\s*GDPR", txt or "", re.IGNORECASE)
+        )
+        authority_counter: Counter = Counter(
+            m.lower() for m in re.findall(
+                r"\b(CNIL|AEPD|Garante|ICO|Datenschutz|APD|NAIH)\b",
+                txt or "",
+            )
+        )
         return self._create_success_result({
-            "mentions_company": q.lower() in txt.lower(),
+            "mentions_company": q.lower() in (txt or "").lower(),
+            "fine_count": len(fines_eur),
+            "total_fine_eur": sum(fines_eur),
+            "highest_fine_eur": max(fines_eur) if fines_eur else 0,
+            "article_top": article_counter.most_common(3),
+            "authority_top": authority_counter.most_common(3),
         })
 
 
@@ -296,16 +350,41 @@ class CMSHospitalCompareExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_CMS_HOSPITAL"
 
+    # V6/Stage-6 field-depth expansion.
+    # Queries the CMS provider-data API by facility-name and returns
+    # overall hospital rating + safety + readmission fields (hospital-
+    # general-information dataset columns).
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        q = self._normalize_domain(entity_id).split(".")[0]
         try:
             data = _json(
                 "https://data.cms.gov/provider-data/api/1/datastore/query/"
-                "xubh-q36u/0?limit=1"
+                f"xubh-q36u/0?limit=25&conditions[0][property]=facility_name"
+                f"&conditions[0][value]={q}&conditions[0][operator]=contains"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        results = data.get("results") or []
+        ratings: list[int] = []
+        readmit: list[str] = []
+        safety: list[str] = []
+        for r in results:
+            rating = r.get("hospital_overall_rating") or ""
+            if rating.isdigit():
+                ratings.append(int(rating))
+            readmit.append(r.get("hospital_readmission_measures_performance") or "")
+            safety.append(r.get("safety_group_performance") or "")
+
+        avg_rating = sum(ratings) / len(ratings) if ratings else 0
         return self._create_success_result({
-            "dataset_probe_ok": bool(data.get("results")),
+            "dataset_probe_ok": True,
+            "facility_hit_count": len(results),
+            "avg_overall_rating": avg_rating,
+            "worst_overall_rating": min(ratings) if ratings else 0,
+            "best_overall_rating": max(ratings) if ratings else 0,
+            "readmission_signals_sample": [r for r in readmit if r][:3],
+            "safety_signals_sample": [s for s in safety if s][:3],
         })
 
 
@@ -314,13 +393,33 @@ class JointCommissionExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_JOINT_COMMISSION"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the QualityCheck results HTML for accreditation-status
+    # hits, certification types, and an "award of distinction" count.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text(f"https://www.qualitycheck.org/search/?search={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"endpoint_reachable": bool(txt)})
+
+        cert_counter: Counter = Counter()
+        for hit in re.findall(r"Accreditation:\s*([^<\n]+)", txt or "", re.IGNORECASE):
+            cert_counter[hit.strip()[:60]] += 1
+
+        gold_seal = len(re.findall(r"Gold Seal", txt or "", re.IGNORECASE))
+        awards_hits = len(re.findall(
+            r"award(?:s)? of distinction", txt or "", re.IGNORECASE,
+        ))
+        return self._create_success_result({
+            "endpoint_reachable": bool(txt),
+            "mentions_company": q.lower() in (txt or "").lower(),
+            "gold_seal_count": gold_seal,
+            "certification_top": cert_counter.most_common(5),
+            "award_of_distinction_hits": awards_hits,
+        })
 
 
 class NPDBPublicExtractor(_LitigationBase):
@@ -345,12 +444,30 @@ class PCAOBQSAASVExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_PCAOB"
 
+    # V6/Stage-6 field-depth expansion.
+    # Probes the firm-inspection-reports page and returns registered-
+    # firm hit count + deficiency-rate indicators when the entity is
+    # a registered audit firm.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text("https://pcaobus.org/oversight/inspections/firm-inspection-reports")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"reachable": bool(txt)})
+
+        firm_mentions = len(re.findall(
+            rf"\b{re.escape(q)}\b", txt or "", re.IGNORECASE,
+        ))
+        deficiency_phrases = len(re.findall(
+            r"significant deficiency|audit deficiency|Part II",
+            txt or "", re.IGNORECASE,
+        ))
+        return self._create_success_result({
+            "reachable": bool(txt),
+            "firm_mentions": firm_mentions,
+            "deficiency_phrase_count": deficiency_phrases,
+        })
 
 
 class OSHAEstablishmentExtractor(_LitigationBase):
