@@ -75,7 +75,7 @@ concrete list of new signals + inference functions.
 | 4.4 | A1 FPR — add 9 new signals to registry | **DONE** |
 | 4.5 | A2 Property — add 10 new signals (habitational sub-config deferred to A2-deep) | **DONE** |
 | 4.6 | A3 Casualty — add 17 new signals across GL/auto/env/umbrella | **DONE** |
-| 4.7 | A4 D&O — add 14 new signals | PENDING |
+| 4.7 | A4 D&O — add 14 new governance signals to do_public | **DONE** |
 | 4.8 | A5 FI — add 12 new signals | PENDING |
 | 4.9 | A6 Aerospace — add 14 new signals | PENDING |
 | 4.9 | A7 Marine — add 13 new signals | PENDING |
@@ -111,6 +111,30 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.7 — A4 D&O signal expansion
+
+14 new governance signals added to `do_public` sub-config (most
+depth-starved pre-expansion at 10 signals — now 24). Overall D&O
+unique-ID count goes from 67 → 81 (mature bar ≥ 28 ✅):
+
+- Litigation density: `shareholder_suit_history`,
+  `dodd_frank_whistleblower_telemetry`.
+- Proxy outcomes: `iss_proxy_recommendation`,
+  `glass_lewis_recommendation`, `proxy_dissent_rate`.
+- Board dynamics: `board_refreshment_velocity`, `ceo_tenure_band`,
+  `cfo_turnover_velocity`, `director_interlock_density`.
+- Disclosure quality: `audit_qualification_history`,
+  `restatement_record`, `related_party_transaction_volume`.
+- Compensation structure: `clawback_policy_presence`,
+  `equity_grant_dilution_trend`.
+
+Inference module `a4_maturation_signals.py` registers 14 neutral
+scaffolds — real bodies wire in with Stage 6 (Stanford SCAC, deeper
+SEC EDGAR DEF 14A parsing, paid ISS / Glass Lewis extractors).
+
+Verification: calibrate do PASS on all 6 sub-configs (25,068 fixtures,
+0 errors), 221/221 goldens green, compliance strict PASS.
 
 ### Stage 4.6 — A3 Casualty signal expansion
 

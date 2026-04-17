@@ -2208,6 +2208,180 @@ directors_officers:
           severity:
             correlation_direction: positive
             weight: 0.15
+    - id: shareholder_suit_history
+      inference_utility_function: shareholder_suit_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: dodd_frank_whistleblower_telemetry
+      inference_utility_function: dodd_frank_whistleblower_telemetry_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: iss_proxy_recommendation
+      inference_utility_function: iss_proxy_recommendation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: glass_lewis_recommendation
+      inference_utility_function: glass_lewis_recommendation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: proxy_dissent_rate
+      inference_utility_function: proxy_dissent_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: board_refreshment_velocity
+      inference_utility_function: board_refreshment_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: ceo_tenure_band
+      inference_utility_function: ceo_tenure_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: audit_qualification_history
+      inference_utility_function: audit_qualification_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: restatement_record
+      inference_utility_function: restatement_record_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: cfo_turnover_velocity
+      inference_utility_function: cfo_turnover_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: director_interlock_density
+      inference_utility_function: director_interlock_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.02
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.02
+    - id: related_party_transaction_volume
+      inference_utility_function: related_party_transaction_volume_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: clawback_policy_presence
+      inference_utility_function: clawback_policy_presence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.02
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.02
+    - id: equity_grant_dilution_trend
+      inference_utility_function: equity_grant_dilution_trend_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.02
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.02
     groups:
       three_layer_assessment:
       - id: public_record
