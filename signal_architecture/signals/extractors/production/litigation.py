@@ -60,20 +60,50 @@ class CourtListenerExtractor(_LitigationBase):
     KILL_SWITCH_ENV = "DSI_DISABLE_COURTLISTENER"
     API_KEY_ENV = "COURTLISTENER_TOKEN"  # optional — anon works but rate-limited
 
+    # V6/Stage-6 field-depth expansion
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
         import os
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         headers = {}
         token = os.environ.get(self.API_KEY_ENV or "", "")
         if token:
             headers["Authorization"] = f"Token {token}"
         try:
-            data = _json(f"https://www.courtlistener.com/api/rest/v3/search/?q={q}&type=r", )
+            data = _json(
+                f"https://www.courtlistener.com/api/rest/v3/search/?q={q}&type=r"
+            )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        results = data.get("results", []) or []
+        # V6/Stage-6 deepening: breakdown by court, filing year, nature of suit
+        court_counter: Counter = Counter()
+        year_counter: Counter = Counter()
+        nature_counter: Counter = Counter()
+        pending_count = 0
+        for r in results:
+            court = r.get("court") or r.get("court_id") or ""
+            if court:
+                court_counter[court] += 1
+            date_filed = r.get("dateFiled") or r.get("date_filed") or ""
+            if date_filed and len(date_filed) >= 4:
+                year_counter[date_filed[:4]] += 1
+            nature = r.get("nature_of_suit") or ""
+            if nature:
+                nature_counter[nature] += 1
+            status = (r.get("status") or r.get("dateTerminated") or "").lower()
+            if "pending" in status or not status:
+                pending_count += 1
+
         return self._create_success_result({
             "total_hits": data.get("count"),
-            "recent_case_ids": [r.get("absolute_url") for r in data.get("results", [])[:5]],
+            "recent_case_ids": [r.get("absolute_url") for r in results[:5]],
+            "courts_top": court_counter.most_common(5),
+            "filing_year_histogram": dict(sorted(year_counter.items())),
+            "nature_of_suit_top": nature_counter.most_common(5),
+            "pending_case_count": pending_count,
+            "result_count": len(results),
         })
 
 
@@ -244,15 +274,68 @@ class OSHAEstablishmentExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_OSHA"
 
+    # V6/Stage-6 field-depth expansion
+    # Parses the IMIS establishment-search HTML for: inspection count,
+    # row-level inspection records (activity_nr, open_date, scope, violations,
+    # initial_penalty), most-recent inspection date, severe-violation proxy.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
-            txt = _text(f"https://www.osha.gov/ords/imis/establishment.search?estab_name={q}")
+            txt = _text(
+                f"https://www.osha.gov/ords/imis/establishment.search?estab_name={q}"
+            )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        rows = re.findall(r"<tr[^>]*>.*?</tr>", txt, flags=re.DOTALL | re.IGNORECASE)
+        inspection_count = 0
+        open_dates: list[str] = []
+        total_initial_penalty = 0.0
+        serious_hits = 0
+        inspection_rows: list[dict] = []
+        for row in rows:
+            cells = re.findall(r"<td[^>]*>(.*?)</td>", row, flags=re.DOTALL | re.IGNORECASE)
+            if len(cells) < 4:
+                continue
+            stripped = [re.sub(r"<[^>]+>", "", c).strip() for c in cells]
+            if any(re.match(r"\d{6,}", c or "") for c in stripped):
+                inspection_count += 1
+                date_match = next(
+                    (c for c in stripped if re.match(r"\d{2}/\d{2}/\d{4}", c or "")),
+                    None,
+                )
+                if date_match:
+                    open_dates.append(date_match)
+                penalty_match = next(
+                    (c for c in stripped if re.match(r"\$[\d,]+", c or "")),
+                    None,
+                )
+                if penalty_match:
+                    try:
+                        total_initial_penalty += float(
+                            penalty_match.replace("$", "").replace(",", "")
+                        )
+                    except ValueError:
+                        pass
+                if "SERIOUS" in " ".join(stripped).upper():
+                    serious_hits += 1
+                inspection_rows.append({
+                    "activity_nr": stripped[0] if stripped else "",
+                    "open_date": date_match or "",
+                    "penalty": penalty_match or "",
+                })
+
+        most_recent = max(open_dates, key=lambda d: d[-4:] + d[:2] + d[3:5]) if open_dates else ""
+
         return self._create_success_result({
             "endpoint_reachable": bool(txt),
             "mentions_company": q.lower() in txt.lower(),
+            "inspection_count": inspection_count,
+            "most_recent_inspection": most_recent,
+            "total_initial_penalty_usd": total_initial_penalty,
+            "serious_violation_rows": serious_hits,
+            "inspection_rows_sample": inspection_rows[:5],
         })
 
 
@@ -265,13 +348,66 @@ class FMCSASMSExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 604_800
     KILL_SWITCH_ENV = "DSI_DISABLE_FMCSA"
 
+    # V6/Stage-6 field-depth expansion
+    # Uses the FMCSA QCMobile JSON API when a DOT number is resolvable
+    # (accepts "USDOT-<num>" or the raw DOT number as entity_id), and
+    # falls back to an HTML probe against the legacy SMS search page.
+    # Target fields: DOT #, legal name, operating status, BASIC percentile
+    # scores (7 BASICs), inspection + crash counts, out-of-service rate.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        q = self._normalize_domain(entity_id).split(".")[0]
+        import re
+        eid = entity_id.strip()
+        dot_match = re.search(r"\b(\d{4,8})\b", eid)
+        if dot_match:
+            dot = dot_match.group(1)
+            try:
+                data = _json(f"https://mobile.fmcsa.dot.gov/qc/services/carriers/{dot}")
+            except httpx.HTTPError:
+                data = {}
+            carrier = (data.get("content") or {}).get("carrier") or {}
+            if carrier:
+                insp_total = sum(int(v or 0) for v in [
+                    carrier.get("vehicleInsp"),
+                    carrier.get("driverInsp"),
+                    carrier.get("hazmatInsp"),
+                    carrier.get("iepInsp"),
+                ])
+                oos_total = sum(int(v or 0) for v in [
+                    carrier.get("vehicleOosInsp"),
+                    carrier.get("driverOosInsp"),
+                    carrier.get("hazmatOosInsp"),
+                    carrier.get("iepOosInsp"),
+                ])
+                oos_rate = (oos_total / insp_total) if insp_total else 0.0
+                return self._create_success_result({
+                    "dot_number": dot,
+                    "legal_name": carrier.get("legalName"),
+                    "dba_name": carrier.get("dbaName"),
+                    "operating_status": carrier.get("statusCode"),
+                    "allowed_to_operate": carrier.get("allowedToOperate"),
+                    "total_drivers": carrier.get("totalDrivers"),
+                    "total_power_units": carrier.get("totalPowerUnits"),
+                    "crash_total": carrier.get("crashTotal"),
+                    "fatal_crash": carrier.get("fatalCrash"),
+                    "injury_crash": carrier.get("injCrash"),
+                    "towaway_crash": carrier.get("towawayCrash"),
+                    "inspections_total": insp_total,
+                    "oos_total": oos_total,
+                    "oos_rate": round(oos_rate, 4),
+                    "sms_basic_score_endpoint_reachable": True,
+                })
+
+        # Fallback: HTML probe against the legacy Home.aspx search
+        q = self._normalize_domain(eid).split(".")[0]
         try:
             txt = _text(f"https://ai.fmcsa.dot.gov/SMS/Home.aspx?Companyname={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"endpoint_reachable": bool(txt)})
+        return self._create_success_result({
+            "endpoint_reachable": bool(txt),
+            "mentions_company": q.lower() in txt.lower() if txt else False,
+            "sms_basic_score_endpoint_reachable": bool(txt),
+        })
 
 
 class NHTSARecallsExtractor(_LitigationBase):

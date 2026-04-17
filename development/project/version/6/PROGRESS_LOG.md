@@ -112,6 +112,39 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Stage 6 pilot — deepened 3 D3 extractors
+
+CourtListener / OSHA / FMCSA moved from reachability probes to
+field-depth extraction. Pattern demonstrated for the remaining 69
+extractors in D1-D7.
+
+- **CourtListenerExtractor**: now returns `courts_top` (top-5 by
+  count), `filing_year_histogram`, `nature_of_suit_top`,
+  `pending_case_count`, `result_count` alongside the prior
+  `total_hits` + `recent_case_ids`.
+- **OSHAEstablishmentExtractor**: HTML table-row parsing yields
+  `inspection_count`, `most_recent_inspection`,
+  `total_initial_penalty_usd`, `serious_violation_rows`, and an
+  `inspection_rows_sample` of up to 5 rows with activity-nr,
+  open-date, and penalty.
+- **FMCSASMSExtractor**: accepts `USDOT-<num>` or raw DOT numbers,
+  fetches the FMCSA QCMobile JSON API, and parses `legal_name`,
+  `dba_name`, `operating_status`, `allowed_to_operate`,
+  `total_drivers`/`total_power_units`, crash counts
+  (fatal/injury/towaway), inspection + OOS totals, derived
+  `oos_rate`. Falls back to the legacy HTML probe when no DOT
+  number is resolvable.
+
+5 new tests in `tests/unit/test_extractors_d3.py` monkeypatch
+`litigation._text` / `litigation._json` with canned payloads to
+exercise the deepened parsing without live HTTP. Existing
+registration + kill-switch + free-tier tests unchanged and still
+green.
+
+Stages 5.2 (Rust port), 5.3 (PyO3), 5.4 (parity CI), 5.5 (p99
+benchmark) remain open; Stage 6 remains open for the other 69
+extractors.
+
 ### Stage 5.1 — pure-function scoring spec extraction
 
 `layers/risk/_scoring_spec.py` extracts the mathematical core of
