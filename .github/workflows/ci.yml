@@ -130,17 +130,17 @@ jobs:
   config-health-gate:
     # V6 Phase 1 (E2): Config Health Gate.
     #
-    # Blocks PR merges on structural compliance regressions:
-    #   1. assess_config_compliance — structural schema + canonical category
-    #      audit; pre-V6 known debt is catalogued in
-    #      development/project/version/6/config_compliance_baseline.json.
-    #      The gate fails only on findings that are NEW vs the baseline.
-    #
-    # Runs as a non-blocking signal today:
-    #   2. calibrate — the end-to-end pricing calibration harness. The guardrail
-    #      hit rate is above the 15% threshold pending V6 A1-A3 maturation work.
-    #      Its report is uploaded so reviewers can see drift, but it does not
-    #      fail the PR. This step is promoted to blocking once A1-A3 land.
+    # All steps block PR merges on regression:
+    #   1. assess_config_compliance — structural schema + canonical
+    #      category audit. Baseline at
+    #      development/project/version/6/config_compliance_baseline.json
+    #      catalogues pre-V6 debt; gate fails on NEW findings.
+    #   2. check_no_stub_imports — stub retirement guard (V6/E10).
+    #   3. test_golden_entities — 220+ end-to-end snapshot regressions.
+    #   4. calibrate — end-to-end pricing calibration harness across
+    #      every coverage/sub-config. Promoted to blocking after V6
+    #      Stage 4.1-4.3 closed the guardrail-hit-rate gap on
+    #      casualty/umbrella/fpr/aerospace_space.
     name: Config Health Gate
     needs: [setup, test]
     runs-on: ubuntu-latest
@@ -174,8 +174,7 @@ jobs:
           pytest tests/integration/test_golden_entities.py -v \
             --junitxml=golden-entities-report.xml
 
-      - name: Run calibration harness (advisory; promoted to blocking post-A3)
-        continue-on-error: true
+      - name: Run calibration harness (blocking)
         run: |
           python -m infrastructure.builder.cli calibrate --json > calibration-report.json
           python -m infrastructure.builder.cli calibrate

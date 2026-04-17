@@ -2582,7 +2582,7 @@ aerospace:
       modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_revenue_ratio: 0.1
       max_ilf_factor: 10.0
   aerospace_rotary:
     metadata:
@@ -3069,7 +3069,7 @@ aerospace:
       modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0
   aerospace_unmanned:
     metadata:
@@ -3528,7 +3528,7 @@ aerospace:
       modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0
   aerospace_mro:
     metadata:
@@ -4005,7 +4005,7 @@ aerospace:
       modifier_floor: 0.1
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_revenue_ratio: 0.04
       max_ilf_factor: 10.0
   aerospace_high_value:
     metadata:

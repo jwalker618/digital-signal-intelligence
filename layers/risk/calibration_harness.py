@@ -547,7 +547,15 @@ def generate_fixtures_for_config(
                             }
 
                             if is_multiplier and basis_value > 0:
-                                submission[basis_field] = basis_value
+                                # When the config prices "basis=limit" the
+                                # basis field IS limit — skip the overwrite
+                                # so submission's limit matches the fixture
+                                # label (otherwise the diagnostic checks use
+                                # a different limit than the pricer and the
+                                # premium_exceeds_limit_ratio check reads
+                                # nonsensical P/Ls).
+                                if basis_field != "limit":
+                                    submission[basis_field] = basis_value
                                 # Provide revenue for guardrail check
                                 # Revenue is typically 2-10x the insured value
                                 submission["revenue"] = max(basis_value * 3, limit * 10)
@@ -932,7 +940,7 @@ class CalibrationHarness:
                     fixture_label=r.fixture.label,
                     check="premium_exceeds_limit_ratio",
                     detail=(
-                        f"Premium ${r.premium:,.0f} exceeds {pl_cap:.0%} of "
+                        f"[{r.fixture.label}] Premium ${r.premium:,.0f} exceeds {pl_cap:.0%} of "
                         f"limit ${r.fixture.limit:,.0f} "
                         f"(P/L={r.pl_ratio:.2%})"
                     ),

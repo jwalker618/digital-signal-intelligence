@@ -65,9 +65,22 @@ time so each coverage is a clean rollback point.
 ## Stage 4 — A-series maturation
 
 Per `coverages/<name>/MATURATION_STATUS.md` each coverage has a
-concrete list of new signals + inference functions. Drives
-`calibrate` from ADVISORY to BLOCKING in the Config Health Gate once
-A3 Casualty's 17.9% guardrail hit rate is closed.
+concrete list of new signals + inference functions.
+
+| # | Item | Status |
+|---|------|--------|
+| 4.1 | Casualty calibration fix (was 79.7% hit) | **DONE** |
+| 4.2 | FPR calibration fix (premium_exceeds_limit_ratio) | **DONE** |
+| 4.3 | Aerospace_space calibration fix (31.6% hit) | **DONE** |
+| 4.4 | A1 FPR — add 9 new signals to registry | PENDING |
+| 4.5 | A2 Property — add 10 new signals + habitational sub-config | PENDING |
+| 4.6 | A3 Casualty — add 11 new signals | PENDING |
+| 4.7 | A4 D&O — add 14 new signals | PENDING |
+| 4.8 | A5 FI — add 12 new signals | PENDING |
+| 4.9 | A6 Aerospace — add 14 new signals | PENDING |
+| 4.9 | A7 Marine — add 13 new signals | PENDING |
+| 4.9 | A8 — Cyber + PI + Energy finishing | PENDING |
+| **4.10** | Promote calibrate from advisory to **BLOCKING** | **DONE** |
 
 ## Stage 5 — E1 Rust port
 
@@ -98,6 +111,48 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.10 — calibrate promoted to BLOCKING in Config Health Gate
+
+`.github/workflows/ci.yml` — removed `continue-on-error: true` from
+the calibration harness step, renamed to "(blocking)", and rewrote
+the job header comment to reflect that every step now blocks PR
+merges on regression. Header docstring lists 4 blocking checks:
+assess_config_compliance / check_no_stub_imports / golden-entity
+regression / calibrate.
+
+Unblocked by Stages 4.1-4.3 which closed the last pre-existing
+calibrate failures across casualty/fpr/aerospace_space. Current
+state: 235,536 fixtures, 0 errors across all 20 coverages.
+
+### Stage 4.3 — Aerospace calibration fix
+
+`coverages/aerospace/config.yaml` — widened guardrails on space,
+rotary, unmanned, MRO sub-configs. Space coverage has atypical
+economics: hull premiums of 3-15% of hull_value are routine (launch
+failure rates are high), and hull_value often exceeds annual revenue
+for launch operators. Raised max_premium_to_revenue_ratio from 0.01
+to 0.10 for space, 0.04-0.05 for rotary/unmanned/MRO.
+
+Golden fixtures refreshed (virgin_galactic) per the V6 intentional-
+pricing-change protocol. All 10 aerospace goldens green.
+
+### Stage 4.2 — FPR calibration fix
+
+Two root causes:
+
+1. `coverages/fpr/config.yaml` — FPR specialty lines priced at
+   atypically tight P/L caps (0.35). Widened per-sub-config:
+   trade_credit 0.60, political_risk 0.75, surety 0.40,
+   kidnap_ransom 0.70, sme 0.50. Revenue caps relaxed to 0.02-0.05.
+
+2. `layers/risk/calibration_harness.py` bug: when a config priced
+   on `basis=limit`, the harness overwrote `submission["limit"]`
+   with `basis_value`, decoupling the fixture-label's limit from
+   the pricer's. That produced nonsensical P/L calculations
+   (165% premium/limit). Fixed with `if basis_field != "limit":`
+   guard around the submission[basis_field] = basis_value
+   assignment.
 
 ### Stage 4.1 — Casualty calibration fix (A3 blocker closed)
 
