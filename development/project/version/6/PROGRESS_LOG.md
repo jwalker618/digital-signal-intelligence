@@ -112,6 +112,36 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### A8-deep follow-up 2 — energy_hydrogen + energy_nuclear sub-configs
+
+Energy now at 12 sub-configs (was 10). Closes 2 of the 6 remaining
+A8-deep sub-configs; only `cyber_saas_platform`, `cyber_media_tech`,
+`pi_clinical_research`, `pi_media_tech`, and `property_habitational`
+remain.
+
+- `energy_hydrogen` (~450 lines): routing on `industry_sector in
+  {HYDROGEN, H2_PRODUCTION, ELECTROLYSER}`. 5-signal registry
+  (electrolyser TRL, offtake counterparty quality, EPA ECHO depth,
+  Superfund proximity, TRI volume). Guardrails tightened for novel-
+  technology tail: modifier_cap 3.0, max_premium_to_revenue 0.02,
+  max_ilf_factor 10.0.
+- `energy_nuclear` (~450 lines): routing on `industry_sector in
+  {NUCLEAR, SMR, NUCLEAR_DECOMMISSIONING}`. 5-signal registry
+  (NRC inspection findings, NRC enforcement history,
+  decommissioning trust funding, EPA ECHO, Superfund proximity).
+  Guardrails tuned for nuclear-scale risk: min_premium 250,000,
+  larger exposure-size bands (up to 200bn TIV), modifier_cap 3.5,
+  max_ilf_factor 12.0.
+
+Both carry full structure — metadata, 3-4 direct_queries, signal
+registry, three_layer_assessment groups, 5-band risk/loss tiers,
+size + complexity exposure bands, per-product ILF curves, and
+guardrails.
+
+Verification: calibrate PASS on all 12 energy sub-configs
+(hydrogen 4,650 fixtures, nuclear 4,890 fixtures, 0 errors), 221/221
+goldens green, compliance strict PASS.
+
 ### Stage 6 batch 2 — 5 more D3 extractors deepened
 
 Extractor deepening continues — 5 more D3 extractors moved from

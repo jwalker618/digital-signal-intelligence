@@ -2,7 +2,7 @@
 
 | Target | Current | Status |
 |--------|---------|--------|
-| 10 sub-configs + `hydrogen` + `nuclear` | 10 | ⏳ 2 new subs deferred to A8-deep |
+| 10 sub-configs + `hydrogen` + `nuclear` | 12 (incl. hydrogen + nuclear) | ✅ (Stage 4.11-fu) |
 | ≥ 40 signals primary registry | 118 | ✅ |
 | ≥ 80 inference functions | 90 | ✅ |
 | Nuclear + hydrogen signals (A8 spec) | 5/5 | ✅ (Stage 4.11) |
@@ -24,10 +24,25 @@
 Real bodies wire in with Stage 6 once NRC ADAMS / EPA TRI extractors
 land the relevant field-depth.
 
+## New sub-configs landed (A8-deep follow-up)
+
+Both `energy_hydrogen` and `energy_nuclear` landed as full sub-configs
+— ~900 lines combined — matching the shape of `energy_storage` and
+`energy_downstream`. Routing on `industry_sector in {HYDROGEN,
+H2_PRODUCTION, ELECTROLYSER}` and `{NUCLEAR, SMR,
+NUCLEAR_DECOMMISSIONING}` respectively.
+
+- `energy_hydrogen` (5 signals): `electrolyser_technology_maturity`,
+  `offtake_counterparty_quality`, `epa_echo_violation_depth`,
+  `superfund_proximity`, `tri_reportable_volume`.
+- `energy_nuclear` (5 signals): `nrc_inspection_findings`,
+  `nrc_enforcement_action_history`, `decommissioning_trust_funding`,
+  `epa_echo_violation_depth`, `superfund_proximity`.
+
+Calibrate PASS: hydrogen 4,650 fixtures, nuclear 4,890 fixtures, 0
+errors. Compliance strict PASS.
+
 ## Next up
 
-1. `energy_hydrogen` + `energy_nuclear` sub-configs → A8-deep
-   (each carries new routing constraints + bespoke modifiers).
-2. Wire D5 climate extractors (NRC inspections, TRI, Superfund) into
-   the new signals once they ship.
-3. Retrofit `expectation_level`.
+1. Wire D5 climate extractors (NRC ADAMS, TRI, Superfund) into the
+   new signals once they ship.
