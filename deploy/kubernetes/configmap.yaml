@@ -119,5 +119,11 @@ data:
   DSI_DISABLE_BSEE: "false"
   DSI_DISABLE_NERC: "false"
 
+  # V6/D7 — Hiring / behavioural-derivative extractor kill-switches.
+  DSI_DISABLE_GREENHOUSE: "false"
+  DSI_DISABLE_LEVER: "false"
+  DSI_DISABLE_ASHBY: "false"
+  DSI_DISABLE_GOOGLE_JOBS: "false"
+
   # V6/C3 — OpenTelemetry. Enable on production to emit spans.
   DSI_OTEL_ENABLED: "false"

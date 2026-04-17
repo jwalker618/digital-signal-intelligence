@@ -436,6 +436,22 @@ def _load_d4_ip_extractors():
         _registry.register_production(name, cls)
 
 
+def _load_d7_hiring_extractors():
+    """V6/D7 — hiring / behavioural-derivative extractors (4)."""
+    try:
+        from . import hiring as hi
+    except ImportError as e:
+        logger.debug(f"Could not load D7 hiring extractors: {e}")
+        return
+    for name, cls in (
+        ("hiring.greenhouse", hi.GreenhouseScraper),
+        ("hiring.lever", hi.LeverScraper),
+        ("hiring.ashby", hi.AshbyScraper),
+        ("hiring.google_jobs", hi.GoogleJobsExtractor),
+    ):
+        _registry.register_production(name, cls)
+
+
 def _load_d6_sector_extractors():
     """V6/D6 — sector-telemetry extractors (11 across aviation/maritime/energy)."""
     try:
@@ -492,6 +508,7 @@ _load_d3_litigation_extractors()
 _load_d4_ip_extractors()
 _load_d5_climate_extractors()
 _load_d6_sector_extractors()
+_load_d7_hiring_extractors()
 
 
 # Register loaders for known extractor types
