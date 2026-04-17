@@ -1,0 +1,22 @@
+entity_id: square_fi
+name: Block, Inc. (Square)
+coverage: fi
+config_id: fi_fintech
+domain: block.xyz
+registry_id: US-Delaware-0001512673
+minimum_viable_input:
+  revenue: 21915000000
+  limit: 25000000
+  deductible: 500000
+  product_type: standard
+  industry_sector: FINTECH
+  domain: block.xyz
+expected:
+  composite_score: 340.0
+  tier: 5
+  decision: decline
+  recommended_premium: 4174204.56
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

@@ -355,6 +355,102 @@ coverages:
         product_type: standard
         industry_sector: FINANCIAL_SERVICES
         domain: bankofamerica.com
+    - entity_id: jpm_fi
+      name: JPMorgan Chase & Co. (FI)
+      config_id: fi_bank
+      domain: jpmorganchase.com
+      registry_id: US-Delaware-0000019617
+      minimum_viable_input:
+        revenue: 158104000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: jpmorganchase.com
+    - entity_id: wells_fargo
+      name: Wells Fargo & Company
+      config_id: fi_bank
+      domain: wellsfargo.com
+      registry_id: US-Delaware-0000072971
+      minimum_viable_input:
+        revenue: 82597000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: wellsfargo.com
+    - entity_id: citigroup
+      name: Citigroup Inc.
+      config_id: fi_bank
+      domain: citi.com
+      registry_id: US-Delaware-0000831001
+      minimum_viable_input:
+        revenue: 78492000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: citi.com
+    - entity_id: metlife
+      name: MetLife, Inc.
+      config_id: fi_insurer
+      domain: metlife.com
+      registry_id: US-Delaware-0001099219
+      minimum_viable_input:
+        revenue: 67912000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: INSURANCE
+        domain: metlife.com
+    - entity_id: prudential
+      name: Prudential Financial, Inc.
+      config_id: fi_insurer
+      domain: prudential.com
+      registry_id: US-New_Jersey-0001137774
+      minimum_viable_input:
+        revenue: 53203000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: standard
+        industry_sector: INSURANCE
+        domain: prudential.com
+    - entity_id: square_fi
+      name: Block, Inc. (Square)
+      config_id: fi_fintech
+      domain: block.xyz
+      registry_id: US-Delaware-0001512673
+      minimum_viable_input:
+        revenue: 21915000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: FINTECH
+        domain: block.xyz
+    - entity_id: coinbase
+      name: Coinbase Global, Inc.
+      config_id: fi_crypto
+      domain: coinbase.com
+      registry_id: US-Delaware-0001679788
+      minimum_viable_input:
+        revenue: 3108000000
+        limit: 25000000
+        deductible: 500000
+        product_type: standard
+        industry_sector: CRYPTO
+        domain: coinbase.com
+    - entity_id: morgan_stanley
+      name: Morgan Stanley
+      config_id: fi_bank
+      domain: morganstanley.com
+      registry_id: US-Delaware-0000895421
+      minimum_viable_input:
+        revenue: 54143000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: standard
+        industry_sector: BANKING
+        domain: morganstanley.com
 
   fpr:
     - entity_id: glencore

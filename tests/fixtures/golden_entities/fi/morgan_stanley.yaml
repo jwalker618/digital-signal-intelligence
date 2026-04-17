@@ -1,0 +1,22 @@
+entity_id: morgan_stanley
+name: Morgan Stanley
+coverage: fi
+config_id: fi_bank
+domain: morganstanley.com
+registry_id: US-Delaware-0000895421
+minimum_viable_input:
+  revenue: 54143000000
+  limit: 100000000
+  deductible: 5000000
+  product_type: standard
+  industry_sector: BANKING
+  domain: morganstanley.com
+expected:
+  composite_score: 340.0
+  tier: 5
+  decision: decline
+  recommended_premium: 30000.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
