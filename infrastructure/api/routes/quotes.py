@@ -52,7 +52,7 @@ async def get_quote(
 ) -> QuoteRecord:
     """Get quote details by code."""
     query = select(Quote).where(Quote.quote_code == quote_code)
-    
+
     result = await db.execute(query)
     record = result.scalar_one_or_none()
 
@@ -60,6 +60,108 @@ async def get_quote(
         raise HTTPException(status_code=404, detail="Quote not found")
 
     return record
+
+
+@router.get("/quotes/{quote_code}/provenance")
+async def get_quote_provenance(
+    quote_code: str,
+    db: AsyncSession = Depends(get_async_db),
+) -> Dict[str, Any]:
+    """V6/E2 — signal-lineage chain-of-custody for a quote.
+
+    Returns every signal_provenance row that contributed to the quote
+    plus the provenance_chain edges linking them, suitable for
+    reinsurer / regulator audit replay. The chain is hash-verifiable
+    client-side via
+    ``signal_architecture.signals.provenance.verify_chain``.
+
+    Response shape::
+
+        {
+          "quote_code": "q_abc123",
+          "assessment_id": "uuid",
+          "nodes": [
+            {
+              "signal_id": "...",
+              "source_name": "...",
+              "response_hash": "...",
+              "self_hash": "...",
+              "extractor_version": "...",
+              "cache_hit": false,
+              "request_timestamp": "...",
+              "provenance": { ...dataclass dump... }
+            }, ...
+          ],
+          "edges": [
+            {"parent_hash": "...", "child_hash": "..."},
+            ...
+          ]
+        }
+    """
+    q_query = select(Quote).where(Quote.quote_code == quote_code)
+    quote = (await db.execute(q_query)).scalar_one_or_none()
+    if not quote:
+        raise HTTPException(status_code=404, detail="Quote not found")
+
+    # signal_provenance + provenance_chain are populated by the
+    # extractor layer (V6/E2 follow-up wiring). If the rows aren't there
+    # yet the endpoint returns an empty chain rather than 404 so clients
+    # can distinguish "quote exists, no provenance captured" from
+    # "quote missing entirely."
+    from sqlalchemy import text
+
+    assessment_id = getattr(quote, "assessment_id", None) or getattr(quote, "id", None)
+
+    node_rows = (
+        await db.execute(
+            text(
+                "SELECT signal_id, source_name, response_hash, self_hash, "
+                "       extractor_version, cache_hit, request_timestamp, "
+                "       provenance "
+                "FROM signal_provenance "
+                "WHERE model_version_id = :mvid "
+                "   OR assessment_id = :aid "
+                "ORDER BY request_timestamp"
+            ),
+            {
+                "mvid": getattr(quote, "model_version_id", None),
+                "aid": assessment_id,
+            },
+        )
+    ).fetchall()
+
+    edge_rows = (
+        await db.execute(
+            text(
+                "SELECT parent_hash, child_hash "
+                "FROM provenance_chain "
+                "WHERE assessment_id = :aid"
+            ),
+            {"aid": assessment_id},
+        )
+    ).fetchall()
+
+    return {
+        "quote_code": quote_code,
+        "assessment_id": str(assessment_id) if assessment_id else None,
+        "nodes": [
+            {
+                "signal_id": r[0],
+                "source_name": r[1],
+                "response_hash": r[2],
+                "self_hash": r[3],
+                "extractor_version": r[4],
+                "cache_hit": bool(r[5]),
+                "request_timestamp": (r[6].isoformat() if r[6] else None),
+                "provenance": r[7],
+            }
+            for r in node_rows
+        ],
+        "edges": [
+            {"parent_hash": r[0], "child_hash": r[1]}
+            for r in edge_rows
+        ],
+    }
 
 @router.post("/quotes/{quote_code}/update-status")
 async def updateStatus_quote(
