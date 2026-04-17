@@ -1,0 +1,48 @@
+coverage_line: event
+coverage_key: event
+phase: v6_b6
+description: "V6/B6 — Event Cancellation / Contingency"
+version: "1.0.0"
+
+default_product_types:
+  - event_cancellation
+  - event_postponement
+  - contingency
+  - non_appearance
+
+default_markets: [us, uk, eu]
+default_currency: USD
+default_min_premium: 15000
+
+default_minimum_viable_input:
+  - field: event_name
+  - field: event_type
+  - field: venue_country
+  - field: gross_ticket_revenue
+  - field: limit
+
+routing_field: event_type
+
+configurations:
+  - name: event_sports
+    model_specificity: 1
+    routing_constraints: [{ field: event_type, operator: "==", value: sports }]
+  - name: event_concert
+    model_specificity: 1
+    routing_constraints: [{ field: event_type, operator: "==", value: concert }]
+  - name: event_conference
+    model_specificity: 2
+    routing_constraints: [{ field: event_type, operator: "==", value: conference }]
+  - name: event_broadcast
+    model_specificity: 2
+    routing_constraints: [{ field: event_type, operator: "==", value: broadcast }]
+  - name: event_sme
+    model_specificity: 3
+    routing_constraints: [{ field: gross_ticket_revenue, operator: "<", value: 1000000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}
