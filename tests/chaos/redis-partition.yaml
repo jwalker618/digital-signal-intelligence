@@ -1,0 +1,24 @@
+# V6/C5b — partition Redis for 60s; expect fallback to uncached
+# extraction + degraded confidence, NO 5xx spike.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: dsi-redis-partition
+  namespace: dsi-staging
+spec:
+  action: partition
+  mode: all
+  selector:
+    namespaces: [dsi-staging]
+    labelSelectors:
+      app: dsi-api
+  direction: to
+  target:
+    mode: all
+    selector:
+      namespaces: [dsi-staging]
+      labelSelectors:
+        app: redis
+  duration: 60s
+  scheduler:
+    cron: '@daily'

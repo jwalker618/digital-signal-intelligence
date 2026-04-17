@@ -1,0 +1,20 @@
+# V6/C5b — 2s latency injection on one extractor endpoint.
+# Expected: per-extractor span exceeds threshold; shedding kicks in.
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: dsi-extractor-latency
+  namespace: dsi-staging
+spec:
+  action: delay
+  mode: one
+  selector:
+    namespaces: [dsi-staging]
+    labelSelectors:
+      app: dsi-api
+  delay:
+    latency: '2000ms'
+    jitter: '200ms'
+  duration: 120s
+  scheduler:
+    cron: '@weekly'
