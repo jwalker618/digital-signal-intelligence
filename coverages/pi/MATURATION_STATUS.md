@@ -2,7 +2,7 @@
 
 | Target | Current | Status |
 |--------|---------|--------|
-| sub-configs inc. `clinical_research` | 13 | ⏳ clinical_research + media_tech subs deferred to A8-deep |
+| sub-configs inc. `clinical_research` | 15 (clinical_research + media_tech landed) | ✅ |
 | ≥ 40 signals primary registry | 101 | ✅ |
 | ≥ 80 inference functions | 82 | ✅ |
 | Clinical-research + media-tech signals (A8 spec) | 5/5 | ✅ (Stage 4.11) |

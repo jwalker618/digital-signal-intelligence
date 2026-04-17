@@ -6931,3 +6931,481 @@ professional_indemnity:
       max_premium_to_limit_ratio: 0.8
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
+  pi_clinical_research:
+    metadata:
+      name: DSI PI Clinical-Research Model
+      description: CROs, IRBs, clinical-trial sponsors, academic research institutions
+      version: 2.3.0
+      product_types:
+      - professional_indemnity
+      - errors_and_omissions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: professional_indemnity, errors_and_omissions'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [CRO, IRB, CLINICAL_RESEARCH, CLINICAL_TRIAL_SPONSOR, ACADEMIC_MEDICAL_CENTER]
+        required_in_input: true
+    direct_queries:
+    - id: irb_active
+      question: Is an active OHRP / FDA IRB registration in place for every trial?
+      query_condition:
+      - return: false
+        action: REFER
+        override: 4
+        applied: null
+        note: IRB registration not active for every trial
+    - id: gcp_training_program
+      question: Does a documented GCP (Good Clinical Practice) training + recertification program exist?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No documented GCP training program
+    - id: adverse_event_reporting_sla
+      question: Are adverse-event reporting SLAs met (<= 24 h for SAEs)?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.3
+        note: AE reporting SLA missed
+    signal_registry:
+    - id: irb_registration
+      inference_utility_function: irb_registration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.22}
+        loss:
+          severity: {correlation_direction: negative, weight: 0.22}
+    - id: clinical_trial_registry_compliance
+      inference_utility_function: clinical_trial_registry_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.18}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.18}
+    - id: good_clinical_practice_score
+      inference_utility_function: good_clinical_practice_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.18}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.15}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.15}
+    - id: litigation_history
+      inference_utility_function: litigation_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.12}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.12}
+    groups:
+      three_layer_assessment:
+      - id: structured_data
+        label: Regulatory & GCP Compliance
+        description: IRB, ClinicalTrials.gov, GCP maturity
+        risk: {weight: 0.55}
+        loss: {weight: 0.50}
+        exposure: {weight: 0.45}
+      - id: public_record
+        label: Claim & Litigation Record
+        description: Breach + litigation + FDA warning letters
+        risk: {weight: 0.30}
+        loss: {weight: 0.35}
+        exposure: {weight: 0.30}
+      - id: technical_infrastructure
+        label: IT Security
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0038
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0058
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0078
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        professional_indemnity:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        errors_and_omissions:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.8
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.02
+      max_ilf_factor: 10.0
+  pi_media_tech:
+    metadata:
+      name: DSI PI Media / Creative-Tech Model
+      description: Publishers, broadcasters, content creators, ad-tech firms
+      version: 2.3.0
+      product_types:
+      - professional_indemnity
+      - errors_and_omissions
+      - media_liability
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: professional_indemnity, errors_and_omissions, media_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD
+      min_premium: 20000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [PUBLISHING, BROADCAST, CONTENT_CREATION, ADTECH, MEDIA]
+        required_in_input: true
+    direct_queries:
+    - id: editorial_review_process
+      question: Is an editorial review process with documented sign-off in place for every publication?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No documented editorial review
+    - id: errors_and_omissions_coverage
+      question: Is E&O coverage already in place for content-related claims?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: No pre-existing E&O coverage
+    signal_registry:
+    - id: defamation_exposure
+      inference_utility_function: defamation_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.25}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.28}
+    - id: content_moderation_posture
+      inference_utility_function: content_moderation_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.20}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.20}
+    - id: litigation_history
+      inference_utility_function: litigation_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.15}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.10}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.10}
+    groups:
+      three_layer_assessment:
+      - id: structured_data
+        label: Editorial & Moderation Controls
+        description: Editorial review, moderation posture, transparency practices
+        risk: {weight: 0.25}
+        loss: {weight: 0.25}
+        exposure: {weight: 0.30}
+      - id: public_record
+        label: Media-Liability Record
+        description: Defamation + litigation + breach history
+        risk: {weight: 0.55}
+        loss: {weight: 0.55}
+        exposure: {weight: 0.40}
+      - id: technical_infrastructure
+        label: Platform Security
+        description: ''
+        risk: {weight: 0.10}
+        loss: {weight: 0.10}
+        exposure: {weight: 0.15}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0038
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0058
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0078
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        professional_indemnity:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        errors_and_omissions:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        media_liability:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.8
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.02
+      max_ilf_factor: 10.0

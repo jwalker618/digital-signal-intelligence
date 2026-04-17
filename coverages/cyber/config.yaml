@@ -7057,3 +7057,471 @@ cyber:
       max_premium_to_limit_ratio: 0.40
       max_premium_to_revenue_ratio: 0.015
       max_ilf_factor: 12.0
+  cyber_saas_platform:
+    metadata:
+      name: DSI Cyber SaaS Platform Model
+      description: Multi-tenant SaaS platforms — B2B + B2C SaaS, PaaS, DBaaS providers
+      version: 2.3.0
+      product_types: *id007
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 50000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [SAAS, PAAS, DBAAS, MULTI_TENANT_PLATFORM]
+        required_in_input: true
+    direct_queries:
+    - id: tenant_isolation_validated
+      question: Is tenant isolation independently validated (SOC 2 Type II or equivalent)?
+      query_condition:
+      - return: false
+        action: REFER
+        override: 4
+        applied: null
+        note: Tenant isolation not independently validated
+    - id: incident_notification_sla
+      question: Are customer incident notification SLAs contractually defined?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No incident-notification SLAs
+    - id: data_residency_controls
+      question: Are data-residency controls honoured (EU data stays in EU, etc.)?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.2
+        note: Data-residency controls not honoured
+    signal_registry:
+    - id: secure_sdlc_maturity
+      inference_utility_function: secure_sdlc_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: negative, weight: 0.20}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.18}
+    - id: email_security_posture
+      inference_utility_function: email_security_posture_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: positive, weight: 0.12}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.10}
+    - id: remote_access_security
+      inference_utility_function: remote_access_security_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: positive, weight: 0.12}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.12}
+    - id: credential_exposure
+      inference_utility_function: credential_exposure_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.18}
+    - id: compliance_badges
+      inference_utility_function: compliance_badges_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.18}
+        loss:
+          severity: {correlation_direction: negative, weight: 0.18}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.18}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.15}
+          severity: {correlation_direction: positive, weight: 0.18}
+    - id: customer_quality
+      inference_utility_function: customer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.05}
+    groups:
+      three_layer_assessment:
+      - id: technical_infrastructure
+        label: Technical Security Posture
+        description: Secure SDLC, email, remote access, credentials, DNS/TLS hygiene
+        risk: {weight: 0.45}
+        loss: {weight: 0.40}
+        exposure: {weight: 0.35}
+      - id: structured_data
+        label: Compliance & Customer Quality
+        description: Compliance badges, customer-quality segment
+        risk: {weight: 0.20}
+        loss: {weight: 0.20}
+        exposure: {weight: 0.25}
+      - id: public_record
+        label: Breach & Litigation Record
+        description: Breach history, regulator actions, class-action exposure
+        risk: {weight: 0.25}
+        loss: {weight: 0.30}
+        exposure: {weight: 0.25}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0046
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0062
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        cyber_liability:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        network_security:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 3.0
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.015
+      max_ilf_factor: 12.0
+  cyber_media_tech:
+    metadata:
+      name: DSI Cyber Media / Content-Tech Model
+      description: Media platforms, CMS vendors, video / audio streaming, publishing-tech
+      version: 2.3.0
+      product_types: *id007
+      applicable_markets: *id001
+      minimum_viable_input:
+        required: *id002
+      min_premium: 40000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [MEDIA, PUBLISHING, STREAMING, CONTENT_PLATFORM]
+        required_in_input: true
+    direct_queries:
+    - id: content_moderation_program
+      question: Is a documented content-moderation policy + transparency-report cadence in place?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No content-moderation policy
+    - id: dmca_notice_handling
+      question: Does the platform have a documented DMCA-notice response workflow under 48h SLA?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: No DMCA-notice workflow
+    signal_registry:
+    - id: content_moderation_posture
+      inference_utility_function: content_moderation_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.20}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.18}
+    - id: defamation_exposure
+      inference_utility_function: defamation_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.18}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.22}
+    - id: secure_sdlc_maturity
+      inference_utility_function: secure_sdlc_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: negative, weight: 0.15}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.15}
+    - id: email_security_posture
+      inference_utility_function: email_security_posture_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk: {correlation_direction: positive, weight: 0.10}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.10}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.12}
+          severity: {correlation_direction: positive, weight: 0.12}
+    groups:
+      three_layer_assessment:
+      - id: structured_data
+        label: Moderation & Governance
+        description: Content moderation, transparency, DMCA workflow
+        risk: {weight: 0.35}
+        loss: {weight: 0.35}
+        exposure: {weight: 0.30}
+      - id: public_record
+        label: Legal & Reputational Record
+        description: Defamation suits, breach record, class-action exposure
+        risk: {weight: 0.35}
+        loss: {weight: 0.40}
+        exposure: {weight: 0.30}
+      - id: technical_infrastructure
+        label: Platform Security Posture
+        description: SDLC, email hygiene, remote-access + DNS/TLS surface
+        risk: {weight: 0.20}
+        loss: {weight: 0.15}
+        exposure: {weight: 0.30}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.001
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0018
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.003
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0046
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0062
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        cyber_liability:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        privacy_liability:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 3.0
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.015
+      max_ilf_factor: 12.0

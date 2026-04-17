@@ -6,7 +6,7 @@ finishing) — see
 
 | Target | Current | Status |
 |--------|---------|--------|
-| 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 12 (incl. aiml_vendor) | ⏳ 2 remaining deferred to A8-deep |
+| 11 sub-configs + `saas_platform` + `aiml_vendor` + `media_tech` | 14 (all A8-deep subs landed) | ✅ |
 | ≥ 40 unique signal IDs in primary registry | 102 | ✅ |
 | ≥ 80 coverage-specific inference functions | 95 | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |

@@ -5,7 +5,7 @@ Tracks progress against the V6 Mature Bar (A2 in
 
 | Target (A2) | Current | Status |
 |-------------|---------|--------|
-| 6 sub-configs (cat / high-value / builders / habitational / general / sme) | 5 | ⏳ habitational deferred to A2-deep |
+| 6 sub-configs (cat / high-value / builders / habitational / general / sme) | 6 (habitational landed) | ✅ |
 | ≥ 22 unique signal IDs in primary registry | 37 | ✅ |
 | ≥ 70 coverage-specific inference functions | 37 | ⏳ 33 to add |
 | Primary config ≥ 40 scored signals | 37 | ⏳ 3 to add |

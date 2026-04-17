@@ -112,6 +112,39 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### A8-deep batch final — 5 remaining sub-configs landed
+
+All remaining A8-deep sub-configs landed in one batch. Cyber, PI,
+and Property now match their A8 spec on sub-config count:
+
+- **`cyber_saas_platform`** (7 signals): secure_sdlc_maturity,
+  email_security_posture, remote_access_security, credential_exposure,
+  compliance_badges, breach_history, customer_quality. Routes on
+  `industry_sector in {SAAS, PAAS, DBAAS, MULTI_TENANT_PLATFORM}`.
+- **`cyber_media_tech`** (5 signals): content_moderation_posture,
+  defamation_exposure, secure_sdlc_maturity, email_security_posture,
+  breach_history. Routes on
+  `industry_sector in {MEDIA, PUBLISHING, STREAMING, CONTENT_PLATFORM}`.
+- **`pi_clinical_research`** (5 signals): irb_registration,
+  clinical_trial_registry_compliance, good_clinical_practice_score,
+  breach_history, litigation_history. Routes on `industry_sector in
+  {CRO, IRB, CLINICAL_RESEARCH, CLINICAL_TRIAL_SPONSOR,
+  ACADEMIC_MEDICAL_CENTER}`.
+- **`pi_media_tech`** (4 signals): defamation_exposure,
+  content_moderation_posture, litigation_history, breach_history.
+  Routes on `industry_sector in {PUBLISHING, BROADCAST,
+  CONTENT_CREATION, ADTECH, MEDIA}`.
+- **`property_habitational`** (8 signals): construction_class,
+  sprinkler_coverage, fire_alarm_quality, building_age_condition,
+  roof_condition, occupancy_hazard_grade, tenant_concentration,
+  vacancy_rate. Routes on `occupancy_class in {HABITATIONAL,
+  APARTMENT, SENIOR_LIVING, HOTEL, DORM}` with `tiv >= 1M`.
+
+Sub-config counts: cyber 12 → 14, pi 13 → 15, property 5 → 6.
+
+Total sub-configs: 137 → 142. Calibrate PASS on every one, 221/221
+goldens green, compliance strict PASS.
+
 ### Stage 6 batch 4 — 5 D5 climate extractors deepened
 
 Climate / environment extractor deepening: 5 of 11 D5 extractors moved
