@@ -1,0 +1,23 @@
+entity_id: vale_pvt
+name: Vale S.A.
+coverage: pvt
+config_id: pvt_high_value_asset
+domain: vale.com
+registry_id: BR-Rio_de_Janeiro-33.592.510
+minimum_viable_input:
+  asset_tiv: 800000000
+  limit: 150000000
+  deductible: 5000000
+  product_type: pvt_terrorism
+  primary_country: BR
+  sector: mining
+  domain: vale.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

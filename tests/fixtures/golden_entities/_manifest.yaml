@@ -2034,3 +2034,135 @@ coverages:
         venue_country: US
         event_name: Harbor Music Festival 2026
         domain: harborfest.example
+
+  pvt:
+    - entity_id: siemens_pvt
+      name: Siemens AG
+      config_id: pvt_sector_exposed
+      domain: siemens.com
+      registry_id: DE-Munich-HRB6684
+      minimum_viable_input:
+        asset_tiv: 200000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: pvt_terrorism
+        primary_country: DE
+        sector: energy
+        domain: siemens.com
+    - entity_id: schlumberger_pvt
+      name: SLB (Schlumberger)
+      config_id: pvt_sector_exposed
+      domain: slb.com
+      registry_id: AN-Willemstad-SLB001
+      minimum_viable_input:
+        asset_tiv: 500000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: pvt_sabotage
+        primary_country: KW
+        sector: energy
+        domain: slb.com
+    - entity_id: halliburton_pvt
+      name: Halliburton Company
+      config_id: pvt_sector_exposed
+      domain: halliburton.com
+      registry_id: US-Delaware-0000045012
+      minimum_viable_input:
+        asset_tiv: 450000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: pvt_sabotage
+        primary_country: IQ
+        sector: energy
+        domain: halliburton.com
+    - entity_id: bechtel_pvt
+      name: Bechtel Corporation (Overseas Ops)
+      config_id: pvt_high_value_asset
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        asset_tiv: 1200000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: SA
+        sector: energy
+        domain: bechtel.com
+    - entity_id: vale_pvt
+      name: Vale S.A.
+      config_id: pvt_high_value_asset
+      domain: vale.com
+      registry_id: BR-Rio_de_Janeiro-33.592.510
+      minimum_viable_input:
+        asset_tiv: 800000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: BR
+        sector: mining
+        domain: vale.com
+    - entity_id: bhp_pvt
+      name: BHP Group Ltd
+      config_id: pvt_high_value_asset
+      domain: bhp.com
+      registry_id: AU-Melbourne-AU004028077
+      minimum_viable_input:
+        asset_tiv: 1500000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: AU
+        sector: mining
+        domain: bhp.com
+    - entity_id: total_pvt
+      name: TotalEnergies SE
+      config_id: pvt_country_risk
+      domain: totalenergies.com
+      registry_id: FR-Paris-542051180
+      minimum_viable_input:
+        asset_tiv: 100000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: pvt_strikes_riots_civil_commotion
+        primary_country: FR
+        sector: energy
+        domain: totalenergies.com
+    - entity_id: abb_pvt
+      name: ABB Ltd
+      config_id: pvt_country_risk
+      domain: abb.com
+      registry_id: CH-Zurich-CHE-101.063.305
+      minimum_viable_input:
+        asset_tiv: 150000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: pvt_sabotage
+        primary_country: CH
+        sector: manufacturing
+        domain: abb.com
+    - entity_id: carrefour_pvt
+      name: Carrefour S.A.
+      config_id: pvt_country_risk
+      domain: carrefour.com
+      registry_id: FR-Massy-652014051
+      minimum_viable_input:
+        asset_tiv: 80000000
+        limit: 25000000
+        deductible: 500000
+        product_type: pvt_strikes_riots_civil_commotion
+        primary_country: FR
+        sector: retail
+        domain: carrefour.com
+    - entity_id: ngo_sme_pvt
+      name: Horizon International Aid Foundation (SME)
+      config_id: pvt_sme
+      domain: horizonaid.example
+      registry_id: US-Delaware-NGO00012345
+      minimum_viable_input:
+        asset_tiv: 4500000
+        limit: 5000000
+        deductible: 50000
+        product_type: pvt_terrorism
+        primary_country: KE
+        sector: nonprofit
+        domain: horizonaid.example

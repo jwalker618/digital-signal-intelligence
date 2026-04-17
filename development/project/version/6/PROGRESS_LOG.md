@@ -55,7 +55,7 @@ time so each coverage is a clean rollback point.
 | 3.3 | B4 EnvLiab | **DONE** | 26 | 10 | PASS | PASS |
 | 3.4 | B5 Construction | **DONE** | 26 | 10 | PASS | PASS |
 | 3.5 | B6 Event | **DONE** | 33 | 10 | PASS | PASS |
-| 3.6 | B7 PVT | PENDING | — | — | — | — |
+| 3.6 | B7 PVT | **DONE** | 26 | 10 | PASS | PASS |
 | 3.7 | B8 TEO | PENDING | — | — | — | — |
 | 3.8 | B9 Reinsurance | PENDING | — | — | — | — |
 | 3.9 | B10 Crop | PENDING | — | — | — | — |
