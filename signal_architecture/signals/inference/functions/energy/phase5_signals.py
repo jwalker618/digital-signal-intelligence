@@ -14,67 +14,39 @@ from typing import Dict, Any
 from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
+
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
 # Upstream/Midstream/Downstream extractors
-from ....extractors.stubs.energy import (
-    BOPTestingComplianceExtractor, WellControlEventsExtractor, RigContractorQualityExtractor,
-    SubseaEquipmentAgeExtractor, WaterDepthProfileExtractor, MetoceanExposureExtractor,
-    BSEEComplianceDetailExtractor, SpudToProductionExtractor,
-    ProducedWaterManagementExtractor, H2SExposureExtractor, ArtificialLiftReliabilityExtractor,
-    StateRegulatoryComplianceExtractor, WellVintageProfileExtractor,
-    FracFleetQualityExtractor, WaterRecyclingRateExtractor, InducedSeismicityScoreExtractor,
-    WellSpacingOptimisationExtractor, CompletionEfficiencyExtractor, PadDrillingIntensityExtractor,
-    PHMSAComplianceExtractor, InlineInspectionExtractor, CathodicProtectionExtractor,
-    RightOfWayExtractor, SCADAMaturityExtractor, PipelineVintageExtractor, ThroughputConsistencyExtractor,
-    TurnaroundComplianceExtractor, PSMAuditFindingsExtractor, MechanicalIntegrityExtractor,
-    FeedstockComplexityExtractor, BIExposureRatioExtractor, ProcessUnitCountExtractor,
-)
 
 # Renewable/Storage extractors
-from ....extractors.stubs.energy import (
-    TechnologyMaturityExtractor, EPCContractorQualityExtractor, WarrantyCoverageExtractor,
-    CapacityFactorExtractor, NatCatExposureExtractor, GridInterconnectionExtractor,
-    PPAQualityExtractor, DegradationRateExtractor, CommissioningDefectsExtractor,
-    ConstructionPhaseExtractor, EPCTrackRecordExtractor, SupplyChainQualityExtractor,
-    InstallationVesselQualityExtractor, FoundationTypeExtractor, TurbinePlatformGenerationExtractor,
-    CableRouteRiskExtractor, MarineWeatherExposureExtractor, CrewTransferSafetyExtractor,
-    OfftakeContractQualityExtractor,
-    HailExposureExtractor, PanelTechnologyVintageExtractor, InverterReliabilityExtractor,
-    CurtailmentRateExtractor, PortfolioGeographicSpreadExtractor,
-    BatteryChemistryExtractor, ThermalManagementSystemExtractor, FireSuppressionCapabilityExtractor,
-    BMSSophisticationExtractor, HydrogenStoragePressureExtractor, SafetyStandardComplianceExtractor,
-    CellFormatMaturityExtractor, ElectrolyserTechnologyExtractor,
-)
 
 # Upstream/Midstream/Downstream aggregators
-from ....aggregators.implementations.energy import (
-    BOPTestingComplianceAggregator, WellControlEventsAggregator, RigContractorQualityAggregator,
-    SubseaEquipmentAgeAggregator, WaterDepthProfileAggregator, MetoceanExposureAggregator,
-    BSEEComplianceDetailAggregator, SpudToProductionAggregator,
-    ProducedWaterManagementAggregator, H2SExposureAggregator, ArtificialLiftReliabilityAggregator,
-    StateRegulatoryComplianceAggregator, WellVintageProfileAggregator,
-    FracFleetQualityAggregator, WaterRecyclingRateAggregator, InducedSeismicityScoreAggregator,
-    WellSpacingOptimisationAggregator, CompletionEfficiencyAggregator, PadDrillingIntensityAggregator,
-    PHMSAComplianceAggregator, InlineInspectionAggregator, CathodicProtectionAggregator,
-    RightOfWayAggregator, SCADAMaturityAggregator, PipelineVintageAggregator, ThroughputConsistencyAggregator,
-    TurnaroundComplianceAggregator, PSMAuditFindingsAggregator, MechanicalIntegrityAggregator,
-    FeedstockComplexityAggregator, BIExposureRatioAggregator, ProcessUnitCountAggregator,
-)
 
 # Renewable/Storage aggregators
-from ....aggregators.implementations.energy import (
-    TechnologyMaturityAggregator, EPCContractorQualityAggregator, WarrantyCoverageAggregator,
-    CapacityFactorAggregator, NatCatExposureAggregator, GridInterconnectionAggregator,
-    PPAQualityAggregator, DegradationRateAggregator, CommissioningDefectsAggregator,
-    ConstructionPhaseAggregator, EPCTrackRecordAggregator, SupplyChainQualityAggregator,
-    InstallationVesselQualityAggregator, FoundationTypeAggregator, TurbinePlatformGenerationAggregator,
-    CableRouteRiskAggregator, MarineWeatherExposureAggregator, CrewTransferSafetyAggregator,
-    OfftakeContractQualityAggregator,
-    HailExposureAggregator, PanelTechnologyVintageAggregator, InverterReliabilityAggregator,
-    CurtailmentRateAggregator, PortfolioGeographicSpreadAggregator,
-    BatteryChemistryAggregator, ThermalManagementSystemAggregator, FireSuppressionCapabilityAggregator,
-    BMSSophisticationAggregator, HydrogenStoragePressureAggregator, SafetyStandardComplianceAggregator,
-    CellFormatMaturityAggregator, ElectrolyserTechnologyAggregator,
-)
 
 
 def _run_pipeline(signal_id, extractor, aggregator, entity_id, context, score_field, default=50, **kw):

@@ -10,121 +10,30 @@ import time
 from signal_architecture.signals.inference.registry import register_inference_function
 from signal_architecture.signals.types import SignalResult
 
-from signal_architecture.signals.extractors.stubs.property.phase_2_extractors import (
-    ConstructionClassExtractor,
-    BuildingAgeConditionExtractor,
-    BuildingCodeComplianceExtractor,
-    RoofConditionExtractor,
-    ElectricalSystemQualityExtractor,
-    RenovationHistoryExtractor,
-    OccupancyHazardGradeExtractor,
-    TenantConcentrationExtractor,
-    ContentsValueDensityExtractor,
-    VacancyRateExtractor,
-    HousekeepingQualityExtractor,
-    WindZoneExtractor,
-    EarthquakeZoneExtractor,
-    FloodZoneExtractor,
-    WildfireZoneExtractor,
-    ConvectiveStormExposureExtractor,
-    GeographicConcentrationExtractor,
-    SprinklerCoverageExtractor,
-    FireAlarmQualityExtractor,
-    FireDepartmentResponseExtractor,
-    FireSeparationExtractor,
-    WaterSupplyAdequacyExtractor,
-    RevenueConcentrationExtractor,
-    RecoveryTimeEstimateExtractor,
-    SupplyChainDependencyExtractor,
-    ContingentBiExposureExtractor,
-    BusinessContinuityPlanningExtractor,
-)
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
 
-from signal_architecture.signals.aggregators.implementations.property.phase_2_aggregators import (
-    ConstructionClassAggregator,
-    BuildingAgeConditionAggregator,
-    BuildingCodeComplianceAggregator,
-    RoofConditionAggregator,
-    ElectricalSystemQualityAggregator,
-    RenovationHistoryAggregator,
-    OccupancyHazardGradeAggregator,
-    TenantConcentrationAggregator,
-    ContentsValueDensityAggregator,
-    VacancyRateAggregator,
-    HousekeepingQualityAggregator,
-    WindZoneAggregator,
-    EarthquakeZoneAggregator,
-    FloodZoneAggregator,
-    WildfireZoneAggregator,
-    ConvectiveStormExposureAggregator,
-    GeographicConcentrationAggregator,
-    SprinklerCoverageAggregator,
-    FireAlarmQualityAggregator,
-    FireDepartmentResponseAggregator,
-    FireSeparationAggregator,
-    WaterSupplyAdequacyAggregator,
-    RevenueConcentrationAggregator,
-    RecoveryTimeEstimateAggregator,
-    SupplyChainDependencyAggregator,
-    ContingentBiExposureAggregator,
-    BusinessContinuityPlanningAggregator,
-)
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
 
 
-async def _run_pipeline(signal_id, extractor, aggregator, entity_id, context,
-                        score_field=None, default=50.0, **kwargs):
-    """Standard extract → aggregate → return pipeline."""
-    if score_field is None:
-        score_field = f"{signal_id}_score"
-    start = time.time()
-    try:
-        ext = await extractor.extract(entity_id, context)
-        agg = await aggregator.aggregate([ext])
-        score = round(float(agg.get("data", {}).get(score_field, default)), 1)
-        return SignalResult(
-            signal_id=signal_id,
-            score=score,
-            confidence=1.0,
-            execution_time_ms=round((time.time() - start) * 1000, 1),
-            raw_data=ext,
-            aggregated_data=agg,
-            metadata=kwargs,
-        )
-    except Exception:
-        return SignalResult(
-            signal_id=signal_id,
-            score=default,
-            confidence=0.3,
-            execution_time_ms=round((time.time() - start) * 1000, 1),
-        )
-
-
-async def _run_categorical(signal_id, extractor, aggregator, entity_id, context,
-                           cat_field=None, default="OTHER", **kwargs):
-    """Standard extract → aggregate → return pipeline for categorical signals."""
-    if cat_field is None:
-        cat_field = signal_id
-    start = time.time()
-    try:
-        ext = await extractor.extract(entity_id, context)
-        agg = await aggregator.aggregate([ext])
-        category = agg.get("data", {}).get(cat_field, default)
-        return SignalResult(
-            signal_id=signal_id,
-            category=category,
-            confidence=0.85,
-            execution_time_ms=round((time.time() - start) * 1000, 1),
-            raw_data=ext,
-            aggregated_data=agg,
-            metadata=kwargs,
-        )
-    except Exception:
-        return SignalResult(
-            signal_id=signal_id,
-            category=default,
-            confidence=0.0,
-            execution_time_ms=round((time.time() - start) * 1000, 1),
-        )
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
 
 
 # =============================================================================

@@ -9,64 +9,6 @@ import time
 from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
-from ....extractors.stubs.marine import (
-    # Network Authority
-    ClassificationSocietyExtractor, PIClubExtractor, ChartererQualityExtractor,
-    MarineBankingRelationshipExtractor, FlagStateExtractor, MarineIndustryAssociationExtractor,
-    TechnicalManagerExtractor, PortRelationshipExtractor,
-    # Operational Telemetry
-    AISComplianceExtractor, DarkActivityExtractor, RouteRiskExtractor,
-    PSCRegionExposureExtractor, OperationalEfficiencyExtractor, WeatherRoutingExtractor,
-    # Safety Compliance
-    PSCDetentionExtractor, PSCDeficiencyExtractor, ClassStatusExtractor,
-    ISMComplianceExtractor, CasualtyHistoryExtractor, TotalLossHistoryExtractor,
-    # Fleet Profile
-    FleetAgeExtractor, FleetStabilityExtractor, VesselQualityExtractor,
-    CrewCertificationExtractor, ManagementConsistencyExtractor,
-    # Sanctions Compliance
-    SanctionsStatusExtractor, OwnershipTransparencyExtractor, JurisdictionRiskExtractor,
-    STSPatternExtractor, HistoricalSanctionsExtractor,
-    # Environmental
-    IMO2020ComplianceExtractor, BWMComplianceExtractor, CIIRatingExtractor, EnvironmentalIncidentExtractor,
-    # Corporate Footprint
-    MarineWebsiteQualityExtractor, FleetListDisclosureExtractor, MarineSustainabilityReportingExtractor,
-    SafetyCultureExtractor, CrewWelfareExtractor, MarineIndustryPresenceExtractor,
-    # Structured Data
-    VettingExtractor, MarineESGRatingExtractor, MarineCreditRatingExtractor,
-    # Categorical
-    OperatorClassificationExtractor, VesselCategoryExtractor, TradingPatternExtractor,
-    FlagStateQualityExtractor, MarineFleetAgeExtractor,
-)
-
-from ....aggregators.implementations.marine import (
-    # Network Authority
-    ClassificationSocietyAggregator, PIClubAggregator, ChartererQualityAggregator,
-    MarineBankingAggregator, FlagStateAggregator, MarineIndustryAssociationAggregator,
-    TechnicalManagerAggregator, PortRelationshipAggregator,
-    # Operational Telemetry
-    AISComplianceAggregator, DarkActivityAggregator, RouteRiskAggregator,
-    PSCRegionAggregator, OperationalEfficiencyAggregator, WeatherRoutingAggregator,
-    # Safety Compliance
-    PSCDetentionAggregator, PSCDeficiencyAggregator, ClassStatusAggregator,
-    ISMComplianceAggregator, CasualtyHistoryAggregator, TotalLossHistoryAggregator,
-    # Fleet Profile
-    FleetAgeAggregator, FleetStabilityAggregator, VesselQualityAggregator,
-    CrewCertificationAggregator, ManagementConsistencyAggregator,
-    # Sanctions Compliance
-    SanctionsStatusAggregator, OwnershipTransparencyAggregator, JurisdictionRiskAggregator,
-    STSPatternAggregator, HistoricalSanctionsAggregator,
-    # Environmental
-    IMO2020ComplianceAggregator, BWMComplianceAggregator, CIIRatingAggregator, EnvironmentalIncidentAggregator,
-    # Corporate Footprint
-    MarineWebsiteQualityAggregator, FleetListDisclosureAggregator, MarineSustainabilityAggregator,
-    SafetyCultureAggregator, CrewWelfareAggregator, MarineIndustryPresenceAggregator,
-    # Structured Data
-    VettingAggregator, MarineESGRatingAggregator, MarineCreditRatingAggregator,
-    # Categorical
-    OperatorClassificationAggregator, VesselCategoryAggregator, TradingPatternAggregator,
-    FlagStateQualityAggregator, FleetAgeBandAggregator,
-)
-
 
 def _run_pipeline(signal_id, extractor, aggregator, entity_id, context, score_field, default=50):
     start = time.time()
@@ -291,6 +233,32 @@ def f48(e, c): return _run_pipeline("credit_rating", MarineCreditRatingExtractor
 # =============================================================================
 
 import random
+
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
+
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
 
 @register_inference_function("port_state_control_basefunction")
 def f49(entity_id, context):

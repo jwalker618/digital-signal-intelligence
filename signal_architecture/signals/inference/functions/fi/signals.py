@@ -9,61 +9,30 @@ import time
 from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
-from ....extractors.stubs.fi import (
-    # Network Authority
-    CorrespondentQualityExtractor, FHLBMembershipExtractor, ClearingRelationshipExtractor,
-    FIAuditorQualityExtractor, LegalCounselExtractor, FIIndustryAssociationExtractor, FICreditRatingExtractor,
-    # Regulatory Compliance
-    ExaminationRatingExtractor, EnforcementActionExtractor, InformalActionExtractor,
-    CRARatingExtractor, BSAAMLExtractor, FairLendingExtractor, ConsumerComplianceExtractor,
-    # Financial Condition
-    CapitalRatioExtractor, AssetQualityExtractor, LiquidityExtractor, EarningsExtractor,
-    ConcentrationExtractor, InterestRateRiskExtractor, GrowthRateExtractor,
-    # Governance
-    FIBoardIndependenceExtractor, BoardExpertiseExtractor, FIExecutiveStabilityExtractor,
-    RiskCommitteeExtractor, AuditCommitteeExtractor, RelatedPartyExtractor,
-    # Operational Risk
-    CFPBComplaintExtractor, BBBComplaintExtractor, FILitigationExtractor,
-    FIBreachHistoryExtractor, OperationalIncidentExtractor,
-    # Cyber Security
-    FITLSConfigExtractor, FIEmailAuthExtractor, FISecurityHeadersExtractor,
-    FINetworkExposureExtractor, FICVEExposureExtractor, FISecurityRatingExtractor,
-    # Corporate Footprint
-    InvestorRelationsExtractor, FIDisclosureQualityExtractor, FISecurityPageExtractor,
-    FIHiringSignalsExtractor, FIESGReportingExtractor, CommunityPresenceExtractor,
-    # Structured Data
-    FIESGRatingExtractor, PeerBenchmarkExtractor,
-    # Categorical
-    InstitutionTypeExtractor, RegulatoryAuthorityExtractor, AssetSizeExtractor, PubliclyTradedExtractor,
-)
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
 
-from ....aggregators.implementations.fi import (
-    # Network Authority
-    CorrespondentQualityAggregator, FHLBMembershipAggregator, ClearingRelationshipAggregator,
-    FIAuditorQualityAggregator, LegalCounselAggregator, FIIndustryAssociationAggregator, FICreditRatingAggregator,
-    # Regulatory Compliance
-    ExaminationRatingAggregator, EnforcementActionAggregator, InformalActionAggregator,
-    CRARatingAggregator, BSAAMLAggregator, FairLendingAggregator, ConsumerComplianceAggregator,
-    # Financial Condition
-    CapitalRatioAggregator, AssetQualityAggregator, LiquidityAggregator, EarningsAggregator,
-    ConcentrationAggregator, InterestRateRiskAggregator, GrowthRateAggregator,
-    # Governance
-    FIBoardIndependenceAggregator, BoardExpertiseAggregator, FIExecutiveStabilityAggregator,
-    RiskCommitteeAggregator, AuditCommitteeAggregator, RelatedPartyAggregator,
-    # Operational Risk
-    CFPBComplaintAggregator, BBBComplaintAggregator, FILitigationAggregator,
-    FIBreachHistoryAggregator, OperationalIncidentAggregator,
-    # Cyber Security
-    FITLSConfigAggregator, FIEmailAuthAggregator, FISecurityHeadersAggregator,
-    FINetworkExposureAggregator, FICVEExposureAggregator, FISecurityRatingAggregator,
-    # Corporate Footprint
-    InvestorRelationsAggregator, FIDisclosureQualityAggregator, FISecurityPageAggregator,
-    FIHiringSignalsAggregator, FIESGReportingAggregator, CommunityPresenceAggregator,
-    # Structured Data
-    FIESGRatingAggregator, PeerBenchmarkAggregator,
-    # Categorical
-    InstitutionTypeAggregator, RegulatoryAuthorityAggregator, AssetSizeAggregator, PubliclyTradedAggregator,
-)
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
 
 
 def _run_pipeline(signal_id, extractor, aggregator, entity_id, context, score_field, default=50):
