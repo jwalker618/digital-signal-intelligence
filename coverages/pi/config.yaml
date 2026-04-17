@@ -1390,6 +1390,137 @@ professional_indemnity:
         label: Profession Type
         impact: PREMIUM_BASE
         default_cat: OTHER
+      three_layer_assessment:
+      - id: network_authority
+        label: Network Authority
+        description: Peer recognition, client quality, professional relationships
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent network authority - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.05
+      - id: regulatory_standing
+        label: Regulatory Standing
+        description: License status, disciplinary history, certifications
+        risk:
+          weight: 0.25
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical regulatory issues
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant regulatory concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent regulatory standing - modifier applied
+        loss:
+          weight: 0.25
+        exposure:
+          weight: 0.1
+      - id: firm_stability
+        label: Firm Stability
+        description: Tenure, partner retention, financial health
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 35
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Firm stability concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent firm stability - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.2
+      - id: practice_quality
+        label: Practice Quality
+        description: Client reviews, outcomes, complaint history
+        risk:
+          weight: 0.15
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent practice quality - modifier applied
+        loss:
+          weight: 0.2
+        exposure:
+          weight: 0.15
+      - id: technical_infrastructure
+        label: Technical Infrastructure
+        description: Digital security posture for client confidentiality
+        risk:
+          weight: 0.1
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent technical infrastructure - modifier applied
+        loss:
+          weight: 0.1
+        exposure:
+          weight: 0.1
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: Website quality, thought leadership, transparency
+        risk:
+          weight: 0.1
+          score_conditions:
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.9
+            note: Excellent corporate footprint - modifier applied
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.25
+      - id: litigation_history
+        label: Litigation History
+        description: Malpractice suits, fee disputes, regulatory enforcement
+        risk:
+          weight: 0.1
+          score_conditions:
+          - threshold: 25
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Severe litigation history
+          - threshold: 40
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant litigation concerns
+          - threshold: 20
+            comparison: <=
+            action: MODIFIER
+            applied: 0.85
+            note: Excellent litigation history - modifier applied
+        loss:
+          weight: 0.15
+        exposure:
+          weight: 0.15
     risk_tier_bands:
       bands:
       - id: 1
@@ -1513,10 +1644,65 @@ professional_indemnity:
       max_premium_to_limit_ratio: 0.15
       max_premium_to_revenue_ratio: 0.002
       max_ilf_factor: 10.0
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
   pi_legal_large:
     metadata:
       name: DSI PI Large Law Firm Pricing Model
-      description: Top-tier corporate/commercial practices — AmLaw 200, Magic Circle
+      description: "Top-tier corporate/commercial practices \u2014 AmLaw 200, Magic Circle"
       version: 2.3.0
       product_types: &id001
       - professional_liability
@@ -2600,10 +2786,16 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_audit:
     metadata:
       name: DSI PI Public Company Audit Model
-      description: Public company audit — Big 4 and mid-tier audit firms
+      description: "Public company audit \u2014 Big 4 and mid-tier audit firms"
       version: 2.3.0
       product_types: *id001
       applicable_markets: *id002
@@ -3552,6 +3744,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_architecture:
     metadata:
       name: DSI PI Architecture & Landscape Design Model
@@ -4054,6 +4252,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_engineering:
     metadata:
       name: DSI PI Structural/Civil/Geotechnical Engineering Model
@@ -5104,6 +5308,12 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_financial_advisory:
     metadata:
       name: DSI PI Wealth Management & IFA Model
@@ -5578,6 +5788,12 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_management_consulting:
     metadata:
       name: DSI PI Strategy & Management Advisory Model
@@ -5941,6 +6157,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_real_estate:
     metadata:
       name: DSI PI Surveyors, Valuers & Estate Agents Model
@@ -6421,6 +6643,12 @@ professional_indemnity:
       base_limit_reference: 1000000
       base_deductible_reference: 25000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
   pi_environmental:
     metadata:
       name: DSI PI Environmental Consulting Model
@@ -6895,3 +7123,9 @@ professional_indemnity:
       base_limit_reference: 2000000
       base_deductible_reference: 50000
       by_product_type: {}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.8
+      max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0

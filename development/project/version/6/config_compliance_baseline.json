@@ -1740,16 +1740,30 @@
     {
       "path": "coverages/pi/config.yaml",
       "scope": "pi/pi_sme",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'loss_tier_bands'"
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
     },
     {
       "path": "coverages/pi/config.yaml",
       "scope": "pi/pi_sme",
-      "category": "structure",
-      "severity": "error",
-      "message": "'groups.three_layer_assessment' is missing or empty"
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'firm_stability' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'practice_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
+    },
+    {
+      "path": "coverages/pi/config.yaml",
+      "scope": "pi/pi_sme",
+      "category": "canonical_category",
+      "severity": "warning",
+      "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
     },
     {
       "path": "coverages/pi/config.yaml",
@@ -1785,13 +1799,6 @@
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'partner_practice_mix' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_legal_specialist",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
     },
     {
       "path": "coverages/pi/config.yaml",
@@ -1866,13 +1873,6 @@
     {
       "path": "coverages/pi/config.yaml",
       "scope": "pi/pi_accounting",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_accounting",
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
@@ -1897,13 +1897,6 @@
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_architecture",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
     },
     {
       "path": "coverages/pi/config.yaml",
@@ -1978,13 +1971,6 @@
     {
       "path": "coverages/pi/config.yaml",
       "scope": "pi/pi_technology",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_technology",
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
@@ -2016,13 +2002,6 @@
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'delivery_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_financial_advisory",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
     },
     {
       "path": "coverages/pi/config.yaml",
@@ -2062,13 +2041,6 @@
     {
       "path": "coverages/pi/config.yaml",
       "scope": "pi/pi_management_consulting",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_management_consulting",
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'regulatory_standing' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
@@ -2093,13 +2065,6 @@
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'litigation_history' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_real_estate",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
     },
     {
       "path": "coverages/pi/config.yaml",
@@ -2135,13 +2100,6 @@
       "category": "canonical_category",
       "severity": "warning",
       "message": "three_layer_assessment id 'valuation_quality' is not in the canonical V6 category list (['behavioural', 'corporate_footprint', 'direct_inquiry', 'network_authority', 'public_record', 'structured_data', 'technical_infrastructure']); E9 will harden this check to an error."
-    },
-    {
-      "path": "coverages/pi/config.yaml",
-      "scope": "pi/pi_environmental",
-      "category": "structure",
-      "severity": "error",
-      "message": "missing required section 'guardrails'"
     },
     {
       "path": "coverages/pi/config.yaml",
