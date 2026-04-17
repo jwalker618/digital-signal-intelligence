@@ -1496,3 +1496,135 @@ coverages:
         employee_count: 35
         state: CA
         domain: localcafe.example
+
+  prodlib:
+    - entity_id: procter_gamble
+      name: The Procter & Gamble Company
+      config_id: prodlib_consumer_goods
+      domain: pg.com
+      registry_id: US-Ohio-0000080424
+      minimum_viable_input:
+        revenue: 84039000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 25000000000
+        domain: pg.com
+    - entity_id: colgate_palmolive
+      name: Colgate-Palmolive Company
+      config_id: prodlib_consumer_goods
+      domain: colgatepalmolive.com
+      registry_id: US-Delaware-0000021665
+      minimum_viable_input:
+        revenue: 19457000000
+        limit: 25000000
+        deductible: 500000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 8000000000
+        domain: colgatepalmolive.com
+    - entity_id: medtronic
+      name: Medtronic plc
+      config_id: prodlib_medical_device
+      domain: medtronic.com
+      registry_id: IE-Dublin-545333
+      minimum_viable_input:
+        revenue: 32362000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: medical_device
+        annual_units_distributed: 800000000
+        domain: medtronic.com
+    - entity_id: stryker
+      name: Stryker Corporation
+      config_id: prodlib_medical_device
+      domain: stryker.com
+      registry_id: US-Michigan-0000310764
+      minimum_viable_input:
+        revenue: 20498000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: medical_device
+        annual_units_distributed: 500000000
+        domain: stryker.com
+    - entity_id: toyota_motor
+      name: Toyota Motor Corporation
+      config_id: prodlib_auto_parts
+      domain: toyota.com
+      registry_id: JP-Tokyo-180101
+      minimum_viable_input:
+        revenue: 274497000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: product_liability
+        product_category: auto_parts
+        annual_units_distributed: 11230000
+        domain: toyota.com
+    - entity_id: ford_motor
+      name: Ford Motor Company
+      config_id: prodlib_auto_parts
+      domain: ford.com
+      registry_id: US-Delaware-0000037996
+      minimum_viable_input:
+        revenue: 176191000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: product_liability
+        product_category: auto_parts
+        annual_units_distributed: 4413000
+        domain: ford.com
+    - entity_id: nestle
+      name: Nestlé S.A.
+      config_id: prodlib_food_bev
+      domain: nestle.com
+      registry_id: CH-Vaud-CHE-105.808.380
+      minimum_viable_input:
+        revenue: 105290000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 100000000000
+        domain: nestle.com
+    - entity_id: kraft_heinz
+      name: The Kraft Heinz Company
+      config_id: prodlib_food_bev
+      domain: kraftheinzcompany.com
+      registry_id: US-Delaware-0001637459
+      minimum_viable_input:
+        revenue: 26803000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 40000000000
+        domain: kraftheinzcompany.com
+    - entity_id: tyson_foods
+      name: Tyson Foods, Inc.
+      config_id: prodlib_food_bev
+      domain: tysonfoods.com
+      registry_id: US-Delaware-0000100493
+      minimum_viable_input:
+        revenue: 52881000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 35000000000
+        domain: tysonfoods.com
+    - entity_id: small_startup_prodlib
+      name: Artisan Kitchenware Co.
+      config_id: prodlib_sme
+      domain: artisankitchen.example
+      registry_id: US-California-ART-00012345
+      minimum_viable_input:
+        revenue: 3800000
+        limit: 2000000
+        deductible: 25000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 45000
+        domain: artisankitchen.example
