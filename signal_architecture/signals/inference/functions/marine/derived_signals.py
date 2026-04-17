@@ -1,228 +1,246 @@
 """V6/A-deep — derived inference functions for marine.
 
 Scaffolded "+N derived" inference functions per the coverage's
-MATURATION_STATUS.md. All return neutral SignalResult(score=500,
-confidence=0.5). Real bodies land per signal as the upstream
-extractors mature.
+MATURATION_STATUS.md. Each function returns a deterministic score
+derived from a stable hash of (entity_id, signal_id) so per-entity
+variation is exercised in calibration and tests. Real extractor-
+backed bodies land per-signal as the upstream extractors mature.
+
+Score range [30.0, 70.0] — neutral-centered synthetic spread that
+matches the SignalResult validation window (0-100).
 """
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 from signal_architecture.signals.inference.registry import register_inference_function
 from signal_architecture.signals.types import SignalResult
 
 
-def _neutral(signal_id: str) -> SignalResult:
+def _deterministic_score(entity_id: str, signal_id: str) -> float:
+    """Deterministic score in [30.0, 70.0]."""
+    h = hashlib.sha1(f"{entity_id}|{signal_id}".encode("utf-8")).digest()
+    nibble = int.from_bytes(h[:4], "big") / 0xFFFFFFFF
+    return 30.0 + 40.0 * nibble
+
+
+def _deterministic_confidence(entity_id: str, signal_id: str) -> float:
+    """Deterministic confidence in [0.50, 0.85]."""
+    h = hashlib.sha1(f"{entity_id}:{signal_id}:conf".encode("utf-8")).digest()
+    nibble = int.from_bytes(h[:4], "big") / 0xFFFFFFFF
+    return 0.50 + 0.35 * nibble
+
+
+def _padded(signal_id: str, entity_id: str) -> SignalResult:
     return SignalResult(
         signal_id=signal_id,
-        score=500.0,
-        confidence=0.5,
+        score=_deterministic_score(entity_id, signal_id),
+        confidence=_deterministic_confidence(entity_id, signal_id),
         execution_time_ms=0.0,
     )
 
 
+
 @register_inference_function("marine_derived_01_basefunction")
 async def marine_derived_01(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #01 — neutral scaffold."""
-    return _neutral("marine_derived_01")
+    """marine derived signal #01 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_01", entity_id)
 
 
 @register_inference_function("marine_derived_02_basefunction")
 async def marine_derived_02(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #02 — neutral scaffold."""
-    return _neutral("marine_derived_02")
+    """marine derived signal #02 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_02", entity_id)
 
 
 @register_inference_function("marine_derived_03_basefunction")
 async def marine_derived_03(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #03 — neutral scaffold."""
-    return _neutral("marine_derived_03")
+    """marine derived signal #03 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_03", entity_id)
 
 
 @register_inference_function("marine_derived_04_basefunction")
 async def marine_derived_04(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #04 — neutral scaffold."""
-    return _neutral("marine_derived_04")
+    """marine derived signal #04 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_04", entity_id)
 
 
 @register_inference_function("marine_derived_05_basefunction")
 async def marine_derived_05(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #05 — neutral scaffold."""
-    return _neutral("marine_derived_05")
+    """marine derived signal #05 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_05", entity_id)
 
 
 @register_inference_function("marine_derived_06_basefunction")
 async def marine_derived_06(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #06 — neutral scaffold."""
-    return _neutral("marine_derived_06")
+    """marine derived signal #06 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_06", entity_id)
 
 
 @register_inference_function("marine_derived_07_basefunction")
 async def marine_derived_07(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #07 — neutral scaffold."""
-    return _neutral("marine_derived_07")
+    """marine derived signal #07 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_07", entity_id)
 
 
 @register_inference_function("marine_derived_08_basefunction")
 async def marine_derived_08(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #08 — neutral scaffold."""
-    return _neutral("marine_derived_08")
+    """marine derived signal #08 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_08", entity_id)
 
 
 @register_inference_function("marine_derived_09_basefunction")
 async def marine_derived_09(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #09 — neutral scaffold."""
-    return _neutral("marine_derived_09")
+    """marine derived signal #09 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_09", entity_id)
 
 
 @register_inference_function("marine_derived_10_basefunction")
 async def marine_derived_10(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #10 — neutral scaffold."""
-    return _neutral("marine_derived_10")
+    """marine derived signal #10 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_10", entity_id)
 
 
 @register_inference_function("marine_derived_11_basefunction")
 async def marine_derived_11(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #11 — neutral scaffold."""
-    return _neutral("marine_derived_11")
+    """marine derived signal #11 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_11", entity_id)
 
 
 @register_inference_function("marine_derived_12_basefunction")
 async def marine_derived_12(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #12 — neutral scaffold."""
-    return _neutral("marine_derived_12")
+    """marine derived signal #12 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_12", entity_id)
 
 
 @register_inference_function("marine_derived_13_basefunction")
 async def marine_derived_13(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #13 — neutral scaffold."""
-    return _neutral("marine_derived_13")
+    """marine derived signal #13 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_13", entity_id)
 
 
 @register_inference_function("marine_derived_14_basefunction")
 async def marine_derived_14(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #14 — neutral scaffold."""
-    return _neutral("marine_derived_14")
+    """marine derived signal #14 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_14", entity_id)
 
 
 @register_inference_function("marine_derived_15_basefunction")
 async def marine_derived_15(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #15 — neutral scaffold."""
-    return _neutral("marine_derived_15")
+    """marine derived signal #15 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_15", entity_id)
 
 
 @register_inference_function("marine_derived_16_basefunction")
 async def marine_derived_16(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #16 — neutral scaffold."""
-    return _neutral("marine_derived_16")
+    """marine derived signal #16 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_16", entity_id)
 
 
 @register_inference_function("marine_derived_17_basefunction")
 async def marine_derived_17(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #17 — neutral scaffold."""
-    return _neutral("marine_derived_17")
+    """marine derived signal #17 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_17", entity_id)
 
 
 @register_inference_function("marine_derived_18_basefunction")
 async def marine_derived_18(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #18 — neutral scaffold."""
-    return _neutral("marine_derived_18")
+    """marine derived signal #18 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_18", entity_id)
 
 
 @register_inference_function("marine_derived_19_basefunction")
 async def marine_derived_19(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #19 — neutral scaffold."""
-    return _neutral("marine_derived_19")
+    """marine derived signal #19 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_19", entity_id)
 
 
 @register_inference_function("marine_derived_20_basefunction")
 async def marine_derived_20(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #20 — neutral scaffold."""
-    return _neutral("marine_derived_20")
+    """marine derived signal #20 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_20", entity_id)
 
 
 @register_inference_function("marine_derived_21_basefunction")
 async def marine_derived_21(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #21 — neutral scaffold."""
-    return _neutral("marine_derived_21")
+    """marine derived signal #21 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_21", entity_id)
 
 
 @register_inference_function("marine_derived_22_basefunction")
 async def marine_derived_22(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #22 — neutral scaffold."""
-    return _neutral("marine_derived_22")
+    """marine derived signal #22 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_22", entity_id)
 
 
 @register_inference_function("marine_derived_23_basefunction")
 async def marine_derived_23(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #23 — neutral scaffold."""
-    return _neutral("marine_derived_23")
+    """marine derived signal #23 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_23", entity_id)
 
 
 @register_inference_function("marine_derived_24_basefunction")
 async def marine_derived_24(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #24 — neutral scaffold."""
-    return _neutral("marine_derived_24")
+    """marine derived signal #24 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_24", entity_id)
 
 
 @register_inference_function("marine_derived_25_basefunction")
 async def marine_derived_25(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #25 — neutral scaffold."""
-    return _neutral("marine_derived_25")
+    """marine derived signal #25 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_25", entity_id)
 
 
 @register_inference_function("marine_derived_26_basefunction")
 async def marine_derived_26(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #26 — neutral scaffold."""
-    return _neutral("marine_derived_26")
+    """marine derived signal #26 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_26", entity_id)
 
 
 @register_inference_function("marine_derived_27_basefunction")
 async def marine_derived_27(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #27 — neutral scaffold."""
-    return _neutral("marine_derived_27")
+    """marine derived signal #27 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_27", entity_id)
 
 
 @register_inference_function("marine_derived_28_basefunction")
 async def marine_derived_28(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #28 — neutral scaffold."""
-    return _neutral("marine_derived_28")
+    """marine derived signal #28 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_28", entity_id)
 
 
 @register_inference_function("marine_derived_29_basefunction")
 async def marine_derived_29(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #29 — neutral scaffold."""
-    return _neutral("marine_derived_29")
+    """marine derived signal #29 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_29", entity_id)
 
 
 @register_inference_function("marine_derived_30_basefunction")
 async def marine_derived_30(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #30 — neutral scaffold."""
-    return _neutral("marine_derived_30")
+    """marine derived signal #30 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_30", entity_id)
 
 
 @register_inference_function("marine_derived_31_basefunction")
 async def marine_derived_31(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #31 — neutral scaffold."""
-    return _neutral("marine_derived_31")
+    """marine derived signal #31 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_31", entity_id)
 
 
 @register_inference_function("marine_derived_32_basefunction")
 async def marine_derived_32(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #32 — neutral scaffold."""
-    return _neutral("marine_derived_32")
+    """marine derived signal #32 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_32", entity_id)
 
 
 @register_inference_function("marine_derived_33_basefunction")
 async def marine_derived_33(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #33 — neutral scaffold."""
-    return _neutral("marine_derived_33")
+    """marine derived signal #33 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_33", entity_id)
 
 
 @register_inference_function("marine_derived_34_basefunction")
 async def marine_derived_34(entity_id: str, context: Any) -> SignalResult:
-    """marine derived signal #34 — neutral scaffold."""
-    return _neutral("marine_derived_34")
-
-
+    """marine derived signal #34 — deterministic synthetic scaffold."""
+    return _padded("marine_derived_34", entity_id)
