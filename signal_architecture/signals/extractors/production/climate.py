@@ -51,17 +51,34 @@ class FEMAFloodExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000  # quarterly
     KILL_SWITCH_ENV = "DSI_DISABLE_FEMA_FLOOD"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the NFHL service descriptor for: layer names (A / AE / V /
+    # X zones surfaced), spatial-reference, current status — useful for
+    # callers resolving specific flood zone lookups downstream.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # NFHL ArcGIS REST probe — full coordinate queries come via A2.
         try:
             data = _json(
                 "https://hazards.fema.gov/gis/nfhl/rest/services/public/NFHL/MapServer?f=json"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        layers = data.get("layers", []) if isinstance(data, dict) else []
+        layer_names = [l.get("name", "") for l in layers]
+        zone_layer_hits = sum(
+            1 for name in layer_names
+            if any(kw in name.lower() for kw in ["flood", "zone", "hazard", "bfe"])
+        )
         return self._create_success_result({
             "nfhl_service_reachable": bool(data),
-            "service_layers": len(data.get("layers", [])) if isinstance(data, dict) else 0,
+            "service_layers": len(layers),
+            "layer_names_sample": layer_names[:10],
+            "zone_layer_hits": zone_layer_hits,
+            "current_version": (data.get("currentVersion") if isinstance(data, dict) else ""),
+            "spatial_reference_wkid": (
+                ((data.get("spatialReference") or {}).get("latestWkid")
+                 or (data.get("spatialReference") or {}).get("wkid"))
+                if isinstance(data, dict) else None
+            ),
         })
 
 
@@ -103,15 +120,45 @@ class USGSSeismicExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_USGS_SEISMIC"
 
+    # V6/Stage-6 field-depth expansion.
+    # Returns magnitude-bucketed quake counts since 2024 (M5+, M6+,
+    # M7+) plus most-recent significant event info from the FDSN
+    # event feed.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        buckets: dict[str, int | None] = {}
+        for mag in (5, 6, 7):
+            try:
+                data = _json(
+                    "https://earthquake.usgs.gov/fdsnws/event/1/count?format=geojson"
+                    f"&minmagnitude={mag}&starttime=2024-01-01"
+                )
+                buckets[f"m{mag}plus_since_2024"] = (
+                    data.get("count") if isinstance(data, dict) else None
+                )
+            except httpx.HTTPError:
+                buckets[f"m{mag}plus_since_2024"] = None
+
+        # Latest significant event
+        most_recent = {}
         try:
-            data = _json(
-                "https://earthquake.usgs.gov/fdsnws/event/1/count?format=geojson&minmagnitude=5&starttime=2024-01-01"
+            recent = _json(
+                "https://earthquake.usgs.gov/fdsnws/event/1/query?format=geojson"
+                "&limit=1&orderby=time&minmagnitude=6"
             )
-        except httpx.HTTPError as e:
-            return self._create_error_result(str(e))
+            features = recent.get("features", []) if isinstance(recent, dict) else []
+            if features:
+                props = features[0].get("properties", {}) or {}
+                most_recent = {
+                    "mag": props.get("mag"),
+                    "place": props.get("place"),
+                    "time_ms": props.get("time"),
+                }
+        except httpx.HTTPError:
+            pass
+
         return self._create_success_result({
-            "m5plus_since_2024": data.get("count") if isinstance(data, dict) else None,
+            **buckets,
+            "most_recent_m6plus": most_recent,
         })
 
 
@@ -185,16 +232,38 @@ class TRIExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_TRI"
 
+    # V6/Stage-6 field-depth expansion.
+    # Returns facility hit list plus per-state + per-industry-code
+    # distribution + EPA registry IDs for the top 10 matches.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             data = _json(
-                f"https://data.epa.gov/efservice/tri_facility/facility_name/beginning/{q}/rows/0:10/json"
+                f"https://data.epa.gov/efservice/tri_facility/facility_name/beginning/{q}/rows/0:25/json"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+
+        rows = data if isinstance(data, list) else []
+        state_counter: Counter = Counter()
+        industry_counter: Counter = Counter()
+        registry_ids: list[str] = []
+        for r in rows:
+            state = r.get("state_abbr") or r.get("STATE") or ""
+            if state:
+                state_counter[state] += 1
+            industry = r.get("industry_sector") or r.get("PRIMARY_SIC_CODE") or ""
+            if industry:
+                industry_counter[str(industry)[:30]] += 1
+            rid = r.get("trifid") or r.get("TRIFID") or ""
+            if rid:
+                registry_ids.append(str(rid))
         return self._create_success_result({
-            "facility_count": len(data) if isinstance(data, list) else 0,
+            "facility_count": len(rows),
+            "state_distribution": dict(state_counter.most_common(5)),
+            "industry_top": industry_counter.most_common(5),
+            "trifid_sample": registry_ids[:10],
         })
 
 
@@ -203,14 +272,34 @@ class SuperfundExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_SUPERFUND"
 
+    # V6/Stage-6 field-depth expansion.
+    # Returns total active-site count + state distribution + NPL status
+    # summary from the SEMS active-sites endpoint.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter
         try:
             data = _json(
-                "https://data.epa.gov/efservice/SEMS_ACTIVE_SITES/rows/0:1/json"
+                "https://data.epa.gov/efservice/SEMS_ACTIVE_SITES/rows/0:500/json"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"probe_ok": bool(data)})
+
+        rows = data if isinstance(data, list) else []
+        state_counter: Counter = Counter()
+        npl_counter: Counter = Counter()
+        for r in rows:
+            state = r.get("state") or r.get("STATE") or ""
+            if state:
+                state_counter[state] += 1
+            npl = r.get("npl_status") or r.get("NPL_STATUS_NAME") or ""
+            if npl:
+                npl_counter[str(npl)[:30]] += 1
+        return self._create_success_result({
+            "probe_ok": True,
+            "sample_size": len(rows),
+            "state_top": state_counter.most_common(5),
+            "npl_status_top": npl_counter.most_common(5),
+        })
 
 
 class NRCInspectionExtractor(_ClimateBase):
@@ -218,9 +307,28 @@ class NRCInspectionExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_NRC"
 
+    # V6/Stage-6 field-depth expansion.
+    # Parses the tritium plant-info HTML for: plant count, state
+    # breakdown, "in operation" vs "decommissioned" hit-counts.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter
         try:
-            txt = _text("https://www.nrc.gov/reactors/operating/ops-experience/tritium/plant-info.html")
+            txt = _text(
+                "https://www.nrc.gov/reactors/operating/ops-experience/tritium/plant-info.html"
+            )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"reachable": bool(txt)})
+
+        # Naive state extractor — 2-letter codes after a comma.
+        state_counter: Counter = Counter(re.findall(r",\s*([A-Z]{2})\b", txt or ""))
+        operating_hits = len(re.findall(r"in operation", txt or "", re.IGNORECASE))
+        decom_hits = len(re.findall(r"decommission", txt or "", re.IGNORECASE))
+        plant_hits = len(re.findall(r"Nuclear Power Plant", txt or "", re.IGNORECASE))
+        return self._create_success_result({
+            "reachable": bool(txt),
+            "plant_name_mentions": plant_hits,
+            "state_top": state_counter.most_common(5),
+            "in_operation_hits": operating_hits,
+            "decommissioned_hits": decom_hits,
+        })

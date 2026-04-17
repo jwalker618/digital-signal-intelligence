@@ -112,6 +112,28 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Stage 6 batch 4 — 5 D5 climate extractors deepened
+
+Climate / environment extractor deepening: 5 of 11 D5 extractors moved
+from reachability probes to field-level parsing.
+
+- **FEMAFloodExtractor**: parses NFHL service descriptor for layer
+  names, zone-layer hit counts (A/AE/V/X), current version, spatial
+  reference WKID.
+- **USGSSeismicExtractor**: M5+/M6+/M7+ bucketed quake counts since
+  2024 + most-recent significant (M6+) event details
+  (magnitude/place/time).
+- **TRIExtractor**: facility hit list + per-state + per-industry
+  distribution + TRIFID registry-ID sample.
+- **SuperfundExtractor**: state distribution (top-5) + NPL status
+  distribution (Final / Proposed / Deleted) from SEMS active-sites.
+- **NRCInspectionExtractor**: plant-name mention count, state-code
+  top-5, in-operation vs decommissioned hit-counts.
+
+5 new monkeypatched tests in `tests/unit/test_extractors_d5.py`
+(9 total). Verification: 9/9 D5 tests pass, 221/221 goldens green,
+compliance strict PASS.
+
 ### Stage 6 batch 3 — 5 more D3 extractors + E10 follow-through
 
 - **SECIAPDExtractor**: parses IAPD summary HTML for CRD + regulatory-
