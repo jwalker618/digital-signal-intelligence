@@ -1,0 +1,44 @@
+coverage_line: specie
+coverage_key: specie
+phase: v6_b11
+description: "V6/B11 — Specie / Fine Art"
+version: "1.0.0"
+
+default_product_types:
+  - vault_cash
+  - jewelry_precious_metals
+  - fine_art_gallery
+  - in_transit
+
+default_markets: [us, uk, eu, ch, jp]
+default_currency: USD
+default_min_premium: 15000
+
+default_minimum_viable_input:
+  - field: entity_name
+  - field: specie_type
+  - field: tiv
+  - field: limit
+
+routing_field: specie_type
+
+configurations:
+  - name: specie_vault_cash
+    model_specificity: 1
+    routing_constraints: [{ field: specie_type, operator: "==", value: vault_cash }]
+  - name: specie_jewelry_precious_metals
+    model_specificity: 1
+    routing_constraints: [{ field: specie_type, operator: "==", value: jewelry }]
+  - name: specie_fine_art_gallery
+    model_specificity: 1
+    routing_constraints: [{ field: specie_type, operator: "==", value: fine_art }]
+  - name: specie_sme
+    model_specificity: 3
+    routing_constraints: [{ field: tiv, operator: "<", value: 10000000 }]
+
+signal_registry: []
+default_risk_tier_bands: {}
+default_loss_tier_bands: {}
+default_exposure_bands: {}
+default_pricing: {}
+default_guardrails: {}
