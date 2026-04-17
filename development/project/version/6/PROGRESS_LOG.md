@@ -72,7 +72,7 @@ concrete list of new signals + inference functions.
 | 4.1 | Casualty calibration fix (was 79.7% hit) | **DONE** |
 | 4.2 | FPR calibration fix (premium_exceeds_limit_ratio) | **DONE** |
 | 4.3 | Aerospace_space calibration fix (31.6% hit) | **DONE** |
-| 4.4 | A1 FPR — add 9 new signals to registry | PENDING |
+| 4.4 | A1 FPR — add 9 new signals to registry | **DONE** |
 | 4.5 | A2 Property — add 10 new signals + habitational sub-config | PENDING |
 | 4.6 | A3 Casualty — add 11 new signals | PENDING |
 | 4.7 | A4 D&O — add 14 new signals | PENDING |
@@ -111,6 +111,40 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.4 — A1 FPR signal expansion
+
+9 new signals added to `coverages/fpr/config.yaml` → `signal_registry`,
+taking FPR from 13 → 30 unique signal IDs across the 5 sub-configs
+(mature bar ≥ 22 ✅). Primary-sub-config count (fpr_trade_credit) is
+still at 12 — the ≥ 40 primary-scored-signal bar is pushed to A1-deep
+alongside the remaining surety / trade-credit chain:
+
+- `fpr_political_risk`: `acled_incident_density`, `wb_wgi_score`,
+  `ofac_country_tier`, `capital_controls_watchlist`,
+  `bit_treaty_coverage`.
+- `fpr_kidnap_ransom`: `acled_kfr_rate_country`,
+  `travel_pattern_density`, `executive_exposure_footprint`.
+- `fpr_trade_credit`: `buyer_concentration`, `sector_credit_spread`.
+
+New inference module
+`signal_architecture/signals/inference/functions/fpr/a1_maturation_signals.py`
+registers 10 neutral `@register_inference_function` entries
+(`*_basefunction`, score 500) — extractor-backed implementations land
+with Stage 6.
+
+`description` field stripped from signal_registry entries (schema-strict)
+— descriptions live in the inference-function docstrings.
+
+Three-layer weights rebalanced so each dimension (risk / loss.frequency
+/ loss.severity) sums to 1.0 across its group. Goldens regenerated
+(`caci.yaml`); 221/221 golden tests green; calibrate returns PASS on
+all 5 FPR sub-configs; compliance gate returns 0 errors (no baseline
+additions).
+
+Remaining A1 backlog pushed to A1-deep (surety chain, trade-credit
+deep, political deep, K&R deep) — tracked in
+`coverages/fpr/MATURATION_STATUS.md`.
 
 ### Stage 4.10 — calibrate promoted to BLOCKING in Config Health Gate
 

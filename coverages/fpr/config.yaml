@@ -284,6 +284,21 @@ financial_political_risk:
           severity:
             correlation_direction: positive
             weight: 0.2
+    - id: sector_credit_spread
+      inference_utility_function: sector_credit_spread_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -785,6 +800,81 @@ financial_political_risk:
           severity:
             correlation_direction: positive
             weight: 0.2
+    - id: acled_incident_density
+      inference_utility_function: acled_incident_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: wb_wgi_score
+      inference_utility_function: wb_wgi_score_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: ofac_country_tier
+      inference_utility_function: ofac_country_tier_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: capital_controls_watchlist
+      inference_utility_function: capital_controls_watchlist_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: bit_treaty_coverage
+      inference_utility_function: bit_treaty_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+          severity:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -1855,6 +1945,51 @@ financial_political_risk:
           size:
             correlation_direction: positive
             weight: 0.15
+    - id: acled_kfr_rate_country
+      inference_utility_function: acled_kfr_rate_country_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.06
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: travel_pattern_density
+      inference_utility_function: travel_pattern_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: behavioural
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: executive_exposure_footprint
+      inference_utility_function: executive_exposure_footprint_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
