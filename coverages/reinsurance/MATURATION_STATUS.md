@@ -14,7 +14,7 @@ Depth-first build **complete** (Stage 3.8 of the Option-D plan).
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage reinsurance` returns PASS | **PASS** (960/960) | ✅ |
 | `assess_config_compliance` returns 0 errors | **0** | ✅ |
-| Cedent cross-walk | pending | ⏳ |
+| Cedent cross-walk | added (by_coverage.json) | ✅ |
 
 ## Routing
 

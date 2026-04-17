@@ -2,7 +2,7 @@ financial_political_risk:
   fpr_trade_credit:
     metadata:
       name: DSI Trade Credit Insurance Model
-      description: "Trade credit \u2014 buyer default, insolvency, protracted default, political risk on receivables"
+      description: Trade credit — buyer default, insolvency, protracted default, political risk on receivables
       version: 2.3.0
       product_types:
       - trade_credit
@@ -642,7 +642,7 @@ financial_political_risk:
   fpr_political_risk:
     metadata:
       name: DSI Political Risk & Violence Model
-      description: "Political risk \u2014 expropriation, currency inconvertibility, political violence, contract frustration"
+      description: Political risk — expropriation, currency inconvertibility, political violence, contract frustration
       version: 2.3.0
       product_types:
       - political_risk
@@ -707,7 +707,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Local partner \u2014 may mitigate or amplify risk"
+        note: Local partner — may mitigate or amplify risk
     - id: resource_extraction
       question: Is this a natural resource extraction investment (oil, gas, mining)?
       query_condition:
@@ -715,7 +715,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Resource extraction \u2014 elevated nationalisation risk"
+        note: Resource extraction — elevated nationalisation risk
     signal_registry:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
@@ -1236,7 +1236,7 @@ financial_political_risk:
   fpr_surety:
     metadata:
       name: DSI Surety & Contract Bond Model
-      description: "Surety bonds \u2014 performance, payment, bid, maintenance; contractor financial strength focus"
+      description: Surety bonds — performance, payment, bid, maintenance; contractor financial strength focus
       version: 2.3.0
       product_types:
       - surety_bond
@@ -1301,7 +1301,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Government contract \u2014 Miller Act bond"
+        note: Government contract — Miller Act bond
     - id: joint_venture
       question: Is this a joint venture project with shared bonding obligations?
       query_condition:
@@ -1309,7 +1309,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "JV bonding \u2014 partner credit exposure"
+        note: JV bonding — partner credit exposure
     signal_registry:
     - id: principal_financial_strength
       inference_utility_function: principal_financial_strength_basefunction
@@ -1726,6 +1726,26 @@ financial_political_risk:
             factor: 0.8
           - deductible: 500000
             factor: 0.7
+        contract_bond:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.05
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.9
+          - deductible: 250000
+            factor: 0.8
+          - deductible: 500000
+            factor: 0.7
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.0
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -1735,7 +1755,7 @@ financial_political_risk:
   fpr_kidnap_ransom:
     metadata:
       name: DSI Kidnap & Ransom Model
-      description: "K&R \u2014 kidnap, ransom, extortion, detention, hijack; crisis response included"
+      description: K&R — kidnap, ransom, extortion, detention, hijack; crisis response included
       version: 2.3.0
       product_types:
       - kidnap_ransom
@@ -2348,7 +2368,7 @@ financial_political_risk:
   fpr_sme:
     metadata:
       name: DSI Financial & Political Risk SME Model
-      description: "Simplified FPR for smaller exposures \u2014 trade credit + political risk combined"
+      description: Simplified FPR for smaller exposures — trade credit + political risk combined
       version: 2.3.0
       product_types:
       - trade_credit
@@ -2933,6 +2953,24 @@ financial_political_risk:
             factor: 0.78
           - deductible: 250000
             factor: 0.68
+        political_risk:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.0
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

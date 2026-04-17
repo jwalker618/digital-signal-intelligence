@@ -11,7 +11,7 @@ finishing) — see
 | ≥ 80 coverage-specific inference functions | 95 | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
 | Guardrails populated | present | ✅ |
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage cyber` returns PASS | **PASS** (Stage 4.11) | ✅ |

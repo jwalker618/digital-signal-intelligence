@@ -112,6 +112,34 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Coverage-debt closure — ILF curves + cross-walk aliases
+
+Closed several `⏳` rows from MATURATION_STATUS.md files across the
+coverages:
+
+- **Parametric ILF curves**: filled 24 missing `by_product_type` ILF
+  blocks across aerospace (satellite + aviation_hull + aviation_liability
+  in space/unmanned), fpr (contract_bond + political_risk), marine
+  (cargo + war_risks + pi_liability + increased_value + total_loss +
+  loss_of_hire across tanker/offshore/high_value), casualty
+  (products_liability in sme), and property (builders_risk +
+  difference_in_conditions + business_interruption across 4 sub-configs).
+  Tuned `max_ilf` per product-type heuristic (war_risks ×1.3,
+  pi_liability ×1.1, builders_risk ×0.9, cargo ×0.9, etc.).
+- **Cross-walk aliases**: `by_coverage.json` now carries 5 sub-config
+  aliases under `metadata.sub_config_aliases`, closing the
+  `casualty_environmental → env_industrial`, `reins_facultative →
+  casualty_general`, `reins_treaty_proportional → casualty_general`,
+  `reins_treaty_excess_of_loss → casualty_umbrella`, and
+  `casualty_wc → wc_general` debts logged in env_liab + reinsurance
+  MATURATION_STATUS docs.
+- **prodlib `expectation_level` retrofit**: the earlier 22-coverage
+  retrofit already touched prodlib (165 entries); the MATURATION
+  doc was out of date and is now ✅.
+
+Verification: calibrate PASS on all 142 sub-configs, 221/221
+goldens green, compliance strict PASS.
+
 ### A8-deep batch final — 5 remaining sub-configs landed
 
 All remaining A8-deep sub-configs landed in one batch. Cyber, PI,

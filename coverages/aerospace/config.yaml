@@ -2682,6 +2682,24 @@ aerospace:
             factor: 0.9
           - deductible: 25000000
             factor: 0.78
+        satellite:
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.018
+          deductible_factors:
+          - deductible: 1000000
+            factor: 1.20
+          - deductible: 2500000
+            factor: 1.10
+          - deductible: 5000000
+            factor: 1.0
+          - deductible: 10000000
+            factor: 0.88
+          - deductible: 25000000
+            factor: 0.72
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3693,6 +3711,46 @@ aerospace:
             factor: 0.6
           - deductible: 250000
             factor: 0.5
+        aviation_hull:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.02
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.25
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.82
+          - deductible: 50000
+            factor: 0.68
+          - deductible: 100000
+            factor: 0.55
+          - deductible: 250000
+            factor: 0.45
+        aviation_liability:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.5
+              k: 0.022
+          deductible_factors:
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.88
+          - deductible: 50000
+            factor: 0.76
+          - deductible: 100000
+            factor: 0.65
+          - deductible: 250000
+            factor: 0.55
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

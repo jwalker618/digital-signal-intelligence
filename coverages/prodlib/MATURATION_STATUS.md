@@ -8,7 +8,7 @@ Depth-first build **complete** (Stage 3.2 of the Option-D plan).
 | ≥ 22 signal IDs | 33 | ✅ |
 | ≥ 60 inference functions | 33 | ⏳ +27 derived planned |
 | Primary config ≥ 40 scored signals | 33 | ⏳ +7 |
-| `expectation_level` retrofit | partial | ⏳ |
+| `expectation_level` retrofit | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | Routing constraints on every sub-config | 5/5 | ✅ |
 | Parametric ILF curves per product_type | auto-generated | ✅ |
 | Guardrails populated | all 5 sub-configs | ✅ |

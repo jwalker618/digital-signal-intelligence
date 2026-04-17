@@ -11,7 +11,7 @@ Tracks progress against the V6 Mature Bar (A5 in
 | Primary config ≥ 40 scored signals | 51 (fi_general) | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
 | `calibrate --coverage fi` returns PASS | **PASS** (Stage 4.8) | ✅ |

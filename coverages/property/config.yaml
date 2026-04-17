@@ -2,7 +2,7 @@ commercial_property:
   property_general:
     metadata:
       name: DSI Commercial Property General Model
-      description: "General commercial property \u2014 offices, retail, light industrial, multi-tenant"
+      description: General commercial property — offices, retail, light industrial, multi-tenant
       version: 2.3.0
       product_types:
       - commercial_property
@@ -70,7 +70,7 @@ commercial_property:
         action: FLAG
         override: null
         applied: null
-        note: "Active renovation \u2014 hot works exposure"
+        note: Active renovation — hot works exposure
     - id: hazardous_materials
       question: Are hazardous materials stored, used, or processed on premises?
       query_condition:
@@ -256,7 +256,7 @@ commercial_property:
           weight: 0.2
           score_conditions:
           - action: FLAG
-            note: "High vacancy \u2014 arson/vandalism exposure"
+            note: High vacancy — arson/vandalism exposure
             threshold: 30
             comparison: <=
         loss:
@@ -1082,6 +1082,54 @@ commercial_property:
             factor: 0.55
           - deductible: 2500000
             factor: 0.48
+        builders_risk:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.2
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.9
+          - deductible: 100000
+            factor: 0.8
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.62
+          - deductible: 1000000
+            factor: 0.55
+          - deductible: 2500000
+            factor: 0.48
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
+        difference_in_conditions:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.2
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.9
+          - deductible: 100000
+            factor: 0.8
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.62
+          - deductible: 1000000
+            factor: 0.55
+          - deductible: 2500000
+            factor: 0.48
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -1091,7 +1139,7 @@ commercial_property:
   property_high_value:
     metadata:
       name: DSI Commercial Property High Value Model
-      description: "High-value commercial property \u2014 TIV >$500M, landmark, data centre, critical infrastructure"
+      description: High-value commercial property — TIV >$500M, landmark, data centre, critical infrastructure
       version: 2.3.0
       product_types:
       - commercial_property
@@ -1171,7 +1219,7 @@ commercial_property:
         action: FLAG
         override: null
         applied: null
-        note: "Coastal frontage \u2014 surge/wind exposure"
+        note: Coastal frontage — surge/wind exposure
     signal_registry:
     - id: construction_class
       inference_utility_function: construction_class_basefunction
@@ -1349,7 +1397,7 @@ commercial_property:
           weight: 0.2
           score_conditions:
           - action: FLAG
-            note: "High vacancy \u2014 arson/vandalism exposure"
+            note: High vacancy — arson/vandalism exposure
             threshold: 30
             comparison: <=
         loss:
@@ -2156,6 +2204,42 @@ commercial_property:
             factor: 0.75
           - deductible: 5000000
             factor: 0.65
+        builders_risk:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.88
+          - deductible: 2500000
+            factor: 0.75
+          - deductible: 5000000
+            factor: 0.65
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
+        difference_in_conditions:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.88
+          - deductible: 2500000
+            factor: 0.75
+          - deductible: 5000000
+            factor: 0.65
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -2165,7 +2249,7 @@ commercial_property:
   property_cat_exposed:
     metadata:
       name: DSI Commercial Property CAT-Exposed Model
-      description: "CAT-exposed commercial property \u2014 coastal wind, earthquake, wildfire zones"
+      description: CAT-exposed commercial property — coastal wind, earthquake, wildfire zones
       version: 2.3.0
       product_types:
       - commercial_property
@@ -2423,7 +2507,7 @@ commercial_property:
           weight: 0.2
           score_conditions:
           - action: FLAG
-            note: "High vacancy \u2014 arson/vandalism exposure"
+            note: High vacancy — arson/vandalism exposure
             threshold: 30
             comparison: <=
         loss:
@@ -3243,6 +3327,50 @@ commercial_property:
             factor: 0.6
           - deductible: 2500000
             factor: 0.52
+        builders_risk:
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.88
+          - deductible: 250000
+            factor: 0.78
+          - deductible: 500000
+            factor: 0.68
+          - deductible: 1000000
+            factor: 0.6
+          - deductible: 2500000
+            factor: 0.52
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
+        business_interruption:
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.88
+          - deductible: 250000
+            factor: 0.78
+          - deductible: 500000
+            factor: 0.68
+          - deductible: 1000000
+            factor: 0.6
+          - deductible: 2500000
+            factor: 0.52
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.0
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3252,7 +3380,7 @@ commercial_property:
   property_builders_risk:
     metadata:
       name: DSI Builders Risk Model
-      description: "Construction-phase property coverage \u2014 new build, renovation, fit-out"
+      description: Construction-phase property coverage — new build, renovation, fit-out
       version: 2.3.0
       product_types:
       - builders_risk
@@ -3305,7 +3433,7 @@ commercial_property:
         action: REFER
         override: 4
         applied: null
-        note: "Wood-frame high-rise \u2014 fire exposure"
+        note: Wood-frame high-rise — fire exposure
     - id: site_security
       question: Is the construction site secured with 24/7 fencing, cameras, and guard service?
       query_condition:
@@ -3507,7 +3635,7 @@ commercial_property:
           weight: 0.2
           score_conditions:
           - action: FLAG
-            note: "High vacancy \u2014 arson/vandalism exposure"
+            note: High vacancy — arson/vandalism exposure
             threshold: 30
             comparison: <=
         loss:
@@ -4315,7 +4443,7 @@ commercial_property:
   property_sme:
     metadata:
       name: DSI Commercial Property SME Model
-      description: "Small-to-medium commercial property \u2014 TIV under $5M, simplified assessment"
+      description: Small-to-medium commercial property — TIV under $5M, simplified assessment
       version: 2.3.0
       product_types:
       - commercial_property
@@ -4549,7 +4677,7 @@ commercial_property:
           weight: 0.2
           score_conditions:
           - action: FLAG
-            note: "High vacancy \u2014 arson/vandalism exposure"
+            note: High vacancy — arson/vandalism exposure
             threshold: 30
             comparison: <=
         loss:
@@ -5343,6 +5471,46 @@ commercial_property:
             factor: 0.72
           - deductible: 100000
             factor: 0.62
+        builders_risk:
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.3
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.72
+          - deductible: 100000
+            factor: 0.62
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
+        difference_in_conditions:
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.3
+          - deductible: 5000
+            factor: 1.15
+          - deductible: 10000
+            factor: 1.0
+          - deductible: 25000
+            factor: 0.85
+          - deductible: 50000
+            factor: 0.72
+          - deductible: 100000
+            factor: 0.62
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -5379,7 +5547,12 @@ commercial_property:
       routing_constraints:
       - field: occupancy_class
         operator: in
-        value: [HABITATIONAL, APARTMENT, SENIOR_LIVING, HOTEL, DORM]
+        value:
+        - HABITATIONAL
+        - APARTMENT
+        - SENIOR_LIVING
+        - HOTEL
+        - DORM
         required_in_input: true
       - field: tiv
         operator: '>='
@@ -5417,105 +5590,151 @@ commercial_property:
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
-        risk: {correlation_direction: positive, weight: 0.20}
+        risk:
+          correlation_direction: positive
+          weight: 0.2
         loss:
-          severity: {correlation_direction: positive, weight: 0.20}
+          severity:
+            correlation_direction: positive
+            weight: 0.2
     - id: sprinkler_coverage
       inference_utility_function: sprinkler_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
-        risk: {correlation_direction: negative, weight: 0.15}
+        risk:
+          correlation_direction: negative
+          weight: 0.15
         loss:
-          frequency: {correlation_direction: negative, weight: 0.18}
+          frequency:
+            correlation_direction: negative
+            weight: 0.18
     - id: fire_alarm_quality
       inference_utility_function: fire_alarm_quality_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
-        risk: {correlation_direction: negative, weight: 0.10}
+        risk:
+          correlation_direction: negative
+          weight: 0.1
         loss:
-          frequency: {correlation_direction: negative, weight: 0.10}
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
     - id: building_age_condition
       inference_utility_function: building_age_condition_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
-        risk: {correlation_direction: positive, weight: 0.12}
+        risk:
+          correlation_direction: positive
+          weight: 0.12
         loss:
-          frequency: {correlation_direction: positive, weight: 0.10}
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
     - id: roof_condition
       inference_utility_function: roof_condition_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
-        risk: {correlation_direction: positive, weight: 0.08}
+        risk:
+          correlation_direction: positive
+          weight: 0.08
         loss:
-          frequency: {correlation_direction: positive, weight: 0.10}
+          frequency:
+            correlation_direction: positive
+            weight: 0.1
     - id: occupancy_hazard_grade
       inference_utility_function: occupancy_hazard_grade_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
-        risk: {correlation_direction: positive, weight: 0.15}
+        risk:
+          correlation_direction: positive
+          weight: 0.15
         loss:
-          frequency: {correlation_direction: positive, weight: 0.15}
+          frequency:
+            correlation_direction: positive
+            weight: 0.15
     - id: tenant_concentration
       inference_utility_function: tenant_concentration_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
-        risk: {correlation_direction: positive, weight: 0.10}
+        risk:
+          correlation_direction: positive
+          weight: 0.1
         loss:
-          severity: {correlation_direction: positive, weight: 0.10}
+          severity:
+            correlation_direction: positive
+            weight: 0.1
     - id: vacancy_rate
       inference_utility_function: vacancy_rate_basefunction
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
-        risk: {correlation_direction: positive, weight: 0.10}
+        risk:
+          correlation_direction: positive
+          weight: 0.1
         loss:
-          frequency: {correlation_direction: positive, weight: 0.07}
+          frequency:
+            correlation_direction: positive
+            weight: 0.07
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
         label: Construction & Life Safety
         description: Construction class, sprinkler / fire-alarm, roof, age
-        risk: {weight: 0.55}
-        loss: {weight: 0.50}
-        exposure: {weight: 0.30}
+        risk:
+          weight: 0.55
+        loss:
+          weight: 0.5
+        exposure:
+          weight: 0.3
       - id: structured_data
         label: Occupancy & Tenancy
         description: Occupancy hazard, tenant concentration, vacancy
-        risk: {weight: 0.35}
-        loss: {weight: 0.40}
-        exposure: {weight: 0.55}
+        risk:
+          weight: 0.35
+        loss:
+          weight: 0.4
+        exposure:
+          weight: 0.55
       - id: corporate_footprint
         label: Corporate Footprint
         description: ''
-        risk: {weight: 0.05}
-        loss: {weight: 0.05}
-        exposure: {weight: 0.10}
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.1
       - id: behavioural
         label: Firm Stability
         description: ''
-        risk: {weight: 0.05}
-        loss: {weight: 0.05}
-        exposure: {weight: 0.05}
+        risk:
+          weight: 0.05
+        loss:
+          weight: 0.05
+        exposure:
+          weight: 0.05
     risk_tier_bands:
       bands:
       - id: 1
         label: PREFERRED
         description: Excellent risk
         interpretation:
-          bands: {min: 800, max: 1000}
+          bands:
+            min: 800
+            max: 1000
           action: APPROVE
           application:
             method: MULTIPLIER
@@ -5525,7 +5744,9 @@ commercial_property:
         label: STANDARD_PLUS
         description: Good risk
         interpretation:
-          bands: {min: 650, max: 799}
+          bands:
+            min: 650
+            max: 799
           action: APPROVE
           application:
             method: MULTIPLIER
@@ -5535,7 +5756,9 @@ commercial_property:
         label: STANDARD
         description: Average risk
         interpretation:
-          bands: {min: 500, max: 649}
+          bands:
+            min: 500
+            max: 649
           action: REFER
           application:
             method: MULTIPLIER
@@ -5545,7 +5768,9 @@ commercial_property:
         label: SUBSTANDARD
         description: Elevated risk
         interpretation:
-          bands: {min: 350, max: 499}
+          bands:
+            min: 350
+            max: 499
           action: REFER
           application:
             method: MULTIPLIER
@@ -5555,7 +5780,9 @@ commercial_property:
         label: DECLINE
         description: Unacceptable risk
         interpretation:
-          bands: {min: 0, max: 349}
+          bands:
+            min: 0
+            max: 349
           action: DECLINE
           application:
             method: MULTIPLIER
@@ -5563,11 +5790,56 @@ commercial_property:
             basis: tiv
     loss_tier_bands:
       bands:
-      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
-      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
-      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
-      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
-      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.2
+            severity_modifier: 1.25
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.5
+            severity_modifier: 1.6
       constraints:
         floor: 0.55
         cap: 1.7
@@ -5575,43 +5847,179 @@ commercial_property:
       size:
         weight: 0.6
         bands:
-        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
-        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
-        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
-        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
-        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+        - id: 1
+          label: MICRO
+          description: Micro
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very Large
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
       complexity:
         weight: 0.4
         bands:
-        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
-        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
-        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
-        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
-        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+        - id: 1
+          label: SIMPLE
+          description: Simple
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.15
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.35
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.7
     limit_configuration:
       type: DECOUPLED
-      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
-      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+      valid_limits:
+      - 1000000
+      - 5000000
+      - 10000000
+      - 25000000
+      - 50000000
+      - 100000000
+      valid_deductibles:
+      - 25000
+      - 50000
+      - 100000
+      - 250000
+      - 500000
     pricing:
       base_limit_reference: 10000000
       base_deductible_reference: 100000
       by_product_type:
         commercial_property:
-          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.5
+              k: 0.025
           deductible_factors:
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.05}
-          - {deductible: 100000, factor: 1.0}
-          - {deductible: 250000, factor: 0.88}
-          - {deductible: 500000, factor: 0.75}
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.05
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.88
+          - deductible: 500000
+            factor: 0.75
         business_interruption:
-          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 5.5
+              k: 0.025
           deductible_factors:
-          - {deductible: 25000, factor: 1.15}
-          - {deductible: 50000, factor: 1.05}
-          - {deductible: 100000, factor: 1.0}
-          - {deductible: 250000, factor: 0.88}
-          - {deductible: 500000, factor: 0.75}
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.05
+          - deductible: 100000
+            factor: 1.0
+          - deductible: 250000
+            factor: 0.88
+          - deductible: 500000
+            factor: 0.75
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

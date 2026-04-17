@@ -11,7 +11,7 @@ Tracks progress against the V6 Mature Bar (A7 in
 | Primary config ≥ 40 scored signals | 50 (marine_general) | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ STS + offshore |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
 | `calibrate --coverage marine` returns PASS | **PASS** (Stage 4.10) | ✅ |

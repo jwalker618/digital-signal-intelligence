@@ -11,7 +11,7 @@ Tracks progress against the V6 Mature Bar (see
 | Primary config ≥ 40 scored signals | 12 (fpr_trade_credit primary) | ⏳ 28 to add |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ surety + K&R |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
 | Guardrails populated (floor/cap/ratios) | present | ✅ (Stage 4.2) |
 | `logic.md` regenerated | regenerated (Stage 4.11-fu) | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |

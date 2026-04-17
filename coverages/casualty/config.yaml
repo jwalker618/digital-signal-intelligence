@@ -2,7 +2,7 @@ commercial_casualty:
   casualty_gl:
     metadata:
       name: DSI Commercial General Liability Model
-      description: "Commercial general liability \u2014 premises, operations, products/completed ops"
+      description: Commercial general liability — premises, operations, products/completed ops
       version: 2.3.0
       product_types:
       - general_liability
@@ -17,8 +17,7 @@ commercial_casualty:
         - field: client_name
           description: Client name
         - field: product_type
-          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
-            products_liability'
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability, products_liability'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -690,7 +689,7 @@ commercial_casualty:
   casualty_wc:
     metadata:
       name: DSI Workers Compensation Model
-      description: "Workers compensation \u2014 payroll-based, experience mod driven, state-specific"
+      description: Workers compensation — payroll-based, experience mod driven, state-specific
       version: 2.3.0
       product_types:
       - workers_compensation
@@ -704,8 +703,7 @@ commercial_casualty:
         - field: client_name
           description: Client name
         - field: product_type
-          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
-            products_liability'
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability, products_liability'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -748,7 +746,7 @@ commercial_casualty:
         action: REFER
         override: 3
         applied: null
-        note: "High experience mod \u2014 loss-driven"
+        note: High experience mod — loss-driven
     - id: multi_state
       question: Are employees located in more than 10 states?
       query_condition:
@@ -756,7 +754,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: "Multi-state WC \u2014 jurisdictional complexity"
+        note: Multi-state WC — jurisdictional complexity
     - id: seasonal_workforce
       question: Does the workforce include >30% seasonal or temporary workers?
       query_condition:
@@ -1274,7 +1272,7 @@ commercial_casualty:
   casualty_auto:
     metadata:
       name: DSI Commercial Auto Liability Model
-      description: "Commercial auto fleet liability \u2014 fleet-value based, driver quality, telematics"
+      description: Commercial auto fleet liability — fleet-value based, driver quality, telematics
       version: 2.3.0
       product_types:
       - commercial_auto
@@ -1331,7 +1329,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: "Driver shortage \u2014 retention/quality risk"
+        note: Driver shortage — retention/quality risk
     - id: prior_fatality
       question: Any at-fault fatality accidents in the past 5 years?
       query_condition:
@@ -1952,7 +1950,7 @@ commercial_casualty:
   casualty_umbrella:
     metadata:
       name: DSI Umbrella & Excess Liability Model
-      description: "Umbrella/excess liability \u2014 underlying-premium based, tower position, nuclear verdict exposure"
+      description: Umbrella/excess liability — underlying-premium based, tower position, nuclear verdict exposure
       version: 2.3.0
       product_types:
       - umbrella_excess
@@ -2017,7 +2015,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: "Lead umbrella position \u2014 higher frequency exposure"
+        note: Lead umbrella position — higher frequency exposure
     signal_registry:
     - id: gl_class_code
       inference_utility_function: gl_class_code_basefunction
@@ -2664,7 +2662,7 @@ commercial_casualty:
   casualty_environmental:
     metadata:
       name: DSI Environmental Liability Model
-      description: "Environmental liability \u2014 pollution, remediation, regulatory defence, third-party claims"
+      description: Environmental liability — pollution, remediation, regulatory defence, third-party claims
       version: 2.3.0
       product_types:
       - environmental_liability
@@ -2678,8 +2676,7 @@ commercial_casualty:
         - field: client_name
           description: Client name
         - field: product_type
-          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
-            products_liability'
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability, products_liability'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -2706,7 +2703,7 @@ commercial_casualty:
         action: REFER
         override: 4
         applied: null
-        note: "Known contamination \u2014 pre-existing conditions"
+        note: Known contamination — pre-existing conditions
     - id: superfund_prp
       question: Is the insured a named PRP at any CERCLA/Superfund site?
       query_condition:
@@ -2722,7 +2719,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: "UST presence \u2014 leak exposure"
+        note: UST presence — leak exposure
     - id: manufacturing_operations
       question: Does the insured operate manufacturing with chemical processes?
       query_condition:
@@ -2730,7 +2727,7 @@ commercial_casualty:
         action: FLAG
         override: null
         applied: null
-        note: "Chemical manufacturing \u2014 pollution exposure"
+        note: Chemical manufacturing — pollution exposure
     - id: phase_i_current
       question: Has a Phase I ESA been completed within the past 3 years for all insured sites?
       query_condition:
@@ -3427,7 +3424,7 @@ commercial_casualty:
   casualty_sme:
     metadata:
       name: DSI Casualty SME Model
-      description: "Small-to-medium casualty \u2014 revenue under $5M, simplified GL + products"
+      description: Small-to-medium casualty — revenue under $5M, simplified GL + products
       version: 2.3.0
       product_types:
       - general_liability
@@ -3442,8 +3439,7 @@ commercial_casualty:
         - field: client_name
           description: Client name
         - field: product_type
-          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability,
-            products_liability'
+          description: 'One of: general_liability, workers_compensation, commercial_auto, umbrella_excess, environmental_liability, products_liability'
         - field: limit
           description: Requested limit in USD
         - field: revenue
@@ -3997,6 +3993,26 @@ commercial_casualty:
             factor: 0.62
           - deductible: 100000
             factor: 0.52
+        products_liability:
+          deductible_factors:
+          - deductible: 2500
+            factor: 1.2
+          - deductible: 5000
+            factor: 1.0
+          - deductible: 10000
+            factor: 0.85
+          - deductible: 25000
+            factor: 0.72
+          - deductible: 50000
+            factor: 0.62
+          - deductible: 100000
+            factor: 0.52
+          ilf_curve:
+            anchor_limit: 500000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.25
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

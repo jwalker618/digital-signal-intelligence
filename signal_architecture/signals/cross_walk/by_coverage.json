@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "description": "Crosswalk of common concepts across seven coverages (aerospace, cyber, do, energy, fi, pi, marine).",
+    "description": "Crosswalk of common concepts across coverages.",
     "notes": [
       "Full path IDs are used to avoid collisions.",
       "CommonConcept provides a normalized anchor for mapping.",
@@ -8,8 +8,15 @@
       "This file is designed for LLM interrogation and code generation.",
       "Versioning allows controlled updates as coverage schemas evolve."
     ],
-    "version": "1.0.0",
-    "last_updated": "2025-12-25"
+    "version": "1.1.0",
+    "last_updated": "2026-04-17",
+    "sub_config_aliases": {
+      "casualty.casualty_environmental": "env_liab.env_industrial",
+      "reinsurance.reins_facultative": "casualty.casualty_general",
+      "reinsurance.reins_treaty_proportional": "casualty.casualty_general",
+      "reinsurance.reins_treaty_excess_of_loss": "casualty.casualty_umbrella",
+      "casualty.casualty_wc": "wc.wc_general"
+    }
   },
   "crosswalk": [
     {

@@ -2027,7 +2027,7 @@ marine:
   marine_cargo:
     metadata:
       name: DSI Marine Cargo Specialist Model
-      description: "Marine cargo insurance \u2014 commodity-specific, transit risk, storage exposure"
+      description: Marine cargo insurance — commodity-specific, transit risk, storage exposure
       version: 2.3.0
       product_types:
       - cargo
@@ -2073,7 +2073,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: "Hazardous cargo \u2014 specialist review"
+        note: Hazardous cargo — specialist review
     - id: open_cover
       question: Is this an open cover (blanket) declaration or a specific voyage policy?
       query_condition:
@@ -2081,7 +2081,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Open cover \u2014 accumulation monitoring required"
+        note: Open cover — accumulation monitoring required
     - id: war_zone_transit
       question: Does the transit route pass through any Joint War Committee listed areas?
       query_condition:
@@ -2097,7 +2097,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Reefer cargo \u2014 cold chain exposure"
+        note: Reefer cargo — cold chain exposure
     signal_registry:
     - id: cargo_commodity_class
       inference_utility_function: cargo_commodity_class_basefunction
@@ -2697,7 +2697,7 @@ marine:
   marine_tanker:
     metadata:
       name: DSI Marine Tanker Specialist Model
-      description: "Tanker fleet hull & liability \u2014 crude, product, chemical, gas carriers"
+      description: Tanker fleet hull & liability — crude, product, chemical, gas carriers
       version: 2.3.0
       product_types: &id005
       - hull_machinery
@@ -2762,7 +2762,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "STS operations \u2014 pollution exposure"
+        note: STS operations — pollution exposure
     - id: single_hull
       question: Are any vessels in the fleet single-hull construction?
       query_condition:
@@ -2770,7 +2770,7 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: "Single hull tanker \u2014 regulatory non-compliance"
+        note: Single hull tanker — regulatory non-compliance
     signal_registry:
     - id: tanker_vetting_status
       inference_utility_function: tanker_vetting_status_basefunction
@@ -2788,7 +2788,7 @@ marine:
             threshold: 30
             comparison: <=
           - action: FLAG
-            note: "Vetting concerns \u2014 observations outstanding"
+            note: Vetting concerns — observations outstanding
             threshold: 50
             comparison: <=
         loss:
@@ -3006,7 +3006,7 @@ marine:
       three_layer_assessment:
       - id: technical_infrastructure
         label: Tanker Risk
-        description: "Tanker-specific risk \u2014 vetting status, pollution exposure, cargo compatibility, hull construction"
+        description: Tanker-specific risk — vetting status, pollution exposure, cargo compatibility, hull construction
         risk:
           weight: 0.45
         loss:
@@ -3339,6 +3339,106 @@ marine:
             factor: 0.6
           - deductible: 5000000
             factor: 0.5
+        total_loss:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        loss_of_hire:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        cargo:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3348,7 +3448,7 @@ marine:
   marine_offshore:
     metadata:
       name: DSI Marine Offshore Specialist Model
-      description: "Offshore marine units \u2014 FPSOs, rigs, OSVs, construction vessels, wind installation"
+      description: Offshore marine units — FPSOs, rigs, OSVs, construction vessels, wind installation
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -3390,7 +3490,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Lay-up status \u2014 reduced maintenance risk"
+        note: Lay-up status — reduced maintenance risk
     - id: deepwater_operations
       question: Does the unit operate in water depths exceeding 1500 metres?
       query_condition:
@@ -3398,7 +3498,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Deepwater operations \u2014 higher severity potential"
+        note: Deepwater operations — higher severity potential
     - id: harsh_environment
       question: Does the unit operate in harsh environment zones (North Sea, Norwegian Sea, sub-Arctic)?
       query_condition:
@@ -3630,7 +3730,7 @@ marine:
       three_layer_assessment:
       - id: technical_infrastructure
         label: Offshore Marine
-        description: "Offshore unit risk \u2014 FPSO, jack-up, semi-sub, construction vessel, mooring integrity"
+        description: Offshore unit risk — FPSO, jack-up, semi-sub, construction vessel, mooring integrity
         risk:
           weight: 0.5
         loss:
@@ -3957,6 +4057,96 @@ marine:
             factor: 0.72
           - deductible: 5000000
             factor: 0.6
+        total_loss:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        pi_liability:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
+        cargo:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3966,7 +4156,7 @@ marine:
   marine_war_risk:
     metadata:
       name: DSI Marine War Risk Specialist Model
-      description: "Marine war risk \u2014 hull war, strikes, piracy, confiscation, terrorism"
+      description: Marine war risk — hull war, strikes, piracy, confiscation, terrorism
       version: 2.3.0
       product_types:
       - war_risks
@@ -3989,7 +4179,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: "JWC listed area trading \u2014 additional premium required"
+        note: JWC listed area trading — additional premium required
     - id: piracy_exposure
       question: Does the trading pattern include high-piracy-risk areas (Gulf of Aden, Gulf of Guinea, Strait of Malacca)?
       query_condition:
@@ -4005,7 +4195,7 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: "Sanctions proximity \u2014 compliance review"
+        note: Sanctions proximity — compliance review
     - id: armed_guards
       question: Does the vessel employ armed security personnel in high-risk areas?
       query_condition:
@@ -4462,7 +4652,7 @@ marine:
   marine_high_value:
     metadata:
       name: DSI Marine High Value Fleet Model
-      description: "High-value fleet hull & liability \u2014 modern tonnage, top-tier operators, fleet value >$1B"
+      description: High-value fleet hull & liability — modern tonnage, top-tier operators, fleet value >$1B
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -4974,6 +5164,86 @@ marine:
             factor: 0.82
           - deductible: 5000000
             factor: 0.68
+        total_loss:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        pi_liability:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
+        cargo:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

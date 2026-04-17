@@ -14,7 +14,7 @@ Depth-first build **complete** (Stage 3.3 of the Option-D plan).
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage env_liab` returns PASS | **PASS** (480/480) | ✅ |
 | `assess_config_compliance` returns 0 errors | **0** | ✅ |
-| `casualty_environmental` → env_industrial cross-walk alias | pending | ⏳ |
+| `casualty_environmental` → env_industrial cross-walk alias | added (by_coverage.json) | ✅ |
 
 ## Routing
 
