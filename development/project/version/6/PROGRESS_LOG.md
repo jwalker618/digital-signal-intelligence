@@ -77,7 +77,7 @@ concrete list of new signals + inference functions.
 | 4.6 | A3 Casualty — add 17 new signals across GL/auto/env/umbrella | **DONE** |
 | 4.7 | A4 D&O — add 14 new governance signals to do_public | **DONE** |
 | 4.8 | A5 FI — add 18 new signals across bank/insurer/fintech/crypto | **DONE** |
-| 4.9 | A6 Aerospace — add 14 new signals | PENDING |
+| 4.9 | A6 Aerospace — add 10 new signals across 5 depth-starved sub-configs | **DONE** |
 | 4.9 | A7 Marine — add 13 new signals | PENDING |
 | 4.9 | A8 — Cyber + PI + Energy finishing | PENDING |
 | **4.10** | Promote calibrate from advisory to **BLOCKING** | **DONE** |
@@ -111,6 +111,35 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 4.9 — A6 Aerospace signal expansion
+
+10 new signal IDs added across 5 depth-starved aerospace sub-configs
+(aerospace unique-ID count 68 → 78, mature bar ≥ 30 ✅):
+
+- `aerospace_high_value` (0 → 5): `opensky_route_telemetry`,
+  `fleet_age_distribution`, `icao_annex19_sms_proxy`,
+  `asias_incident_count`, `part_121_135_cert_band`.
+- `aerospace_space` (5 → 7): `space_launch_cadence`,
+  `fleet_age_distribution`.
+- `aerospace_unmanned` (5 → 7): `uas_part107_compliance`,
+  `icao_annex19_sms_proxy`.
+- `aerospace_rotary` (5 → 7): `rotary_mro_history`,
+  `fleet_age_distribution`.
+- `aerospace_mro` (5 → 8): `part_145_repair_station_band`,
+  `rotary_mro_history`, `fsims_training_depth`.
+
+Insertions reuse signals across sub-configs where appropriate
+(`fleet_age_distribution`, `icao_annex19_sms_proxy`,
+`rotary_mro_history`) — identical inference-function, different
+weight context per sub-config.
+
+Inference module `a6_maturation_signals.py` registers 10 neutral
+scaffolds. Real bodies wire in with Stage 6 (OpenSky Network, ASIAS,
+FSIMS, FAA Part 145/121/135/107).
+
+Verification: calibrate aerospace PASS on all 7 sub-configs (11,436
+fixtures, 0 errors), 221/221 goldens green, compliance strict PASS.
 
 ### Stage 4.8 — A5 FI signal expansion
 

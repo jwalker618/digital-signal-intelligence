@@ -2247,6 +2247,33 @@ aerospace:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: space_launch_cadence
+      inference_utility_function: space_launch_cadence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: fleet_age_distribution
+      inference_utility_function: fleet_age_distribution_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -2748,6 +2775,33 @@ aerospace:
           size:
             correlation_direction: positive
             weight: 0.15
+    - id: rotary_mro_history
+      inference_utility_function: rotary_mro_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+    - id: fleet_age_distribution
+      inference_utility_function: fleet_age_distribution_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -3207,6 +3261,30 @@ aerospace:
           severity:
             correlation_direction: positive
             weight: 0.1
+    - id: uas_part107_compliance
+      inference_utility_function: uas_part107_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+    - id: icao_annex19_sms_proxy
+      inference_utility_function: icao_annex19_sms_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -3684,6 +3762,42 @@ aerospace:
           severity:
             correlation_direction: positive
             weight: 0.15
+    - id: part_145_repair_station_band
+      inference_utility_function: part_145_repair_station_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+    - id: rotary_mro_history
+      inference_utility_function: rotary_mro_history_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: fsims_training_depth
+      inference_utility_function: fsims_training_depth_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -4065,7 +4179,73 @@ aerospace:
         override: 4
         applied: null
         note: Regulatory enforcement history
-    signal_registry: []
+    signal_registry:
+    - id: opensky_route_telemetry
+      inference_utility_function: opensky_route_telemetry_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: fleet_age_distribution
+      inference_utility_function: fleet_age_distribution_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: icao_annex19_sms_proxy
+      inference_utility_function: icao_annex19_sms_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+    - id: asias_incident_count
+      inference_utility_function: asias_incident_count_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: part_121_135_cert_band
+      inference_utility_function: part_121_135_cert_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
