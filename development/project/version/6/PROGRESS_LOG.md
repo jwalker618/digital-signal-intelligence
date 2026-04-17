@@ -25,7 +25,7 @@ preserved across sessions.
 |---|------|--------|--------|
 | 1.1 | `ProductionExtractor.extract()` builds + persists `Provenance` on every successful extraction | **DONE** | (next) |
 | 1.2 | `DriftDetector` registers `DriftReferralBridge` as an `on_alert` observer | **DONE** | (next) |
-| 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | PENDING | — |
+| 1.3 | `POST /api/v1/admin/rate-filing/generate` authenticated endpoint | **DONE** | (next) |
 | 1.4 | Example tenant overlay file (`coverages/cyber/overlays/dsi-demo.yaml`) + integration smoke | PENDING | — |
 | 1.5 | C3 OpenTelemetry end-to-end smoke with `DSI_OTEL_ENABLED=true` | PENDING | — |
 | 1.6 | E10 physical stub move — **BLOCKED** until A1–A8 complete (inference functions still import stubs) | BLOCKED | — |
@@ -83,6 +83,26 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### 1.3 — POST /api/v1/admin/rate-filing/generate
+
+Authenticated admin endpoint at
+`/api/v1/admin/rate-filing/generate` that returns the full
+SERFF-ready pack as a JSON bundle (`files` dict keyed by filename).
+
+- Pydantic `RateFilingRequest { coverage, config, state }` validation.
+- `ConfigNotFoundError` → 404.
+- Non-two-letter state code → 422.
+- State normalised to upper-case.
+- Underlying logic uses `infrastructure.admin.rate_filing.generate_
+  filing()` — same output as the CLI.
+- Gated on `Permission.ADMIN_SYSTEM`.
+
+Mounted through `infrastructure/api/admin/__init__.py`.
+
+5 handler tests: artefact presence + content spot-check, state upper-
+case normalisation, invalid-state rejection, 404 for missing coverage,
+404 for missing config.
 
 ### 1.2 — DriftDetector ↔ DriftReferralBridge wiring
 

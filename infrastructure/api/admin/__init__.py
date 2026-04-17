@@ -13,6 +13,7 @@ from infrastructure.api.admin.config_routes import router as config_router
 from infrastructure.api.admin.user_routes import router as user_router
 from infrastructure.api.admin.audit_routes import router as audit_router
 from infrastructure.api.admin.evidence_routes import router as evidence_router
+from infrastructure.api.admin.rate_filing_routes import router as rate_filing_router
 
 # Aggregate router that mounts all sub-routers at the same prefix. This
 # keeps the main app's include_router call simple.
@@ -22,5 +23,6 @@ router.include_router(config_router)
 router.include_router(user_router)
 router.include_router(audit_router)
 router.include_router(evidence_router)
+router.include_router(rate_filing_router)
 
 __all__ = ["router"]
