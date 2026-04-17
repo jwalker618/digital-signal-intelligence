@@ -1628,3 +1628,135 @@ coverages:
         product_category: consumer_goods
         annual_units_distributed: 45000
         domain: artisankitchen.example
+
+  env_liab:
+    - entity_id: dupont_env
+      name: DuPont de Nemours, Inc.
+      config_id: env_industrial
+      domain: dupont.com
+      registry_id: US-Delaware-0001666700
+      minimum_viable_input:
+        revenue: 12069000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '32'
+        domain: dupont.com
+    - entity_id: dow_inc
+      name: Dow Inc.
+      config_id: env_industrial
+      domain: dow.com
+      registry_id: US-Delaware-0001751788
+      minimum_viable_input:
+        revenue: 44622000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '32'
+        domain: dow.com
+    - entity_id: 3m_env
+      name: 3M Company
+      config_id: env_industrial
+      domain: 3m.com
+      registry_id: US-Delaware-0000066740
+      minimum_viable_input:
+        revenue: 32681000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '33'
+        domain: 3m.com
+    - entity_id: waste_mgmt_env
+      name: Waste Management, Inc.
+      config_id: env_waste_mgmt
+      domain: wm.com
+      registry_id: US-Delaware-0000823768
+      minimum_viable_input:
+        revenue: 20726000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: wm.com
+    - entity_id: republic_services
+      name: Republic Services, Inc.
+      config_id: env_waste_mgmt
+      domain: republicservices.com
+      registry_id: US-Delaware-0001060391
+      minimum_viable_input:
+        revenue: 14965000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: republicservices.com
+    - entity_id: clean_harbors
+      name: Clean Harbors, Inc.
+      config_id: env_waste_mgmt
+      domain: cleanharbors.com
+      registry_id: US-Massachusetts-0000822818
+      minimum_viable_input:
+        revenue: 5415000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: cleanharbors.com
+    - entity_id: simon_env
+      name: Simon Property Group (Environmental)
+      config_id: env_real_estate
+      domain: simon.com
+      registry_id: US-Delaware-0001063761
+      minimum_viable_input:
+        revenue: 5957000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: environmental_impairment
+        facility_type: real_estate
+        naics_2digit: '53'
+        domain: simon.com
+    - entity_id: brookfield_prop
+      name: Brookfield Property Partners L.P.
+      config_id: env_real_estate
+      domain: bpy.brookfield.com
+      registry_id: BM-Hamilton-BPY001
+      minimum_viable_input:
+        revenue: 5650000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: environmental_impairment
+        facility_type: real_estate
+        naics_2digit: '53'
+        domain: bpy.brookfield.com
+    - entity_id: kinder_morgan_env
+      name: Kinder Morgan (Midstream Environmental)
+      config_id: env_energy_midstream_xwalk
+      domain: kindermorgan.com
+      registry_id: US-Delaware-0001506307
+      minimum_viable_input:
+        revenue: 15334000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: environmental_impairment
+        facility_type: energy_midstream
+        naics_2digit: '48'
+        domain: kindermorgan.com
+    - entity_id: small_convenience
+      name: Greenfield Gas Station LLC (SME)
+      config_id: env_sme
+      domain: greenfield.example
+      registry_id: US-Texas-TX00045678
+      minimum_viable_input:
+        revenue: 3200000
+        limit: 5000000
+        deductible: 50000
+        product_type: environmental_impairment
+        facility_type: retail
+        naics_2digit: '44'
+        domain: greenfield.example

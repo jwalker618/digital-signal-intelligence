@@ -1,0 +1,23 @@
+entity_id: waste_mgmt_env
+name: Waste Management, Inc.
+coverage: env_liab
+config_id: env_waste_mgmt
+domain: wm.com
+registry_id: US-Delaware-0000823768
+minimum_viable_input:
+  revenue: 20726000000
+  limit: 100000000
+  deductible: 2500000
+  product_type: environmental_impairment
+  facility_type: waste_mgmt
+  naics_2digit: '56'
+  domain: wm.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 8346.24
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0
