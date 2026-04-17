@@ -86,7 +86,7 @@ concrete list of new signals + inference functions.
 
 | # | Item | Status | Commit |
 |---|------|--------|--------|
-| 5.1 | Extract `layers/risk/_scoring_spec.py` pure-function spec | PENDING | — |
+| 5.1 | Extract `layers/risk/_scoring_spec.py` pure-function spec | **DONE** | (next) |
 | 5.2 | Port to `rust/dsi-core/src/scoring.rs` | PENDING | — |
 | 5.3 | PyO3 wrapper exposing `score(config_hash, signals) -> CompositeResult` | PENDING | — |
 | 5.4 | Nightly parity job (1 000 golden fixtures, max abs divergence < 1e-9) | PENDING | — |
@@ -111,6 +111,36 @@ sources (currently absent; fixtures use free+public sources only).
 ## Change log (newest first)
 
 *(each completed item appends an entry here with commit hash + summary)*
+
+### Stage 5.1 — pure-function scoring spec extraction
+
+`layers/risk/_scoring_spec.py` extracts the mathematical core of
+`scorer.calculate_composite` into a pure-function module with zero I/O,
+plain dataclasses, and deterministic output. This is the reference
+specification for the Rust port (Stage 5.2+) and the basis of the
+Stage 5.4 parity contract.
+
+Design rules documented in the module docstring:
+- No logging, network, file reads, or Pydantic.
+- Deterministic: no time, randomness, or dict-order dependence.
+- Translatable: every line maps 1:1 to a Rust statement.
+
+Public surface:
+- `SignalInput`, `GroupWeight`, `GroupScore`, `CompositeResult`
+  frozen dataclasses.
+- `compute_composite(signals, group_weights, default_score=50.0,
+  default_confidence=0.5) -> CompositeResult`.
+
+`tests/unit/test_scoring_spec.py` — 10 tests, including a
+`test_pure_spec_matches_scorer_calculate_composite` parity cross-check
+that verifies bit-level agreement (to 1e-9 absolute) between the pure
+spec and `ModelScorer.calculate_composite` on a synthetic fixture.
+
+Stage 5.2 (port to rust/dsi-core/src/scoring.rs), 5.3 (PyO3 wrapper),
+5.4 (nightly 1,000-fixture parity job), and 5.5 (p99 < 5 ms
+benchmark) remain open — these require a Rust toolchain + maturin
+build pipeline which is outside the scope of this Python-only
+iteration.
 
 ### Stage 4.11 — A8 Cyber/PI/Energy signal finishing
 
