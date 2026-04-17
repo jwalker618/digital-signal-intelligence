@@ -431,6 +431,94 @@ def test_joint_commission_deepened_parsing(monkeypatch):
     assert any("Hospital" in c for c in cert_names)
 
 
+def test_pacer_rss_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import PACERRSSExtractor
+    sample = '''
+    <html>
+    <a href="https://ecf.dcd.uscourts.gov/cgi-bin/rss_outside.pl">DC District</a>
+    <a href="https://ecf.cand.uscourts.gov/rss.rss">N.D. Cal.</a>
+    Ninth Circuit, Fifth Circuit, Eleventh Circuit courts.
+    Eastern District of Texas, Southern District of New York.
+    </html>
+    '''
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_PACER_RSS", raising=False)
+    r = PACERRSSExtractor().extract("example.com")
+    d = r.data
+    assert d["rss_url_count"] == 1  # only one .rss URL
+    assert d["circuit_mentions"] == 3
+    assert d["district_mentions"] == 2
+
+
+def test_sec_litreleases_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import SECLitigationReleasesExtractor
+    sample = '''
+    <rss><channel>
+    <item><title>LR-25123 SEC v. Example Corp</title></item>
+    <item><title>LR-25130 SEC v. Other Corp</title></item>
+    <item><title>LR-25131 More about acme</title></item>
+    </channel></rss>
+    '''
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_SEC_LITRELEASES", raising=False)
+    r = SECLitigationReleasesExtractor().extract("acme.com")
+    d = r.data
+    assert d["item_count"] == 3
+    assert "25123" in d["release_id_sample"]
+    assert d["entity_mention_count"] == 1
+
+
+def test_npdb_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import NPDBPublicExtractor
+    sample = "<html>Medical Malpractice 2022 2023. Adverse Action taken. Peer Review board. data.csv dataset.zip 2024</html>"
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_NPDB", raising=False)
+    r = NPDBPublicExtractor().extract("example.com")
+    d = r.data
+    assert d["dataset_download_count"] == 2
+    year_labels = [y for y, _ in d["year_top"]]
+    assert "2023" in year_labels
+    labels = [e for e, _ in d["event_keyword_top"]]
+    assert "medical malpractice" in labels
+
+
+def test_eu_safety_gate_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import EUSafetyGateExtractor
+    sample = "<html>Alerts from Germany, Germany, France, Italy, Spain. Hazards: Chemical, Electric Shock, Fire, Chemical.</html>"
+    monkeypatch.setattr(litigation, "_text", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_EU_SAFETYGATE", raising=False)
+    r = EUSafetyGateExtractor().extract("example.com")
+    d = r.data
+    country_labels = [c for c, _ in d["country_top"]]
+    assert "Germany" in country_labels
+    hazard_labels = [h for h, _ in d["hazard_top"]]
+    assert "chemical" in hazard_labels
+
+
+def test_usda_fsis_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import litigation
+    from signal_architecture.signals.extractors.production.litigation import USDAFSISRecallsExtractor
+    sample = [
+        {"field_risk_level_id": "high", "field_product_items": "ground beef",
+         "field_recall_date": "2024-09-15"},
+        {"field_risk_level_id": "high", "field_product_items": "chicken sausages",
+         "field_recall_date": "2024-10-02"},
+        {"field_risk_level_id": "low", "field_product_items": "ground beef",
+         "field_recall_date": "2023-05-11"},
+    ]
+    monkeypatch.setattr(litigation, "_json", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_FSIS", raising=False)
+    r = USDAFSISRecallsExtractor().extract("example.com")
+    d = r.data
+    assert d["recall_count"] == 3
+    assert ("high", 2) in d["risk_level_top"]
+    assert d["most_recent_recall"] == "2024-10-02"
+
+
 def test_pcaob_deepened_parsing(monkeypatch):
     from signal_architecture.signals.extractors.production import litigation
     from signal_architecture.signals.extractors.production.litigation import (

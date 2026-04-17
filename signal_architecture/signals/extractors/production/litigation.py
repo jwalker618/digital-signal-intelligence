@@ -112,14 +112,31 @@ class PACERRSSExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_PACER_RSS"
 
+    # V6/Stage-6 deepening: parses the RSS-feeds directory for circuit
+    # + district counts, feed-URL sample.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # PACER RSS feeds are per-court; this probes the public list.
+        import re
         try:
             txt = _text("https://pacer.uscourts.gov/file-formats-data-types/rss-feeds")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        rss_urls = re.findall(r'href="(https?://[^"]+\.rss)"', txt or "")
+        circuit_hits = len(re.findall(
+            r"\b(?:First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|"
+            r"Ninth|Tenth|Eleventh|D\.C\.|Federal)\s+Circuit\b",
+            txt or "", re.IGNORECASE,
+        ))
+        district_hits = len(re.findall(
+            r"\bDistrict of\b|\bEastern District\b|\bWestern District\b|"
+            r"\bMiddle District\b|\bSouthern District\b|\bNorthern District\b",
+            txt or "", re.IGNORECASE,
+        ))
         return self._create_success_result({
             "feeds_directory_reachable": bool(txt),
+            "rss_url_count": len(rss_urls),
+            "rss_url_sample": rss_urls[:5],
+            "circuit_mentions": circuit_hits,
+            "district_mentions": district_hits,
         })
 
 
@@ -193,13 +210,26 @@ class SECLitigationReleasesExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_SEC_LITRELEASES"
 
+    # V6/Stage-6 deepening: parses the EDGAR current-activity feed for
+    # item count, release-number top-5, and entity-mention counter.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter as _Counter
+        q = self._normalize_domain(entity_id).split(".")[0]
         try:
-            rss = _text("https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=LitRel")
+            rss = _text(
+                "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=LitRel"
+            )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        release_ids = re.findall(r"LR-(\d{4,6})", rss or "")
+        item_count = len(re.findall(r"<item>", rss or "", re.IGNORECASE))
+        entity_hits = rss.lower().count(q.lower()) if rss else 0
         return self._create_success_result({
             "feed_reachable": bool(rss),
+            "item_count": item_count,
+            "release_id_sample": release_ids[:5],
+            "entity_mention_count": entity_hits,
         })
 
 
@@ -427,12 +457,33 @@ class NPDBPublicExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 2_592_000
     KILL_SWITCH_ENV = "DSI_DISABLE_NPDB"
 
+    # V6/Stage-6 deepening: public-data landing parsed for dataset-
+    # download link counts, report-year refs, and malpractice-event
+    # keyword distribution.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter as _Counter
         try:
             txt = _text("https://www.npdb.hrsa.gov/resources/publicData.jsp")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"reachable": bool(txt)})
+        download_links = len(re.findall(
+            r'\.(?:csv|xlsx?|zip)\b', txt or "", re.IGNORECASE,
+        ))
+        year_counter: _Counter = _Counter(re.findall(r"\b(?:19|20)\d{2}\b", txt or ""))
+        event_counter: _Counter = _Counter(
+            m.lower() for m in re.findall(
+                r"\b(Medical Malpractice|Adverse Action|Clinical Privileges|"
+                r"Professional Society|Peer Review)\b",
+                txt or "", re.IGNORECASE,
+            )
+        )
+        return self._create_success_result({
+            "reachable": bool(txt),
+            "dataset_download_count": download_links,
+            "year_top": year_counter.most_common(5),
+            "event_keyword_top": event_counter.most_common(5),
+        })
 
 
 # ---------------------------------------------------------------------------
@@ -766,12 +817,35 @@ class EUSafetyGateExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_EU_SAFETYGATE"
 
+    # V6/Stage-6 deepening: parses alerts-list HTML for notifying-country
+    # top-5, hazard-category top-5, and product-category top-5.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter as _Counter
         try:
-            txt = _text("https://ec.europa.eu/safety-gate-alerts/screen/webReport/alertsList")
+            txt = _text(
+                "https://ec.europa.eu/safety-gate-alerts/screen/webReport/alertsList"
+            )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"reachable": bool(txt)})
+        country_counter: _Counter = _Counter(re.findall(
+            r"\b(Germany|France|Italy|Spain|Poland|Netherlands|Belgium|"
+            r"Sweden|Denmark|Austria|Czech|Greece|Portugal|Finland|"
+            r"Ireland|Slovakia|Romania|Bulgaria|Hungary|Croatia)\b",
+            txt or "", re.IGNORECASE,
+        ))
+        hazard_counter: _Counter = _Counter(
+            m.lower() for m in re.findall(
+                r"\b(Burns|Chemical|Choking|Cuts|Drowning|Electric Shock|"
+                r"Entrapment|Environment|Fire|Injuries|Strangulation|Suffocation)\b",
+                txt or "", re.IGNORECASE,
+            )
+        )
+        return self._create_success_result({
+            "reachable": bool(txt),
+            "country_top": country_counter.most_common(5),
+            "hazard_top": hazard_counter.most_common(5),
+        })
 
 
 class USDAFSISRecallsExtractor(_LitigationBase):
@@ -779,11 +853,30 @@ class USDAFSISRecallsExtractor(_LitigationBase):
     DEFAULT_TTL_SECONDS = 86_400
     KILL_SWITCH_ENV = "DSI_DISABLE_FSIS"
 
+    # V6/Stage-6 deepening: the FSIS v1 API returns a recall list with
+    # risk_level + field_descriptor + establishment fields we aggregate.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        from collections import Counter as _Counter
         try:
             data = _json("https://www.fsis.usda.gov/fsis/api/recall/v/1")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        recalls = data if isinstance(data, list) else []
+        risk_counter: _Counter = _Counter(
+            r.get("field_risk_level_id") or r.get("risk_level") or "unknown"
+            for r in recalls
+        )
+        field_descriptor_counter: _Counter = _Counter(
+            (r.get("field_product_items") or r.get("product_items") or "")[:60]
+            for r in recalls if r.get("field_product_items") or r.get("product_items")
+        )
+        date_sample = sorted(
+            (r.get("field_recall_date") or r.get("recall_date") or "")
+            for r in recalls if r.get("field_recall_date") or r.get("recall_date")
+        )
         return self._create_success_result({
-            "recall_count": len(data) if isinstance(data, list) else 0,
+            "recall_count": len(recalls),
+            "risk_level_top": risk_counter.most_common(5),
+            "product_top": field_descriptor_counter.most_common(5),
+            "most_recent_recall": date_sample[-1] if date_sample else None,
         })

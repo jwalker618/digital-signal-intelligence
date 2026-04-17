@@ -181,6 +181,64 @@ def test_superfund_deepened_parsing(monkeypatch):
     assert any("Final NPL" in l for l in labels)
 
 
+def test_noaa_cdo_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import climate
+    from signal_architecture.signals.extractors.production.climate import NOAACDOExtractor
+    sample = {
+        "results": [
+            {"id": "GHCND", "mindate": "1763-01-01", "maxdate": "2024-12-31"},
+            {"id": "GSOM", "mindate": "1763-01-01", "maxdate": "2024-12-31"},
+            {"id": "GSOY", "mindate": "1763-01-01", "maxdate": "2024-12-31"},
+        ],
+    }
+    monkeypatch.setattr(climate, "_json", lambda url, **kw: sample)
+    monkeypatch.setenv("NOAA_CDO_TOKEN", "dummy")
+    monkeypatch.delenv("DSI_DISABLE_NOAA_CDO", raising=False)
+    r = NOAACDOExtractor().extract("example.com")
+    d = r.data
+    assert d["dataset_count"] == 3
+    assert "GHCND" in d["dataset_ids"]
+    assert d["mindate"] == "1763-01-01"
+
+
+def test_usfs_fire_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import climate
+    from signal_architecture.signals.extractors.production.climate import USFSFireHazardExtractor
+    sample = {
+        "currentVersion": 10.81,
+        "description": "Wildfire Hazard Potential raster",
+        "spatialReference": {"wkid": 4326, "latestWkid": 4326},
+        "layers": [
+            {"id": 0, "name": "Wildfire Hazard Potential"},
+            {"id": 1, "name": "Flame Length Probability"},
+        ],
+    }
+    monkeypatch.setattr(climate, "_json", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_USFS_FIRE", raising=False)
+    r = USFSFireHazardExtractor().extract("example.com")
+    d = r.data
+    assert d["service_layers"] == 2
+    assert "Wildfire Hazard Potential" in d["layer_names_sample"]
+    assert d["spatial_reference_wkid"] == 4326
+
+
+def test_energystar_deepened_parsing(monkeypatch):
+    from signal_architecture.signals.extractors.production import climate
+    from signal_architecture.signals.extractors.production.climate import ENERGYSTARExtractor
+    sample = [
+        {"primary_property_type": "Office", "state": "CA", "year_certified": "2023"},
+        {"primary_property_type": "Office", "state": "CA", "year_certified": "2024"},
+        {"primary_property_type": "Hospital", "state": "NY", "year_certified": "2023"},
+    ]
+    monkeypatch.setattr(climate, "_json", lambda url, **kw: sample)
+    monkeypatch.delenv("DSI_DISABLE_ENERGYSTAR", raising=False)
+    r = ENERGYSTARExtractor().extract("example.com")
+    d = r.data
+    assert d["building_records_probe"] == 3
+    assert ("Office", 2) in d["space_type_top"]
+    assert ("CA", 2) in d["state_top"]
+
+
 def test_nrc_deepened_parsing(monkeypatch):
     from signal_architecture.signals.extractors.production import climate
     from signal_architecture.signals.extractors.production.climate import (

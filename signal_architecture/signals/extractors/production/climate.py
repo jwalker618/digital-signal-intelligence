@@ -13,6 +13,7 @@ Env Liability (B4), and Crop (B10) coverages.
 from __future__ import annotations
 
 import os
+from collections import Counter
 from typing import List
 
 import httpx
@@ -88,6 +89,8 @@ class NOAACDOExtractor(_ClimateBase):
     KILL_SWITCH_ENV = "DSI_DISABLE_NOAA_CDO"
     API_KEY_ENV = "NOAA_CDO_TOKEN"
 
+    # V6/Stage-6 deepening: lists datasets with coverage + mindate /
+    # maxdate extracted so callers can choose the right corpus.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
         token = os.environ[self.API_KEY_ENV]
         try:
@@ -97,8 +100,15 @@ class NOAACDOExtractor(_ClimateBase):
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        results = data.get("results", []) if isinstance(data, dict) else []
+        ids = [r.get("id") for r in results if r.get("id")]
+        mindate = min((r.get("mindate") for r in results if r.get("mindate")), default=None)
+        maxdate = max((r.get("maxdate") for r in results if r.get("maxdate")), default=None)
         return self._create_success_result({
-            "dataset_count": len(data.get("results", []) if isinstance(data, dict) else []),
+            "dataset_count": len(results),
+            "dataset_ids": ids[:20],
+            "mindate": mindate,
+            "maxdate": maxdate,
         })
 
 
@@ -107,12 +117,39 @@ class USFSFireHazardExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_USFS_FIRE"
 
+    # V6/Stage-6 deepening: parses the MapServer descriptor for layer
+    # count, spatial-reference WKID, service description.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
         try:
-            txt = _text("https://apps.fs.usda.gov/arcx/rest/services/RDW_Wildfire/RMRS_WildfireHazardPotential_2020/MapServer?f=json")
+            data = _json(
+                "https://apps.fs.usda.gov/arcx/rest/services/RDW_Wildfire/"
+                "RMRS_WildfireHazardPotential_2020/MapServer?f=json"
+            )
         except httpx.HTTPError as e:
-            return self._create_error_result(str(e))
-        return self._create_success_result({"reachable": bool(txt)})
+            # Fall back to a bare reachability probe when non-JSON.
+            try:
+                txt = _text(
+                    "https://apps.fs.usda.gov/arcx/rest/services/RDW_Wildfire/"
+                    "RMRS_WildfireHazardPotential_2020/MapServer?f=json"
+                )
+            except httpx.HTTPError as ee:
+                return self._create_error_result(str(ee))
+            return self._create_success_result({"reachable": bool(txt)})
+
+        if not isinstance(data, dict):
+            return self._create_success_result({"reachable": True})
+        layers = data.get("layers") or []
+        return self._create_success_result({
+            "reachable": True,
+            "service_layers": len(layers),
+            "layer_names_sample": [l.get("name") for l in layers[:5] if l.get("name")],
+            "description": (data.get("description") or "")[:200],
+            "current_version": data.get("currentVersion"),
+            "spatial_reference_wkid": (
+                (data.get("spatialReference") or {}).get("latestWkid")
+                or (data.get("spatialReference") or {}).get("wkid")
+            ),
+        })
 
 
 class USGSSeismicExtractor(_ClimateBase):
@@ -168,14 +205,29 @@ class CopernicusSentinelExtractor(_ClimateBase):
     KILL_SWITCH_ENV = "DSI_DISABLE_COPERNICUS"
     API_KEY_ENV = "SENTINELHUB_CLIENT_ID"
 
+    # V6/Stage-6 deepening: parses the unauthenticated catalog probe
+    # response for JSON structure depth + error-code heuristics.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # Sentinel Hub imagery requires OAuth2 — we ship a reachability
-        # probe so the framework operates without imagery ingestion.
         try:
-            data = _json("https://services.sentinel-hub.com/api/v1/configuration/products")
+            with httpx.Client(timeout=6.0) as c:
+                r = c.get(
+                    "https://services.sentinel-hub.com/api/v1/configuration/products"
+                )
+                status = r.status_code
+                data = {}
+                try:
+                    data = r.json()
+                except ValueError:
+                    data = {}
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"catalog_reachable": bool(data)})
+        is_auth_required = status in (401, 403)
+        return self._create_success_result({
+            "catalog_reachable": status < 500,
+            "status_code": status,
+            "requires_auth": is_auth_required,
+            "response_keys": list(data.keys())[:5] if isinstance(data, dict) else [],
+        })
 
 
 class ECMWFERA5Extractor(_ClimateBase):
@@ -184,14 +236,26 @@ class ECMWFERA5Extractor(_ClimateBase):
     KILL_SWITCH_ENV = "DSI_DISABLE_ERA5"
     API_KEY_ENV = "CDSAPI_KEY"
 
+    # V6/Stage-6 deepening: API-docs landing parsed for dataset names,
+    # "request" keyword counts, and section-heading counts.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # ECMWF Climate Data Store needs OAuth + heavy downloads;
-        # V6 ships an auth-free docs probe.
+        import re
         try:
             txt = _text("https://cds.climate.copernicus.eu/api")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        return self._create_success_result({"cds_reachable": bool(txt)})
+        dataset_hits = len(re.findall(
+            r"\bERA5\b|\bCMIP6\b|\bCAMS\b|\bEFAS\b|\bSEAS5\b",
+            txt or "", re.IGNORECASE,
+        ))
+        request_hits = len(re.findall(r"\brequest(?:s|ed)?\b", txt or "", re.IGNORECASE))
+        heading_count = len(re.findall(r"<h[12][^>]*>", txt or "", re.IGNORECASE))
+        return self._create_success_result({
+            "cds_reachable": bool(txt),
+            "dataset_keyword_hits": dataset_hits,
+            "request_keyword_hits": request_hits,
+            "heading_count": heading_count,
+        })
 
 
 class CDPOpenDataExtractor(_ClimateBase):
@@ -199,14 +263,28 @@ class CDPOpenDataExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_CDP"
 
+    # V6/Stage-6 deepening: parses response-search HTML for climate-
+    # disclosure year refs, A-list / Leadership-band hits, scope 1/2/3
+    # mention counts.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        import re
+        from collections import Counter as _Counter
         q = self._normalize_domain(entity_id).split(".")[0]
         try:
             txt = _text(f"https://www.cdp.net/en/responses?queries%5Bname%5D={q}")
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        year_counter: _Counter = _Counter(re.findall(r"\b20\d{2}\b", txt or ""))
+        a_list_hits = len(re.findall(r"A[- ]?List|Leadership", txt or "", re.IGNORECASE))
+        scope_counter: _Counter = _Counter(
+            m.group(0).lower()
+            for m in re.finditer(r"Scope\s*[123]", txt or "", re.IGNORECASE)
+        )
         return self._create_success_result({
-            "mentions_company": q.lower() in txt.lower(),
+            "mentions_company": q.lower() in (txt or "").lower(),
+            "year_top": year_counter.most_common(5),
+            "a_list_hits": a_list_hits,
+            "scope_mention_top": scope_counter.most_common(3),
         })
 
 
@@ -215,15 +293,32 @@ class ENERGYSTARExtractor(_ClimateBase):
     DEFAULT_TTL_SECONDS = 7_776_000
     KILL_SWITCH_ENV = "DSI_DISABLE_ENERGYSTAR"
 
+    # V6/Stage-6 deepening: fetches 50 building records, aggregates
+    # space-type + state + year-certified distributions.
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
         try:
             data = _json(
-                "https://data.energystar.gov/resource/58v3-c8sz.json?$limit=1"
+                "https://data.energystar.gov/resource/58v3-c8sz.json?$limit=50"
             )
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        rows = data if isinstance(data, list) else []
+        space_type_counter: Counter = Counter(
+            r.get("primary_property_type") for r in rows
+            if r.get("primary_property_type")
+        )
+        state_counter: Counter = Counter(
+            r.get("state") for r in rows if r.get("state")
+        )
+        year_counter: Counter = Counter(
+            str(r.get("year_certified"))[:4] for r in rows
+            if r.get("year_certified")
+        )
         return self._create_success_result({
-            "building_records_probe": len(data) if isinstance(data, list) else 0,
+            "building_records_probe": len(rows),
+            "space_type_top": space_type_counter.most_common(5),
+            "state_top": state_counter.most_common(5),
+            "year_certified_top": year_counter.most_common(5),
         })
 
 
