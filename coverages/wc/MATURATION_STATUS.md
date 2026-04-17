@@ -15,7 +15,7 @@ Depth-first build **complete** (Stage 3.1 of the Option-D plan).
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage wc` returns PASS | **PASS** (288/288 fixtures) | ✅ |
 | `assess_config_compliance` returns 0 errors | **0** | ✅ |
-| `logic.md` regenerated | yes | ✅ |
+| `logic.md` regenerated | regenerated (Stage 4.11-fu) | ✅ |
 
 ## Routing (NAICS 2-digit)
 

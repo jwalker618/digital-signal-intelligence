@@ -112,6 +112,18 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### logic.md regeneration across 22 coverages
+
+`python coverages/doc_generator.py` run across every coverage,
+regenerating `logic.md` to reflect the expanded signal registries
+landed in Stage 4 (FPR / Property / Casualty / D&O / FI / Aerospace /
+Marine / Cyber / PI / Energy) + the new `cyber_aiml_vendor` sub-config.
+
+10 coverage `logic.md` files updated (the 12 new coverages built in
+Stage 3 already had up-to-date logic.md on landing). 5
+MATURATION_STATUS.md files updated to mark the "⏳ regen after
+registry expansion" row as ✅.
+
 ### expectation_level retrofit across 22 coverages
 
 3,205 `expectation_level: UNIVERSAL` entries added to every scored

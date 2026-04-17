@@ -222,17 +222,18 @@ This configuration contains **7 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
 - `public_record`: 5 signals
+- `structured_data`: 3 signals
 
 **Selection Rationale:**
-- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 38% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -527,17 +528,19 @@ This configuration contains **6 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **6 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
 - `technical_infrastructure`: 6 signals
+- `public_record`: 1 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 38% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 

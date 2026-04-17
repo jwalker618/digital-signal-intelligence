@@ -16,7 +16,7 @@ the initial build; remaining items tracked below.
 | 10 golden entities green | **10** | ✅ |
 | `calibrate --coverage medprof` returns PASS | **PASS** | ✅ |
 | `assess_config_compliance` returns 0 errors | **0** | ✅ |
-| `logic.md` regenerated | yes | ✅ |
+| `logic.md` regenerated | regenerated (Stage 4.11-fu) | ✅ |
 
 ## Goldens (10)
 

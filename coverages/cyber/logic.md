@@ -345,16 +345,19 @@ This configuration contains **5 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **6 signals** distributed as follows:
+This configuration contains **10 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `INFERRED_PROXY` (6 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (9 signals): Medium confidence
 
 **Signal Count by Group:**
 - `technical_infrastructure`: 6 signals
+- `structured_data`: 3 signals
+- `public_record`: 1 signals
 
 **Selection Rationale:**
-- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 10% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -405,16 +408,19 @@ This configuration contains **6 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **6 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `INFERRED_PROXY` (6 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
+- `INFERRED_PROXY` (7 signals): Medium confidence
 
 **Signal Count by Group:**
 - `technical_infrastructure`: 6 signals
+- `public_record`: 1 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 12% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -685,4 +691,67 @@ This configuration contains **6 signals** distributed as follows:
   - Assume `revenue` = $10,000,000
   - Base Premium = $10,000,000 × 0.0022 = **$22,000**
   - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
+
+---
+
+## Model: `cyber_aiml_vendor`
+*AI / ML vendors — foundation-model providers, MLOps platforms, AI consultancies*
+
+### Routing Protocol (Multiplexer)
+- `industry_sector in ['AI_VENDOR', 'ML_VENDOR', 'AIML_PLATFORM']`
+
+### Three-Layer Weight Distribution
+> *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
+
+**Validation:** PASS
+
+| Group | Risk | Loss | Exposure |
+|-------|------|------|----------|
+| AI Governance & Documentation | 0.45 | 0.45 | 0.35 |
+| AI Incident Record | 0.20 | 0.25 | 0.15 |
+| Vendor Security Posture | 0.25 | 0.20 | 0.35 |
+| Network Authority | 0.05 | 0.05 | 0.05 |
+| Corporate Footprint | 0.05 | 0.05 | 0.10 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
+
+### Signal Architecture Rationale
+This configuration contains **7 signals** distributed as follows:
+
+**By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
+
+**Signal Count by Group:**
+- `structured_data`: 3 signals
+- `technical_infrastructure`: 3 signals
+- `public_record`: 1 signals
+
+**Selection Rationale:**
+- 29% of signals are directly observable, ensuring objective, machine-readable assessment.
+- Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
+- Signal selection prioritizes external observability (DSI Foundational Principle #1).
+
+### Signal Group Importance Ranking
+> *Groups ranked by combined weight across all three assessment layers.*
+
+| Rank | Group | Combined | Risk | Loss | Exposure |
+|------|-------|----------|------|------|----------|
+| 1 | AI Governance & Documentation | 1.25 | 0.45 | 0.45 | 0.35 |
+| 2 | Vendor Security Posture | 0.80 | 0.25 | 0.20 | 0.35 |
+| 3 | AI Incident Record | 0.60 | 0.20 | 0.25 | 0.15 |
+| 4 | Corporate Footprint | 0.20 | 0.05 | 0.05 | 0.10 |
+| 5 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
+
+**Primary Assessment Driver:** `AI Governance & Documentation` with combined weight of 1.25
+**Secondary Driver:** `Vendor Security Posture` with combined weight of 0.80
+
+### Theoretical Premium Calculation (Tier 3 Standard)
+> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
+> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+
+**1. The Pricing Anchor:** The Base Rate of `0.32%` on `revenue` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
+**2. Theoretical Execution:**
+  - Assume `revenue` = $10,000,000
+  - Base Premium = $10,000,000 × 0.0032 = **$32,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$32,000**.
 

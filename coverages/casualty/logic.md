@@ -30,18 +30,18 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **11 signals** distributed as follows:
+This configuration contains **15 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (4 signals): Highest confidence
-- `INFERRED_PROXY` (6 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (5 signals): Highest confidence
+- `INFERRED_PROXY` (9 signals): Medium confidence
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `structured_data`: 11 signals
+- `structured_data`: 15 signals
 
 **Selection Rationale:**
-- 36% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 33% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -152,17 +152,17 @@ This configuration contains **10 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **11 signals** distributed as follows:
+This configuration contains **17 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (7 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (10 signals): Highest confidence
+- `INFERRED_PROXY` (7 signals): Medium confidence
 
 **Signal Count by Group:**
-- `structured_data`: 11 signals
+- `structured_data`: 17 signals
 
 **Selection Rationale:**
-- 64% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 59% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -212,18 +212,18 @@ This configuration contains **11 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **15 signals** distributed as follows:
+This configuration contains **18 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
-- `INFERRED_PROXY` (7 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (7 signals): Highest confidence
+- `INFERRED_PROXY` (9 signals): Medium confidence
 - `COHORT_INFERENCE` (2 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `structured_data`: 15 signals
+- `structured_data`: 18 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 39% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -244,11 +244,11 @@ This configuration contains **15 signals** distributed as follows:
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
 > *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
 
-**1. The Pricing Anchor:** The Base Rate of `65.0%` on `underlying_premium` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
+**1. The Pricing Anchor:** The Base Rate of `40.0%` on `underlying_premium` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
 **2. Theoretical Execution:**
   - Assume `underlying_premium` = $10,000,000
-  - Base Premium = $10,000,000 × 0.65 = **$6,500,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$6,500,000**.
+  - Base Premium = $10,000,000 × 0.4 = **$4,000,000**
+  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$4,000,000**.
 
 ---
 
@@ -273,19 +273,19 @@ This configuration contains **15 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **16 signals** distributed as follows:
+This configuration contains **20 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (7 signals): Highest confidence
+- `DIRECT_OBSERVABLE` (11 signals): Highest confidence
 - `INFERRED_PROXY` (7 signals): Medium confidence
 - `COHORT_INFERENCE` (2 signals): Lowest confidence
 
 **Signal Count by Group:**
 - `structured_data`: 11 signals
-- `public_record`: 5 signals
+- `public_record`: 9 signals
 
 **Selection Rationale:**
-- 44% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 55% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 

@@ -13,7 +13,7 @@ Tracks progress against the V6 Mature Bar (A2 in
 | `routing_constraints` on every non-general sub-config | present | ✅ |
 | Parametric ILF curve per product_type | partial | ⏳ habitational + builders_risk |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |
-| `logic.md` regenerated | yes (V5) | ⏳ regen after registry expansion |
+| `logic.md` regenerated | regenerated (Stage 4.11-fu) | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
 | `calibrate --coverage property` returns PASS | **PASS** (Stage 4.5) | ✅ |
 | `assess_config_compliance` returns 0 errors | 0 errors | ✅ |

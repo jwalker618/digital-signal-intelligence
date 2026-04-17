@@ -162,17 +162,18 @@ This configuration contains **8 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **11 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (2 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (8 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
 
 **Signal Count by Group:**
-- `structured_data`: 5 signals
+- `structured_data`: 9 signals
+- `public_record`: 2 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 73% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -220,14 +221,17 @@ This configuration contains **5 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **0 signals** distributed as follows:
+This configuration contains **4 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (4 signals): Highest confidence
 
 **Signal Count by Group:**
+- `structured_data`: 2 signals
+- `public_record`: 2 signals
 
 **Selection Rationale:**
-- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 100% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -275,17 +279,19 @@ This configuration contains **0 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
 - `structured_data`: 5 signals
+- `public_record`: 2 signals
+- `corporate_footprint`: 1 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 38% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -335,17 +341,19 @@ This configuration contains **5 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **10 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (2 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `INFERRED_PROXY` (8 signals): Medium confidence
 
 **Signal Count by Group:**
-- `structured_data`: 5 signals
+- `structured_data`: 7 signals
+- `public_record`: 2 signals
+- `corporate_footprint`: 1 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 

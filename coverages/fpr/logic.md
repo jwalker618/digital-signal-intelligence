@@ -30,19 +30,19 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **11 signals** distributed as follows:
+This configuration contains **12 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (5 signals): Highest confidence
+- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
 - `INFERRED_PROXY` (5 signals): Medium confidence
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `structured_data`: 6 signals
+- `structured_data`: 7 signals
 - `public_record`: 5 signals
 
 **Selection Rationale:**
-- 45% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -90,17 +90,17 @@ This configuration contains **11 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **10 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (5 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `public_record`: 5 signals
+- `public_record`: 10 signals
 
 **Selection Rationale:**
-- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -206,17 +206,19 @@ This configuration contains **5 signals** distributed as follows:
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **10 signals** distributed as follows:
+This configuration contains **13 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (4 signals): Highest confidence
-- `INFERRED_PROXY` (6 signals): Medium confidence
+- `INFERRED_PROXY` (9 signals): Medium confidence
 
 **Signal Count by Group:**
-- `public_record`: 10 signals
+- `public_record`: 11 signals
+- `behavioural`: 1 signals
+- `corporate_footprint`: 1 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 31% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
