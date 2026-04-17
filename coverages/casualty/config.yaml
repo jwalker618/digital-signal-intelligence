@@ -3094,6 +3094,238 @@ commercial_casualty:
           frequency:
             correlation_direction: positive
             weight: 0.04
+    - id: casualty_primary_derived_01
+      inference_utility_function: casualty_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_02
+      inference_utility_function: casualty_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_03
+      inference_utility_function: casualty_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_04
+      inference_utility_function: casualty_derived_04_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_05
+      inference_utility_function: casualty_derived_05_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_06
+      inference_utility_function: casualty_derived_06_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_07
+      inference_utility_function: casualty_derived_07_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_08
+      inference_utility_function: casualty_derived_08_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_09
+      inference_utility_function: casualty_derived_09_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_10
+      inference_utility_function: casualty_derived_10_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_11
+      inference_utility_function: casualty_derived_11_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_12
+      inference_utility_function: casualty_derived_12_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_13
+      inference_utility_function: casualty_derived_13_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_14
+      inference_utility_function: casualty_derived_14_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_15
+      inference_utility_function: casualty_derived_15_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_16
+      inference_utility_function: casualty_derived_16_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_17
+      inference_utility_function: casualty_derived_17_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: casualty_primary_derived_18
+      inference_utility_function: casualty_derived_18_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_19
+      inference_utility_function: casualty_derived_19_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: casualty_primary_derived_20
+      inference_utility_function: casualty_derived_20_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.01
     groups:
       three_layer_assessment:
       - id: public_record

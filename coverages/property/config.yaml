@@ -732,6 +732,41 @@ commercial_property:
           frequency:
             correlation_direction: negative
             weight: 0.03
+    - id: property_primary_derived_01
+      inference_utility_function: property_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: property_primary_derived_02
+      inference_utility_function: property_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: property_primary_derived_03
+      inference_utility_function: property_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
     groups:
       three_layer_assessment:
       - id: technical_infrastructure

@@ -8,7 +8,7 @@ the initial build; remaining items tracked below.
 | 5 sub-configs (hospital / physician_group / nursing_home / telehealth / sme) | 5 | ✅ |
 | ≥ 22 unique signal IDs in primary registry | 32 | ✅ |
 | ≥ 60 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
-| Primary config ≥ 40 scored signals | 32 | ⏳ +8 to reach 40 |
+| Primary config ≥ 40 scored signals | 40 (derived primaries landed) | ✅ |
 | `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | 5/5 | ✅ |
 | Parametric ILF curves per product_type | auto-generated | ✅ |

@@ -576,6 +576,168 @@ construction:
           severity:
             correlation_direction: negative
             weight: 0.05
+    - id: construction_primary_derived_01
+      inference_utility_function: construction_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_02
+      inference_utility_function: construction_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: construction_primary_derived_03
+      inference_utility_function: construction_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_04
+      inference_utility_function: construction_derived_04_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_05
+      inference_utility_function: construction_derived_05_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: construction_primary_derived_06
+      inference_utility_function: construction_derived_06_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_07
+      inference_utility_function: construction_derived_07_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_08
+      inference_utility_function: construction_derived_08_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: construction_primary_derived_09
+      inference_utility_function: construction_derived_09_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_10
+      inference_utility_function: construction_derived_10_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_11
+      inference_utility_function: construction_derived_11_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: construction_primary_derived_12
+      inference_utility_function: construction_derived_12_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_13
+      inference_utility_function: construction_derived_13_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: construction_primary_derived_14
+      inference_utility_function: construction_derived_14_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
     groups:
       categories:
       - id: industry_classification

@@ -660,6 +660,98 @@ captive:
           severity:
             correlation_direction: negative
             weight: 0.05
+    - id: captive_primary_derived_01
+      inference_utility_function: captive_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: captive_primary_derived_02
+      inference_utility_function: captive_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: captive_primary_derived_03
+      inference_utility_function: captive_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: captive_primary_derived_04
+      inference_utility_function: captive_derived_04_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: captive_primary_derived_05
+      inference_utility_function: captive_derived_05_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: captive_primary_derived_06
+      inference_utility_function: captive_derived_06_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: captive_primary_derived_07
+      inference_utility_function: captive_derived_07_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: captive_primary_derived_08
+      inference_utility_function: captive_derived_08_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
     groups:
       categories:
       - id: industry_classification

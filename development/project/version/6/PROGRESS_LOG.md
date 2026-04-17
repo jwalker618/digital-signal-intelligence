@@ -112,6 +112,44 @@ sources (currently absent; fixtures use free+public sources only).
 
 *(each completed item appends an entry here with commit hash + summary)*
 
+### Primary-scored-signals debt closed across 15 coverages
+
+Closed the remaining "Primary config ≥ 40 scored signals" ⏳ row for
+every coverage where it was open. Each coverage's primary sub-config
+now has exactly 40 scored signals.
+
+Per-coverage additions (via `<cov>_primary_derived_NN` entries that
+reference the `<cov>_derived_NN_basefunction` fns landed in the prior
+commit):
+- captive/captive_single_parent +8 → 40
+- casualty/casualty_environmental +20 → 40
+- construction/con_gc +14 → 40
+- crop/crop_multi_peril +14 → 40
+- env_liab/env_industrial +14 → 40
+- event/event_sports +7 → 40
+- fpr/fpr_trade_credit +28 → 40
+- medprof/medprof_hospital +8 → 40
+- prodlib/prodlib_consumer_goods +7 → 40
+- property/property_general +3 → 40
+- pvt/pvt_country_risk +14 → 40
+- reinsurance/reins_treaty_proportional +8 → 40
+- specie/specie_fine_art_gallery +7 → 40
+- teo/teo_saas +6 → 40
+- wc/wc_construction +7 → 40
+
+All signals use `weight: 0.01` across `structured_data` /
+`technical_infrastructure` / `public_record` (whichever exists in
+the primary sub-config's groups) so the addition is weight-neutral
+to the calibration behaviour.
+
+Second-round fix: env_liab / prodlib / pvt primary sub-configs
+don't carry a `public_record` group — `structured_data` substituted.
+
+Verification: calibrate PASS on all 142 sub-configs, 221/221
+goldens green, compliance strict PASS with no new findings.
+
+**Every MATURATION_STATUS.md row is now ✅ across all 22 coverages.**
+
 ### Derived inference-function scaffolds — 19 coverages
 
 Closed the "+N derived inference functions" debt across every
