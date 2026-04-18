@@ -12,6 +12,7 @@ use pyo3::prelude::*;
 pub mod graph;
 pub mod derivatives;
 pub mod validation;
+pub mod scoring;
 
 /// DSI Core Python module
 #[pymodule]
@@ -42,6 +43,18 @@ fn dsi_core(m: &Bound<'_, PyModule>) -> PyResult<()> {
     valid_module.add_function(wrap_pyfunction!(validation::validate_score_conditions, &valid_module)?)?;
     valid_module.add_function(wrap_pyfunction!(validation::validate_weight_sums, &valid_module)?)?;
     m.add_submodule(&valid_module)?;
+
+    // Scoring submodule (V6/E1 Stage 5.2+)
+    let scoring_module = PyModule::new_bound(m.py(), "scoring")?;
+    scoring_module.add_class::<scoring::SignalInput>()?;
+    scoring_module.add_class::<scoring::GroupWeight>()?;
+    scoring_module.add_class::<scoring::GroupScore>()?;
+    scoring_module.add_class::<scoring::CompositeResult>()?;
+    scoring_module.add_function(wrap_pyfunction!(scoring::compute_composite, &scoring_module)?)?;
+    scoring_module.add("DEFAULT_SCORE", scoring::DEFAULT_SCORE)?;
+    scoring_module.add("DEFAULT_CONFIDENCE", scoring::DEFAULT_CONFIDENCE)?;
+    scoring_module.add("COMPOSITE_SCALE", scoring::COMPOSITE_SCALE)?;
+    m.add_submodule(&scoring_module)?;
 
     Ok(())
 }

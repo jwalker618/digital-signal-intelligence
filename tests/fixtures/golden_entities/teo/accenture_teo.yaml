@@ -1,0 +1,22 @@
+entity_id: accenture_teo
+name: Accenture plc
+coverage: teo
+config_id: teo_systems_integrator
+domain: accenture.com
+registry_id: IE-Dublin-471706
+minimum_viable_input:
+  revenue: 64124000000
+  limit: 100000000
+  deductible: 2500000
+  product_type: tech_eo
+  business_model: systems_integrator
+  domain: accenture.com
+expected:
+  composite_score: 100.01
+  tier: 5
+  decision: decline
+  recommended_premium: 5750.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

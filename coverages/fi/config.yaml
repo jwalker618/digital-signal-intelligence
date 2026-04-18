@@ -85,6 +85,7 @@ financial_institutions:
     - id: institution_type
       inference_utility_function: institution_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: institution_type
         source: metadata.institution_type
@@ -131,6 +132,7 @@ financial_institutions:
     - id: regulatory_framework
       inference_utility_function: regulatory_authority_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: regulatory_framework
         source: metadata.regulatory_framework
@@ -165,6 +167,7 @@ financial_institutions:
     - id: asset_size_band
       inference_utility_function: asset_size_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: asset_size_band
         source: metadata.asset_size_band
@@ -190,6 +193,7 @@ financial_institutions:
     - id: publicly_traded
       inference_utility_function: publicly_traded_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: publicly_traded
         source: metadata.publicly_traded
@@ -206,6 +210,7 @@ financial_institutions:
     - id: correspondent_quality
       inference_utility_function: correspondent_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -221,6 +226,7 @@ financial_institutions:
     - id: fhlb_membership
       inference_utility_function: fhlb_membership_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -233,6 +239,7 @@ financial_institutions:
     - id: clearing_relationship
       inference_utility_function: clearing_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -245,6 +252,7 @@ financial_institutions:
     - id: auditor_quality
       inference_utility_function: auditor_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -260,6 +268,7 @@ financial_institutions:
     - id: legal_counsel
       inference_utility_function: legal_counsel_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -272,6 +281,7 @@ financial_institutions:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -280,6 +290,7 @@ financial_institutions:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -292,6 +303,7 @@ financial_institutions:
     - id: examination_rating
       inference_utility_function: examination_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -318,6 +330,7 @@ financial_institutions:
     - id: enforcement_action
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -348,6 +361,7 @@ financial_institutions:
     - id: informal_action
       inference_utility_function: informal_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -360,6 +374,7 @@ financial_institutions:
     - id: cra_rating
       inference_utility_function: cra_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -372,6 +387,7 @@ financial_institutions:
     - id: bsa_aml
       inference_utility_function: bsa_aml_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -398,6 +414,7 @@ financial_institutions:
     - id: fair_lending
       inference_utility_function: fair_lending_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -413,6 +430,7 @@ financial_institutions:
     - id: consumer_compliance
       inference_utility_function: consumer_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -425,6 +443,7 @@ financial_institutions:
     - id: capital_ratio
       inference_utility_function: capital_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -452,6 +471,7 @@ financial_institutions:
     - id: asset_quality
       inference_utility_function: asset_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -473,6 +493,7 @@ financial_institutions:
     - id: liquidity
       inference_utility_function: liquidity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -485,6 +506,7 @@ financial_institutions:
     - id: earnings
       inference_utility_function: earnings_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -497,6 +519,7 @@ financial_institutions:
     - id: concentration
       inference_utility_function: concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -513,6 +536,7 @@ financial_institutions:
     - id: interest_rate_risk
       inference_utility_function: interest_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -525,6 +549,7 @@ financial_institutions:
     - id: growth_rate
       inference_utility_function: growth_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -537,6 +562,7 @@ financial_institutions:
     - id: board_independence
       inference_utility_function: board_independence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -552,6 +578,7 @@ financial_institutions:
     - id: board_expertise
       inference_utility_function: board_expertise_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -564,6 +591,7 @@ financial_institutions:
     - id: executive_stability
       inference_utility_function: executive_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -576,6 +604,7 @@ financial_institutions:
     - id: risk_committee
       inference_utility_function: risk_committee_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -591,6 +620,7 @@ financial_institutions:
     - id: audit_committee
       inference_utility_function: audit_committee_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -603,6 +633,7 @@ financial_institutions:
     - id: related_party
       inference_utility_function: related_party_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -618,6 +649,7 @@ financial_institutions:
     - id: cfpb_complaint
       inference_utility_function: cfpb_complaint_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -637,6 +669,7 @@ financial_institutions:
     - id: bbb_complaint
       inference_utility_function: bbb_complaint_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -649,6 +682,7 @@ financial_institutions:
     - id: litigation
       inference_utility_function: litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -670,6 +704,7 @@ financial_institutions:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -691,6 +726,7 @@ financial_institutions:
     - id: operational_incident
       inference_utility_function: operational_incidents_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -706,6 +742,7 @@ financial_institutions:
     - id: tls_score
       inference_utility_function: tls_configuration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -721,6 +758,7 @@ financial_institutions:
     - id: email_auth
       inference_utility_function: email_authentication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -733,6 +771,7 @@ financial_institutions:
     - id: security_headers
       inference_utility_function: security_headers_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -745,6 +784,7 @@ financial_institutions:
     - id: network_exposure
       inference_utility_function: network_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -764,6 +804,7 @@ financial_institutions:
     - id: vulnerability
       inference_utility_function: cve_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -785,6 +826,7 @@ financial_institutions:
     - id: security_rating
       inference_utility_function: security_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -800,6 +842,7 @@ financial_institutions:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -812,6 +855,7 @@ financial_institutions:
     - id: disclosure_quality
       inference_utility_function: disclosure_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -824,6 +868,7 @@ financial_institutions:
     - id: security_page
       inference_utility_function: security_page_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -832,6 +877,7 @@ financial_institutions:
     - id: hiring_signals
       inference_utility_function: hiring_signals_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -847,6 +893,7 @@ financial_institutions:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -855,6 +902,7 @@ financial_institutions:
     - id: community_presence
       inference_utility_function: community_presence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -867,6 +915,7 @@ financial_institutions:
     - id: credit_rating_structured
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -879,6 +928,7 @@ financial_institutions:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -891,6 +941,7 @@ financial_institutions:
     - id: peer_benchmark
       inference_utility_function: peer_benchmark_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1481,6 +1532,7 @@ financial_institutions:
     - id: institution_type
       inference_utility_function: institution_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: institution_type
         source: metadata.institution_type
@@ -1503,6 +1555,7 @@ financial_institutions:
     - id: examination_rating
       inference_utility_function: examination_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1521,6 +1574,7 @@ financial_institutions:
     - id: enforcement_action
       inference_utility_function: enforcement_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1539,6 +1593,7 @@ financial_institutions:
     - id: capital_ratio
       inference_utility_function: capital_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1561,6 +1616,7 @@ financial_institutions:
     - id: asset_quality
       inference_utility_function: asset_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -1577,6 +1633,7 @@ financial_institutions:
     - id: tls_score
       inference_utility_function: tls_configuration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1589,6 +1646,7 @@ financial_institutions:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1607,6 +1665,7 @@ financial_institutions:
     - id: litigation
       inference_utility_function: litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1973,6 +2032,7 @@ financial_institutions:
     - id: capital_adequacy
       inference_utility_function: capital_adequacy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1989,6 +2049,7 @@ financial_institutions:
     - id: loan_portfolio_quality
       inference_utility_function: loan_portfolio_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2010,6 +2071,7 @@ financial_institutions:
     - id: regulatory_exam_results
       inference_utility_function: regulatory_exam_results_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2031,6 +2093,7 @@ financial_institutions:
     - id: bsa_aml_compliance
       inference_utility_function: bsa_aml_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2052,6 +2115,7 @@ financial_institutions:
     - id: interest_rate_sensitivity
       inference_utility_function: interest_rate_sensitivity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2065,6 +2129,93 @@ financial_institutions:
           size:
             correlation_direction: positive
             weight: 0.15
+    - id: ffiec_call_report_ratios
+      inference_utility_function: ffiec_call_report_ratios_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: ubpr_roe_volatility
+      inference_utility_function: ubpr_roe_volatility_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: bsa_aml_enforcement
+      inference_utility_function: bsa_aml_enforcement_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: cra_rating
+      inference_utility_function: cra_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: camels_proxy_composite
+      inference_utility_function: camels_proxy_composite_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: dfast_ccar_outcome
+      inference_utility_function: dfast_ccar_outcome_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -2435,7 +2586,65 @@ financial_institutions:
         override: 4
         applied: null
         note: Insurance regulatory action
-    signal_registry: []
+    signal_registry:
+    - id: naic_rbc_band
+      inference_utility_function: naic_rbc_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: iris_ratio_band
+      inference_utility_function: iris_ratio_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: complaint_index
+      inference_utility_function: complaint_index_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: jiri_index
+      inference_utility_function: jiri_index_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -2809,6 +3018,7 @@ financial_institutions:
     - id: regulatory_licensing_status
       inference_utility_function: regulatory_licensing_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2827,6 +3037,7 @@ financial_institutions:
     - id: crypto_asset_exposure
       inference_utility_function: crypto_asset_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2852,6 +3063,7 @@ financial_institutions:
     - id: platform_technology_risk
       inference_utility_function: platform_technology_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2867,6 +3079,7 @@ financial_institutions:
     - id: consumer_protection_compliance
       inference_utility_function: consumer_protection_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2887,6 +3100,7 @@ financial_institutions:
     - id: partner_bank_dependency
       inference_utility_function: partner_bank_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2900,6 +3114,45 @@ financial_institutions:
           complexity:
             correlation_direction: positive
             weight: 0.15
+    - id: sponsor_bank_dependency
+      inference_utility_function: sponsor_bank_dependency_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: bsa_findings_velocity
+      inference_utility_function: bsa_findings_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: complaint_velocity
+      inference_utility_function: complaint_velocity_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -3297,6 +3550,7 @@ financial_institutions:
     - id: regulatory_licensing_status
       inference_utility_function: regulatory_licensing_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3310,6 +3564,7 @@ financial_institutions:
     - id: crypto_asset_exposure
       inference_utility_function: crypto_asset_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3330,6 +3585,7 @@ financial_institutions:
     - id: platform_technology_risk
       inference_utility_function: platform_technology_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3345,6 +3601,7 @@ financial_institutions:
     - id: consumer_protection_compliance
       inference_utility_function: consumer_protection_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3361,6 +3618,7 @@ financial_institutions:
     - id: partner_bank_dependency
       inference_utility_function: partner_bank_dependency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3374,6 +3632,71 @@ financial_institutions:
           complexity:
             correlation_direction: positive
             weight: 0.15
+    - id: ofac_exposure_proxy
+      inference_utility_function: ofac_exposure_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: mixer_tumbler_interaction
+      inference_utility_function: mixer_tumbler_interaction_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: travel_rule_compliance
+      inference_utility_function: travel_rule_compliance_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: reserve_attestation_cadence
+      inference_utility_function: reserve_attestation_cadence_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: cex_dex_exposure_mix
+      inference_utility_function: cex_dex_exposure_mix_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: structured_data

@@ -1,0 +1,23 @@
+entity_id: koch_captive
+name: Koch Industries Captive Insurance Co
+coverage: captive
+config_id: captive_single_parent
+domain: kochind.com
+registry_id: US-Vermont-VT-KOCH
+minimum_viable_input:
+  parent_revenue: 125000000000
+  limit: 150000000
+  deductible: 5000000
+  product_type: single_parent_captive
+  captive_structure: single_parent
+  domicile: US-VT
+  domain: kochind.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 11223.42
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

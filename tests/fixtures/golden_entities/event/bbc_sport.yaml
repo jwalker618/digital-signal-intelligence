@@ -1,0 +1,24 @@
+entity_id: bbc_sport
+name: BBC Sport (Broadcast production)
+coverage: event
+config_id: event_broadcast
+domain: bbc.co.uk
+registry_id: UK-London-0000000100
+minimum_viable_input:
+  gross_ticket_revenue: 250000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: event_cancellation
+  event_type: broadcast
+  venue_country: UK
+  event_name: BBC 2026 Sport Broadcasts
+  domain: bbc.co.uk
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 8280.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

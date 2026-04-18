@@ -1,5 +1,5 @@
 # DSI Logic Document: `DO`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -23,12 +23,9 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Corporate Governance | 0.25 | 0.25 | 0.10 |
-| Financial Integrity | 0.20 | 0.30 | 0.20 |
+| Corporate Governance | 0.40 | 0.38 | 0.45 |
+| Financial Integrity | 0.25 | 0.32 | 0.45 |
 | Litigation Profile | 0.25 | 0.25 | 0.05 |
-| Executive Profile | 0.10 | 0.10 | 0.15 |
-| Corporate Footprint | 0.05 | 0.03 | 0.20 |
-| Structured Data | 0.05 | 0.02 | 0.25 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -39,13 +36,10 @@ This configuration contains **48 signals** distributed as follows:
 - `INFERRED_PROXY` (17 signals): Medium confidence
 
 **Signal Count by Group:**
+- `corporate_footprint`: 19 signals
+- `structured_data`: 12 signals
 - `network_authority`: 8 signals
-- `governance`: 8 signals
-- `financial`: 8 signals
-- `litigation`: 6 signals
-- `corporate_footprint`: 6 signals
-- `executive`: 5 signals
-- `structured_data`: 4 signals
+- `public_record`: 6 signals
 - `company_type`: 1 signals
 - `industry`: 1 signals
 - `stock_exchange`: 1 signals
@@ -60,16 +54,13 @@ This configuration contains **48 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Financial Integrity | 0.70 | 0.20 | 0.30 | 0.20 |
-| 2 | Corporate Governance | 0.60 | 0.25 | 0.25 | 0.10 |
+| 1 | Corporate Governance | 1.23 | 0.40 | 0.38 | 0.45 |
+| 2 | Financial Integrity | 1.02 | 0.25 | 0.32 | 0.45 |
 | 3 | Litigation Profile | 0.55 | 0.25 | 0.25 | 0.05 |
-| 4 | Executive Profile | 0.35 | 0.10 | 0.10 | 0.15 |
-| 5 | Structured Data | 0.32 | 0.05 | 0.02 | 0.25 |
-| 6 | Corporate Footprint | 0.28 | 0.05 | 0.03 | 0.20 |
-| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Financial Integrity` with combined weight of 0.70
-**Secondary Driver:** `Corporate Governance` with combined weight of 0.60
+**Primary Assessment Driver:** `Corporate Governance` with combined weight of 1.23
+**Secondary Driver:** `Financial Integrity` with combined weight of 1.02
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -96,10 +87,9 @@ This configuration contains **48 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Governance | 0.30 | 0.30 | 0.15 |
+| Governance | 0.45 | 0.40 | 0.55 |
 | Financial Health | 0.25 | 0.35 | 0.25 |
 | Litigation Profile | 0.30 | 0.25 | 0.20 |
-| Corporate Footprint | 0.15 | 0.10 | 0.40 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -109,10 +99,9 @@ This configuration contains **15 signals** distributed as follows:
 - `INFERRED_PROXY` (15 signals): Medium confidence
 
 **Signal Count by Group:**
-- `governance`: 4 signals
-- `financial`: 4 signals
-- `litigation`: 3 signals
-- `footprint`: 2 signals
+- `corporate_footprint`: 6 signals
+- `structured_data`: 4 signals
+- `public_record`: 3 signals
 - `company_type`: 1 signals
 - `industry`: 1 signals
 
@@ -126,13 +115,12 @@ This configuration contains **15 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Financial Health | 0.85 | 0.25 | 0.35 | 0.25 |
-| 2 | Governance | 0.75 | 0.30 | 0.30 | 0.15 |
+| 1 | Governance | 1.40 | 0.45 | 0.40 | 0.55 |
+| 2 | Financial Health | 0.85 | 0.25 | 0.35 | 0.25 |
 | 3 | Litigation Profile | 0.75 | 0.30 | 0.25 | 0.20 |
-| 4 | Corporate Footprint | 0.65 | 0.15 | 0.10 | 0.40 |
 
-**Primary Assessment Driver:** `Financial Health` with combined weight of 0.85
-**Secondary Driver:** `Governance` with combined weight of 0.75
+**Primary Assessment Driver:** `Governance` with combined weight of 1.40
+**Secondary Driver:** `Financial Health` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -159,28 +147,26 @@ This configuration contains **15 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Public Company Governance | 0.30 | 0.30 | 0.20 |
+| Public Company Governance | 0.50 | 0.55 | 0.45 |
 | Transaction & Event Risk | 0.20 | 0.20 | 0.20 |
 | Corporate Footprint | 0.15 | 0.10 | 0.20 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
-| Regulatory Standing | 0.10 | 0.15 | 0.15 |
-| Litigation History | 0.10 | 0.10 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **10 signals** distributed as follows:
+This configuration contains **24 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (16 signals): Highest confidence
+- `INFERRED_PROXY` (7 signals): Medium confidence
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `public_company_governance`: 5 signals
-- `transaction_event_risk`: 5 signals
+- `public_record`: 19 signals
+- `structured_data`: 5 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 67% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -189,14 +175,12 @@ This configuration contains **10 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Public Company Governance | 0.80 | 0.30 | 0.30 | 0.20 |
+| 1 | Public Company Governance | 1.50 | 0.50 | 0.55 | 0.45 |
 | 2 | Transaction & Event Risk | 0.60 | 0.20 | 0.20 | 0.20 |
 | 3 | Corporate Footprint | 0.45 | 0.15 | 0.10 | 0.20 |
 | 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Regulatory Standing | 0.40 | 0.10 | 0.15 | 0.15 |
-| 6 | Litigation History | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Public Company Governance` with combined weight of 0.80
+**Primary Assessment Driver:** `Public Company Governance` with combined weight of 1.50
 **Secondary Driver:** `Transaction & Event Risk` with combined weight of 0.60
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -227,8 +211,7 @@ This configuration contains **10 signals** distributed as follows:
 | Transaction & Event Risk | 0.35 | 0.30 | 0.25 |
 | Corporate Footprint | 0.20 | 0.20 | 0.25 |
 | Firm Stability | 0.20 | 0.20 | 0.20 |
-| Regulatory Standing | 0.15 | 0.15 | 0.15 |
-| Litigation History | 0.10 | 0.15 | 0.15 |
+| Regulatory Standing | 0.25 | 0.30 | 0.30 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -239,7 +222,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `transaction_event_risk`: 5 signals
+- `structured_data`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -252,13 +235,12 @@ This configuration contains **5 signals** distributed as follows:
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
 | 1 | Transaction & Event Risk | 0.90 | 0.35 | 0.30 | 0.25 |
-| 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
-| 3 | Firm Stability | 0.60 | 0.20 | 0.20 | 0.20 |
-| 4 | Regulatory Standing | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
+| 2 | Regulatory Standing | 0.85 | 0.25 | 0.30 | 0.30 |
+| 3 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
+| 4 | Firm Stability | 0.60 | 0.20 | 0.20 | 0.20 |
 
 **Primary Assessment Driver:** `Transaction & Event Risk` with combined weight of 0.90
-**Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -287,8 +269,7 @@ This configuration contains **5 signals** distributed as follows:
 |-------|------|------|----------|
 | Corporate Footprint | 0.25 | 0.20 | 0.25 |
 | Firm Stability | 0.25 | 0.25 | 0.20 |
-| Regulatory Standing | 0.25 | 0.25 | 0.25 |
-| Litigation History | 0.15 | 0.20 | 0.15 |
+| Regulatory Standing | 0.40 | 0.45 | 0.40 |
 | Transaction & Event Risk | 0.10 | 0.10 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -300,7 +281,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `transaction_event_risk`: 5 signals
+- `structured_data`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -312,13 +293,12 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Regulatory Standing | 0.75 | 0.25 | 0.25 | 0.25 |
+| 1 | Regulatory Standing | 1.25 | 0.40 | 0.45 | 0.40 |
 | 2 | Corporate Footprint | 0.70 | 0.25 | 0.20 | 0.25 |
 | 3 | Firm Stability | 0.70 | 0.25 | 0.25 | 0.20 |
-| 4 | Litigation History | 0.50 | 0.15 | 0.20 | 0.15 |
-| 5 | Transaction & Event Risk | 0.35 | 0.10 | 0.10 | 0.15 |
+| 4 | Transaction & Event Risk | 0.35 | 0.10 | 0.10 | 0.15 |
 
-**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.75
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 1.25
 **Secondary Driver:** `Corporate Footprint` with combined weight of 0.70
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -348,10 +328,9 @@ This configuration contains **5 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Transaction & Event Risk | 0.40 | 0.40 | 0.30 |
-| Public Company Governance | 0.20 | 0.20 | 0.20 |
+| Public Company Governance | 0.30 | 0.35 | 0.35 |
 | Corporate Footprint | 0.15 | 0.10 | 0.20 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
-| Litigation History | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -363,8 +342,8 @@ This configuration contains **10 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `public_company_governance`: 5 signals
-- `transaction_event_risk`: 5 signals
+- `public_record`: 5 signals
+- `structured_data`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -377,13 +356,12 @@ This configuration contains **10 signals** distributed as follows:
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
 | 1 | Transaction & Event Risk | 1.10 | 0.40 | 0.40 | 0.30 |
-| 2 | Public Company Governance | 0.60 | 0.20 | 0.20 | 0.20 |
+| 2 | Public Company Governance | 1.00 | 0.30 | 0.35 | 0.35 |
 | 3 | Corporate Footprint | 0.45 | 0.15 | 0.10 | 0.20 |
 | 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
 
 **Primary Assessment Driver:** `Transaction & Event Risk` with combined weight of 1.10
-**Secondary Driver:** `Public Company Governance` with combined weight of 0.60
+**Secondary Driver:** `Public Company Governance` with combined weight of 1.00
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

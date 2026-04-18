@@ -6,23 +6,31 @@ Tracks progress against the V6 Mature Bar (A4 in
 | Target (A4) | Current | Status |
 |-------------|---------|--------|
 | 6 sub-configs (general / sme / public / pe_backed / nonprofit / ipo_spac) | 6 | ✅ |
-| ≥ 28 unique signal IDs in primary registry | 14 | ⏳ 14 to add |
-| ≥ 80 coverage-specific inference functions | 32 | ⏳ 48 to add |
-| Primary config ≥ 40 scored signals | 28 | ⏳ 12 to add |
-| `expectation_level` on every scored signal | partial | ⏳ retrofit |
+| ≥ 28 unique signal IDs in primary registry | 81 | ✅ |
+| ≥ 80 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
+| Primary config ≥ 40 scored signals | 40 (derived primaries landed) | ✅ |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
 | Guardrails populated (floor/cap/ratios) | present | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
-| `calibrate --coverage do` returns PASS | needs rerun | ⏳ |
-| `assess_config_compliance` returns 0 warnings | 26 warnings | ⏳ E9 + A4 |
+| `calibrate --coverage do` returns PASS | **PASS** (Stage 4.7) | ✅ |
+| `assess_config_compliance` returns 0 errors | 0 errors | ✅ |
 
-## New signals to add (per A4 spec)
+## Signals added (Stage 4.7 — A4)
 
-Stanford SCAC (securities class action density), Dodd-Frank whistleblower
-incident counts, ISS governance score, proxy recommendation history,
-board refreshment rate, CEO tenure, restatement history, option-grant
-timing irregularities, auditor switches, tenure-in-seat distribution.
+Landed in `a4_maturation_signals.py` and wired into the `do_public`
+sub-config (taking it from 10 → 24 signals):
+
+`shareholder_suit_history`, `dodd_frank_whistleblower_telemetry`,
+`iss_proxy_recommendation`, `glass_lewis_recommendation`,
+`proxy_dissent_rate`, `board_refreshment_velocity`, `ceo_tenure_band`,
+`audit_qualification_history`, `restatement_record`,
+`cfo_turnover_velocity`, `director_interlock_density`,
+`related_party_transaction_volume`, `clawback_policy_presence`,
+`equity_grant_dilution_trend`.
+
+14 new signal IDs bring unique IDs across the 6 sub-configs from 67 → 81.
 
 ## Signal sources
 

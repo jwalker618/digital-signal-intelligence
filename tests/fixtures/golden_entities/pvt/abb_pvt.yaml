@@ -1,0 +1,23 @@
+entity_id: abb_pvt
+name: ABB Ltd
+coverage: pvt
+config_id: pvt_country_risk
+domain: abb.com
+registry_id: CH-Zurich-CHE-101.063.305
+minimum_viable_input:
+  asset_tiv: 150000000
+  limit: 50000000
+  deductible: 1000000
+  product_type: pvt_sabotage
+  primary_country: CH
+  sector: manufacturing
+  domain: abb.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

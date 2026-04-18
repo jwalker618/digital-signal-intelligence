@@ -1,0 +1,23 @@
+entity_id: small_convenience
+name: Greenfield Gas Station LLC (SME)
+coverage: env_liab
+config_id: env_sme
+domain: greenfield.example
+registry_id: US-Texas-TX00045678
+minimum_viable_input:
+  revenue: 3200000
+  limit: 5000000
+  deductible: 50000
+  product_type: environmental_impairment
+  facility_type: retail
+  naics_2digit: '44'
+  domain: greenfield.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 16161.72
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

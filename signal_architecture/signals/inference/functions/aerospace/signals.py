@@ -9,61 +9,8 @@ from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
 # Import extractors (using actual names from aerospace __init__.py)
-from ....extractors.stubs.aerospace import (
-    AirlineAllianceExtractor,
-    CodesharePartnershipExtractor,
-    AircraftLessorExtractor,
-    OEMRelationshipExtractor,
-    MROProviderExtractor,
-    AviationSafetyDatabaseExtractor,
-    OperatingCertificateExtractor,
-    IOSARegistryExtractor,
-    RampInspectionExtractor,
-    EUSafetyListExtractor,
-    StateSafetyExtractor,
-    FlightOperationsExtractor,
-    FleetRegistryExtractor,
-    OrderBacklogExtractor,
-    CrewTrainingExtractor,
-    OperationalComplexityExtractor,
-    MaintenanceIndicatorsExtractor,
-    RouteRiskExtractor,
-    SafetyLeadershipExtractor,
-    MarketPositionExtractor,
-    GovernmentSupportExtractor,
-)
-from ....extractors.stubs.common import IndustryAssociationExtractor, CreditRatingExtractor
 
 # Import aggregators (using actual names from aerospace __init__.py)
-from ....aggregators.implementations.aerospace import (
-    AllianceMembershipAggregator,
-    CodeshareQualityAggregator,
-    LessorQualityAggregator,
-    OEMRelationshipAggregator,
-    MROQualityAggregator,
-    AviationSafetyAggregator,
-    AccidentHistoryAggregator,
-    IncidentHistoryAggregator,
-    AccidentRateAggregator,
-    FatalityHistoryAggregator,
-    InvestigationFindingsAggregator,
-    CertificateStatusAggregator,
-    IOSAAuditAggregator,
-    RampInspectionAggregator,
-    EUSafetyListAggregator,
-    StateSafetyAggregator,
-    FlightOperationsAggregator,
-    CrewTrainingAggregator,
-    OperationalComplexityAggregator,
-    FleetQualityAggregator,
-    OrderBacklogAggregator,
-    MaintenanceIndicatorsAggregator,
-    RouteRiskAggregator,
-    SafetyLeadershipAggregator,
-    MarketPositionAggregator,
-    GovernmentSupportAggregator,
-)
-from ....aggregators.implementations.common import IndustryEngagementAggregator, CreditRatingAggregator
 
 
 def _run_pipeline(signal_id, extractor, aggregator, entity_id, context, score_field, default=50, **kw):
@@ -232,6 +179,32 @@ def f41(e, c): return _run_pipeline("government_support", GovernmentSupportExtra
 # =============================================================================
 
 import random
+
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
+
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
 
 @register_inference_function("certification_transparency_basefunction")
 def f42(entity_id, context):

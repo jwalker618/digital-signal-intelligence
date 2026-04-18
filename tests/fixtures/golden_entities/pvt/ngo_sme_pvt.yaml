@@ -1,0 +1,23 @@
+entity_id: ngo_sme_pvt
+name: Horizon International Aid Foundation (SME)
+coverage: pvt
+config_id: pvt_sme
+domain: horizonaid.example
+registry_id: US-Delaware-NGO00012345
+minimum_viable_input:
+  asset_tiv: 4500000
+  limit: 5000000
+  deductible: 50000
+  product_type: pvt_terrorism
+  primary_country: KE
+  sector: nonprofit
+  domain: horizonaid.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

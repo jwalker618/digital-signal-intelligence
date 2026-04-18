@@ -79,6 +79,7 @@ directors_officers:
     - id: company_type
       inference_utility_function: company_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: company_type
         source: metadata.company_type
@@ -116,6 +117,7 @@ directors_officers:
     - id: industry
       inference_utility_function: industry_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: industry
         source: metadata.industry
@@ -153,6 +155,7 @@ directors_officers:
     - id: stock_exchange
       inference_utility_function: stock_exchange_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: stock_exchange
         source: metadata.stock_exchange
@@ -181,6 +184,7 @@ directors_officers:
     - id: auditor_quality
       inference_utility_function: auditor_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -196,6 +200,7 @@ directors_officers:
     - id: legal_counsel
       inference_utility_function: legal_counsel_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -208,6 +213,7 @@ directors_officers:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -220,6 +226,7 @@ directors_officers:
     - id: investor_quality
       inference_utility_function: investor_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -236,6 +243,7 @@ directors_officers:
     - id: board_network
       inference_utility_function: board_network_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -248,6 +256,7 @@ directors_officers:
     - id: index_inclusion
       inference_utility_function: index_inclusion_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -260,6 +269,7 @@ directors_officers:
     - id: analyst_coverage
       inference_utility_function: analyst_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -272,6 +282,7 @@ directors_officers:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -280,6 +291,7 @@ directors_officers:
     - id: board_independence
       inference_utility_function: board_independence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -301,6 +313,7 @@ directors_officers:
     - id: board_diversity
       inference_utility_function: board_diversity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -313,6 +326,7 @@ directors_officers:
     - id: ceo_chair_separation
       inference_utility_function: ceo_chair_separation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -321,6 +335,7 @@ directors_officers:
     - id: committee_structure
       inference_utility_function: committee_structure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -333,6 +348,7 @@ directors_officers:
     - id: board_refreshment
       inference_utility_function: board_refreshment_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -341,6 +357,7 @@ directors_officers:
     - id: related_party
       inference_utility_function: related_party_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -356,6 +373,7 @@ directors_officers:
     - id: compensation_structure
       inference_utility_function: compensation_structure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -364,6 +382,7 @@ directors_officers:
     - id: shareholder_rights
       inference_utility_function: shareholder_rights_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -376,6 +395,7 @@ directors_officers:
     - id: audit_opinion
       inference_utility_function: audit_opinion_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -402,6 +422,7 @@ directors_officers:
     - id: internal_controls
       inference_utility_function: internal_controls_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -423,6 +444,7 @@ directors_officers:
     - id: restatement
       inference_utility_function: restatement_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -444,6 +466,7 @@ directors_officers:
     - id: filing_timeliness
       inference_utility_function: filing_timelienness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -456,6 +479,7 @@ directors_officers:
     - id: revenue_recognition
       inference_utility_function: revenue_recognition_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -471,6 +495,7 @@ directors_officers:
     - id: debt_covenant
       inference_utility_function: debt_covenant_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -479,6 +504,7 @@ directors_officers:
     - id: stock_volatility
       inference_utility_function: stock_volatility_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -494,6 +520,7 @@ directors_officers:
     - id: short_interest
       inference_utility_function: short_interest_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -510,6 +537,7 @@ directors_officers:
     - id: securities_litigation
       inference_utility_function: securities_litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -543,6 +571,7 @@ directors_officers:
     - id: derivative_litigation
       inference_utility_function: derivitaive_litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -558,6 +587,7 @@ directors_officers:
     - id: sec_enforcement
       inference_utility_function: sec_enforcement_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -584,6 +614,7 @@ directors_officers:
     - id: regulatory_action
       inference_utility_function: regulatory_action_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -599,6 +630,7 @@ directors_officers:
     - id: pending_litigation
       inference_utility_function: pending_litigation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -614,6 +646,7 @@ directors_officers:
     - id: whistleblower
       inference_utility_function: whistleblower_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -626,6 +659,7 @@ directors_officers:
     - id: executive_stability
       inference_utility_function: executive_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -638,6 +672,7 @@ directors_officers:
     - id: cfo_quality
       inference_utility_function: cfo_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -653,6 +688,7 @@ directors_officers:
     - id: insider_trading
       inference_utility_function: insider_trading_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -668,6 +704,7 @@ directors_officers:
     - id: executive_background
       inference_utility_function: executive_background_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -689,6 +726,7 @@ directors_officers:
     - id: trading_plan
       inference_utility_function: trading_plan_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -697,6 +735,7 @@ directors_officers:
     - id: investor_relations
       inference_utility_function: investor_relations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -709,6 +748,7 @@ directors_officers:
     - id: governance_page
       inference_utility_function: governance_page_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -717,6 +757,7 @@ directors_officers:
     - id: esg_reporting
       inference_utility_function: esg_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -725,6 +766,7 @@ directors_officers:
     - id: press_release
       inference_utility_function: press_release_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -737,6 +779,7 @@ directors_officers:
     - id: leadership_visibility
       inference_utility_function: leadership_visability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -745,6 +788,7 @@ directors_officers:
     - id: hiring_signals
       inference_utility_function: hiring_signals_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -760,6 +804,7 @@ directors_officers:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -772,6 +817,7 @@ directors_officers:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -780,6 +826,7 @@ directors_officers:
     - id: governance_rating
       inference_utility_function: governance_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -788,6 +835,7 @@ directors_officers:
     - id: iss_governance
       inference_utility_function: iss_governance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1363,6 +1411,7 @@ directors_officers:
     - id: company_type
       inference_utility_function: company_type_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: company_type
         source: metadata.company_type
@@ -1382,6 +1431,7 @@ directors_officers:
     - id: industry
       inference_utility_function: industry_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: industry
         source: metadata.industry
@@ -1407,6 +1457,7 @@ directors_officers:
     - id: board_composition
       inference_utility_function: board_independence_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1425,6 +1476,7 @@ directors_officers:
     - id: investor_quality
       inference_utility_function: investor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1437,6 +1489,7 @@ directors_officers:
     - id: management_stability
       inference_utility_function: executive_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1449,6 +1502,7 @@ directors_officers:
     - id: related_party
       inference_utility_function: related_party_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1461,6 +1515,7 @@ directors_officers:
     - id: financial_health
       inference_utility_function: public_financials_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1473,6 +1528,7 @@ directors_officers:
     - id: growth_trajectory
       inference_utility_function: growth_rate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1485,6 +1541,7 @@ directors_officers:
     - id: debt_position
       inference_utility_function: debt_covenant_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1497,6 +1554,7 @@ directors_officers:
     - id: auditor_quality
       inference_utility_function: auditor_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1509,6 +1567,7 @@ directors_officers:
     - id: litigation_history
       inference_utility_function: pending_litigation_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1530,6 +1589,7 @@ directors_officers:
     - id: employment_claims
       inference_utility_function: employment_claims_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1542,6 +1602,7 @@ directors_officers:
     - id: regulatory_history
       inference_utility_function: regulatory_action_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1554,6 +1615,7 @@ directors_officers:
     - id: corporate_footprint
       inference_utility_function: governance_page_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1566,6 +1628,7 @@ directors_officers:
     - id: employee_count
       inference_utility_function: hiring_signals_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2018,6 +2081,7 @@ directors_officers:
     - id: sec_filing_quality
       inference_utility_function: sec_filing_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2039,6 +2103,7 @@ directors_officers:
     - id: board_independence
       inference_utility_function: board_independence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2051,6 +2116,7 @@ directors_officers:
     - id: shareholder_activism
       inference_utility_function: shareholder_activism_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2071,6 +2137,7 @@ directors_officers:
     - id: securities_litigation_exposure
       inference_utility_function: securities_litigation_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2092,6 +2159,7 @@ directors_officers:
     - id: executive_compensation_structure
       inference_utility_function: executive_compensation_structure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2108,6 +2176,7 @@ directors_officers:
     - id: ma_activity
       inference_utility_function: ma_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2129,6 +2198,7 @@ directors_officers:
     - id: ipo_spac_exposure
       inference_utility_function: ipo_spac_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2150,6 +2220,7 @@ directors_officers:
     - id: pe_sponsor_dynamics
       inference_utility_function: pe_sponsor_dynamics_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2169,6 +2240,7 @@ directors_officers:
     - id: bankruptcy_distress_risk
       inference_utility_function: bankruptcy_distress_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2190,6 +2262,7 @@ directors_officers:
     - id: regulatory_investigation_exposure
       inference_utility_function: regulatory_investigation_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2208,6 +2281,194 @@ directors_officers:
           severity:
             correlation_direction: positive
             weight: 0.15
+    - id: shareholder_suit_history
+      inference_utility_function: shareholder_suit_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: dodd_frank_whistleblower_telemetry
+      inference_utility_function: dodd_frank_whistleblower_telemetry_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: iss_proxy_recommendation
+      inference_utility_function: iss_proxy_recommendation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: glass_lewis_recommendation
+      inference_utility_function: glass_lewis_recommendation_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: proxy_dissent_rate
+      inference_utility_function: proxy_dissent_rate_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: board_refreshment_velocity
+      inference_utility_function: board_refreshment_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: ceo_tenure_band
+      inference_utility_function: ceo_tenure_band_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: audit_qualification_history
+      inference_utility_function: audit_qualification_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: restatement_record
+      inference_utility_function: restatement_record_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: cfo_turnover_velocity
+      inference_utility_function: cfo_turnover_velocity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: director_interlock_density
+      inference_utility_function: director_interlock_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.02
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.02
+    - id: related_party_transaction_volume
+      inference_utility_function: related_party_transaction_volume_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: clawback_policy_presence
+      inference_utility_function: clawback_policy_presence_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.02
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.02
+    - id: equity_grant_dilution_trend
+      inference_utility_function: equity_grant_dilution_trend_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.02
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.02
     groups:
       three_layer_assessment:
       - id: public_record
@@ -2585,6 +2846,7 @@ directors_officers:
     - id: ma_activity
       inference_utility_function: ma_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2601,6 +2863,7 @@ directors_officers:
     - id: ipo_spac_exposure
       inference_utility_function: ipo_spac_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2617,6 +2880,7 @@ directors_officers:
     - id: pe_sponsor_dynamics
       inference_utility_function: pe_sponsor_dynamics_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2636,6 +2900,7 @@ directors_officers:
     - id: bankruptcy_distress_risk
       inference_utility_function: bankruptcy_distress_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2652,6 +2917,7 @@ directors_officers:
     - id: regulatory_investigation_exposure
       inference_utility_function: regulatory_investigation_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3034,6 +3300,7 @@ directors_officers:
     - id: ma_activity
       inference_utility_function: ma_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3050,6 +3317,7 @@ directors_officers:
     - id: ipo_spac_exposure
       inference_utility_function: ipo_spac_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3066,6 +3334,7 @@ directors_officers:
     - id: pe_sponsor_dynamics
       inference_utility_function: pe_sponsor_dynamics_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3085,6 +3354,7 @@ directors_officers:
     - id: bankruptcy_distress_risk
       inference_utility_function: bankruptcy_distress_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3101,6 +3371,7 @@ directors_officers:
     - id: regulatory_investigation_exposure
       inference_utility_function: regulatory_investigation_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3506,6 +3777,7 @@ directors_officers:
     - id: sec_filing_quality
       inference_utility_function: sec_filing_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3522,6 +3794,7 @@ directors_officers:
     - id: board_independence
       inference_utility_function: board_independence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3534,6 +3807,7 @@ directors_officers:
     - id: shareholder_activism
       inference_utility_function: shareholder_activism_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3550,6 +3824,7 @@ directors_officers:
     - id: securities_litigation_exposure
       inference_utility_function: securities_litigation_exposure_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3566,6 +3841,7 @@ directors_officers:
     - id: executive_compensation_structure
       inference_utility_function: executive_compensation_structure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3582,6 +3858,7 @@ directors_officers:
     - id: ma_activity
       inference_utility_function: ma_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3598,6 +3875,7 @@ directors_officers:
     - id: ipo_spac_exposure
       inference_utility_function: ipo_spac_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3614,6 +3892,7 @@ directors_officers:
     - id: pe_sponsor_dynamics
       inference_utility_function: pe_sponsor_dynamics_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3633,6 +3912,7 @@ directors_officers:
     - id: bankruptcy_distress_risk
       inference_utility_function: bankruptcy_distress_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -3649,6 +3929,7 @@ directors_officers:
     - id: regulatory_investigation_exposure
       inference_utility_function: regulatory_investigation_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:

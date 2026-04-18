@@ -71,6 +71,7 @@ marine:
     - id: operator_type
       inference_utility_function: operator_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: operator_type
         source: metadata.operator_type
@@ -99,6 +100,7 @@ marine:
     - id: vessel_category
       inference_utility_function: primaryvessel_category_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: vessel_category
         source: metadata.vessel_category
@@ -133,6 +135,7 @@ marine:
     - id: trading_pattern
       inference_utility_function: trading_pattern_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: trading_pattern
         source: metadata.trading_pattern
@@ -155,6 +158,7 @@ marine:
     - id: flag_state_quality
       inference_utility_function: flagstate_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: flag_state_quality
         features:
@@ -173,6 +177,7 @@ marine:
     - id: fleet_age_band
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: fleet_age_band
         features:
@@ -200,6 +205,7 @@ marine:
     - id: classification_society
       inference_utility_function: classification_society_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -215,6 +221,7 @@ marine:
     - id: pi_club
       inference_utility_function: pi_club_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -227,6 +234,7 @@ marine:
     - id: charterer_quality
       inference_utility_function: charterer_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -239,6 +247,7 @@ marine:
     - id: banking_relationship
       inference_utility_function: banking_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -251,6 +260,7 @@ marine:
     - id: flag_state
       inference_utility_function: flag_state_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -263,6 +273,7 @@ marine:
     - id: industry_association
       inference_utility_function: industry_association_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -271,6 +282,7 @@ marine:
     - id: technical_manager
       inference_utility_function: technical_manager_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -283,6 +295,7 @@ marine:
     - id: port_relationship
       inference_utility_function: port_relationship_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -291,6 +304,7 @@ marine:
     - id: port_state_control
       inference_utility_function: port_state_control_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -303,6 +317,7 @@ marine:
     - id: classification_society_quality
       inference_utility_function: classification_society_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -311,6 +326,7 @@ marine:
     - id: ais_compliance
       inference_utility_function: ais_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -332,6 +348,7 @@ marine:
     - id: dark_activity
       inference_utility_function: dark_activity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -362,6 +379,7 @@ marine:
     - id: route_risk
       inference_utility_function: route_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -381,6 +399,7 @@ marine:
     - id: psc_region_exposure
       inference_utility_function: psc_regions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -393,6 +412,7 @@ marine:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -401,6 +421,7 @@ marine:
     - id: weather_routing
       inference_utility_function: weather_routing_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -413,6 +434,7 @@ marine:
     - id: psc_detention
       inference_utility_function: psc_detention_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -434,6 +456,7 @@ marine:
     - id: psc_deficiency
       inference_utility_function: psc_deficiency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -446,6 +469,7 @@ marine:
     - id: class_status
       inference_utility_function: class_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -472,6 +496,7 @@ marine:
     - id: ism_compliance
       inference_utility_function: ism_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -495,6 +520,7 @@ marine:
     - id: casualty_history
       inference_utility_function: casualty_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -520,6 +546,7 @@ marine:
     - id: total_loss
       inference_utility_function: totalloss_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -541,6 +568,7 @@ marine:
     - id: fleet_age
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -560,6 +588,7 @@ marine:
     - id: fleet_stability
       inference_utility_function: fleet_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -572,6 +601,7 @@ marine:
     - id: vessel_quality
       inference_utility_function: vessel_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -587,6 +617,7 @@ marine:
     - id: crew_certification
       inference_utility_function: crew_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -599,6 +630,7 @@ marine:
     - id: management_consistency
       inference_utility_function: management_consistency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -611,6 +643,7 @@ marine:
     - id: sanctions_status
       inference_utility_function: sanctions_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -629,6 +662,7 @@ marine:
     - id: ownership_transparency
       inference_utility_function: ownership_transparency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -647,6 +681,7 @@ marine:
     - id: jurisdiction_risk
       inference_utility_function: jurisdiction_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -673,6 +708,7 @@ marine:
     - id: sts_pattern
       inference_utility_function: sts_pattern_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -696,6 +732,7 @@ marine:
     - id: historical_sanctions
       inference_utility_function: historical_sanctions_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -708,6 +745,7 @@ marine:
     - id: imo2020_compliance
       inference_utility_function: imo_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -720,6 +758,7 @@ marine:
     - id: bwm_compliance
       inference_utility_function: bwm_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -732,6 +771,7 @@ marine:
     - id: cii_rating
       inference_utility_function: cii_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -740,6 +780,7 @@ marine:
     - id: environmental_incident
       inference_utility_function: environmental_incident_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -759,6 +800,7 @@ marine:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -767,6 +809,7 @@ marine:
     - id: fleet_disclosure
       inference_utility_function: fleet_list_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -779,6 +822,7 @@ marine:
     - id: sustainability_reporting
       inference_utility_function: sustainability_reporting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -787,6 +831,7 @@ marine:
     - id: safety_communication
       inference_utility_function: safety_culture_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -799,6 +844,7 @@ marine:
     - id: crew_welfare
       inference_utility_function: crew_welfare_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -807,6 +853,7 @@ marine:
     - id: industry_presence
       inference_utility_function: industry_presence_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -815,6 +862,7 @@ marine:
     - id: vetting
       inference_utility_function: vetting_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -830,6 +878,7 @@ marine:
     - id: esg_rating
       inference_utility_function: esg_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -838,6 +887,7 @@ marine:
     - id: credit_rating
       inference_utility_function: credit_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1430,6 +1480,7 @@ marine:
     - id: vessel_category
       inference_utility_function: primaryvessel_category_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: vessel_category
         source: metadata.vessel_category
@@ -1452,6 +1503,7 @@ marine:
     - id: fleet_age_band
       inference_utility_function: fleet_age_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: fleet_age_band
         features:
@@ -1470,6 +1522,7 @@ marine:
     - id: psc_detention
       inference_utility_function: psc_detention_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1488,6 +1541,7 @@ marine:
     - id: casualty_history
       inference_utility_function: casualty_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1506,6 +1560,7 @@ marine:
     - id: ais_compliance
       inference_utility_function: ais_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1528,6 +1583,7 @@ marine:
     - id: route_risk
       inference_utility_function: route_risk_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1544,6 +1600,7 @@ marine:
     - id: operational_efficiency
       inference_utility_function: operational_efficiency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1560,6 +1617,7 @@ marine:
     - id: class_status
       inference_utility_function: class_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1578,6 +1636,7 @@ marine:
     - id: ism_compliance
       inference_utility_function: ism_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1596,6 +1655,7 @@ marine:
     - id: flag_state
       inference_utility_function: flag_state_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1612,6 +1672,7 @@ marine:
     - id: classification_society
       inference_utility_function: classification_society_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1628,6 +1689,7 @@ marine:
     - id: pi_club
       inference_utility_function: pi_club_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -1644,6 +1706,7 @@ marine:
     - id: fleet_stability
       inference_utility_function: fleet_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1660,6 +1723,7 @@ marine:
     - id: crew_certification
       inference_utility_function: crew_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1676,6 +1740,7 @@ marine:
     - id: vessel_quality
       inference_utility_function: vessel_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -1962,7 +2027,7 @@ marine:
   marine_cargo:
     metadata:
       name: DSI Marine Cargo Specialist Model
-      description: "Marine cargo insurance \u2014 commodity-specific, transit risk, storage exposure"
+      description: Marine cargo insurance — commodity-specific, transit risk, storage exposure
       version: 2.3.0
       product_types:
       - cargo
@@ -2008,7 +2073,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: "Hazardous cargo \u2014 specialist review"
+        note: Hazardous cargo — specialist review
     - id: open_cover
       question: Is this an open cover (blanket) declaration or a specific voyage policy?
       query_condition:
@@ -2016,7 +2081,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Open cover \u2014 accumulation monitoring required"
+        note: Open cover — accumulation monitoring required
     - id: war_zone_transit
       question: Does the transit route pass through any Joint War Committee listed areas?
       query_condition:
@@ -2032,11 +2097,12 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Reefer cargo \u2014 cold chain exposure"
+        note: Reefer cargo — cold chain exposure
     signal_registry:
     - id: cargo_commodity_class
       inference_utility_function: cargo_commodity_class_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.cargo_commodity_class
@@ -2062,6 +2128,7 @@ marine:
     - id: packaging_quality
       inference_utility_function: packaging_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2077,6 +2144,7 @@ marine:
     - id: transit_mode
       inference_utility_function: transit_mode_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.transit_mode
@@ -2099,6 +2167,7 @@ marine:
     - id: storage_exposure
       inference_utility_function: storage_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2118,6 +2187,7 @@ marine:
     - id: theft_pilferage_exposure
       inference_utility_function: theft_pilferage_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2138,6 +2208,7 @@ marine:
     - id: temperature_control
       inference_utility_function: temperature_control_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2153,6 +2224,7 @@ marine:
     - id: psc_detention_rate
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2178,6 +2250,7 @@ marine:
     - id: ism_audit_quality
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2190,6 +2263,7 @@ marine:
     - id: isps_compliance
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2202,6 +2276,7 @@ marine:
     - id: sanctions_screening_depth
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2220,6 +2295,7 @@ marine:
     - id: class_survey_currency
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2229,6 +2305,67 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: tokyo_mou_detention_history
+      inference_utility_function: tokyo_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: flag_of_convenience_proxy
+      inference_utility_function: flag_of_convenience_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
@@ -2560,7 +2697,7 @@ marine:
   marine_tanker:
     metadata:
       name: DSI Marine Tanker Specialist Model
-      description: "Tanker fleet hull & liability \u2014 crude, product, chemical, gas carriers"
+      description: Tanker fleet hull & liability — crude, product, chemical, gas carriers
       version: 2.3.0
       product_types: &id005
       - hull_machinery
@@ -2625,7 +2762,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "STS operations \u2014 pollution exposure"
+        note: STS operations — pollution exposure
     - id: single_hull
       question: Are any vessels in the fleet single-hull construction?
       query_condition:
@@ -2633,11 +2770,12 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: "Single hull tanker \u2014 regulatory non-compliance"
+        note: Single hull tanker — regulatory non-compliance
     signal_registry:
     - id: tanker_vetting_status
       inference_utility_function: tanker_vetting_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2650,7 +2788,7 @@ marine:
             threshold: 30
             comparison: <=
           - action: FLAG
-            note: "Vetting concerns \u2014 observations outstanding"
+            note: Vetting concerns — observations outstanding
             threshold: 50
             comparison: <=
         loss:
@@ -2663,6 +2801,7 @@ marine:
     - id: pollution_liability_exposure
       inference_utility_function: pollution_liability_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2685,6 +2824,7 @@ marine:
     - id: double_hull_compliance
       inference_utility_function: double_hull_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2700,6 +2840,7 @@ marine:
     - id: cargo_compatibility
       inference_utility_function: cargo_compatibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2715,6 +2856,7 @@ marine:
     - id: sts_operations
       inference_utility_function: sts_operations_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2735,6 +2877,7 @@ marine:
     - id: psc_detention_rate
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2751,6 +2894,7 @@ marine:
     - id: ism_audit_quality
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2763,6 +2907,7 @@ marine:
     - id: isps_compliance
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2775,6 +2920,7 @@ marine:
     - id: sanctions_screening_depth
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2788,6 +2934,7 @@ marine:
     - id: class_survey_currency
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2797,11 +2944,69 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: ais_dark_activity_rate
+      inference_utility_function: ais_dark_activity_rate_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: ais_spoofing_signal
+      inference_utility_function: ais_spoofing_signal_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: sts_transfer_density
+      inference_utility_function: sts_transfer_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
         label: Tanker Risk
-        description: "Tanker-specific risk \u2014 vetting status, pollution exposure, cargo compatibility, hull construction"
+        description: Tanker-specific risk — vetting status, pollution exposure, cargo compatibility, hull construction
         risk:
           weight: 0.45
         loss:
@@ -3134,6 +3339,106 @@ marine:
             factor: 0.6
           - deductible: 5000000
             factor: 0.5
+        total_loss:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        loss_of_hire:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        cargo:
+          deductible_factors:
+          - deductible: 100000
+            factor: 1.2
+          - deductible: 250000
+            factor: 1.0
+          - deductible: 500000
+            factor: 0.85
+          - deductible: 1000000
+            factor: 0.72
+          - deductible: 2500000
+            factor: 0.6
+          - deductible: 5000000
+            factor: 0.5
+          ilf_curve:
+            anchor_limit: 10000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3143,7 +3448,7 @@ marine:
   marine_offshore:
     metadata:
       name: DSI Marine Offshore Specialist Model
-      description: "Offshore marine units \u2014 FPSOs, rigs, OSVs, construction vessels, wind installation"
+      description: Offshore marine units — FPSOs, rigs, OSVs, construction vessels, wind installation
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -3185,7 +3490,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Lay-up status \u2014 reduced maintenance risk"
+        note: Lay-up status — reduced maintenance risk
     - id: deepwater_operations
       question: Does the unit operate in water depths exceeding 1500 metres?
       query_condition:
@@ -3193,7 +3498,7 @@ marine:
         action: FLAG
         override: null
         applied: null
-        note: "Deepwater operations \u2014 higher severity potential"
+        note: Deepwater operations — higher severity potential
     - id: harsh_environment
       question: Does the unit operate in harsh environment zones (North Sea, Norwegian Sea, sub-Arctic)?
       query_condition:
@@ -3206,6 +3511,7 @@ marine:
     - id: unit_type
       inference_utility_function: unit_type_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.offshore_unit_type
@@ -3234,6 +3540,7 @@ marine:
     - id: mooring_integrity
       inference_utility_function: mooring_integrity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3249,6 +3556,7 @@ marine:
     - id: dp_system_reliability
       inference_utility_function: dp_system_reliability_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3270,6 +3578,7 @@ marine:
     - id: metocean_exposure
       inference_utility_function: metocean_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3289,6 +3598,7 @@ marine:
     - id: offshore_class_compliance
       inference_utility_function: offshore_class_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3307,6 +3617,7 @@ marine:
     - id: psc_detention_rate
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3323,6 +3634,7 @@ marine:
     - id: ism_audit_quality
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3335,6 +3647,7 @@ marine:
     - id: isps_compliance
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3347,6 +3660,7 @@ marine:
     - id: sanctions_screening_depth
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3360,6 +3674,7 @@ marine:
     - id: class_survey_currency
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3369,11 +3684,53 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: class_society_transfer_frequency
+      inference_utility_function: class_society_transfer_frequency_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: imo_cic_campaign_results
+      inference_utility_function: imo_cic_campaign_results_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: technical_infrastructure
         label: Offshore Marine
-        description: "Offshore unit risk \u2014 FPSO, jack-up, semi-sub, construction vessel, mooring integrity"
+        description: Offshore unit risk — FPSO, jack-up, semi-sub, construction vessel, mooring integrity
         risk:
           weight: 0.5
         loss:
@@ -3700,6 +4057,96 @@ marine:
             factor: 0.72
           - deductible: 5000000
             factor: 0.6
+        total_loss:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        pi_liability:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
+        cargo:
+          deductible_factors:
+          - deductible: 250000
+            factor: 1.15
+          - deductible: 500000
+            factor: 1.0
+          - deductible: 1000000
+            factor: 0.85
+          - deductible: 2500000
+            factor: 0.72
+          - deductible: 5000000
+            factor: 0.6
+          ilf_curve:
+            anchor_limit: 25000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
@@ -3709,7 +4156,7 @@ marine:
   marine_war_risk:
     metadata:
       name: DSI Marine War Risk Specialist Model
-      description: "Marine war risk \u2014 hull war, strikes, piracy, confiscation, terrorism"
+      description: Marine war risk — hull war, strikes, piracy, confiscation, terrorism
       version: 2.3.0
       product_types:
       - war_risks
@@ -3732,7 +4179,7 @@ marine:
         action: REFER
         override: 3
         applied: null
-        note: "JWC listed area trading \u2014 additional premium required"
+        note: JWC listed area trading — additional premium required
     - id: piracy_exposure
       question: Does the trading pattern include high-piracy-risk areas (Gulf of Aden, Gulf of Guinea, Strait of Malacca)?
       query_condition:
@@ -3748,7 +4195,7 @@ marine:
         action: REFER
         override: 5
         applied: null
-        note: "Sanctions proximity \u2014 compliance review"
+        note: Sanctions proximity — compliance review
     - id: armed_guards
       question: Does the vessel employ armed security personnel in high-risk areas?
       query_condition:
@@ -3769,6 +4216,7 @@ marine:
     - id: psc_detention_rate
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3785,6 +4233,7 @@ marine:
     - id: ism_audit_quality
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3797,6 +4246,7 @@ marine:
     - id: isps_compliance
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3809,6 +4259,7 @@ marine:
     - id: sanctions_screening_depth
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3822,6 +4273,7 @@ marine:
     - id: class_survey_currency
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -3831,6 +4283,48 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: piracy_corridor_exposure
+      inference_utility_function: piracy_corridor_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.06
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: ais_dark_activity_rate
+      inference_utility_function: ais_dark_activity_rate_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+    - id: flag_of_convenience_proxy
+      inference_utility_function: flag_of_convenience_proxy_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: behavioural
@@ -4158,7 +4652,7 @@ marine:
   marine_high_value:
     metadata:
       name: DSI Marine High Value Fleet Model
-      description: "High-value fleet hull & liability \u2014 modern tonnage, top-tier operators, fleet value >$1B"
+      description: High-value fleet hull & liability — modern tonnage, top-tier operators, fleet value >$1B
       version: 2.3.0
       product_types: *id005
       applicable_markets: *id001
@@ -4217,6 +4711,7 @@ marine:
     - id: psc_detention_rate
       inference_utility_function: psc_detention_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4233,6 +4728,7 @@ marine:
     - id: ism_audit_quality
       inference_utility_function: ism_audit_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4245,6 +4741,7 @@ marine:
     - id: isps_compliance
       inference_utility_function: isps_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4257,6 +4754,7 @@ marine:
     - id: sanctions_screening_depth
       inference_utility_function: sanctions_screening_depth_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4270,6 +4768,7 @@ marine:
     - id: class_survey_currency
       inference_utility_function: class_survey_currency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -4279,6 +4778,67 @@ marine:
           frequency:
             correlation_direction: positive
             weight: 0.1
+    - id: paris_mou_detention_history
+      inference_utility_function: paris_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: tokyo_mou_detention_history
+      inference_utility_function: tokyo_mou_detention_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: vessel_age_profile_curve
+      inference_utility_function: vessel_age_profile_curve_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: class_society_transfer_frequency
+      inference_utility_function: class_society_transfer_frequency_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -4604,6 +5164,86 @@ marine:
             factor: 0.82
           - deductible: 5000000
             factor: 0.68
+        total_loss:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        increased_value:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.75
+        war_risks:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 6.5
+        pi_liability:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.5
+        cargo:
+          deductible_factors:
+          - deductible: 500000
+            factor: 1.12
+          - deductible: 1000000
+            factor: 1.0
+          - deductible: 2500000
+            factor: 0.82
+          - deductible: 5000000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 50000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 4.5
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5

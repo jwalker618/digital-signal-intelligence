@@ -18,7 +18,25 @@ Registration:
 
 # Import all coverage modules to register functions
 from . import aerospace
+from . import casualty  # V6/A3
 from . import cyber
 from . import do
 from . import energy
+from . import fi  # V6/A5
+from . import fpr  # V6/A1
+from . import marine  # V6/A7
+from . import pi  # V6/A8
+from . import property  # V6/A2  # noqa: A004 — shadows builtin but matches coverage name
 from . import cross_coverage
+from . import medprof  # V6/B1
+from . import wc  # V6/B2
+from . import prodlib  # V6/B3
+from . import env_liab  # V6/B4
+from . import construction  # V6/B5
+from . import event  # V6/B6
+from . import pvt  # V6/B7
+from . import teo  # V6/B8
+from . import reinsurance  # V6/B9
+from . import crop  # V6/B10
+from . import specie  # V6/B11
+from . import captive  # V6/B12

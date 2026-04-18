@@ -1,0 +1,23 @@
+entity_id: chs_inc
+name: CHS Inc.
+coverage: crop
+config_id: crop_multi_peril
+domain: chsinc.com
+registry_id: US-Minnesota-CHS00001
+minimum_viable_input:
+  acreage: 320000
+  limit: 75000000
+  deductible: 1000000
+  product_type: multi_peril_crop_insurance
+  crop_type: wheat
+  state_country: US-ND
+  domain: chsinc.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

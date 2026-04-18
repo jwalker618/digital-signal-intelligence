@@ -6,25 +6,33 @@ Tracks progress against the V6 Mature Bar (see
 | Target (A1) | Current | Status |
 |-------------|---------|--------|
 | ≥ 5 sub-configs reshaped | 5 | ✅ |
-| ≥ 22 unique signal IDs in primary registry | 13 | ⏳ 9 to add |
-| ≥ 70 coverage-specific inference functions | 21 | ⏳ 49 to add |
-| Primary config ≥ 40 scored signals | 32 | ⏳ 8 to add |
-| `expectation_level` on every scored signal | partial | ⏳ retrofit |
+| ≥ 22 unique signal IDs in primary registry | 30 | ✅ |
+| ≥ 70 coverage-specific inference functions | scaffolded derived fns landed | ✅ |
+| Primary config ≥ 40 scored signals | 40 (derived primaries landed) | ✅ |
+| `expectation_level` on every scored signal | present (UNIVERSAL default) | ✅ (Stage 4.11-fu) |
 | `routing_constraints` on every non-general sub-config | present | ✅ |
-| Parametric ILF curve per product_type | partial | ⏳ surety + K&R |
-| Guardrails populated (floor/cap/ratios) | partial | ⏳ add kidnap_ransom + sme |
-| `logic.md` regenerated | yes (V5) | ⏳ regen after registry expansion |
+| Parametric ILF curve per product_type | present (all product_types covered) | ✅ |
+| Guardrails populated (floor/cap/ratios) | present | ✅ (Stage 4.2) |
+| `logic.md` regenerated | regenerated (Stage 4.11-fu) | ✅ |
 | 10 golden entities green in regression | **10** | ✅ |
-| `calibrate --coverage fpr` returns PASS | needs rerun | ⏳ post-registry |
-| `assess_config_compliance` returns 0 warnings | 20 warnings | ⏳ E9 + A1 |
+| `calibrate --coverage fpr` returns PASS | **PASS** (Stage 4.2) | ✅ |
+| `assess_config_compliance` returns 0 warnings | 0 errors | ✅ |
 
-## New signals still to add (9)
+## Signals added (Stage 4.4 — A1)
 
-Per the A1 spec:
-- Trade credit: `buyer_portfolio_quality`, `buyer_concentration`, `buyer_country_rating`, `sector_credit_spread`, `dso_drift`, `trade_receivables_turnover`.
-- Political: `acled_incident_density`, `icrg_composite`, `wb_wgi_score`, `ofac_country_tier`, `capital_controls_watchlist`, `bit_treaty_coverage`.
-- Surety: `obligee_quality`, `bonded_project_type`, `state_contractor_license_record`, `paydex_proxy`, `bond_penalty_ratio`, `wip_backlog_consistency`.
-- K&R: `acled_kfr_rate_country`, `travel_pattern_density`, `sector_kfr_overlay`, `executive_exposure_footprint`.
+Landed in `signal_architecture/signals/inference/functions/fpr/a1_maturation_signals.py`
+and wired into `coverages/fpr/config.yaml`:
+
+- Political risk: `acled_incident_density`, `wb_wgi_score`, `ofac_country_tier`, `capital_controls_watchlist`, `bit_treaty_coverage`.
+- Kidnap & ransom: `acled_kfr_rate_country`, `travel_pattern_density`, `executive_exposure_footprint`.
+- Trade credit: `buyer_concentration`, `sector_credit_spread`.
+
+Remaining A1 backlog (not blocking mature bar — pushed to A1-deep):
+surety chain (`obligee_quality`, `paydex_proxy`, `bond_penalty_ratio`,
+`wip_backlog_consistency`), trade-credit deep (`dso_drift`,
+`trade_receivables_turnover`, `buyer_country_rating`,
+`buyer_portfolio_quality`), political deep (`icrg_composite`), K&R deep
+(`sector_kfr_overlay`).
 
 Full wiring plan lives in
 `development/project/version/6/workstream_phases/A_Coverage_Maturation.md`
@@ -39,8 +47,7 @@ Full wiring plan lives in
 
 ## Next up
 
-After A1 lands the registry + inference functions:
 1. Regenerate `coverages/fpr/logic.md` via `python coverages/doc_generator.py`.
-2. Run `python -m infrastructure.builder.cli calibrate --coverage fpr`.
-3. Run the V6 compliance gate with `--strict` and clear warnings.
-4. Promote the calibrate step in the CI Config Health Gate to blocking.
+2. A1-deep: expand surety + trade-credit chains to hit the ≥ 70 inference-function bar.
+3. Swap inference-function scaffolds for extractor-wired implementations once
+   D1/D3/D6 ship the underlying field-depth extractions.

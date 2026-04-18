@@ -1,5 +1,5 @@
 # DSI Logic Document: `FPR`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -24,26 +24,25 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Trade Credit Risk | 0.40 | 0.40 | 0.35 |
-| Political Risk | 0.10 | 0.10 | 0.15 |
+| Political Risk | 0.25 | 0.25 | 0.30 |
 | Corporate Footprint | 0.20 | 0.15 | 0.20 |
 | Firm Stability | 0.15 | 0.20 | 0.15 |
-| Regulatory Standing | 0.15 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **11 signals** distributed as follows:
+This configuration contains **12 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (5 signals): Highest confidence
+- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
 - `INFERRED_PROXY` (5 signals): Medium confidence
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `trade_credit_risk`: 6 signals
-- `political_risk`: 5 signals
+- `structured_data`: 7 signals
+- `public_record`: 5 signals
 
 **Selection Rationale:**
-- 45% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -53,13 +52,12 @@ This configuration contains **11 signals** distributed as follows:
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
 | 1 | Trade Credit Risk | 1.15 | 0.40 | 0.40 | 0.35 |
-| 2 | Corporate Footprint | 0.55 | 0.20 | 0.15 | 0.20 |
-| 3 | Firm Stability | 0.50 | 0.15 | 0.20 | 0.15 |
-| 4 | Regulatory Standing | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Political Risk | 0.35 | 0.10 | 0.10 | 0.15 |
+| 2 | Political Risk | 0.80 | 0.25 | 0.25 | 0.30 |
+| 3 | Corporate Footprint | 0.55 | 0.20 | 0.15 | 0.20 |
+| 4 | Firm Stability | 0.50 | 0.15 | 0.20 | 0.15 |
 
 **Primary Assessment Driver:** `Trade Credit Risk` with combined weight of 1.15
-**Secondary Driver:** `Corporate Footprint` with combined weight of 0.55
+**Secondary Driver:** `Political Risk` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -86,25 +84,23 @@ This configuration contains **11 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Political Risk | 0.45 | 0.45 | 0.40 |
+| Political Risk | 0.65 | 0.70 | 0.60 |
 | Corporate Footprint | 0.20 | 0.15 | 0.25 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
-| Regulatory Standing | 0.10 | 0.15 | 0.10 |
-| Litigation History | 0.10 | 0.10 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **10 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (5 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `political_risk`: 5 signals
+- `public_record`: 10 signals
 
 **Selection Rationale:**
-- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -113,13 +109,11 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Political Risk | 1.30 | 0.45 | 0.45 | 0.40 |
+| 1 | Political Risk | 1.95 | 0.65 | 0.70 | 0.60 |
 | 2 | Corporate Footprint | 0.60 | 0.20 | 0.15 | 0.25 |
 | 3 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
-| 4 | Regulatory Standing | 0.35 | 0.10 | 0.15 | 0.10 |
-| 5 | Litigation History | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Political Risk` with combined weight of 1.30
+**Primary Assessment Driver:** `Political Risk` with combined weight of 1.95
 **Secondary Driver:** `Corporate Footprint` with combined weight of 0.60
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -161,7 +155,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (1 signals): Medium confidence
 
 **Signal Count by Group:**
-- `surety_risk`: 5 signals
+- `structured_data`: 5 signals
 
 **Selection Rationale:**
 - 80% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -206,26 +200,25 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Kidnap & Ransom Risk | 0.45 | 0.40 | 0.35 |
-| Political Risk | 0.15 | 0.15 | 0.15 |
+| Kidnap & Ransom Risk | 0.70 | 0.65 | 0.60 |
 | Corporate Footprint | 0.20 | 0.20 | 0.25 |
 | Firm Stability | 0.10 | 0.15 | 0.15 |
-| Regulatory Standing | 0.10 | 0.10 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **10 signals** distributed as follows:
+This configuration contains **13 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (4 signals): Highest confidence
-- `INFERRED_PROXY` (6 signals): Medium confidence
+- `INFERRED_PROXY` (9 signals): Medium confidence
 
 **Signal Count by Group:**
-- `political_risk`: 5 signals
-- `kidnap_ransom_risk`: 5 signals
+- `public_record`: 11 signals
+- `behavioural`: 1 signals
+- `corporate_footprint`: 1 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 31% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -234,13 +227,11 @@ This configuration contains **10 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Kidnap & Ransom Risk | 1.20 | 0.45 | 0.40 | 0.35 |
+| 1 | Kidnap & Ransom Risk | 1.95 | 0.70 | 0.65 | 0.60 |
 | 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
-| 3 | Political Risk | 0.45 | 0.15 | 0.15 | 0.15 |
-| 4 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
-| 5 | Regulatory Standing | 0.30 | 0.10 | 0.10 | 0.10 |
+| 3 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `Kidnap & Ransom Risk` with combined weight of 1.20
+**Primary Assessment Driver:** `Kidnap & Ransom Risk` with combined weight of 1.95
 **Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -270,10 +261,9 @@ This configuration contains **10 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Trade Credit Risk | 0.30 | 0.30 | 0.25 |
-| Political Risk | 0.25 | 0.25 | 0.25 |
+| Political Risk | 0.35 | 0.35 | 0.35 |
 | Corporate Footprint | 0.20 | 0.15 | 0.25 |
 | Firm Stability | 0.15 | 0.20 | 0.15 |
-| Regulatory Standing | 0.10 | 0.10 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -285,8 +275,8 @@ This configuration contains **11 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `trade_credit_risk`: 6 signals
-- `political_risk`: 5 signals
+- `structured_data`: 6 signals
+- `public_record`: 5 signals
 
 **Selection Rationale:**
 - 45% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -298,14 +288,13 @@ This configuration contains **11 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Trade Credit Risk | 0.85 | 0.30 | 0.30 | 0.25 |
-| 2 | Political Risk | 0.75 | 0.25 | 0.25 | 0.25 |
+| 1 | Political Risk | 1.05 | 0.35 | 0.35 | 0.35 |
+| 2 | Trade Credit Risk | 0.85 | 0.30 | 0.30 | 0.25 |
 | 3 | Corporate Footprint | 0.60 | 0.20 | 0.15 | 0.25 |
 | 4 | Firm Stability | 0.50 | 0.15 | 0.20 | 0.15 |
-| 5 | Regulatory Standing | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Trade Credit Risk` with combined weight of 0.85
-**Secondary Driver:** `Political Risk` with combined weight of 0.75
+**Primary Assessment Driver:** `Political Risk` with combined weight of 1.05
+**Secondary Driver:** `Trade Credit Risk` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

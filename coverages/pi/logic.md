@@ -1,5 +1,5 @@
 # DSI Logic Document: `PI`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -23,12 +23,10 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.15 | 0.10 | 0.05 |
-| Regulatory Standing | 0.25 | 0.25 | 0.10 |
+| Regulatory Standing | 0.35 | 0.40 | 0.25 |
 | Firm Stability | 0.15 | 0.15 | 0.20 |
-| Practice Quality | 0.15 | 0.20 | 0.15 |
-| Technical Infrastructure | 0.10 | 0.10 | 0.10 |
+| Practice Quality | 0.25 | 0.30 | 0.25 |
 | Corporate Footprint | 0.10 | 0.05 | 0.25 |
-| Litigation History | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -40,13 +38,11 @@ This configuration contains **44 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `regulatory_standing`: 7 signals
+- `public_record`: 12 signals
+- `technical_infrastructure`: 10 signals
 - `network_authority`: 6 signals
-- `firm_stability`: 6 signals
+- `behavioural`: 6 signals
 - `corporate_footprint`: 6 signals
-- `practice_quality`: 5 signals
-- `technical_infrastructure`: 5 signals
-- `litigation_history`: 5 signals
 - `profession_type`: 1 signals
 - `sub_profession_type`: 1 signals
 - `firm_size`: 1 signals
@@ -62,16 +58,14 @@ This configuration contains **44 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Regulatory Standing | 0.60 | 0.25 | 0.25 | 0.10 |
-| 2 | Firm Stability | 0.50 | 0.15 | 0.15 | 0.20 |
-| 3 | Practice Quality | 0.50 | 0.15 | 0.20 | 0.15 |
+| 1 | Regulatory Standing | 1.00 | 0.35 | 0.40 | 0.25 |
+| 2 | Practice Quality | 0.80 | 0.25 | 0.30 | 0.25 |
+| 3 | Firm Stability | 0.50 | 0.15 | 0.15 | 0.20 |
 | 4 | Corporate Footprint | 0.40 | 0.10 | 0.05 | 0.25 |
-| 5 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
-| 6 | Network Authority | 0.30 | 0.15 | 0.10 | 0.05 |
-| 7 | Technical Infrastructure | 0.30 | 0.10 | 0.10 | 0.10 |
+| 5 | Network Authority | 0.30 | 0.15 | 0.10 | 0.05 |
 
-**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.60
-**Secondary Driver:** `Firm Stability` with combined weight of 0.50
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 1.00
+**Secondary Driver:** `Practice Quality` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -94,11 +88,16 @@ This configuration contains **44 signals** distributed as follows:
 ### Three-Layer Weight Distribution
 > *DSI requires that weights for Risk, Loss, and Exposure each sum to 1.0 across all signal groups.*
 
-**Validation:** FAIL - Weights do not sum to 1.0
+**Validation:** PASS
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| **TOTAL** | **0.00** | **0.00** | **0.00** |
+| Network Authority | 0.15 | 0.10 | 0.05 |
+| Regulatory Standing | 0.35 | 0.40 | 0.25 |
+| Firm Stability | 0.15 | 0.15 | 0.20 |
+| Practice Quality | 0.25 | 0.30 | 0.25 |
+| Corporate Footprint | 0.10 | 0.05 | 0.25 |
+| **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
 This configuration contains **1 signals** distributed as follows:
@@ -119,7 +118,14 @@ This configuration contains **1 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
+| 1 | Regulatory Standing | 1.00 | 0.35 | 0.40 | 0.25 |
+| 2 | Practice Quality | 0.80 | 0.25 | 0.30 | 0.25 |
+| 3 | Firm Stability | 0.50 | 0.15 | 0.15 | 0.20 |
+| 4 | Corporate Footprint | 0.40 | 0.10 | 0.05 | 0.25 |
+| 5 | Network Authority | 0.30 | 0.15 | 0.10 | 0.05 |
 
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 1.00
+**Secondary Driver:** `Practice Quality` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -148,13 +154,10 @@ This configuration contains **1 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.20 | 0.20 | 0.10 |
+| Regulatory Standing | 0.30 | 0.35 | 0.20 |
 | Firm Stability | 0.20 | 0.15 | 0.20 |
-| Practice Quality | 0.15 | 0.20 | 0.10 |
-| Technical Infrastructure | 0.10 | 0.10 | 0.10 |
-| Corporate Footprint | 0.05 | 0.05 | 0.10 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Partner Practice Mix | 0.10 | 0.10 | 0.25 |
+| Practice Quality | 0.25 | 0.30 | 0.20 |
+| Corporate Footprint | 0.15 | 0.15 | 0.35 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -165,7 +168,7 @@ This configuration contains **7 signals** distributed as follows:
 - `INFERRED_PROXY` (4 signals): Medium confidence
 
 **Signal Count by Group:**
-- `partner_practice_mix`: 7 signals
+- `corporate_footprint`: 7 signals
 
 **Selection Rationale:**
 - 43% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -177,17 +180,14 @@ This configuration contains **7 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Firm Stability | 0.55 | 0.20 | 0.15 | 0.20 |
-| 2 | Regulatory Standing | 0.50 | 0.20 | 0.20 | 0.10 |
-| 3 | Practice Quality | 0.45 | 0.15 | 0.20 | 0.10 |
-| 4 | Partner Practice Mix | 0.45 | 0.10 | 0.10 | 0.25 |
-| 5 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 6 | Technical Infrastructure | 0.30 | 0.10 | 0.10 | 0.10 |
-| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.20 | 0.05 | 0.05 | 0.10 |
+| 1 | Regulatory Standing | 0.85 | 0.30 | 0.35 | 0.20 |
+| 2 | Practice Quality | 0.75 | 0.25 | 0.30 | 0.20 |
+| 3 | Corporate Footprint | 0.65 | 0.15 | 0.15 | 0.35 |
+| 4 | Firm Stability | 0.55 | 0.20 | 0.15 | 0.20 |
+| 5 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Firm Stability` with combined weight of 0.55
-**Secondary Driver:** `Regulatory Standing` with combined weight of 0.50
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.85
+**Secondary Driver:** `Practice Quality` with combined weight of 0.75
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -215,27 +215,25 @@ This configuration contains **7 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.25 | 0.20 | 0.10 |
+| Regulatory Standing | 0.50 | 0.50 | 0.60 |
 | Firm Stability | 0.15 | 0.10 | 0.15 |
-| Practice Quality | 0.15 | 0.25 | 0.10 |
-| Technical Infrastructure | 0.05 | 0.05 | 0.05 |
+| Practice Quality | 0.20 | 0.30 | 0.15 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.15 | 0.20 | 0.15 |
-| Case Portfolio | 0.10 | 0.10 | 0.35 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (1 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `case_portfolio`: 5 signals
+- `public_record`: 5 signals
+- `structured_data`: 3 signals
 
 **Selection Rationale:**
-- 20% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 38% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -244,17 +242,14 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Regulatory Standing | 0.55 | 0.25 | 0.20 | 0.10 |
-| 2 | Case Portfolio | 0.55 | 0.10 | 0.10 | 0.35 |
-| 3 | Practice Quality | 0.50 | 0.15 | 0.25 | 0.10 |
-| 4 | Litigation History | 0.50 | 0.15 | 0.20 | 0.15 |
-| 5 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
-| 6 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 7 | Technical Infrastructure | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Regulatory Standing | 1.60 | 0.50 | 0.50 | 0.60 |
+| 2 | Practice Quality | 0.65 | 0.20 | 0.30 | 0.15 |
+| 3 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.55
-**Secondary Driver:** `Case Portfolio` with combined weight of 0.55
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 1.60
+**Secondary Driver:** `Practice Quality` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -283,13 +278,10 @@ This configuration contains **5 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.05 | 0.05 |
-| Regulatory Standing | 0.30 | 0.30 | 0.15 |
+| Regulatory Standing | 0.40 | 0.45 | 0.25 |
 | Firm Stability | 0.10 | 0.10 | 0.10 |
-| Practice Quality | 0.10 | 0.10 | 0.10 |
-| Technical Infrastructure | 0.10 | 0.05 | 0.05 |
+| Practice Quality | 0.40 | 0.35 | 0.55 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Audit Quality | 0.20 | 0.20 | 0.40 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -300,7 +292,7 @@ This configuration contains **7 signals** distributed as follows:
 - `INFERRED_PROXY` (3 signals): Medium confidence
 
 **Signal Count by Group:**
-- `audit_quality`: 7 signals
+- `technical_infrastructure`: 7 signals
 
 **Selection Rationale:**
 - 57% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -312,17 +304,14 @@ This configuration contains **7 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Audit Quality | 0.80 | 0.20 | 0.20 | 0.40 |
-| 2 | Regulatory Standing | 0.75 | 0.30 | 0.30 | 0.15 |
-| 3 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 4 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
-| 5 | Practice Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Technical Infrastructure | 0.20 | 0.10 | 0.05 | 0.05 |
-| 7 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Practice Quality | 1.30 | 0.40 | 0.35 | 0.55 |
+| 2 | Regulatory Standing | 1.10 | 0.40 | 0.45 | 0.25 |
+| 3 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
+| 4 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Audit Quality` with combined weight of 0.80
-**Secondary Driver:** `Regulatory Standing` with combined weight of 0.75
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.30
+**Secondary Driver:** `Regulatory Standing` with combined weight of 1.10
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -350,12 +339,10 @@ This configuration contains **7 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.25 | 0.25 | 0.10 |
+| Regulatory Standing | 0.35 | 0.45 | 0.30 |
 | Firm Stability | 0.15 | 0.15 | 0.20 |
-| Practice Quality | 0.20 | 0.20 | 0.20 |
-| Technical Infrastructure | 0.10 | 0.10 | 0.10 |
+| Practice Quality | 0.30 | 0.30 | 0.30 |
 | Corporate Footprint | 0.10 | 0.05 | 0.15 |
-| Litigation History | 0.10 | 0.20 | 0.20 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -375,16 +362,14 @@ This configuration contains **0 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Regulatory Standing | 0.60 | 0.25 | 0.25 | 0.10 |
-| 2 | Practice Quality | 0.60 | 0.20 | 0.20 | 0.20 |
+| 1 | Regulatory Standing | 1.10 | 0.35 | 0.45 | 0.30 |
+| 2 | Practice Quality | 0.90 | 0.30 | 0.30 | 0.30 |
 | 3 | Firm Stability | 0.50 | 0.15 | 0.15 | 0.20 |
-| 4 | Litigation History | 0.50 | 0.10 | 0.20 | 0.20 |
-| 5 | Technical Infrastructure | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Corporate Footprint | 0.30 | 0.10 | 0.05 | 0.15 |
-| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 4 | Corporate Footprint | 0.30 | 0.10 | 0.05 | 0.15 |
+| 5 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.60
-**Secondary Driver:** `Practice Quality` with combined weight of 0.60
+**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 1.10
+**Secondary Driver:** `Practice Quality` with combined weight of 0.90
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -413,13 +398,10 @@ This configuration contains **0 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.15 | 0.15 | 0.05 |
+| Regulatory Standing | 0.25 | 0.30 | 0.15 |
 | Firm Stability | 0.15 | 0.10 | 0.15 |
-| Practice Quality | 0.15 | 0.15 | 0.10 |
-| Technical Infrastructure | 0.05 | 0.05 | 0.05 |
+| Practice Quality | 0.45 | 0.50 | 0.60 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Design Quality | 0.25 | 0.30 | 0.45 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -430,7 +412,7 @@ This configuration contains **6 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `design_quality`: 6 signals
+- `technical_infrastructure`: 6 signals
 
 **Selection Rationale:**
 - 67% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -442,17 +424,14 @@ This configuration contains **6 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Design Quality | 1.00 | 0.25 | 0.30 | 0.45 |
-| 2 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
-| 3 | Practice Quality | 0.40 | 0.15 | 0.15 | 0.10 |
-| 4 | Regulatory Standing | 0.35 | 0.15 | 0.15 | 0.05 |
-| 5 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 6 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 7 | Technical Infrastructure | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Practice Quality | 1.55 | 0.45 | 0.50 | 0.60 |
+| 2 | Regulatory Standing | 0.70 | 0.25 | 0.30 | 0.15 |
+| 3 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Design Quality` with combined weight of 1.00
-**Secondary Driver:** `Firm Stability` with combined weight of 0.40
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.55
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.70
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -481,13 +460,10 @@ This configuration contains **6 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.05 | 0.05 |
-| Regulatory Standing | 0.20 | 0.15 | 0.05 |
+| Regulatory Standing | 0.30 | 0.30 | 0.15 |
 | Firm Stability | 0.10 | 0.10 | 0.10 |
-| Practice Quality | 0.10 | 0.10 | 0.10 |
-| Technical Infrastructure | 0.05 | 0.05 | 0.05 |
+| Practice Quality | 0.50 | 0.50 | 0.65 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Engineering Quality | 0.35 | 0.35 | 0.50 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -498,7 +474,7 @@ This configuration contains **6 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `engineering_quality`: 6 signals
+- `technical_infrastructure`: 6 signals
 
 **Selection Rationale:**
 - 67% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -510,17 +486,14 @@ This configuration contains **6 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Engineering Quality | 1.20 | 0.35 | 0.35 | 0.50 |
-| 2 | Regulatory Standing | 0.40 | 0.20 | 0.15 | 0.05 |
-| 3 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 4 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
-| 5 | Practice Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
-| 7 | Technical Infrastructure | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Practice Quality | 1.65 | 0.50 | 0.50 | 0.65 |
+| 2 | Regulatory Standing | 0.75 | 0.30 | 0.30 | 0.15 |
+| 3 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
+| 4 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Engineering Quality` with combined weight of 1.20
-**Secondary Driver:** `Regulatory Standing` with combined weight of 0.40
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.65
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.75
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -548,27 +521,26 @@ This configuration contains **6 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.15 | 0.10 | 0.05 |
+| Regulatory Standing | 0.25 | 0.25 | 0.15 |
 | Firm Stability | 0.15 | 0.10 | 0.15 |
-| Practice Quality | 0.15 | 0.15 | 0.10 |
-| Technical Infrastructure | 0.15 | 0.20 | 0.15 |
+| Practice Quality | 0.45 | 0.55 | 0.60 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Delivery Quality | 0.15 | 0.20 | 0.35 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **6 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `delivery_quality`: 6 signals
+- `technical_infrastructure`: 6 signals
+- `public_record`: 1 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 38% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -577,17 +549,14 @@ This configuration contains **6 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Delivery Quality | 0.70 | 0.15 | 0.20 | 0.35 |
-| 2 | Technical Infrastructure | 0.50 | 0.15 | 0.20 | 0.15 |
+| 1 | Practice Quality | 1.60 | 0.45 | 0.55 | 0.60 |
+| 2 | Regulatory Standing | 0.65 | 0.25 | 0.25 | 0.15 |
 | 3 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
-| 4 | Practice Quality | 0.40 | 0.15 | 0.15 | 0.10 |
-| 5 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 6 | Regulatory Standing | 0.30 | 0.15 | 0.10 | 0.05 |
-| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Delivery Quality` with combined weight of 0.70
-**Secondary Driver:** `Technical Infrastructure` with combined weight of 0.50
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.60
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -615,13 +584,10 @@ This configuration contains **6 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.25 | 0.25 | 0.15 |
+| Regulatory Standing | 0.35 | 0.40 | 0.25 |
 | Firm Stability | 0.15 | 0.10 | 0.15 |
-| Practice Quality | 0.15 | 0.20 | 0.10 |
-| Technical Infrastructure | 0.10 | 0.10 | 0.10 |
+| Practice Quality | 0.35 | 0.40 | 0.50 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Advisory Quality | 0.10 | 0.10 | 0.30 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -632,7 +598,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `advisory_quality`: 5 signals
+- `technical_infrastructure`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -644,17 +610,14 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Regulatory Standing | 0.65 | 0.25 | 0.25 | 0.15 |
-| 2 | Advisory Quality | 0.50 | 0.10 | 0.10 | 0.30 |
-| 3 | Practice Quality | 0.45 | 0.15 | 0.20 | 0.10 |
-| 4 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
-| 5 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 6 | Technical Infrastructure | 0.30 | 0.10 | 0.10 | 0.10 |
-| 7 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Practice Quality | 1.25 | 0.35 | 0.40 | 0.50 |
+| 2 | Regulatory Standing | 1.00 | 0.35 | 0.40 | 0.25 |
+| 3 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Regulatory Standing` with combined weight of 0.65
-**Secondary Driver:** `Advisory Quality` with combined weight of 0.50
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.25
+**Secondary Driver:** `Regulatory Standing` with combined weight of 1.00
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -682,12 +645,10 @@ This configuration contains **5 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.15 | 0.10 | 0.10 |
-| Regulatory Standing | 0.15 | 0.15 | 0.05 |
+| Regulatory Standing | 0.25 | 0.30 | 0.20 |
 | Firm Stability | 0.20 | 0.15 | 0.20 |
-| Practice Quality | 0.20 | 0.25 | 0.15 |
-| Technical Infrastructure | 0.10 | 0.10 | 0.15 |
+| Practice Quality | 0.30 | 0.35 | 0.30 |
 | Corporate Footprint | 0.10 | 0.10 | 0.20 |
-| Litigation History | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -707,16 +668,14 @@ This configuration contains **0 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Practice Quality | 0.60 | 0.20 | 0.25 | 0.15 |
-| 2 | Firm Stability | 0.55 | 0.20 | 0.15 | 0.20 |
-| 3 | Corporate Footprint | 0.40 | 0.10 | 0.10 | 0.20 |
-| 4 | Litigation History | 0.40 | 0.10 | 0.15 | 0.15 |
+| 1 | Practice Quality | 0.95 | 0.30 | 0.35 | 0.30 |
+| 2 | Regulatory Standing | 0.75 | 0.25 | 0.30 | 0.20 |
+| 3 | Firm Stability | 0.55 | 0.20 | 0.15 | 0.20 |
+| 4 | Corporate Footprint | 0.40 | 0.10 | 0.10 | 0.20 |
 | 5 | Network Authority | 0.35 | 0.15 | 0.10 | 0.10 |
-| 6 | Regulatory Standing | 0.35 | 0.15 | 0.15 | 0.05 |
-| 7 | Technical Infrastructure | 0.35 | 0.10 | 0.10 | 0.15 |
 
-**Primary Assessment Driver:** `Practice Quality` with combined weight of 0.60
-**Secondary Driver:** `Firm Stability` with combined weight of 0.55
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 0.95
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.75
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -744,13 +703,10 @@ This configuration contains **0 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Regulatory Standing | 0.20 | 0.20 | 0.10 |
+| Regulatory Standing | 0.30 | 0.35 | 0.20 |
 | Firm Stability | 0.15 | 0.10 | 0.15 |
-| Practice Quality | 0.15 | 0.15 | 0.10 |
-| Technical Infrastructure | 0.05 | 0.05 | 0.05 |
+| Practice Quality | 0.40 | 0.45 | 0.55 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Valuation Quality | 0.20 | 0.25 | 0.40 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -761,7 +717,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `valuation_quality`: 5 signals
+- `technical_infrastructure`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -773,17 +729,14 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Valuation Quality | 0.85 | 0.20 | 0.25 | 0.40 |
-| 2 | Regulatory Standing | 0.50 | 0.20 | 0.20 | 0.10 |
+| 1 | Practice Quality | 1.40 | 0.40 | 0.45 | 0.55 |
+| 2 | Regulatory Standing | 0.85 | 0.30 | 0.35 | 0.20 |
 | 3 | Firm Stability | 0.40 | 0.15 | 0.10 | 0.15 |
-| 4 | Practice Quality | 0.40 | 0.15 | 0.15 | 0.10 |
-| 5 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 6 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 7 | Technical Infrastructure | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 4 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Valuation Quality` with combined weight of 0.85
-**Secondary Driver:** `Regulatory Standing` with combined weight of 0.50
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.40
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -811,13 +764,10 @@ This configuration contains **5 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.05 | 0.05 | 0.05 |
-| Regulatory Standing | 0.20 | 0.20 | 0.10 |
+| Regulatory Standing | 0.30 | 0.35 | 0.20 |
 | Firm Stability | 0.10 | 0.10 | 0.10 |
-| Practice Quality | 0.10 | 0.10 | 0.10 |
-| Technical Infrastructure | 0.05 | 0.05 | 0.05 |
+| Practice Quality | 0.50 | 0.45 | 0.60 |
 | Corporate Footprint | 0.05 | 0.05 | 0.05 |
-| Litigation History | 0.10 | 0.15 | 0.10 |
-| Environmental Assessment Quality | 0.35 | 0.30 | 0.45 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -828,7 +778,7 @@ This configuration contains **5 signals** distributed as follows:
 - `INFERRED_PROXY` (2 signals): Medium confidence
 
 **Signal Count by Group:**
-- `environmental_assessment_quality`: 5 signals
+- `technical_infrastructure`: 5 signals
 
 **Selection Rationale:**
 - 60% of signals are directly observable, ensuring objective, machine-readable assessment.
@@ -840,17 +790,14 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Environmental Assessment Quality | 1.10 | 0.35 | 0.30 | 0.45 |
-| 2 | Regulatory Standing | 0.50 | 0.20 | 0.20 | 0.10 |
-| 3 | Litigation History | 0.35 | 0.10 | 0.15 | 0.10 |
-| 4 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
-| 5 | Practice Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
-| 7 | Technical Infrastructure | 0.15 | 0.05 | 0.05 | 0.05 |
-| 8 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Practice Quality | 1.55 | 0.50 | 0.45 | 0.60 |
+| 2 | Regulatory Standing | 0.85 | 0.30 | 0.35 | 0.20 |
+| 3 | Firm Stability | 0.30 | 0.10 | 0.10 | 0.10 |
+| 4 | Network Authority | 0.15 | 0.05 | 0.05 | 0.05 |
+| 5 | Corporate Footprint | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Environmental Assessment Quality` with combined weight of 1.10
-**Secondary Driver:** `Regulatory Standing` with combined weight of 0.50
+**Primary Assessment Driver:** `Practice Quality` with combined weight of 1.55
+**Secondary Driver:** `Regulatory Standing` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

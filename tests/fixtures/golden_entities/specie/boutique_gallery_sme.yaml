@@ -1,0 +1,22 @@
+entity_id: boutique_gallery_sme
+name: Luminous Gallery LLC (SME)
+coverage: specie
+config_id: specie_sme
+domain: luminousgallery.example
+registry_id: US-New_York-NY00012321
+minimum_viable_input:
+  tiv: 7500000
+  limit: 5000000
+  deductible: 50000
+  product_type: fine_art_gallery
+  specie_type: fine_art
+  domain: luminousgallery.example
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 10288.13
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

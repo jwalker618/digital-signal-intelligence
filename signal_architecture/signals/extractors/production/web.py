@@ -59,11 +59,32 @@ class GitHubOrgExtractor(ProductionExtractor):
             data = _json_get(f"https://api.github.com/orgs/{org}", headers=headers)
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        # V6/Stage-6 deepening: return richer org profile + infer
+        # activity-era band from created_at.
+        created = data.get("created_at") or ""
+        try:
+            year = int(created[:4]) if created else 0
+        except ValueError:
+            year = 0
+        era = (
+            "2020s" if year >= 2020 else
+            "2010s" if year >= 2010 else
+            "2000s" if year >= 2000 else
+            "unknown"
+        )
         return self._create_success_result({
             "public_repos": data.get("public_repos"),
+            "public_gists": data.get("public_gists"),
             "followers": data.get("followers"),
-            "created_at": data.get("created_at"),
+            "following": data.get("following"),
+            "created_at": created,
+            "updated_at": data.get("updated_at"),
+            "era_band": era,
             "verified_email_domain": data.get("email") or None,
+            "blog": data.get("blog"),
+            "location": data.get("location"),
+            "company": data.get("company"),
+            "is_verified": bool(data.get("is_verified")),
         })
 
 
@@ -82,20 +103,31 @@ class WaybackExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        # V6/Stage-6 deepening: aggregate CDX snapshots across full
+        # history to return first-seen, last-seen, total count, and a
+        # per-year histogram.
         domain = self._normalize_domain(entity_id)
         url = (
             "https://web.archive.org/cdx/search/cdx?"
-            f"url={domain}&output=json&limit=1&fl=timestamp,original&from=1996"
+            f"url={domain}&output=json&limit=500&fl=timestamp&from=1996"
         )
         try:
             data = _json_get(url)
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
         rows = data[1:] if isinstance(data, list) and len(data) > 1 else []
-        first_ts = rows[0][0] if rows else None
+        timestamps = [r[0] for r in rows if r and r[0]]
+        from collections import Counter as _Counter
+        year_histogram = _Counter(ts[:4] for ts in timestamps if len(ts) >= 4)
+        first_ts = min(timestamps) if timestamps else None
+        last_ts = max(timestamps) if timestamps else None
         return self._create_success_result({
             "first_seen": first_ts,
+            "last_seen": last_ts,
             "snapshot_available": bool(rows),
+            "snapshot_count": len(rows),
+            "years_observed": sorted(year_histogram.keys()),
+            "year_histogram_top": year_histogram.most_common(5),
         })
 
 
@@ -151,19 +183,53 @@ class CommonCrawlExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # CC-MAIN-YYYY-WW index — we hit the latest index summary only.
+        # V6/Stage-6 deepening: parses the line-delimited JSON from
+        # Common Crawl for status-code + mime-type + URL-path-depth
+        # distributions in addition to the presence flag.
         domain = self._normalize_domain(entity_id)
         index = kwargs.get("cc_index", "CC-MAIN-2025-13")
-        url = f"https://index.commoncrawl.org/{index}-index?url=*.{domain}&output=json&limit=1"
+        url = (
+            f"https://index.commoncrawl.org/{index}-index?url=*.{domain}"
+            "&output=json&limit=50"
+        )
         try:
             with httpx.Client(timeout=5.0) as client:
                 resp = client.get(url)
-            present = resp.status_code == 200 and bool(resp.text.strip())
+                text = resp.text
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        from collections import Counter as _Counter
+        import json as _json
+        records = []
+        for line in (text or "").splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                records.append(_json.loads(line))
+            except ValueError:
+                continue
+        status_counter: _Counter = _Counter(
+            str(r.get("status", "")) for r in records if r.get("status")
+        )
+        mime_counter: _Counter = _Counter(
+            str(r.get("mime", ""))[:30] for r in records if r.get("mime")
+        )
+        path_depths = []
+        for r in records:
+            u = r.get("url") or ""
+            if "://" in u:
+                path = u.split("://", 1)[1].split("/", 1)
+                depth = len(path[1].strip("/").split("/")) if len(path) > 1 and path[1] else 0
+                path_depths.append(depth)
+        avg_path_depth = (sum(path_depths) / len(path_depths)) if path_depths else 0.0
         return self._create_success_result({
-            "present_in_index": present,
+            "present_in_index": bool(records),
             "index": index,
+            "record_count": len(records),
+            "status_top": status_counter.most_common(3),
+            "mime_top": mime_counter.most_common(3),
+            "avg_path_depth": avg_path_depth,
         })
 
 
@@ -182,17 +248,29 @@ class TrancoRankExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        # V6/Stage-6 deepening: besides the latest rank, return min /
+        # max / mean rank, rank-velocity (latest minus oldest), and a
+        # best-month vs worst-month marker.
         domain = self._normalize_domain(entity_id)
         url = f"https://tranco-list.eu/api/ranks/domain/{domain}"
         try:
             data = _json_get(url)
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        ranks = data.get("ranks", [])
-        latest = ranks[0].get("rank") if ranks else None
+        ranks = data.get("ranks", []) or []
+        rank_vals = [
+            r.get("rank") for r in ranks
+            if isinstance(r.get("rank"), (int, float))
+        ]
+        latest = rank_vals[0] if rank_vals else None
+        first = rank_vals[-1] if rank_vals else None
         return self._create_success_result({
             "current_rank": latest,
             "history_points": len(ranks),
+            "best_rank": min(rank_vals) if rank_vals else None,
+            "worst_rank": max(rank_vals) if rank_vals else None,
+            "mean_rank": (sum(rank_vals) / len(rank_vals)) if rank_vals else None,
+            "rank_velocity": (latest - first) if (latest is not None and first is not None) else None,
         })
 
 
@@ -250,6 +328,10 @@ class _AbuseFeedExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        # V6/Stage-6 deepening: reports the exact-match line count +
+        # neighbourhood hits (subdomain / path-prefix matches) alongside
+        # the binary presence flag so downstream callers can rank
+        # severity.
         domain = self._normalize_domain(entity_id)
         try:
             with httpx.Client(timeout=5.0) as client:
@@ -258,10 +340,22 @@ class _AbuseFeedExtractor(ProductionExtractor):
                 text = resp.text.lower()
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
-        present = domain.lower() in text
+
+        lines = text.splitlines()
+        exact_hits = sum(1 for ln in lines if domain.lower() == ln.strip().lower())
+        subdomain_hits = sum(
+            1 for ln in lines
+            if domain.lower() in ln.lower() and ln.strip().lower() != domain.lower()
+        )
+        root = domain.split(".")[0]
+        root_hits = sum(1 for ln in lines if root.lower() in ln.lower())
         return self._create_success_result({
-            "listed_on_abuse_feed": present,
+            "listed_on_abuse_feed": exact_hits > 0 or subdomain_hits > 0,
             "feed": self.SOURCE_NAME,
+            "exact_match_count": exact_hits,
+            "subdomain_match_count": subdomain_hits,
+            "root_token_match_count": root_hits,
+            "feed_line_count": len(lines),
         })
 
 
@@ -297,6 +391,8 @@ class CloudflareRadarExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
+        # V6/Stage-6 deepening: projects the Cloudflare Radar summary
+        # into top attack-type + human-bot ratio + success fields.
         import os
         domain = self._normalize_domain(entity_id)
         url = (
@@ -308,8 +404,21 @@ class CloudflareRadarExtractor(ProductionExtractor):
             data = _json_get(url, headers=headers)
         except httpx.HTTPError as e:
             return self._create_error_result(str(e))
+        result = data.get("result", {}) or {}
+        summary_0 = (result.get("summary_0") or {})
+        # Cloudflare returns percentage strings; coerce to float.
+        def _pct(v):
+            try:
+                return float(str(v).rstrip("%"))
+            except (TypeError, ValueError):
+                return 0.0
+        attack_types = [(k, _pct(v)) for k, v in summary_0.items()]
+        attack_types.sort(key=lambda t: t[1], reverse=True)
         return self._create_success_result({
-            "raw_summary": data.get("result", {}),
+            "raw_summary": result,
+            "success": bool(data.get("success")),
+            "attack_type_top": attack_types[:5],
+            "attack_type_count": len(attack_types),
         })
 
 
@@ -324,17 +433,44 @@ class GoogleTransparencyExtractor(ProductionExtractor):
         return []
 
     def _do_extract(self, entity_id: str, **kwargs) -> ExtractorResult:
-        # HTTPS-posture scraping is JSONP-based and brittle; we ship a
-        # working probe but downstream signal is limited to boolean
-        # "responds on https" for V6 initial. Follow-up phase deepens this.
+        # V6/Stage-6 deepening: parses HSTS max-age + includeSubDomains
+        # + preload flags, detects HTTP→HTTPS upgrade, and captures a
+        # set of common security headers' presence.
         domain = self._normalize_domain(entity_id)
         try:
             with httpx.Client(timeout=5.0, follow_redirects=False) as client:
                 resp = client.get(f"https://{domain}/")
         except httpx.HTTPError:
             return self._create_success_result({"https_reachable": False})
+
+        hsts = resp.headers.get("strict-transport-security", "") or ""
+        hsts_max_age = 0
+        if "max-age=" in hsts.lower():
+            try:
+                hsts_max_age = int(
+                    hsts.lower().split("max-age=", 1)[1].split(";", 1)[0].strip()
+                )
+            except (ValueError, IndexError):
+                pass
+        hsts_include_sub = "includesubdomains" in hsts.lower()
+        hsts_preload = "preload" in hsts.lower()
+
+        sec_headers = {
+            "content-security-policy": bool(resp.headers.get("content-security-policy")),
+            "x-frame-options": bool(resp.headers.get("x-frame-options")),
+            "x-content-type-options": bool(resp.headers.get("x-content-type-options")),
+            "referrer-policy": bool(resp.headers.get("referrer-policy")),
+            "permissions-policy": bool(resp.headers.get("permissions-policy")),
+        }
+        sec_header_score = sum(1 for v in sec_headers.values() if v)
+
         return self._create_success_result({
             "https_reachable": resp.status_code < 400,
             "status_code": resp.status_code,
-            "hsts_header": resp.headers.get("strict-transport-security"),
+            "hsts_header": hsts or None,
+            "hsts_max_age": hsts_max_age,
+            "hsts_include_subdomains": hsts_include_sub,
+            "hsts_preload": hsts_preload,
+            "security_headers_present": sec_headers,
+            "security_header_score": sec_header_score,
         })

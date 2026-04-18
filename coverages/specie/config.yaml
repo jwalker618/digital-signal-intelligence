@@ -1,0 +1,4296 @@
+specie:
+  specie_vault_cash:
+    metadata:
+      name: "Specie \u2014 Vault Cash"
+      description: Bank / CIT vault cash-in-transit
+      version: 2.2.0
+      product_types:
+      - vault_cash
+      - jewelry_precious_metals
+      - fine_art_gallery
+      - in_transit
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - ch
+      - jp
+      minimum_viable_input:
+      - field: entity_name
+        description: Legal name
+      - field: specie_type
+        description: vault_cash / jewelry / fine_art
+      - field: tiv
+        description: Total insurable value in USD
+      - field: limit
+        description: Requested limit in USD
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: specie_type
+        operator: ==
+        value: vault_cash
+        required_in_input: true
+    direct_queries:
+    - id: claims_history
+      question: Has the insured had any claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: null
+        applied: null
+        note: Prior claims - review required
+    - id: prior_coverage
+      question: Does the insured have prior coverage?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No prior coverage
+    signal_registry:
+    - id: vulnerability_management
+      inference_utility_function: vulnerability_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: incident_response
+      inference_utility_function: incident_response_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_certifications
+      inference_utility_function: security_certifications_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_budget
+      inference_utility_function: security_budget_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_team
+      inference_utility_function: security_team_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: penetration_testing
+      inference_utility_function: penetration_testing_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: website_quality
+      inference_utility_function: website_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: security_disclosure
+      inference_utility_function: security_disclosure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: leadership_visibility
+      inference_utility_function: leadership_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: social_presence
+      inference_utility_function: social_presence_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: brand_reputation
+      inference_utility_function: brand_reputation_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: media_coverage
+      inference_utility_function: media_coverage_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: investor_relations
+      inference_utility_function: investor_relations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: business_continuity
+      inference_utility_function: business_continuity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low business continuity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: disaster_recovery
+      inference_utility_function: disaster_recovery_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low disaster recovery score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: operational_resilience
+      inference_utility_function: operational_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low operational resilience score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: technology_stack
+      inference_utility_function: technology_stack_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low technology stack score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: process_maturity
+      inference_utility_function: process_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low process maturity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: quality_management
+      inference_utility_function: quality_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low quality management score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: revenue_growth
+      inference_utility_function: revenue_growth_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: profitability
+      inference_utility_function: profitability_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: liquidity_ratio
+      inference_utility_function: liquidity_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: debt_ratio
+      inference_utility_function: debt_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: credit_rating
+      inference_utility_function: credit_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: stock_performance
+      inference_utility_function: stock_performance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: funding_status
+      inference_utility_function: funding_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: customer_quality
+      inference_utility_function: customer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low customer quality score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: partner_ecosystem
+      inference_utility_function: partner_ecosystem_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low partner ecosystem score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: certification_status
+      inference_utility_function: certification_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low certification status score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: vendor_relationships
+      inference_utility_function: vendor_relationships_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low vendor relationships score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: industry_associations
+      inference_utility_function: industry_associations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low industry associations score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: supply_chain_visibility
+      inference_utility_function: supply_chain_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low supply chain visibility score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    groups:
+      categories:
+      - id: industry_classification
+        label: Industry Classification
+        description: Industry classification derived from public records
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: size_band
+        label: Size Band
+        description: Company size classification
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: geography
+        label: Geography
+        description: Primary operational geography
+        impact: MODIFIER
+        default_cat: OTHER
+      three_layer_assessment:
+      - id: technical_infrastructure
+        risk:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in cyber security
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in cyber security
+        loss:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor cyber security - loss loading
+        exposure:
+          weight: 0.4333
+      - id: corporate_footprint
+        risk:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in corporate footprint
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in corporate footprint
+        loss:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor corporate footprint - loss loading
+        exposure:
+          weight: 0.2
+      - id: structured_data
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+      - id: network_authority
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 8000
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 12000
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 18000
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 30000
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: PREMIUM_BASE
+            applied: 50000
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value ($0 - $1M)
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value ($1M - $10M)
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value ($10M - $50M)
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value ($50M - $250M)
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very large exposure value ($250M+)
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operations
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operations
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operations
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: BUNDLED
+      packages:
+      - id: 1
+        label: STARTER
+        limit: 1000000
+        deductible: 25000
+      - id: 2
+        label: STANDARD
+        limit: 5000000
+        deductible: 50000
+      - id: 3
+        label: ENHANCED
+        limit: 10000000
+        deductible: 100000
+      - id: 4
+        label: PREMIUM
+        limit: 25000000
+        deductible: 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      by_product_type:
+        specie:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.025
+              cap: 8.0
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.85
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 6.0
+  specie_jewelry_precious_metals:
+    metadata:
+      name: "Specie \u2014 Jewelry & Precious Metals"
+      description: Jewellers / bullion
+      version: 2.2.0
+      product_types:
+      - vault_cash
+      - jewelry_precious_metals
+      - fine_art_gallery
+      - in_transit
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - ch
+      - jp
+      minimum_viable_input:
+      - field: entity_name
+        description: Legal name
+      - field: specie_type
+        description: vault_cash / jewelry / fine_art
+      - field: tiv
+        description: Total insurable value in USD
+      - field: limit
+        description: Requested limit in USD
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: specie_type
+        operator: ==
+        value: jewelry
+        required_in_input: true
+    direct_queries:
+    - id: claims_history
+      question: Has the insured had any claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: null
+        applied: null
+        note: Prior claims - review required
+    - id: prior_coverage
+      question: Does the insured have prior coverage?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No prior coverage
+    signal_registry:
+    - id: vulnerability_management
+      inference_utility_function: vulnerability_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: incident_response
+      inference_utility_function: incident_response_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_certifications
+      inference_utility_function: security_certifications_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_budget
+      inference_utility_function: security_budget_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_team
+      inference_utility_function: security_team_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: penetration_testing
+      inference_utility_function: penetration_testing_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: website_quality
+      inference_utility_function: website_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: security_disclosure
+      inference_utility_function: security_disclosure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: leadership_visibility
+      inference_utility_function: leadership_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: social_presence
+      inference_utility_function: social_presence_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: brand_reputation
+      inference_utility_function: brand_reputation_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: media_coverage
+      inference_utility_function: media_coverage_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: investor_relations
+      inference_utility_function: investor_relations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: business_continuity
+      inference_utility_function: business_continuity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low business continuity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: disaster_recovery
+      inference_utility_function: disaster_recovery_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low disaster recovery score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: operational_resilience
+      inference_utility_function: operational_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low operational resilience score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: technology_stack
+      inference_utility_function: technology_stack_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low technology stack score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: process_maturity
+      inference_utility_function: process_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low process maturity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: quality_management
+      inference_utility_function: quality_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low quality management score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: revenue_growth
+      inference_utility_function: revenue_growth_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: profitability
+      inference_utility_function: profitability_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: liquidity_ratio
+      inference_utility_function: liquidity_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: debt_ratio
+      inference_utility_function: debt_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: credit_rating
+      inference_utility_function: credit_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: stock_performance
+      inference_utility_function: stock_performance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: funding_status
+      inference_utility_function: funding_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: customer_quality
+      inference_utility_function: customer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low customer quality score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: partner_ecosystem
+      inference_utility_function: partner_ecosystem_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low partner ecosystem score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: certification_status
+      inference_utility_function: certification_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low certification status score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: vendor_relationships
+      inference_utility_function: vendor_relationships_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low vendor relationships score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: industry_associations
+      inference_utility_function: industry_associations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low industry associations score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: supply_chain_visibility
+      inference_utility_function: supply_chain_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low supply chain visibility score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    groups:
+      categories:
+      - id: industry_classification
+        label: Industry Classification
+        description: Industry classification derived from public records
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: size_band
+        label: Size Band
+        description: Company size classification
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: geography
+        label: Geography
+        description: Primary operational geography
+        impact: MODIFIER
+        default_cat: OTHER
+      three_layer_assessment:
+      - id: technical_infrastructure
+        risk:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in cyber security
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in cyber security
+        loss:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor cyber security - loss loading
+        exposure:
+          weight: 0.4333
+      - id: corporate_footprint
+        risk:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in corporate footprint
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in corporate footprint
+        loss:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor corporate footprint - loss loading
+        exposure:
+          weight: 0.2
+      - id: structured_data
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+      - id: network_authority
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 8000
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 12000
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 18000
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 30000
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: PREMIUM_BASE
+            applied: 50000
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value ($0 - $1M)
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value ($1M - $10M)
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value ($10M - $50M)
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value ($50M - $250M)
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very large exposure value ($250M+)
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operations
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operations
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operations
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: BUNDLED
+      packages:
+      - id: 1
+        label: STARTER
+        limit: 1000000
+        deductible: 25000
+      - id: 2
+        label: STANDARD
+        limit: 5000000
+        deductible: 50000
+      - id: 3
+        label: ENHANCED
+        limit: 10000000
+        deductible: 100000
+      - id: 4
+        label: PREMIUM
+        limit: 25000000
+        deductible: 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      by_product_type:
+        specie:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.025
+              cap: 8.0
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.85
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 6.0
+  specie_fine_art_gallery:
+    metadata:
+      name: "Specie \u2014 Fine Art Gallery"
+      description: Fine-art gallery / museum
+      version: 2.2.0
+      product_types:
+      - vault_cash
+      - jewelry_precious_metals
+      - fine_art_gallery
+      - in_transit
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - ch
+      - jp
+      minimum_viable_input:
+      - field: entity_name
+        description: Legal name
+      - field: specie_type
+        description: vault_cash / jewelry / fine_art
+      - field: tiv
+        description: Total insurable value in USD
+      - field: limit
+        description: Requested limit in USD
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 1
+      routing_constraints:
+      - field: specie_type
+        operator: ==
+        value: fine_art
+        required_in_input: true
+    direct_queries:
+    - id: claims_history
+      question: Has the insured had any claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: null
+        applied: null
+        note: Prior claims - review required
+    - id: prior_coverage
+      question: Does the insured have prior coverage?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No prior coverage
+    signal_registry:
+    - id: vulnerability_management
+      inference_utility_function: vulnerability_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: incident_response
+      inference_utility_function: incident_response_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_certifications
+      inference_utility_function: security_certifications_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_budget
+      inference_utility_function: security_budget_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_team
+      inference_utility_function: security_team_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: penetration_testing
+      inference_utility_function: penetration_testing_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: website_quality
+      inference_utility_function: website_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: security_disclosure
+      inference_utility_function: security_disclosure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: leadership_visibility
+      inference_utility_function: leadership_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: social_presence
+      inference_utility_function: social_presence_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: brand_reputation
+      inference_utility_function: brand_reputation_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: media_coverage
+      inference_utility_function: media_coverage_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: investor_relations
+      inference_utility_function: investor_relations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: business_continuity
+      inference_utility_function: business_continuity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low business continuity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: disaster_recovery
+      inference_utility_function: disaster_recovery_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low disaster recovery score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: operational_resilience
+      inference_utility_function: operational_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low operational resilience score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: technology_stack
+      inference_utility_function: technology_stack_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low technology stack score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: process_maturity
+      inference_utility_function: process_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low process maturity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: quality_management
+      inference_utility_function: quality_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low quality management score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: revenue_growth
+      inference_utility_function: revenue_growth_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: profitability
+      inference_utility_function: profitability_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: liquidity_ratio
+      inference_utility_function: liquidity_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: debt_ratio
+      inference_utility_function: debt_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: credit_rating
+      inference_utility_function: credit_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: stock_performance
+      inference_utility_function: stock_performance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: funding_status
+      inference_utility_function: funding_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: customer_quality
+      inference_utility_function: customer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low customer quality score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: partner_ecosystem
+      inference_utility_function: partner_ecosystem_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low partner ecosystem score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: certification_status
+      inference_utility_function: certification_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low certification status score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: vendor_relationships
+      inference_utility_function: vendor_relationships_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low vendor relationships score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: industry_associations
+      inference_utility_function: industry_associations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low industry associations score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: supply_chain_visibility
+      inference_utility_function: supply_chain_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low supply chain visibility score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: specie_primary_derived_01
+      inference_utility_function: specie_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: specie_primary_derived_02
+      inference_utility_function: specie_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: specie_primary_derived_03
+      inference_utility_function: specie_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: specie_primary_derived_04
+      inference_utility_function: specie_derived_04_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: specie_primary_derived_05
+      inference_utility_function: specie_derived_05_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: specie_primary_derived_06
+      inference_utility_function: specie_derived_06_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: specie_primary_derived_07
+      inference_utility_function: specie_derived_07_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    groups:
+      categories:
+      - id: industry_classification
+        label: Industry Classification
+        description: Industry classification derived from public records
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: size_band
+        label: Size Band
+        description: Company size classification
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: geography
+        label: Geography
+        description: Primary operational geography
+        impact: MODIFIER
+        default_cat: OTHER
+      three_layer_assessment:
+      - id: technical_infrastructure
+        risk:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in cyber security
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in cyber security
+        loss:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor cyber security - loss loading
+        exposure:
+          weight: 0.4333
+      - id: corporate_footprint
+        risk:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in corporate footprint
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in corporate footprint
+        loss:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor corporate footprint - loss loading
+        exposure:
+          weight: 0.2
+      - id: structured_data
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+      - id: network_authority
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 8000
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 12000
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 18000
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 30000
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: PREMIUM_BASE
+            applied: 50000
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value ($0 - $1M)
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value ($1M - $10M)
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value ($10M - $50M)
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value ($50M - $250M)
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very large exposure value ($250M+)
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operations
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operations
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operations
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: BUNDLED
+      packages:
+      - id: 1
+        label: STARTER
+        limit: 1000000
+        deductible: 25000
+      - id: 2
+        label: STANDARD
+        limit: 5000000
+        deductible: 50000
+      - id: 3
+        label: ENHANCED
+        limit: 10000000
+        deductible: 100000
+      - id: 4
+        label: PREMIUM
+        limit: 25000000
+        deductible: 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      by_product_type:
+        specie:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.025
+              cap: 8.0
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.85
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 6.0
+  specie_sme:
+    metadata:
+      name: "Specie \u2014 SME"
+      description: TIV < $10M
+      version: 2.2.0
+      product_types:
+      - vault_cash
+      - jewelry_precious_metals
+      - fine_art_gallery
+      - in_transit
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - ch
+      - jp
+      minimum_viable_input:
+      - field: entity_name
+        description: Legal name
+      - field: specie_type
+        description: vault_cash / jewelry / fine_art
+      - field: tiv
+        description: Total insurable value in USD
+      - field: limit
+        description: Requested limit in USD
+      min_premium: 5000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: tiv
+        operator: <
+        value: 10000000
+        required_in_input: true
+    direct_queries:
+    - id: claims_history
+      question: Has the insured had any claims in the past 5 years?
+      query_condition:
+      - return: true
+        action: REFER
+        override: null
+        applied: null
+        note: Prior claims - review required
+    - id: prior_coverage
+      question: Does the insured have prior coverage?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No prior coverage
+    signal_registry:
+    - id: vulnerability_management
+      inference_utility_function: vulnerability_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: incident_response
+      inference_utility_function: incident_response_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_certifications
+      inference_utility_function: security_certifications_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_budget
+      inference_utility_function: security_budget_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: security_team
+      inference_utility_function: security_team_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: penetration_testing
+      inference_utility_function: penetration_testing_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: website_quality
+      inference_utility_function: website_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: security_disclosure
+      inference_utility_function: security_disclosure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: leadership_visibility
+      inference_utility_function: leadership_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: social_presence
+      inference_utility_function: social_presence_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: brand_reputation
+      inference_utility_function: brand_reputation_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: media_coverage
+      inference_utility_function: media_coverage_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: investor_relations
+      inference_utility_function: investor_relations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0714
+    - id: business_continuity
+      inference_utility_function: business_continuity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low business continuity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: disaster_recovery
+      inference_utility_function: disaster_recovery_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low disaster recovery score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: operational_resilience
+      inference_utility_function: operational_resilience_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low operational resilience score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: technology_stack
+      inference_utility_function: technology_stack_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low technology stack score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: process_maturity
+      inference_utility_function: process_maturity_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low process maturity score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: quality_management
+      inference_utility_function: quality_management_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: technical_infrastructure
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low quality management score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+    - id: revenue_growth
+      inference_utility_function: revenue_growth_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: profitability
+      inference_utility_function: profitability_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: liquidity_ratio
+      inference_utility_function: liquidity_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: debt_ratio
+      inference_utility_function: debt_ratio_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: credit_rating
+      inference_utility_function: credit_rating_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: stock_performance
+      inference_utility_function: stock_performance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: funding_status
+      inference_utility_function: funding_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.1429
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1
+          severity:
+            correlation_direction: negative
+            weight: 0.0429
+    - id: customer_quality
+      inference_utility_function: customer_quality_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low customer quality score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: partner_ecosystem
+      inference_utility_function: partner_ecosystem_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low partner ecosystem score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: certification_status
+      inference_utility_function: certification_status_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low certification status score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: vendor_relationships
+      inference_utility_function: vendor_relationships_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low vendor relationships score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: industry_associations
+      inference_utility_function: industry_associations_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low industry associations score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    - id: supply_chain_visibility
+      inference_utility_function: supply_chain_visibility_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: network_authority
+        risk:
+          correlation_direction: positive
+          weight: 0.1667
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: FLAG
+            note: Low supply chain visibility score
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.1167
+          severity:
+            correlation_direction: negative
+            weight: 0.05
+        exposure:
+          size:
+            correlation_direction: positive
+            weight: 0.0833
+    groups:
+      categories:
+      - id: industry_classification
+        label: Industry Classification
+        description: Industry classification derived from public records
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: size_band
+        label: Size Band
+        description: Company size classification
+        impact: MODIFIER
+        default_cat: OTHER
+      - id: geography
+        label: Geography
+        description: Primary operational geography
+        impact: MODIFIER
+        default_cat: OTHER
+      three_layer_assessment:
+      - id: technical_infrastructure
+        risk:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in cyber security
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in cyber security
+        loss:
+          weight: 0.4333
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor cyber security - loss loading
+        exposure:
+          weight: 0.4333
+      - id: corporate_footprint
+        risk:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: REFER
+            override: 5
+            note: Critical deficiencies in corporate footprint
+          - threshold: 45
+            comparison: <=
+            action: REFER
+            override: 4
+            note: Significant concerns in corporate footprint
+        loss:
+          weight: 0.2
+          score_conditions:
+          - threshold: 30
+            comparison: <=
+            action: MODIFIER
+            applied: 1.2
+            note: Poor corporate footprint - loss loading
+        exposure:
+          weight: 0.2
+      - id: structured_data
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+      - id: network_authority
+        risk:
+          weight: 0.1833
+        loss:
+          weight: 0.1833
+        exposure:
+          weight: 0.1833
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk - automatic approval, preferred pricing
+        interpretation:
+          bands:
+            min: 800
+            max: 1000
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 8000
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk - automatic approval, standard pricing
+        interpretation:
+          bands:
+            min: 650
+            max: 799
+          action: APPROVE
+          application:
+            method: PREMIUM_BASE
+            applied: 12000
+      - id: 3
+        label: STANDARD
+        description: Average risk - may require referral
+        interpretation:
+          bands:
+            min: 500
+            max: 649
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 18000
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk - requires senior review
+        interpretation:
+          bands:
+            min: 350
+            max: 499
+          action: REFER
+          application:
+            method: PREMIUM_BASE
+            applied: 30000
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk - decline
+        interpretation:
+          bands:
+            min: 0
+            max: 349
+          action: DECLINE
+          application:
+            method: PREMIUM_BASE
+            applied: 50000
+    loss_tier_bands:
+      bands:
+      - id: 1
+        label: VERY_LOW
+        description: Very low risk of loss
+        interpretation:
+          bands:
+            min: 80
+            max: 100
+          application:
+            frequency_modifier: 0.7
+            severity_modifier: 0.8
+      - id: 2
+        label: LOW
+        description: Low risk of loss
+        interpretation:
+          bands:
+            min: 60
+            max: 79
+          application:
+            frequency_modifier: 0.85
+            severity_modifier: 0.9
+      - id: 3
+        label: MODERATE
+        description: Moderate risk of loss
+        interpretation:
+          bands:
+            min: 40
+            max: 59
+          application:
+            frequency_modifier: 1.0
+            severity_modifier: 1.0
+      - id: 4
+        label: ELEVATED
+        description: Elevated risk of loss
+        interpretation:
+          bands:
+            min: 20
+            max: 39
+          application:
+            frequency_modifier: 1.15
+            severity_modifier: 1.15
+      - id: 5
+        label: HIGH
+        description: High risk of loss
+        interpretation:
+          bands:
+            min: 0
+            max: 19
+          application:
+            frequency_modifier: 1.35
+            severity_modifier: 1.4
+      constraints:
+        floor: 0.55
+        cap: 1.6
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - id: 1
+          label: MICRO
+          description: Micro exposure value ($0 - $1M)
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.5
+              implied_thresholds:
+                min: 0
+                max: 1000000
+        - id: 2
+          label: SMALL
+          description: Small exposure value ($1M - $10M)
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.75
+              implied_thresholds:
+                min: 1000000
+                max: 10000000
+        - id: 3
+          label: MEDIUM
+          description: Medium exposure value ($10M - $50M)
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.0
+              implied_thresholds:
+                min: 10000000
+                max: 50000000
+        - id: 4
+          label: LARGE
+          description: Large exposure value ($50M - $250M)
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.5
+              implied_thresholds:
+                min: 50000000
+                max: 250000000
+        - id: 5
+          label: VERY_LARGE
+          description: Very large exposure value ($250M+)
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 2.5
+              implied_thresholds:
+                min: 250000000
+                max: 1000000000
+      complexity:
+        weight: 0.4
+        bands:
+        - id: 1
+          label: SIMPLE
+          description: Simple operational complexity
+          interpretation:
+            bands:
+              min: 0
+              max: 20
+            application:
+              method: MODIFIER
+              applied: 0.85
+        - id: 2
+          label: MODERATE
+          description: Moderate operational complexity
+          interpretation:
+            bands:
+              min: 21
+              max: 40
+            application:
+              method: MODIFIER
+              applied: 0.95
+        - id: 3
+          label: COMPLEX
+          description: Complex operations
+          interpretation:
+            bands:
+              min: 41
+              max: 60
+            application:
+              method: MODIFIER
+              applied: 1.1
+        - id: 4
+          label: HIGHLY_COMPLEX
+          description: Highly complex operations
+          interpretation:
+            bands:
+              min: 61
+              max: 80
+            application:
+              method: MODIFIER
+              applied: 1.3
+        - id: 5
+          label: EXTREMELY_COMPLEX
+          description: Extremely complex operations
+          interpretation:
+            bands:
+              min: 81
+              max: 100
+            application:
+              method: MODIFIER
+              applied: 1.6
+    limit_configuration:
+      type: BUNDLED
+      packages:
+      - id: 1
+        label: STARTER
+        limit: 1000000
+        deductible: 25000
+      - id: 2
+        label: STANDARD
+        limit: 5000000
+        deductible: 50000
+      - id: 3
+        label: ENHANCED
+        limit: 10000000
+        deductible: 100000
+      - id: 4
+        label: PREMIUM
+        limit: 25000000
+        deductible: 250000
+    pricing:
+      base_limit_reference: 1000000
+      base_deductible_reference: 50000
+      by_product_type:
+        specie:
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              max_ilf: 4.5
+              k: 0.025
+              cap: 8.0
+          deductible_factors:
+          - deductible: 25000
+            factor: 1.15
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.85
+          - deductible: 250000
+            factor: 0.7
+          - deductible: 500000
+            factor: 0.55
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.5
+      max_premium_to_limit_ratio: 0.15
+      max_premium_to_revenue_ratio: 0.01
+      max_ilf_factor: 6.0

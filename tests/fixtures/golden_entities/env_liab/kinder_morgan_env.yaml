@@ -1,0 +1,23 @@
+entity_id: kinder_morgan_env
+name: Kinder Morgan (Midstream Environmental)
+coverage: env_liab
+config_id: env_energy_midstream_xwalk
+domain: kindermorgan.com
+registry_id: US-Delaware-0001506307
+minimum_viable_input:
+  revenue: 15334000000
+  limit: 200000000
+  deductible: 5000000
+  product_type: environmental_impairment
+  facility_type: energy_midstream
+  naics_2digit: '48'
+  domain: kindermorgan.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 8346.24
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

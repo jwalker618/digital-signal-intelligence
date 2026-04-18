@@ -1,0 +1,24 @@
+entity_id: teladoc_health
+name: Teladoc Health, Inc.
+coverage: medprof
+config_id: medprof_telehealth
+domain: teladochealth.com
+registry_id: US-Delaware-0001477449
+minimum_viable_input:
+  revenue: 2602000000
+  limit: 15000000
+  deductible: 250000
+  product_type: telehealth_mpl
+  employee_count: 5500
+  facility_type: telehealth
+  annual_patient_encounters: 20000000
+  domain: teladochealth.com
+expected:
+  composite_score: 99.99
+  tier: 5
+  decision: decline
+  recommended_premium: 5796.0
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

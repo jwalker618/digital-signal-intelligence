@@ -1,0 +1,23 @@
+entity_id: corteva
+name: Corteva, Inc.
+coverage: crop
+config_id: crop_yield_protection
+domain: corteva.com
+registry_id: US-Delaware-0001755672
+minimum_viable_input:
+  acreage: 350000
+  limit: 75000000
+  deductible: 1000000
+  product_type: yield_protection
+  crop_type: corn
+  state_country: US-IA
+  domain: corteva.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

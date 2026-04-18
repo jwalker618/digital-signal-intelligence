@@ -1,0 +1,23 @@
+entity_id: small_home_builder
+name: Maple Leaf Home Builders LLC (SME)
+coverage: construction
+config_id: con_sme
+domain: mapleleafhomes.example
+registry_id: US-Colorado-LLC00098765
+minimum_viable_input:
+  revenue: 4500000
+  limit: 2000000
+  deductible: 50000
+  product_type: builders_risk
+  contractor_type: general_contractor
+  project_value: 1500000
+  domain: mapleleafhomes.example
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 16161.72
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

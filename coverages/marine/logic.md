@@ -1,5 +1,5 @@
 # DSI Logic Document: `MARINE`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -23,11 +23,8 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.15 | 0.10 | 0.05 |
-| Operational Telemetry | 0.20 | 0.15 | 0.15 |
-| Safety Compliance | 0.25 | 0.35 | 0.10 |
-| Fleet Profile | 0.10 | 0.15 | 0.35 |
-| Sanctions Compliance | 0.15 | 0.10 | 0.10 |
-| Environmental Compliance | 0.05 | 0.05 | 0.10 |
+| Operational Telemetry | 0.30 | 0.30 | 0.50 |
+| Safety Compliance | 0.45 | 0.50 | 0.30 |
 | Corporate Footprint | 0.05 | 0.05 | 0.10 |
 | Structured Data | 0.05 | 0.05 | 0.05 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
@@ -40,13 +37,10 @@ This configuration contains **50 signals** distributed as follows:
 - `INFERRED_PROXY` (18 signals): Medium confidence
 
 **Signal Count by Group:**
+- `public_record`: 15 signals
+- `technical_infrastructure`: 11 signals
 - `network_authority`: 10 signals
-- `operational_telemetry`: 6 signals
-- `safety_compliance`: 6 signals
 - `corporate_footprint`: 6 signals
-- `fleet_profile`: 5 signals
-- `sanctions_compliance`: 5 signals
-- `environmental`: 4 signals
 - `structured_data`: 3 signals
 - `operator_type`: 1 signals
 - `vessel_category`: 1 signals
@@ -64,17 +58,14 @@ This configuration contains **50 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Compliance | 0.70 | 0.25 | 0.35 | 0.10 |
-| 2 | Fleet Profile | 0.60 | 0.10 | 0.15 | 0.35 |
-| 3 | Operational Telemetry | 0.50 | 0.20 | 0.15 | 0.15 |
-| 4 | Sanctions Compliance | 0.35 | 0.15 | 0.10 | 0.10 |
-| 5 | Network Authority | 0.30 | 0.15 | 0.10 | 0.05 |
-| 6 | Environmental Compliance | 0.20 | 0.05 | 0.05 | 0.10 |
-| 7 | Corporate Footprint | 0.20 | 0.05 | 0.05 | 0.10 |
-| 8 | Structured Data | 0.15 | 0.05 | 0.05 | 0.05 |
+| 1 | Safety Compliance | 1.25 | 0.45 | 0.50 | 0.30 |
+| 2 | Operational Telemetry | 1.10 | 0.30 | 0.30 | 0.50 |
+| 3 | Network Authority | 0.30 | 0.15 | 0.10 | 0.05 |
+| 4 | Corporate Footprint | 0.20 | 0.05 | 0.05 | 0.10 |
+| 5 | Structured Data | 0.15 | 0.05 | 0.05 | 0.05 |
 
-**Primary Assessment Driver:** `Safety Compliance` with combined weight of 0.70
-**Secondary Driver:** `Fleet Profile` with combined weight of 0.60
+**Primary Assessment Driver:** `Safety Compliance` with combined weight of 1.25
+**Secondary Driver:** `Operational Telemetry` with combined weight of 1.10
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -102,9 +93,8 @@ This configuration contains **50 signals** distributed as follows:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Safety Compliance | 0.30 | 0.35 | 0.20 |
-| Operational Telemetry | 0.25 | 0.25 | 0.25 |
+| Operational Telemetry | 0.45 | 0.40 | 0.50 |
 | Network Authority | 0.25 | 0.25 | 0.30 |
-| Fleet Profile | 0.20 | 0.15 | 0.25 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
@@ -115,10 +105,9 @@ This configuration contains **15 signals** distributed as follows:
 - `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_compliance`: 4 signals
-- `operational_telemetry`: 3 signals
+- `technical_infrastructure`: 6 signals
+- `public_record`: 4 signals
 - `network_authority`: 3 signals
-- `fleet_profile`: 3 signals
 - `vessel_category`: 1 signals
 - `fleet_age_band`: 1 signals
 
@@ -132,13 +121,12 @@ This configuration contains **15 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Compliance | 0.85 | 0.30 | 0.35 | 0.20 |
-| 2 | Network Authority | 0.80 | 0.25 | 0.25 | 0.30 |
-| 3 | Operational Telemetry | 0.75 | 0.25 | 0.25 | 0.25 |
-| 4 | Fleet Profile | 0.60 | 0.20 | 0.15 | 0.25 |
+| 1 | Operational Telemetry | 1.35 | 0.45 | 0.40 | 0.50 |
+| 2 | Safety Compliance | 0.85 | 0.30 | 0.35 | 0.20 |
+| 3 | Network Authority | 0.80 | 0.25 | 0.25 | 0.30 |
 
-**Primary Assessment Driver:** `Safety Compliance` with combined weight of 0.85
-**Secondary Driver:** `Network Authority` with combined weight of 0.80
+**Primary Assessment Driver:** `Operational Telemetry` with combined weight of 1.35
+**Secondary Driver:** `Safety Compliance` with combined weight of 0.85
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -166,28 +154,26 @@ This configuration contains **15 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Cargo Quality | 0.35 | 0.35 | 0.30 |
-| Port State & Regulatory Compliance | 0.15 | 0.15 | 0.10 |
-| Trading Pattern | 0.15 | 0.15 | 0.20 |
-| Fleet Age Band | 0.10 | 0.10 | 0.10 |
-| Flag State Quality | 0.10 | 0.10 | 0.10 |
+| Cargo Quality | 0.45 | 0.45 | 0.40 |
+| Port State & Regulatory Compliance | 0.25 | 0.25 | 0.20 |
+| Trading Pattern | 0.20 | 0.20 | 0.30 |
 | Corporate Footprint | 0.10 | 0.10 | 0.10 |
-| Firm Stability | 0.05 | 0.05 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **11 signals** distributed as follows:
+This configuration contains **15 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
-- `INFERRED_PROXY` (5 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (8 signals): Highest confidence
+- `INFERRED_PROXY` (7 signals): Medium confidence
 
 **Signal Count by Group:**
-- `cargo_quality`: 6 signals
-- `port_state_compliance`: 5 signals
+- `public_record`: 7 signals
+- `technical_infrastructure`: 6 signals
+- `structured_data`: 2 signals
 
 **Selection Rationale:**
-- 55% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 53% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -196,16 +182,13 @@ This configuration contains **11 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Cargo Quality | 1.00 | 0.35 | 0.35 | 0.30 |
-| 2 | Trading Pattern | 0.50 | 0.15 | 0.15 | 0.20 |
-| 3 | Port State & Regulatory Compliance | 0.40 | 0.15 | 0.15 | 0.10 |
-| 4 | Fleet Age Band | 0.30 | 0.10 | 0.10 | 0.10 |
-| 5 | Flag State Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Corporate Footprint | 0.30 | 0.10 | 0.10 | 0.10 |
-| 7 | Firm Stability | 0.20 | 0.05 | 0.05 | 0.10 |
+| 1 | Cargo Quality | 1.30 | 0.45 | 0.45 | 0.40 |
+| 2 | Port State & Regulatory Compliance | 0.70 | 0.25 | 0.25 | 0.20 |
+| 3 | Trading Pattern | 0.70 | 0.20 | 0.20 | 0.30 |
+| 4 | Corporate Footprint | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Cargo Quality` with combined weight of 1.00
-**Secondary Driver:** `Trading Pattern` with combined weight of 0.50
+**Primary Assessment Driver:** `Cargo Quality` with combined weight of 1.30
+**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.70
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -233,28 +216,26 @@ This configuration contains **11 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Tanker Risk | 0.30 | 0.30 | 0.25 |
-| Port State & Regulatory Compliance | 0.20 | 0.15 | 0.15 |
-| Fleet Age Band | 0.15 | 0.15 | 0.15 |
-| Flag State Quality | 0.10 | 0.10 | 0.10 |
-| Trading Pattern | 0.10 | 0.15 | 0.15 |
+| Tanker Risk | 0.45 | 0.45 | 0.40 |
+| Port State & Regulatory Compliance | 0.30 | 0.25 | 0.25 |
+| Trading Pattern | 0.15 | 0.20 | 0.25 |
 | Corporate Footprint | 0.10 | 0.10 | 0.10 |
-| Firm Stability | 0.05 | 0.05 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **10 signals** distributed as follows:
+This configuration contains **14 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
-- `INFERRED_PROXY` (4 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (7 signals): Highest confidence
+- `INFERRED_PROXY` (7 signals): Medium confidence
 
 **Signal Count by Group:**
-- `tanker_risk`: 5 signals
-- `port_state_compliance`: 5 signals
+- `public_record`: 8 signals
+- `technical_infrastructure`: 5 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -263,16 +244,13 @@ This configuration contains **10 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Tanker Risk | 0.85 | 0.30 | 0.30 | 0.25 |
-| 2 | Port State & Regulatory Compliance | 0.50 | 0.20 | 0.15 | 0.15 |
-| 3 | Fleet Age Band | 0.45 | 0.15 | 0.15 | 0.15 |
-| 4 | Trading Pattern | 0.40 | 0.10 | 0.15 | 0.15 |
-| 5 | Flag State Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Corporate Footprint | 0.30 | 0.10 | 0.10 | 0.10 |
-| 7 | Firm Stability | 0.20 | 0.05 | 0.05 | 0.10 |
+| 1 | Tanker Risk | 1.30 | 0.45 | 0.45 | 0.40 |
+| 2 | Port State & Regulatory Compliance | 0.80 | 0.30 | 0.25 | 0.25 |
+| 3 | Trading Pattern | 0.60 | 0.15 | 0.20 | 0.25 |
+| 4 | Corporate Footprint | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Tanker Risk` with combined weight of 0.85
-**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.50
+**Primary Assessment Driver:** `Tanker Risk` with combined weight of 1.30
+**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.80
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -300,28 +278,26 @@ This configuration contains **10 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Offshore Marine | 0.35 | 0.30 | 0.30 |
-| Port State & Regulatory Compliance | 0.15 | 0.15 | 0.10 |
-| Fleet Age Band | 0.15 | 0.15 | 0.15 |
-| Flag State Quality | 0.10 | 0.10 | 0.10 |
-| Trading Pattern | 0.05 | 0.10 | 0.10 |
+| Offshore Marine | 0.50 | 0.45 | 0.45 |
+| Port State & Regulatory Compliance | 0.25 | 0.25 | 0.20 |
+| Trading Pattern | 0.10 | 0.15 | 0.20 |
 | Corporate Footprint | 0.15 | 0.15 | 0.15 |
-| Firm Stability | 0.05 | 0.05 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **10 signals** distributed as follows:
+This configuration contains **13 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (8 signals): Highest confidence
-- `INFERRED_PROXY` (2 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (9 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
 
 **Signal Count by Group:**
-- `offshore_marine`: 5 signals
-- `port_state_compliance`: 5 signals
+- `public_record`: 6 signals
+- `technical_infrastructure`: 5 signals
+- `structured_data`: 2 signals
 
 **Selection Rationale:**
-- 80% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 69% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -330,16 +306,13 @@ This configuration contains **10 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Offshore Marine | 0.95 | 0.35 | 0.30 | 0.30 |
-| 2 | Fleet Age Band | 0.45 | 0.15 | 0.15 | 0.15 |
-| 3 | Corporate Footprint | 0.45 | 0.15 | 0.15 | 0.15 |
-| 4 | Port State & Regulatory Compliance | 0.40 | 0.15 | 0.15 | 0.10 |
-| 5 | Flag State Quality | 0.30 | 0.10 | 0.10 | 0.10 |
-| 6 | Trading Pattern | 0.25 | 0.05 | 0.10 | 0.10 |
-| 7 | Firm Stability | 0.20 | 0.05 | 0.05 | 0.10 |
+| 1 | Offshore Marine | 1.40 | 0.50 | 0.45 | 0.45 |
+| 2 | Port State & Regulatory Compliance | 0.70 | 0.25 | 0.25 | 0.20 |
+| 3 | Trading Pattern | 0.45 | 0.10 | 0.15 | 0.20 |
+| 4 | Corporate Footprint | 0.45 | 0.15 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `Offshore Marine` with combined weight of 0.95
-**Secondary Driver:** `Fleet Age Band` with combined weight of 0.45
+**Primary Assessment Driver:** `Offshore Marine` with combined weight of 1.40
+**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.70
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -366,26 +339,25 @@ This configuration contains **10 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Trading Pattern | 0.35 | 0.30 | 0.30 |
-| Port State & Regulatory Compliance | 0.15 | 0.15 | 0.10 |
-| Flag State Quality | 0.20 | 0.15 | 0.15 |
+| Trading Pattern | 0.45 | 0.45 | 0.45 |
+| Port State & Regulatory Compliance | 0.35 | 0.30 | 0.25 |
 | Fleet Age Band | 0.10 | 0.10 | 0.15 |
 | Corporate Footprint | 0.10 | 0.15 | 0.15 |
-| Firm Stability | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (4 signals): Highest confidence
-- `INFERRED_PROXY` (1 signals): Medium confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
 
 **Signal Count by Group:**
-- `port_state_compliance`: 5 signals
+- `public_record`: 7 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 80% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -394,15 +366,13 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Trading Pattern | 0.95 | 0.35 | 0.30 | 0.30 |
-| 2 | Flag State Quality | 0.50 | 0.20 | 0.15 | 0.15 |
-| 3 | Port State & Regulatory Compliance | 0.40 | 0.15 | 0.15 | 0.10 |
-| 4 | Corporate Footprint | 0.40 | 0.10 | 0.15 | 0.15 |
-| 5 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
-| 6 | Fleet Age Band | 0.35 | 0.10 | 0.10 | 0.15 |
+| 1 | Trading Pattern | 1.35 | 0.45 | 0.45 | 0.45 |
+| 2 | Port State & Regulatory Compliance | 0.90 | 0.35 | 0.30 | 0.25 |
+| 3 | Corporate Footprint | 0.40 | 0.10 | 0.15 | 0.15 |
+| 4 | Fleet Age Band | 0.35 | 0.10 | 0.10 | 0.15 |
 
-**Primary Assessment Driver:** `Trading Pattern` with combined weight of 0.95
-**Secondary Driver:** `Flag State Quality` with combined weight of 0.50
+**Primary Assessment Driver:** `Trading Pattern` with combined weight of 1.35
+**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.90
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -429,26 +399,25 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Port State & Regulatory Compliance | 0.25 | 0.20 | 0.15 |
+| Port State & Regulatory Compliance | 0.40 | 0.35 | 0.25 |
 | Fleet Age Band | 0.20 | 0.20 | 0.20 |
-| Flag State Quality | 0.15 | 0.15 | 0.10 |
-| Trading Pattern | 0.10 | 0.15 | 0.15 |
+| Trading Pattern | 0.20 | 0.25 | 0.30 |
 | Corporate Footprint | 0.20 | 0.20 | 0.25 |
-| Firm Stability | 0.10 | 0.10 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **9 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (4 signals): Highest confidence
-- `INFERRED_PROXY` (1 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (6 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
 
 **Signal Count by Group:**
-- `port_state_compliance`: 5 signals
+- `public_record`: 7 signals
+- `structured_data`: 2 signals
 
 **Selection Rationale:**
-- 80% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 67% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -457,15 +426,13 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
-| 2 | Port State & Regulatory Compliance | 0.60 | 0.25 | 0.20 | 0.15 |
-| 3 | Fleet Age Band | 0.60 | 0.20 | 0.20 | 0.20 |
-| 4 | Flag State Quality | 0.40 | 0.15 | 0.15 | 0.10 |
-| 5 | Trading Pattern | 0.40 | 0.10 | 0.15 | 0.15 |
-| 6 | Firm Stability | 0.35 | 0.10 | 0.10 | 0.15 |
+| 1 | Port State & Regulatory Compliance | 1.00 | 0.40 | 0.35 | 0.25 |
+| 2 | Trading Pattern | 0.75 | 0.20 | 0.25 | 0.30 |
+| 3 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
+| 4 | Fleet Age Band | 0.60 | 0.20 | 0.20 | 0.20 |
 
-**Primary Assessment Driver:** `Corporate Footprint` with combined weight of 0.65
-**Secondary Driver:** `Port State & Regulatory Compliance` with combined weight of 0.60
+**Primary Assessment Driver:** `Port State & Regulatory Compliance` with combined weight of 1.00
+**Secondary Driver:** `Trading Pattern` with combined weight of 0.75
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

@@ -1,0 +1,24 @@
+entity_id: swiss_re
+name: Swiss Re
+coverage: reinsurance
+config_id: reins_treaty_excess_of_loss
+domain: swissre.com
+registry_id: CH-Zurich-CHE-103.728.497
+minimum_viable_input:
+  revenue: 50003000000
+  limit: 250000000
+  deductible: 5000000
+  product_type: treaty_xol
+  cedent_name: Swiss Re
+  treaty_type: xol
+  subject_business: property_cat
+  domain: swissre.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 6955.2
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

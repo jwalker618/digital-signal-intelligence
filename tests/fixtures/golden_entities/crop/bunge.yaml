@@ -1,0 +1,23 @@
+entity_id: bunge
+name: Bunge Global SA
+coverage: crop
+config_id: crop_multi_peril
+domain: bunge.com
+registry_id: CH-Geneva-CHE-228.400.003
+minimum_viable_input:
+  acreage: 400000
+  limit: 100000000
+  deductible: 1000000
+  product_type: multi_peril_crop_insurance
+  crop_type: soybean
+  state_country: BR-MT
+  domain: bunge.com
+expected:
+  composite_score: 100.0
+  tier: 5
+  decision: decline
+  recommended_premium: 13468.1
+tolerance:
+  score_points: 50.0
+  premium_bps: 1000.0
+  tier_spread: 0

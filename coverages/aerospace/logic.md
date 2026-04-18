@@ -1,5 +1,5 @@
 # DSI Logic Document: `AEROSPACE`
-*Generated: 2026-03-31*
+*Generated: 2026-04-17*
 
 ## DSI Foundational Principles Adherence
 This configuration is validated against the DSI Whitepaper & Vision Paper:
@@ -23,12 +23,9 @@ This configuration is validated against the DSI Whitepaper & Vision Paper:
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
 | Network Authority | 0.10 | 0.05 | 0.05 |
-| Safety Record | 0.30 | 0.40 | 0.10 |
-| Regulatory Compliance | 0.20 | 0.20 | 0.10 |
-| Operational Quality | 0.15 | 0.15 | 0.15 |
-| Fleet Quality | 0.10 | 0.10 | 0.35 |
+| Safety Record | 0.50 | 0.60 | 0.20 |
+| Operational Quality | 0.30 | 0.30 | 0.60 |
 | Financial Stability | 0.05 | 0.03 | 0.10 |
-| Route Risk | 0.05 | 0.05 | 0.10 |
 | Corporate Governance | 0.05 | 0.02 | 0.05 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -41,14 +38,11 @@ This configuration contains **48 signals** distributed as follows:
 - `COHORT_INFERENCE` (1 signals): Lowest confidence
 
 **Signal Count by Group:**
-- `regulatory_compliance`: 7 signals
-- `operational_quality`: 6 signals
-- `fleet_quality`: 6 signals
+- `technical_infrastructure`: 17 signals
+- `public_record`: 12 signals
 - `network_authority`: 5 signals
-- `safety_record`: 5 signals
-- `route_risk`: 5 signals
-- `corporate_governance`: 5 signals
-- `financial_stability`: 4 signals
+- `corporate_footprint`: 5 signals
+- `behavioural`: 4 signals
 - `operator_type`: 1 signals
 - `fleet_category`: 1 signals
 - `fleet_size`: 1 signals
@@ -65,17 +59,14 @@ This configuration contains **48 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Record | 0.80 | 0.30 | 0.40 | 0.10 |
-| 2 | Fleet Quality | 0.55 | 0.10 | 0.10 | 0.35 |
-| 3 | Regulatory Compliance | 0.50 | 0.20 | 0.20 | 0.10 |
-| 4 | Operational Quality | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
-| 6 | Route Risk | 0.20 | 0.05 | 0.05 | 0.10 |
-| 7 | Financial Stability | 0.18 | 0.05 | 0.03 | 0.10 |
-| 8 | Corporate Governance | 0.12 | 0.05 | 0.02 | 0.05 |
+| 1 | Safety Record | 1.30 | 0.50 | 0.60 | 0.20 |
+| 2 | Operational Quality | 1.20 | 0.30 | 0.30 | 0.60 |
+| 3 | Network Authority | 0.20 | 0.10 | 0.05 | 0.05 |
+| 4 | Financial Stability | 0.18 | 0.05 | 0.03 | 0.10 |
+| 5 | Corporate Governance | 0.12 | 0.05 | 0.02 | 0.05 |
 
-**Primary Assessment Driver:** `Safety Record` with combined weight of 0.80
-**Secondary Driver:** `Fleet Quality` with combined weight of 0.55
+**Primary Assessment Driver:** `Safety Record` with combined weight of 1.30
+**Secondary Driver:** `Operational Quality` with combined weight of 1.20
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -103,10 +94,8 @@ This configuration contains **48 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Safety Record | 0.35 | 0.45 | 0.10 |
-| Regulatory Compliance | 0.25 | 0.20 | 0.10 |
-| Operational Quality | 0.20 | 0.15 | 0.15 |
-| Fleet Quality | 0.15 | 0.15 | 0.55 |
+| Safety Record | 0.60 | 0.65 | 0.20 |
+| Operational Quality | 0.35 | 0.30 | 0.70 |
 | Corporate Governance | 0.05 | 0.05 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
@@ -118,11 +107,9 @@ This configuration contains **22 signals** distributed as follows:
 - `INFERRED_PROXY` (13 signals): Medium confidence
 
 **Signal Count by Group:**
-- `safety_record`: 4 signals
-- `regulatory_compliance`: 4 signals
-- `operational_quality`: 4 signals
-- `fleet_quality`: 3 signals
-- `corporate_governance`: 3 signals
+- `public_record`: 8 signals
+- `technical_infrastructure`: 7 signals
+- `corporate_footprint`: 3 signals
 - `operator_type`: 1 signals
 - `fleet_category`: 1 signals
 - `fleet_size`: 1 signals
@@ -138,14 +125,12 @@ This configuration contains **22 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Safety Record | 0.90 | 0.35 | 0.45 | 0.10 |
-| 2 | Fleet Quality | 0.85 | 0.15 | 0.15 | 0.55 |
-| 3 | Regulatory Compliance | 0.55 | 0.25 | 0.20 | 0.10 |
-| 4 | Operational Quality | 0.50 | 0.20 | 0.15 | 0.15 |
-| 5 | Corporate Governance | 0.20 | 0.05 | 0.05 | 0.10 |
+| 1 | Safety Record | 1.45 | 0.60 | 0.65 | 0.20 |
+| 2 | Operational Quality | 1.35 | 0.35 | 0.30 | 0.70 |
+| 3 | Corporate Governance | 0.20 | 0.05 | 0.05 | 0.10 |
 
-**Primary Assessment Driver:** `Safety Record` with combined weight of 0.90
-**Secondary Driver:** `Fleet Quality` with combined weight of 0.85
+**Primary Assessment Driver:** `Safety Record` with combined weight of 1.45
+**Secondary Driver:** `Operational Quality` with combined weight of 1.35
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -172,25 +157,25 @@ This configuration contains **22 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Space Risk | 0.45 | 0.45 | 0.35 |
+| Space Risk | 0.55 | 0.55 | 0.45 |
 | Regulatory Framework | 0.15 | 0.10 | 0.15 |
 | Corporate Footprint | 0.20 | 0.20 | 0.25 |
 | Firm Stability | 0.10 | 0.15 | 0.15 |
-| Fleet Category | 0.10 | 0.10 | 0.10 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **7 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
 
 **Signal Count by Group:**
-- `space_risk`: 5 signals
+- `technical_infrastructure`: 5 signals
+- `structured_data`: 2 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 43% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -199,13 +184,12 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Space Risk | 1.25 | 0.45 | 0.45 | 0.35 |
+| 1 | Space Risk | 1.55 | 0.55 | 0.55 | 0.45 |
 | 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
 | 3 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
 | 4 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
-| 5 | Fleet Category | 0.30 | 0.10 | 0.10 | 0.10 |
 
-**Primary Assessment Driver:** `Space Risk` with combined weight of 1.25
+**Primary Assessment Driver:** `Space Risk` with combined weight of 1.55
 **Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -233,26 +217,25 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Rotary Wing Risk | 0.35 | 0.35 | 0.25 |
-| Iosa Status | 0.10 | 0.10 | 0.10 |
-| Regulatory Framework | 0.15 | 0.10 | 0.15 |
-| Fleet Size | 0.10 | 0.10 | 0.15 |
+| Rotary Wing Risk | 0.45 | 0.45 | 0.40 |
+| Iosa Status | 0.25 | 0.20 | 0.25 |
 | Corporate Footprint | 0.15 | 0.20 | 0.20 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **7 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
 - `DIRECT_OBSERVABLE` (2 signals): Highest confidence
-- `INFERRED_PROXY` (3 signals): Medium confidence
+- `INFERRED_PROXY` (5 signals): Medium confidence
 
 **Signal Count by Group:**
-- `rotary_wing_risk`: 5 signals
+- `technical_infrastructure`: 5 signals
+- `structured_data`: 2 signals
 
 **Selection Rationale:**
-- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 29% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -261,15 +244,13 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Rotary Wing Risk | 0.95 | 0.35 | 0.35 | 0.25 |
-| 2 | Corporate Footprint | 0.55 | 0.15 | 0.20 | 0.20 |
-| 3 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
-| 4 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
-| 5 | Fleet Size | 0.35 | 0.10 | 0.10 | 0.15 |
-| 6 | Iosa Status | 0.30 | 0.10 | 0.10 | 0.10 |
+| 1 | Rotary Wing Risk | 1.30 | 0.45 | 0.45 | 0.40 |
+| 2 | Iosa Status | 0.70 | 0.25 | 0.20 | 0.25 |
+| 3 | Corporate Footprint | 0.55 | 0.15 | 0.20 | 0.20 |
+| 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `Rotary Wing Risk` with combined weight of 0.95
-**Secondary Driver:** `Corporate Footprint` with combined weight of 0.55
+**Primary Assessment Driver:** `Rotary Wing Risk` with combined weight of 1.30
+**Secondary Driver:** `Iosa Status` with combined weight of 0.70
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
@@ -296,25 +277,26 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Unmanned Aircraft Systems | 0.40 | 0.40 | 0.35 |
+| Unmanned Aircraft Systems | 0.50 | 0.55 | 0.50 |
 | Regulatory Framework | 0.20 | 0.15 | 0.15 |
 | Corporate Footprint | 0.15 | 0.15 | 0.20 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
-| Fleet Size | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **7 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (2 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (4 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
 
 **Signal Count by Group:**
-- `unmanned_systems`: 5 signals
+- `technical_infrastructure`: 5 signals
+- `public_record`: 1 signals
+- `structured_data`: 1 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 57% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -323,13 +305,12 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Unmanned Aircraft Systems | 1.15 | 0.40 | 0.40 | 0.35 |
+| 1 | Unmanned Aircraft Systems | 1.55 | 0.50 | 0.55 | 0.50 |
 | 2 | Regulatory Framework | 0.50 | 0.20 | 0.15 | 0.15 |
 | 3 | Corporate Footprint | 0.50 | 0.15 | 0.15 | 0.20 |
 | 4 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
-| 5 | Fleet Size | 0.40 | 0.10 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `Unmanned Aircraft Systems` with combined weight of 1.15
+**Primary Assessment Driver:** `Unmanned Aircraft Systems` with combined weight of 1.55
 **Secondary Driver:** `Regulatory Framework` with combined weight of 0.50
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -358,25 +339,26 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| MRO Facility Risk | 0.40 | 0.40 | 0.30 |
+| MRO Facility Risk | 0.50 | 0.55 | 0.45 |
 | Regulatory Framework | 0.15 | 0.10 | 0.15 |
 | Corporate Footprint | 0.20 | 0.20 | 0.25 |
 | Firm Stability | 0.15 | 0.15 | 0.15 |
-| Fleet Category | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **5 signals** distributed as follows:
+This configuration contains **8 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
-- `DIRECT_OBSERVABLE` (3 signals): Highest confidence
-- `INFERRED_PROXY` (2 signals): Medium confidence
+- `DIRECT_OBSERVABLE` (4 signals): Highest confidence
+- `INFERRED_PROXY` (4 signals): Medium confidence
 
 **Signal Count by Group:**
-- `mro_risk`: 5 signals
+- `technical_infrastructure`: 5 signals
+- `structured_data`: 2 signals
+- `public_record`: 1 signals
 
 **Selection Rationale:**
-- 60% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 50% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -385,13 +367,12 @@ This configuration contains **5 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | MRO Facility Risk | 1.10 | 0.40 | 0.40 | 0.30 |
+| 1 | MRO Facility Risk | 1.50 | 0.50 | 0.55 | 0.45 |
 | 2 | Corporate Footprint | 0.65 | 0.20 | 0.20 | 0.25 |
 | 3 | Firm Stability | 0.45 | 0.15 | 0.15 | 0.15 |
 | 4 | Regulatory Framework | 0.40 | 0.15 | 0.10 | 0.15 |
-| 5 | Fleet Category | 0.40 | 0.10 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `MRO Facility Risk` with combined weight of 1.10
+**Primary Assessment Driver:** `MRO Facility Risk` with combined weight of 1.50
 **Secondary Driver:** `Corporate Footprint` with combined weight of 0.65
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
@@ -419,23 +400,25 @@ This configuration contains **5 signals** distributed as follows:
 
 | Group | Risk | Loss | Exposure |
 |-------|------|------|----------|
-| Iosa Status | 0.20 | 0.15 | 0.10 |
-| Regulatory Framework | 0.20 | 0.15 | 0.15 |
-| Fleet Size | 0.15 | 0.15 | 0.20 |
-| Fleet Category | 0.10 | 0.15 | 0.15 |
+| Iosa Status | 0.40 | 0.30 | 0.25 |
+| Fleet Size | 0.25 | 0.30 | 0.35 |
 | Corporate Footprint | 0.25 | 0.25 | 0.25 |
 | Firm Stability | 0.10 | 0.15 | 0.15 |
 | **TOTAL** | **1.00** | **1.00** | **1.00** |
 
 ### Signal Architecture Rationale
-This configuration contains **0 signals** distributed as follows:
+This configuration contains **5 signals** distributed as follows:
 
 **By Proxy Tier (Confidence Hierarchy):**
+- `DIRECT_OBSERVABLE` (2 signals): Highest confidence
+- `INFERRED_PROXY` (3 signals): Medium confidence
 
 **Signal Count by Group:**
+- `structured_data`: 3 signals
+- `public_record`: 2 signals
 
 **Selection Rationale:**
-- 0% of signals are directly observable, ensuring objective, machine-readable assessment.
+- 40% of signals are directly observable, ensuring objective, machine-readable assessment.
 - Proxy tiers weight confidence: DIRECT_OBSERVABLE signals have highest pricing impact.
 - Signal selection prioritizes external observability (DSI Foundational Principle #1).
 
@@ -444,15 +427,13 @@ This configuration contains **0 signals** distributed as follows:
 
 | Rank | Group | Combined | Risk | Loss | Exposure |
 |------|-------|----------|------|------|----------|
-| 1 | Corporate Footprint | 0.75 | 0.25 | 0.25 | 0.25 |
-| 2 | Regulatory Framework | 0.50 | 0.20 | 0.15 | 0.15 |
-| 3 | Fleet Size | 0.50 | 0.15 | 0.15 | 0.20 |
-| 4 | Iosa Status | 0.45 | 0.20 | 0.15 | 0.10 |
-| 5 | Fleet Category | 0.40 | 0.10 | 0.15 | 0.15 |
-| 6 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
+| 1 | Iosa Status | 0.95 | 0.40 | 0.30 | 0.25 |
+| 2 | Fleet Size | 0.90 | 0.25 | 0.30 | 0.35 |
+| 3 | Corporate Footprint | 0.75 | 0.25 | 0.25 | 0.25 |
+| 4 | Firm Stability | 0.40 | 0.10 | 0.15 | 0.15 |
 
-**Primary Assessment Driver:** `Corporate Footprint` with combined weight of 0.75
-**Secondary Driver:** `Regulatory Framework` with combined weight of 0.50
+**Primary Assessment Driver:** `Iosa Status` with combined weight of 0.95
+**Secondary Driver:** `Fleet Size` with combined weight of 0.90
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*

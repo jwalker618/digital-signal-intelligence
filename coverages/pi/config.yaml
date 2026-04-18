@@ -80,6 +80,7 @@ professional_indemnity:
     - id: profession_type
       inference_utility_function: primaryprofessional_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: profession_type
         source: metadata.profession_type
@@ -129,6 +130,7 @@ professional_indemnity:
     - id: sub_profession_type
       inference_utility_function: sub_profession_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: sub_profession_type
         source: metadata.sub_profession_type
@@ -271,6 +273,7 @@ professional_indemnity:
     - id: firm_size
       inference_utility_function: firm_size_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: firm_size
         source: metadata.firm_size
@@ -299,6 +302,7 @@ professional_indemnity:
     - id: revenue_size
       inference_utility_function: annualrevenue_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: revenue_size
         source: metadata.revenue_size
@@ -330,6 +334,7 @@ professional_indemnity:
     - id: peer_ranking
       inference_utility_function: peer_ranking_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -345,6 +350,7 @@ professional_indemnity:
     - id: client_quality
       inference_utility_function: client_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -361,6 +367,7 @@ professional_indemnity:
     - id: referral_network
       inference_utility_function: referral_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -373,6 +380,7 @@ professional_indemnity:
     - id: association_leadership
       inference_utility_function: association_leadership_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -381,6 +389,7 @@ professional_indemnity:
     - id: thought_leadership
       inference_utility_function: thought_leadership_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -389,6 +398,7 @@ professional_indemnity:
     - id: panel_membership
       inference_utility_function: panel_membership_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: network_authority
         risk:
@@ -397,6 +407,7 @@ professional_indemnity:
     - id: license_status
       inference_utility_function: license_status_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -423,6 +434,7 @@ professional_indemnity:
     - id: disciplinary_history
       inference_utility_function: disciplinary_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -449,6 +461,7 @@ professional_indemnity:
     - id: malpractice_record
       inference_utility_function: malpractice_record_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -470,6 +483,7 @@ professional_indemnity:
     - id: ce_compliance
       inference_utility_function: ce_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -478,6 +492,7 @@ professional_indemnity:
     - id: specialty_certification
       inference_utility_function: speciality_certifications_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -486,6 +501,7 @@ professional_indemnity:
     - id: peer_review
       inference_utility_function: peer_review_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -512,6 +528,7 @@ professional_indemnity:
     - id: pcaob_standing
       inference_utility_function: pcaob_standing_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -527,6 +544,7 @@ professional_indemnity:
     - id: tenure
       inference_utility_function: years_inpractice_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -539,6 +557,7 @@ professional_indemnity:
     - id: partner_stability
       inference_utility_function: partner_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -561,6 +580,7 @@ professional_indemnity:
     - id: staff_retention
       inference_utility_function: staff_retention_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -573,6 +593,7 @@ professional_indemnity:
     - id: office_stability
       inference_utility_function: office_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -581,6 +602,7 @@ professional_indemnity:
     - id: financial_stability
       inference_utility_function: financial_stability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -599,6 +621,7 @@ professional_indemnity:
     - id: succession_planning
       inference_utility_function: succession_planning_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: behavioural
         risk:
@@ -607,6 +630,7 @@ professional_indemnity:
     - id: outcome_patterns
       inference_utility_function: outcome_patterns_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -622,6 +646,7 @@ professional_indemnity:
     - id: client_reviews
       inference_utility_function: client_reviews_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -634,6 +659,7 @@ professional_indemnity:
     - id: work_quality
       inference_utility_function: work_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -649,6 +675,7 @@ professional_indemnity:
     - id: fee_dispute
       inference_utility_function: fee_dispute_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -661,6 +688,7 @@ professional_indemnity:
     - id: complaint_history
       inference_utility_function: complaint_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -676,6 +704,7 @@ professional_indemnity:
     - id: tls_score
       inference_utility_function: tls_score_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -691,6 +720,7 @@ professional_indemnity:
     - id: email_auth
       inference_utility_function: email_authentication_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -703,6 +733,7 @@ professional_indemnity:
     - id: security_headers
       inference_utility_function: security_headers_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -715,6 +746,7 @@ professional_indemnity:
     - id: portal_security
       inference_utility_function: portal_security_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -730,6 +762,7 @@ professional_indemnity:
     - id: breach_history
       inference_utility_function: breach_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -751,6 +784,7 @@ professional_indemnity:
     - id: website_quality
       inference_utility_function: website_quality_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -759,6 +793,7 @@ professional_indemnity:
     - id: bio_completeness
       inference_utility_function: bio_completeness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -771,6 +806,7 @@ professional_indemnity:
     - id: practice_clarity
       inference_utility_function: practice_clarity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -779,6 +815,7 @@ professional_indemnity:
     - id: publications
       inference_utility_function: publications_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -787,6 +824,7 @@ professional_indemnity:
     - id: community_involvement
       inference_utility_function: community_involvement_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -795,6 +833,7 @@ professional_indemnity:
     - id: diversity
       inference_utility_function: diversity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -803,6 +842,7 @@ professional_indemnity:
     - id: malpractice_suits
       inference_utility_function: malpractice_suits_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -836,6 +876,7 @@ professional_indemnity:
     - id: fee_disputes_litigation
       inference_utility_function: fee_disputes_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -848,6 +889,7 @@ professional_indemnity:
     - id: regulatory_enforcement
       inference_utility_function: regulatory_enforcement_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -874,6 +916,7 @@ professional_indemnity:
     - id: civil_litigation
       inference_utility_function: civil_litigation_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -889,6 +932,7 @@ professional_indemnity:
     - id: bankruptcy
       inference_utility_function: bankruptcy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1298,6 +1342,7 @@ professional_indemnity:
     - id: profession_type
       inference_utility_function: primaryprofessional_classification_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: profession_type
         source: metadata.profession_type
@@ -1715,6 +1760,7 @@ professional_indemnity:
     - id: lateral_hire_volume
       inference_utility_function: lateral_hire_volume_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1731,6 +1777,7 @@ professional_indemnity:
     - id: prior_acts_coverage
       inference_utility_function: prior_acts_coverage_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1753,6 +1800,7 @@ professional_indemnity:
     - id: conflict_system_quality
       inference_utility_function: conflict_system_quality_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1769,6 +1817,7 @@ professional_indemnity:
     - id: trust_account_compliance
       inference_utility_function: trust_account_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1787,6 +1836,7 @@ professional_indemnity:
     - id: class_action_exposure
       inference_utility_function: class_action_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1803,6 +1853,7 @@ professional_indemnity:
     - id: partner_departure_rate
       inference_utility_function: partner_departure_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -1825,6 +1876,7 @@ professional_indemnity:
     - id: matter_concentration
       inference_utility_function: matter_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: corporate_footprint
         risk:
@@ -2260,6 +2312,7 @@ professional_indemnity:
     - id: case_concentration
       inference_utility_function: case_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2276,6 +2329,7 @@ professional_indemnity:
     - id: contingency_fee_ratio
       inference_utility_function: contingency_fee_ratio_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2292,6 +2346,7 @@ professional_indemnity:
     - id: trial_success_rate
       inference_utility_function: trial_success_rate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2308,6 +2363,7 @@ professional_indemnity:
     - id: statute_tracking_compliance
       inference_utility_function: statute_tracking_compliance_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2330,6 +2386,7 @@ professional_indemnity:
     - id: case_value_distribution
       inference_utility_function: case_value_distribution_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2343,6 +2400,45 @@ professional_indemnity:
           size:
             correlation_direction: positive
             weight: 0.2
+    - id: irb_registration
+      inference_utility_function: irb_registration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          severity:
+            correlation_direction: negative
+            weight: 0.03
+    - id: clinical_trial_registry_compliance
+      inference_utility_function: clinical_trial_registry_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+    - id: good_clinical_practice_score
+      inference_utility_function: good_clinical_practice_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: network_authority
@@ -2742,6 +2838,7 @@ professional_indemnity:
     - id: pcaob_inspection_deficiency_rate
       inference_utility_function: pcaob_inspection_deficiency_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2764,6 +2861,7 @@ professional_indemnity:
     - id: restatement_rate
       inference_utility_function: restatement_rate_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2780,6 +2878,7 @@ professional_indemnity:
     - id: going_concern_accuracy
       inference_utility_function: going_concern_accuracy_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2796,6 +2895,7 @@ professional_indemnity:
     - id: sec_enforcement_exposure
       inference_utility_function: sec_enforcement_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2818,6 +2918,7 @@ professional_indemnity:
     - id: audit_client_concentration
       inference_utility_function: audit_client_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2834,6 +2935,7 @@ professional_indemnity:
     - id: audit_partner_rotation_compliance
       inference_utility_function: audit_partner_rotation_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -2846,6 +2948,7 @@ professional_indemnity:
     - id: securities_litigation_exposure
       inference_utility_function: securities_litigation_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3647,6 +3750,7 @@ professional_indemnity:
     - id: design_defect_claims
       inference_utility_function: design_defect_claims_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3663,6 +3767,7 @@ professional_indemnity:
     - id: building_code_compliance
       inference_utility_function: building_code_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3685,6 +3790,7 @@ professional_indemnity:
     - id: project_complexity_score
       inference_utility_function: project_complexity_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3701,6 +3807,7 @@ professional_indemnity:
     - id: latent_defect_exposure
       inference_utility_function: latent_defect_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3717,6 +3824,7 @@ professional_indemnity:
     - id: sustainability_certification
       inference_utility_function: sustainability_certification_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -3729,6 +3837,7 @@ professional_indemnity:
     - id: pi_construction_phase
       inference_utility_function: pi_construction_phase_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: technical_infrastructure
         source: metadata.construction_phase
@@ -4131,6 +4240,7 @@ professional_indemnity:
     - id: structural_failure_history
       inference_utility_function: structural_failure_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4153,6 +4263,7 @@ professional_indemnity:
     - id: pe_license_compliance
       inference_utility_function: pe_license_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4171,6 +4282,7 @@ professional_indemnity:
     - id: geotechnical_claim_frequency
       inference_utility_function: geotechnical_claim_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4187,6 +4299,7 @@ professional_indemnity:
     - id: infrastructure_project_exposure
       inference_utility_function: infrastructure_project_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4203,6 +4316,7 @@ professional_indemnity:
     - id: project_size_concentration
       inference_utility_function: project_size_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4219,6 +4333,7 @@ professional_indemnity:
     - id: remediation_cost_history
       inference_utility_function: remediation_cost_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4654,6 +4769,7 @@ professional_indemnity:
     - id: project_failure_rate
       inference_utility_function: project_failure_rate_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4670,6 +4786,7 @@ professional_indemnity:
     - id: sla_compliance
       inference_utility_function: sla_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4686,6 +4803,7 @@ professional_indemnity:
     - id: data_breach_exposure
       inference_utility_function: data_breach_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4708,6 +4826,7 @@ professional_indemnity:
     - id: technology_stack_currency
       inference_utility_function: technology_stack_currency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4724,6 +4843,7 @@ professional_indemnity:
     - id: implementation_methodology
       inference_utility_function: implementation_methodology_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4740,6 +4860,7 @@ professional_indemnity:
     - id: client_data_encryption
       inference_utility_function: client_data_encryption_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -4753,6 +4874,32 @@ professional_indemnity:
           size:
             correlation_direction: positive
             weight: 0.1
+    - id: defamation_exposure
+      inference_utility_function: defamation_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+    - id: content_moderation_posture
+      inference_utility_function: content_moderation_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: negative
+          weight: 0.03
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: network_authority
@@ -5123,6 +5270,7 @@ professional_indemnity:
     - id: suitability_compliance
       inference_utility_function: suitability_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5145,6 +5293,7 @@ professional_indemnity:
     - id: complaint_per_aum
       inference_utility_function: complaint_per_aum_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5161,6 +5310,7 @@ professional_indemnity:
     - id: regulatory_exam_results
       inference_utility_function: regulatory_exam_results_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5177,6 +5327,7 @@ professional_indemnity:
     - id: churning_indicators
       inference_utility_function: churning_indicators_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5193,6 +5344,7 @@ professional_indemnity:
     - id: fee_transparency_score
       inference_utility_function: fee_transparency_score_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5927,6 +6079,7 @@ professional_indemnity:
     - id: valuation_accuracy
       inference_utility_function: valuation_accuracy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5943,6 +6096,7 @@ professional_indemnity:
     - id: negligent_misstatement_history
       inference_utility_function: negligent_misstatement_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5965,6 +6119,7 @@ professional_indemnity:
     - id: property_type_concentration
       inference_utility_function: property_type_concentration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5981,6 +6136,7 @@ professional_indemnity:
     - id: market_knowledge_currency
       inference_utility_function: market_knowledge_currency_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -5997,6 +6153,7 @@ professional_indemnity:
     - id: rics_compliance
       inference_utility_function: rics_compliance_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6386,6 +6543,7 @@ professional_indemnity:
     - id: contamination_assessment_accuracy
       inference_utility_function: contamination_assessment_accuracy_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6402,6 +6560,7 @@ professional_indemnity:
     - id: regulatory_compliance_track
       inference_utility_function: regulatory_compliance_track_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6418,6 +6577,7 @@ professional_indemnity:
     - id: remediation_effectiveness
       inference_utility_function: remediation_effectiveness_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6434,6 +6594,7 @@ professional_indemnity:
     - id: long_tail_exposure
       inference_utility_function: long_tail_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6450,6 +6611,7 @@ professional_indemnity:
     - id: cercla_superfund_exposure
       inference_utility_function: cercla_superfund_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: technical_infrastructure
         risk:
@@ -6768,4 +6930,482 @@ professional_indemnity:
       modifier_cap: 2.5
       max_premium_to_limit_ratio: 0.8
       max_premium_to_revenue_ratio: 0.002
+      max_ilf_factor: 10.0
+  pi_clinical_research:
+    metadata:
+      name: DSI PI Clinical-Research Model
+      description: CROs, IRBs, clinical-trial sponsors, academic research institutions
+      version: 2.3.0
+      product_types:
+      - professional_indemnity
+      - errors_and_omissions
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: professional_indemnity, errors_and_omissions'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD
+      min_premium: 25000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [CRO, IRB, CLINICAL_RESEARCH, CLINICAL_TRIAL_SPONSOR, ACADEMIC_MEDICAL_CENTER]
+        required_in_input: true
+    direct_queries:
+    - id: irb_active
+      question: Is an active OHRP / FDA IRB registration in place for every trial?
+      query_condition:
+      - return: false
+        action: REFER
+        override: 4
+        applied: null
+        note: IRB registration not active for every trial
+    - id: gcp_training_program
+      question: Does a documented GCP (Good Clinical Practice) training + recertification program exist?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No documented GCP training program
+    - id: adverse_event_reporting_sla
+      question: Are adverse-event reporting SLAs met (<= 24 h for SAEs)?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.3
+        note: AE reporting SLA missed
+    signal_registry:
+    - id: irb_registration
+      inference_utility_function: irb_registration_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.22}
+        loss:
+          severity: {correlation_direction: negative, weight: 0.22}
+    - id: clinical_trial_registry_compliance
+      inference_utility_function: clinical_trial_registry_compliance_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.18}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.18}
+    - id: good_clinical_practice_score
+      inference_utility_function: good_clinical_practice_score_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.18}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.15}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.15}
+    - id: litigation_history
+      inference_utility_function: litigation_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.12}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.12}
+    groups:
+      three_layer_assessment:
+      - id: structured_data
+        label: Regulatory & GCP Compliance
+        description: IRB, ClinicalTrials.gov, GCP maturity
+        risk: {weight: 0.55}
+        loss: {weight: 0.50}
+        exposure: {weight: 0.45}
+      - id: public_record
+        label: Claim & Litigation Record
+        description: Breach + litigation + FDA warning letters
+        risk: {weight: 0.30}
+        loss: {weight: 0.35}
+        exposure: {weight: 0.30}
+      - id: technical_infrastructure
+        label: IT Security
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0038
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0058
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0078
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        professional_indemnity:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        errors_and_omissions:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.8
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.02
+      max_ilf_factor: 10.0
+  pi_media_tech:
+    metadata:
+      name: DSI PI Media / Creative-Tech Model
+      description: Publishers, broadcasters, content creators, ad-tech firms
+      version: 2.3.0
+      product_types:
+      - professional_indemnity
+      - errors_and_omissions
+      - media_liability
+      applicable_markets:
+      - us
+      - uk
+      - eu
+      - apac
+      minimum_viable_input:
+        required:
+        - field: client_name
+          description: Client name
+        - field: product_type
+          description: 'One of: professional_indemnity, errors_and_omissions, media_liability'
+        - field: limit
+          description: Requested limit in USD
+        - field: revenue
+          description: Annual revenue in USD
+      min_premium: 20000
+      default_currency: USD
+      model_specificity: 3
+      routing_constraints:
+      - field: industry_sector
+        operator: in
+        value: [PUBLISHING, BROADCAST, CONTENT_CREATION, ADTECH, MEDIA]
+        required_in_input: true
+    direct_queries:
+    - id: editorial_review_process
+      question: Is an editorial review process with documented sign-off in place for every publication?
+      query_condition:
+      - return: false
+        action: FLAG
+        override: null
+        applied: null
+        note: No documented editorial review
+    - id: errors_and_omissions_coverage
+      question: Is E&O coverage already in place for content-related claims?
+      query_condition:
+      - return: false
+        action: MODIFIER
+        override: null
+        applied: 1.15
+        note: No pre-existing E&O coverage
+    signal_registry:
+    - id: defamation_exposure
+      inference_utility_function: defamation_exposure_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.25}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.28}
+    - id: content_moderation_posture
+      inference_utility_function: content_moderation_posture_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk: {correlation_direction: negative, weight: 0.20}
+        loss:
+          frequency: {correlation_direction: negative, weight: 0.20}
+    - id: litigation_history
+      inference_utility_function: litigation_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.15}
+        loss:
+          frequency: {correlation_direction: positive, weight: 0.15}
+    - id: breach_history
+      inference_utility_function: breach_history_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk: {correlation_direction: positive, weight: 0.10}
+        loss:
+          severity: {correlation_direction: positive, weight: 0.10}
+    groups:
+      three_layer_assessment:
+      - id: structured_data
+        label: Editorial & Moderation Controls
+        description: Editorial review, moderation posture, transparency practices
+        risk: {weight: 0.25}
+        loss: {weight: 0.25}
+        exposure: {weight: 0.30}
+      - id: public_record
+        label: Media-Liability Record
+        description: Defamation + litigation + breach history
+        risk: {weight: 0.55}
+        loss: {weight: 0.55}
+        exposure: {weight: 0.40}
+      - id: technical_infrastructure
+        label: Platform Security
+        description: ''
+        risk: {weight: 0.10}
+        loss: {weight: 0.10}
+        exposure: {weight: 0.15}
+      - id: network_authority
+        label: Network Authority
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.05}
+      - id: corporate_footprint
+        label: Corporate Footprint
+        description: ''
+        risk: {weight: 0.05}
+        loss: {weight: 0.05}
+        exposure: {weight: 0.10}
+    risk_tier_bands:
+      bands:
+      - id: 1
+        label: PREFERRED
+        description: Excellent risk
+        interpretation:
+          bands: {min: 800, max: 1000}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0012
+            basis: revenue
+      - id: 2
+        label: STANDARD_PLUS
+        description: Good risk
+        interpretation:
+          bands: {min: 650, max: 799}
+          action: APPROVE
+          application:
+            method: MULTIPLIER
+            applied: 0.0022
+            basis: revenue
+      - id: 3
+        label: STANDARD
+        description: Average risk
+        interpretation:
+          bands: {min: 500, max: 649}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0038
+            basis: revenue
+      - id: 4
+        label: SUBSTANDARD
+        description: Elevated risk
+        interpretation:
+          bands: {min: 350, max: 499}
+          action: REFER
+          application:
+            method: MULTIPLIER
+            applied: 0.0058
+            basis: revenue
+      - id: 5
+        label: DECLINE
+        description: Unacceptable risk
+        interpretation:
+          bands: {min: 0, max: 349}
+          action: DECLINE
+          application:
+            method: MULTIPLIER
+            applied: 0.0078
+            basis: revenue
+    loss_tier_bands:
+      bands:
+      - {id: 1, label: VERY_LOW, description: Very low risk of loss, interpretation: {bands: {min: 80, max: 100}, application: {frequency_modifier: 0.7, severity_modifier: 0.8}}}
+      - {id: 2, label: LOW, description: Low risk of loss, interpretation: {bands: {min: 60, max: 79}, application: {frequency_modifier: 0.85, severity_modifier: 0.9}}}
+      - {id: 3, label: MODERATE, description: Moderate risk of loss, interpretation: {bands: {min: 40, max: 59}, application: {frequency_modifier: 1.0, severity_modifier: 1.0}}}
+      - {id: 4, label: ELEVATED, description: Elevated risk of loss, interpretation: {bands: {min: 20, max: 39}, application: {frequency_modifier: 1.2, severity_modifier: 1.25}}}
+      - {id: 5, label: HIGH, description: High risk of loss, interpretation: {bands: {min: 0, max: 19}, application: {frequency_modifier: 1.5, severity_modifier: 1.6}}}
+      constraints:
+        floor: 0.55
+        cap: 1.7
+    exposure:
+      size:
+        weight: 0.6
+        bands:
+        - {id: 1, label: MICRO, description: Micro, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.5, implied_thresholds: {min: 0, max: 1000000}}}}
+        - {id: 2, label: SMALL, description: Small, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.75, implied_thresholds: {min: 1000000, max: 10000000}}}}
+        - {id: 3, label: MEDIUM, description: Medium, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.0, implied_thresholds: {min: 10000000, max: 50000000}}}}
+        - {id: 4, label: LARGE, description: Large, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.5, implied_thresholds: {min: 50000000, max: 250000000}}}}
+        - {id: 5, label: VERY_LARGE, description: Very Large, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 2.5, implied_thresholds: {min: 250000000, max: 1000000000}}}}
+      complexity:
+        weight: 0.4
+        bands:
+        - {id: 1, label: SIMPLE, description: Simple, interpretation: {bands: {min: 0, max: 20}, application: {method: MODIFIER, applied: 0.85}}}
+        - {id: 2, label: MODERATE, description: Moderate, interpretation: {bands: {min: 21, max: 40}, application: {method: MODIFIER, applied: 0.95}}}
+        - {id: 3, label: COMPLEX, description: Complex, interpretation: {bands: {min: 41, max: 60}, application: {method: MODIFIER, applied: 1.15}}}
+        - {id: 4, label: HIGHLY_COMPLEX, description: Highly complex, interpretation: {bands: {min: 61, max: 80}, application: {method: MODIFIER, applied: 1.35}}}
+        - {id: 5, label: EXTREMELY_COMPLEX, description: Extremely complex, interpretation: {bands: {min: 81, max: 100}, application: {method: MODIFIER, applied: 1.7}}}
+    limit_configuration:
+      type: DECOUPLED
+      valid_limits: [1000000, 5000000, 10000000, 25000000, 50000000, 100000000]
+      valid_deductibles: [25000, 50000, 100000, 250000, 500000]
+    pricing:
+      base_limit_reference: 10000000
+      base_deductible_reference: 100000
+      by_product_type:
+        professional_indemnity:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        errors_and_omissions:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+        media_liability:
+          ilf_curve: {anchor_limit: 10000000, curve: bounded_exponential, params: {max_ilf: 5.5, k: 0.025}}
+          deductible_factors:
+          - {deductible: 25000, factor: 1.15}
+          - {deductible: 50000, factor: 1.05}
+          - {deductible: 100000, factor: 1.0}
+          - {deductible: 250000, factor: 0.88}
+          - {deductible: 500000, factor: 0.75}
+    guardrails:
+      modifier_floor: 0.1
+      modifier_cap: 2.8
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.02
       max_ilf_factor: 10.0

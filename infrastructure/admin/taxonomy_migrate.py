@@ -38,7 +38,9 @@ from signal_architecture.signals.taxonomy import CANONICAL_IDS  # noqa: E402
 
 DEFAULT_MAPPING: Dict[str, str] = {
     # Operational / technical
+    "operational": "technical_infrastructure",
     "operational_quality": "technical_infrastructure",
+    "financial_health": "structured_data",
     "operational_risk": "technical_infrastructure",
     "operational_telemetry": "technical_infrastructure",
     "cyber_security": "technical_infrastructure",

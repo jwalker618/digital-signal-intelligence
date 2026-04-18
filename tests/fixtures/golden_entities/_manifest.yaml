@@ -1212,3 +1212,1607 @@ coverages:
         product_type: standard
         industry_sector: REAL_ESTATE
         domain: kilroyrealty.com
+
+  medprof:
+    - entity_id: hca_healthcare
+      name: HCA Healthcare, Inc.
+      config_id: medprof_hospital
+      domain: hcahealthcare.com
+      registry_id: US-Delaware-0000860730
+      minimum_viable_input:
+        revenue: 64968000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 294000
+        facility_type: hospital
+        annual_patient_encounters: 37500000
+        domain: hcahealthcare.com
+    - entity_id: ascension_health
+      name: Ascension Health
+      config_id: medprof_hospital
+      domain: ascension.org
+      registry_id: US-Missouri-430670344
+      minimum_viable_input:
+        revenue: 28500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 142000
+        facility_type: hospital
+        annual_patient_encounters: 18000000
+        domain: ascension.org
+    - entity_id: tenet_healthcare
+      name: Tenet Healthcare Corporation
+      config_id: medprof_hospital
+      domain: tenethealth.com
+      registry_id: US-Nevada-0000070318
+      minimum_viable_input:
+        revenue: 20548000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 102000
+        facility_type: hospital
+        annual_patient_encounters: 10000000
+        domain: tenethealth.com
+    - entity_id: kaiser_permanente
+      name: Kaiser Permanente
+      config_id: medprof_hospital
+      domain: kaiserpermanente.org
+      registry_id: US-California-K0123456
+      minimum_viable_input:
+        revenue: 100800000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: hospital_mpl
+        employee_count: 240000
+        facility_type: hospital
+        annual_patient_encounters: 45000000
+        domain: kaiserpermanente.org
+    - entity_id: northwell_health
+      name: Northwell Health
+      config_id: medprof_hospital
+      domain: northwell.edu
+      registry_id: US-New_York-NW123456
+      minimum_viable_input:
+        revenue: 18100000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 85000
+        facility_type: hospital
+        annual_patient_encounters: 8000000
+        domain: northwell.edu
+    - entity_id: cleveland_clinic
+      name: Cleveland Clinic
+      config_id: medprof_hospital
+      domain: clevelandclinic.org
+      registry_id: US-Ohio-341047370
+      minimum_viable_input:
+        revenue: 14700000000
+        limit: 25000000
+        deductible: 500000
+        product_type: hospital_mpl
+        employee_count: 72000
+        facility_type: hospital
+        annual_patient_encounters: 11000000
+        domain: clevelandclinic.org
+    - entity_id: teladoc_health
+      name: Teladoc Health, Inc.
+      config_id: medprof_telehealth
+      domain: teladochealth.com
+      registry_id: US-Delaware-0001477449
+      minimum_viable_input:
+        revenue: 2602000000
+        limit: 15000000
+        deductible: 250000
+        product_type: telehealth_mpl
+        employee_count: 5500
+        facility_type: telehealth
+        annual_patient_encounters: 20000000
+        domain: teladochealth.com
+    - entity_id: brookdale_senior
+      name: Brookdale Senior Living Inc.
+      config_id: medprof_nursing_home
+      domain: brookdale.com
+      registry_id: US-Delaware-0001332349
+      minimum_viable_input:
+        revenue: 2966000000
+        limit: 15000000
+        deductible: 250000
+        product_type: nursing_home_mpl
+        employee_count: 28000
+        facility_type: ltc
+        annual_patient_encounters: 75000
+        domain: brookdale.com
+    - entity_id: genesis_healthcare
+      name: Genesis Healthcare, Inc.
+      config_id: medprof_nursing_home
+      domain: genesishcc.com
+      registry_id: US-Pennsylvania-0001350653
+      minimum_viable_input:
+        revenue: 3500000000
+        limit: 15000000
+        deductible: 250000
+        product_type: nursing_home_mpl
+        employee_count: 70000
+        facility_type: ltc
+        annual_patient_encounters: 200000
+        domain: genesishcc.com
+    - entity_id: mednax_physicians
+      name: Pediatrix Medical Group
+      config_id: medprof_physician_group
+      domain: pediatrix.com
+      registry_id: US-Florida-0000893949
+      minimum_viable_input:
+        revenue: 1980000000
+        limit: 15000000
+        deductible: 250000
+        product_type: physician_mpl
+        employee_count: 8000
+        facility_type: physician_group
+        annual_patient_encounters: 2000000
+        domain: pediatrix.com
+
+  wc:
+    - entity_id: walmart_wc
+      name: Walmart Inc.
+      config_id: wc_office
+      domain: walmart.com
+      registry_id: US-Delaware-0000104169
+      minimum_viable_input:
+        revenue: 648125000000
+        limit: 25000000
+        deductible: 250000
+        product_type: workers_comp
+        naics_2digit: '54'
+        employee_count: 2300000
+        state: AR
+        domain: walmart.com
+    - entity_id: amazon_wc
+      name: Amazon.com, Inc.
+      config_id: wc_transport
+      domain: amazon.com
+      registry_id: US-Delaware-0001018724
+      minimum_viable_input:
+        revenue: 574785000000
+        limit: 25000000
+        deductible: 250000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 1544000
+        state: WA
+        domain: amazon.com
+    - entity_id: ups_wc
+      name: United Parcel Service, Inc.
+      config_id: wc_transport
+      domain: ups.com
+      registry_id: US-Delaware-0001090727
+      minimum_viable_input:
+        revenue: 91009000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 500000
+        state: GA
+        domain: ups.com
+    - entity_id: hca_wc
+      name: HCA Healthcare, Inc.
+      config_id: wc_healthcare
+      domain: hcahealthcare.com
+      registry_id: US-Delaware-0000860730
+      minimum_viable_input:
+        revenue: 64968000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '62'
+        employee_count: 294000
+        state: TN
+        domain: hcahealthcare.com
+    - entity_id: caterpillar_wc
+      name: Caterpillar Inc.
+      config_id: wc_manufacturing
+      domain: caterpillar.com
+      registry_id: US-Delaware-0000018230
+      minimum_viable_input:
+        revenue: 67060000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '33'
+        employee_count: 112900
+        state: IL
+        domain: caterpillar.com
+    - entity_id: bechtel_wc
+      name: Bechtel Corporation
+      config_id: wc_construction
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        revenue: 17500000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '23'
+        employee_count: 55000
+        state: VA
+        domain: bechtel.com
+    - entity_id: fluor_wc
+      name: Fluor Corporation
+      config_id: wc_construction
+      domain: fluor.com
+      registry_id: US-Delaware-0001124198
+      minimum_viable_input:
+        revenue: 15474000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '23'
+        employee_count: 44000
+        state: TX
+        domain: fluor.com
+    - entity_id: fedex_wc
+      name: FedEx Corporation
+      config_id: wc_transport
+      domain: fedex.com
+      registry_id: US-Delaware-0001048911
+      minimum_viable_input:
+        revenue: 90155000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '49'
+        employee_count: 500000
+        state: TN
+        domain: fedex.com
+    - entity_id: kaiser_wc
+      name: Kaiser Permanente
+      config_id: wc_healthcare
+      domain: kaiserpermanente.org
+      registry_id: US-California-K0123456
+      minimum_viable_input:
+        revenue: 100800000000
+        limit: 25000000
+        deductible: 500000
+        product_type: workers_comp
+        naics_2digit: '62'
+        employee_count: 240000
+        state: CA
+        domain: kaiserpermanente.org
+    - entity_id: local_cafe_wc
+      name: Local Cafe LLC (SME)
+      config_id: wc_sme
+      domain: localcafe.example
+      registry_id: US-California-LLC00000001
+      minimum_viable_input:
+        revenue: 2500000
+        limit: 1000000
+        deductible: 25000
+        product_type: workers_comp
+        naics_2digit: '72'
+        employee_count: 35
+        state: CA
+        domain: localcafe.example
+
+  prodlib:
+    - entity_id: procter_gamble
+      name: The Procter & Gamble Company
+      config_id: prodlib_consumer_goods
+      domain: pg.com
+      registry_id: US-Ohio-0000080424
+      minimum_viable_input:
+        revenue: 84039000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 25000000000
+        domain: pg.com
+    - entity_id: colgate_palmolive
+      name: Colgate-Palmolive Company
+      config_id: prodlib_consumer_goods
+      domain: colgatepalmolive.com
+      registry_id: US-Delaware-0000021665
+      minimum_viable_input:
+        revenue: 19457000000
+        limit: 25000000
+        deductible: 500000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 8000000000
+        domain: colgatepalmolive.com
+    - entity_id: medtronic
+      name: Medtronic plc
+      config_id: prodlib_medical_device
+      domain: medtronic.com
+      registry_id: IE-Dublin-545333
+      minimum_viable_input:
+        revenue: 32362000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: medical_device
+        annual_units_distributed: 800000000
+        domain: medtronic.com
+    - entity_id: stryker
+      name: Stryker Corporation
+      config_id: prodlib_medical_device
+      domain: stryker.com
+      registry_id: US-Michigan-0000310764
+      minimum_viable_input:
+        revenue: 20498000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: medical_device
+        annual_units_distributed: 500000000
+        domain: stryker.com
+    - entity_id: toyota_motor
+      name: Toyota Motor Corporation
+      config_id: prodlib_auto_parts
+      domain: toyota.com
+      registry_id: JP-Tokyo-180101
+      minimum_viable_input:
+        revenue: 274497000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: product_liability
+        product_category: auto_parts
+        annual_units_distributed: 11230000
+        domain: toyota.com
+    - entity_id: ford_motor
+      name: Ford Motor Company
+      config_id: prodlib_auto_parts
+      domain: ford.com
+      registry_id: US-Delaware-0000037996
+      minimum_viable_input:
+        revenue: 176191000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: product_liability
+        product_category: auto_parts
+        annual_units_distributed: 4413000
+        domain: ford.com
+    - entity_id: nestle
+      name: Nestlé S.A.
+      config_id: prodlib_food_bev
+      domain: nestle.com
+      registry_id: CH-Vaud-CHE-105.808.380
+      minimum_viable_input:
+        revenue: 105290000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 100000000000
+        domain: nestle.com
+    - entity_id: kraft_heinz
+      name: The Kraft Heinz Company
+      config_id: prodlib_food_bev
+      domain: kraftheinzcompany.com
+      registry_id: US-Delaware-0001637459
+      minimum_viable_input:
+        revenue: 26803000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 40000000000
+        domain: kraftheinzcompany.com
+    - entity_id: tyson_foods
+      name: Tyson Foods, Inc.
+      config_id: prodlib_food_bev
+      domain: tysonfoods.com
+      registry_id: US-Delaware-0000100493
+      minimum_viable_input:
+        revenue: 52881000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: product_liability
+        product_category: food_bev
+        annual_units_distributed: 35000000000
+        domain: tysonfoods.com
+    - entity_id: small_startup_prodlib
+      name: Artisan Kitchenware Co.
+      config_id: prodlib_sme
+      domain: artisankitchen.example
+      registry_id: US-California-ART-00012345
+      minimum_viable_input:
+        revenue: 3800000
+        limit: 2000000
+        deductible: 25000
+        product_type: product_liability
+        product_category: consumer_goods
+        annual_units_distributed: 45000
+        domain: artisankitchen.example
+
+  env_liab:
+    - entity_id: dupont_env
+      name: DuPont de Nemours, Inc.
+      config_id: env_industrial
+      domain: dupont.com
+      registry_id: US-Delaware-0001666700
+      minimum_viable_input:
+        revenue: 12069000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '32'
+        domain: dupont.com
+    - entity_id: dow_inc
+      name: Dow Inc.
+      config_id: env_industrial
+      domain: dow.com
+      registry_id: US-Delaware-0001751788
+      minimum_viable_input:
+        revenue: 44622000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '32'
+        domain: dow.com
+    - entity_id: 3m_env
+      name: 3M Company
+      config_id: env_industrial
+      domain: 3m.com
+      registry_id: US-Delaware-0000066740
+      minimum_viable_input:
+        revenue: 32681000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: industrial
+        naics_2digit: '33'
+        domain: 3m.com
+    - entity_id: waste_mgmt_env
+      name: Waste Management, Inc.
+      config_id: env_waste_mgmt
+      domain: wm.com
+      registry_id: US-Delaware-0000823768
+      minimum_viable_input:
+        revenue: 20726000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: wm.com
+    - entity_id: republic_services
+      name: Republic Services, Inc.
+      config_id: env_waste_mgmt
+      domain: republicservices.com
+      registry_id: US-Delaware-0001060391
+      minimum_viable_input:
+        revenue: 14965000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: republicservices.com
+    - entity_id: clean_harbors
+      name: Clean Harbors, Inc.
+      config_id: env_waste_mgmt
+      domain: cleanharbors.com
+      registry_id: US-Massachusetts-0000822818
+      minimum_viable_input:
+        revenue: 5415000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: environmental_impairment
+        facility_type: waste_mgmt
+        naics_2digit: '56'
+        domain: cleanharbors.com
+    - entity_id: simon_env
+      name: Simon Property Group (Environmental)
+      config_id: env_real_estate
+      domain: simon.com
+      registry_id: US-Delaware-0001063761
+      minimum_viable_input:
+        revenue: 5957000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: environmental_impairment
+        facility_type: real_estate
+        naics_2digit: '53'
+        domain: simon.com
+    - entity_id: brookfield_prop
+      name: Brookfield Property Partners L.P.
+      config_id: env_real_estate
+      domain: bpy.brookfield.com
+      registry_id: BM-Hamilton-BPY001
+      minimum_viable_input:
+        revenue: 5650000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: environmental_impairment
+        facility_type: real_estate
+        naics_2digit: '53'
+        domain: bpy.brookfield.com
+    - entity_id: kinder_morgan_env
+      name: Kinder Morgan (Midstream Environmental)
+      config_id: env_energy_midstream_xwalk
+      domain: kindermorgan.com
+      registry_id: US-Delaware-0001506307
+      minimum_viable_input:
+        revenue: 15334000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: environmental_impairment
+        facility_type: energy_midstream
+        naics_2digit: '48'
+        domain: kindermorgan.com
+    - entity_id: small_convenience
+      name: Greenfield Gas Station LLC (SME)
+      config_id: env_sme
+      domain: greenfield.example
+      registry_id: US-Texas-TX00045678
+      minimum_viable_input:
+        revenue: 3200000
+        limit: 5000000
+        deductible: 50000
+        product_type: environmental_impairment
+        facility_type: retail
+        naics_2digit: '44'
+        domain: greenfield.example
+
+  construction:
+    - entity_id: bechtel_con
+      name: Bechtel Corporation
+      config_id: con_gc
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        revenue: 17500000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: general_contractor
+        project_value: 500000000
+        domain: bechtel.com
+    - entity_id: fluor_con
+      name: Fluor Corporation
+      config_id: con_gc
+      domain: fluor.com
+      registry_id: US-Delaware-0001124198
+      minimum_viable_input:
+        revenue: 15474000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: general_contractor
+        project_value: 400000000
+        domain: fluor.com
+    - entity_id: aecom_con
+      name: AECOM
+      config_id: con_gc
+      domain: aecom.com
+      registry_id: US-Delaware-0000868857
+      minimum_viable_input:
+        revenue: 14378000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: builders_risk
+        contractor_type: general_contractor
+        project_value: 350000000
+        domain: aecom.com
+    - entity_id: turner_con
+      name: Turner Construction Company
+      config_id: con_gc
+      domain: turnerconstruction.com
+      registry_id: US-New_York-TC0000001
+      minimum_viable_input:
+        revenue: 17000000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ccip
+        contractor_type: general_contractor
+        project_value: 600000000
+        domain: turnerconstruction.com
+    - entity_id: skanska_con
+      name: Skanska AB (US operations)
+      config_id: con_gc
+      domain: usa.skanska.com
+      registry_id: SE-Stockholm-5560001100
+      minimum_viable_input:
+        revenue: 14000000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ccip
+        contractor_type: general_contractor
+        project_value: 500000000
+        domain: usa.skanska.com
+    - entity_id: kiewit_con
+      name: Kiewit Corporation
+      config_id: con_infrastructure
+      domain: kiewit.com
+      registry_id: US-Delaware-K00000001
+      minimum_viable_input:
+        revenue: 13850000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: heavy_civil
+        project_value: 800000000
+        domain: kiewit.com
+    - entity_id: granite_construction
+      name: Granite Construction Incorporated
+      config_id: con_infrastructure
+      domain: graniteconstruction.com
+      registry_id: US-Delaware-0000861459
+      minimum_viable_input:
+        revenue: 3910000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: ocip
+        contractor_type: heavy_civil
+        project_value: 200000000
+        domain: graniteconstruction.com
+    - entity_id: emcor_sub
+      name: EMCOR Group, Inc.
+      config_id: con_subcontractor
+      domain: emcorgroup.com
+      registry_id: US-Delaware-0000105634
+      minimum_viable_input:
+        revenue: 13080000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: builders_risk
+        contractor_type: subcontractor
+        project_value: 150000000
+        domain: emcorgroup.com
+    - entity_id: quanta_energy
+      name: Quanta Services, Inc.
+      config_id: con_energy_xwalk
+      domain: quantaservices.com
+      registry_id: US-Delaware-0001050915
+      minimum_viable_input:
+        revenue: 23660000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: ocip
+        contractor_type: energy_field
+        project_value: 500000000
+        domain: quantaservices.com
+    - entity_id: small_home_builder
+      name: Maple Leaf Home Builders LLC (SME)
+      config_id: con_sme
+      domain: mapleleafhomes.example
+      registry_id: US-Colorado-LLC00098765
+      minimum_viable_input:
+        revenue: 4500000
+        limit: 2000000
+        deductible: 50000
+        product_type: builders_risk
+        contractor_type: general_contractor
+        project_value: 1500000
+        domain: mapleleafhomes.example
+
+  event:
+    - entity_id: live_nation
+      name: Live Nation Entertainment, Inc.
+      config_id: event_concert
+      domain: livenationentertainment.com
+      registry_id: US-Delaware-0001335258
+      minimum_viable_input:
+        gross_ticket_revenue: 22749000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: Live Nation 2026 Global Tours
+        domain: livenationentertainment.com
+    - entity_id: aeg_live
+      name: AEG Presents
+      config_id: event_concert
+      domain: aegworldwide.com
+      registry_id: US-California-AEG000001
+      minimum_viable_input:
+        gross_ticket_revenue: 8500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: AEG 2026 Season
+        domain: aegworldwide.com
+    - entity_id: nfl
+      name: National Football League
+      config_id: event_sports
+      domain: nfl.com
+      registry_id: US-New_York-NFL00000001
+      minimum_viable_input:
+        gross_ticket_revenue: 20000000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: US
+        event_name: NFL 2026 Season
+        domain: nfl.com
+    - entity_id: msg_sports
+      name: Madison Square Garden Sports Corp.
+      config_id: event_sports
+      domain: themadisonsquaregardencompany.com
+      registry_id: US-Delaware-0001636519
+      minimum_viable_input:
+        gross_ticket_revenue: 1000000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: US
+        event_name: MSG Sports 2026
+        domain: themadisonsquaregardencompany.com
+    - entity_id: formula_one
+      name: Formula One World Championship Ltd
+      config_id: event_sports
+      domain: formula1.com
+      registry_id: UK-London-00112769
+      minimum_viable_input:
+        gross_ticket_revenue: 3200000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: event_cancellation
+        event_type: sports
+        venue_country: UK
+        event_name: F1 2026 World Championship
+        domain: formula1.com
+    - entity_id: sxsw
+      name: South by Southwest
+      config_id: event_conference
+      domain: sxsw.com
+      registry_id: US-Texas-SXSW001
+      minimum_viable_input:
+        gross_ticket_revenue: 80000000
+        limit: 25000000
+        deductible: 500000
+        product_type: event_cancellation
+        event_type: conference
+        venue_country: US
+        event_name: SXSW 2026
+        domain: sxsw.com
+    - entity_id: comic_con
+      name: San Diego Comic-Con International
+      config_id: event_conference
+      domain: comic-con.org
+      registry_id: US-California-SDCC0001
+      minimum_viable_input:
+        gross_ticket_revenue: 35000000
+        limit: 25000000
+        deductible: 500000
+        product_type: event_cancellation
+        event_type: conference
+        venue_country: US
+        event_name: SDCC 2026
+        domain: comic-con.org
+    - entity_id: bbc_sport
+      name: BBC Sport (Broadcast production)
+      config_id: event_broadcast
+      domain: bbc.co.uk
+      registry_id: UK-London-0000000100
+      minimum_viable_input:
+        gross_ticket_revenue: 250000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: broadcast
+        venue_country: UK
+        event_name: BBC 2026 Sport Broadcasts
+        domain: bbc.co.uk
+    - entity_id: espn_broadcast
+      name: ESPN, Inc.
+      config_id: event_broadcast
+      domain: espn.com
+      registry_id: US-Delaware-0000820775
+      minimum_viable_input:
+        gross_ticket_revenue: 20000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: event_cancellation
+        event_type: broadcast
+        venue_country: US
+        event_name: ESPN 2026 live programming
+        domain: espn.com
+    - entity_id: local_festival_sme
+      name: Harbor Music Festival LLC (SME)
+      config_id: event_sme
+      domain: harborfest.example
+      registry_id: US-Massachusetts-LLC00055566
+      minimum_viable_input:
+        gross_ticket_revenue: 450000
+        limit: 2000000
+        deductible: 25000
+        product_type: event_cancellation
+        event_type: concert
+        venue_country: US
+        event_name: Harbor Music Festival 2026
+        domain: harborfest.example
+
+  pvt:
+    - entity_id: siemens_pvt
+      name: Siemens AG
+      config_id: pvt_sector_exposed
+      domain: siemens.com
+      registry_id: DE-Munich-HRB6684
+      minimum_viable_input:
+        asset_tiv: 200000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: pvt_terrorism
+        primary_country: DE
+        sector: energy
+        domain: siemens.com
+    - entity_id: schlumberger_pvt
+      name: SLB (Schlumberger)
+      config_id: pvt_sector_exposed
+      domain: slb.com
+      registry_id: AN-Willemstad-SLB001
+      minimum_viable_input:
+        asset_tiv: 500000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: pvt_sabotage
+        primary_country: KW
+        sector: energy
+        domain: slb.com
+    - entity_id: halliburton_pvt
+      name: Halliburton Company
+      config_id: pvt_sector_exposed
+      domain: halliburton.com
+      registry_id: US-Delaware-0000045012
+      minimum_viable_input:
+        asset_tiv: 450000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: pvt_sabotage
+        primary_country: IQ
+        sector: energy
+        domain: halliburton.com
+    - entity_id: bechtel_pvt
+      name: Bechtel Corporation (Overseas Ops)
+      config_id: pvt_high_value_asset
+      domain: bechtel.com
+      registry_id: US-Nevada-NV20031076088
+      minimum_viable_input:
+        asset_tiv: 1200000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: SA
+        sector: energy
+        domain: bechtel.com
+    - entity_id: vale_pvt
+      name: Vale S.A.
+      config_id: pvt_high_value_asset
+      domain: vale.com
+      registry_id: BR-Rio_de_Janeiro-33.592.510
+      minimum_viable_input:
+        asset_tiv: 800000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: BR
+        sector: mining
+        domain: vale.com
+    - entity_id: bhp_pvt
+      name: BHP Group Ltd
+      config_id: pvt_high_value_asset
+      domain: bhp.com
+      registry_id: AU-Melbourne-AU004028077
+      minimum_viable_input:
+        asset_tiv: 1500000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: pvt_terrorism
+        primary_country: AU
+        sector: mining
+        domain: bhp.com
+    - entity_id: total_pvt
+      name: TotalEnergies SE
+      config_id: pvt_country_risk
+      domain: totalenergies.com
+      registry_id: FR-Paris-542051180
+      minimum_viable_input:
+        asset_tiv: 100000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: pvt_strikes_riots_civil_commotion
+        primary_country: FR
+        sector: energy
+        domain: totalenergies.com
+    - entity_id: abb_pvt
+      name: ABB Ltd
+      config_id: pvt_country_risk
+      domain: abb.com
+      registry_id: CH-Zurich-CHE-101.063.305
+      minimum_viable_input:
+        asset_tiv: 150000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: pvt_sabotage
+        primary_country: CH
+        sector: manufacturing
+        domain: abb.com
+    - entity_id: carrefour_pvt
+      name: Carrefour S.A.
+      config_id: pvt_country_risk
+      domain: carrefour.com
+      registry_id: FR-Massy-652014051
+      minimum_viable_input:
+        asset_tiv: 80000000
+        limit: 25000000
+        deductible: 500000
+        product_type: pvt_strikes_riots_civil_commotion
+        primary_country: FR
+        sector: retail
+        domain: carrefour.com
+    - entity_id: ngo_sme_pvt
+      name: Horizon International Aid Foundation (SME)
+      config_id: pvt_sme
+      domain: horizonaid.example
+      registry_id: US-Delaware-NGO00012345
+      minimum_viable_input:
+        asset_tiv: 4500000
+        limit: 5000000
+        deductible: 50000
+        product_type: pvt_terrorism
+        primary_country: KE
+        sector: nonprofit
+        domain: horizonaid.example
+
+  teo:
+    - entity_id: salesforce_teo
+      name: Salesforce, Inc.
+      config_id: teo_saas
+      domain: salesforce.com
+      registry_id: US-Delaware-0001108524
+      minimum_viable_input:
+        revenue: 34857000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: saas
+        domain: salesforce.com
+    - entity_id: servicenow_teo
+      name: ServiceNow, Inc.
+      config_id: teo_saas
+      domain: servicenow.com
+      registry_id: US-Delaware-0001373715
+      minimum_viable_input:
+        revenue: 8971000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: saas
+        domain: servicenow.com
+    - entity_id: snowflake_teo
+      name: Snowflake Inc.
+      config_id: teo_saas
+      domain: snowflake.com
+      registry_id: US-Delaware-0001640147
+      minimum_viable_input:
+        revenue: 2806000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: saas
+        domain: snowflake.com
+    - entity_id: datadog_teo
+      name: Datadog, Inc.
+      config_id: teo_saas
+      domain: datadoghq.com
+      registry_id: US-Delaware-0001561550
+      minimum_viable_input:
+        revenue: 2128000000
+        limit: 25000000
+        deductible: 500000
+        product_type: tech_eo
+        business_model: saas
+        domain: datadoghq.com
+    - entity_id: openai_teo
+      name: OpenAI, Inc.
+      config_id: teo_aiml_vendor
+      domain: openai.com
+      registry_id: US-Delaware-OPENAI001
+      minimum_viable_input:
+        revenue: 3400000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: aiml_liability
+        business_model: aiml_vendor
+        domain: openai.com
+    - entity_id: anthropic_teo
+      name: Anthropic, PBC
+      config_id: teo_aiml_vendor
+      domain: anthropic.com
+      registry_id: US-Delaware-ANTHROPIC1
+      minimum_viable_input:
+        revenue: 850000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: aiml_liability
+        business_model: aiml_vendor
+        domain: anthropic.com
+    - entity_id: accenture_teo
+      name: Accenture plc
+      config_id: teo_systems_integrator
+      domain: accenture.com
+      registry_id: IE-Dublin-471706
+      minimum_viable_input:
+        revenue: 64124000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: systems_integrator
+        domain: accenture.com
+    - entity_id: infosys_teo
+      name: Infosys Limited
+      config_id: teo_systems_integrator
+      domain: infosys.com
+      registry_id: IN-Bengaluru-L85110KA1981PLC013115
+      minimum_viable_input:
+        revenue: 18562000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: tech_eo
+        business_model: systems_integrator
+        domain: infosys.com
+    - entity_id: cdw_teo
+      name: CDW Corporation
+      config_id: teo_managed_service_provider
+      domain: cdw.com
+      registry_id: US-Delaware-0001402057
+      minimum_viable_input:
+        revenue: 21037000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: tech_eo
+        business_model: managed_services
+        domain: cdw.com
+    - entity_id: startup_saas_sme
+      name: RapidFlow Analytics (SME SaaS)
+      config_id: teo_sme
+      domain: rapidflow.example
+      registry_id: US-Delaware-RF0055777
+      minimum_viable_input:
+        revenue: 8000000
+        limit: 5000000
+        deductible: 50000
+        product_type: tech_eo
+        business_model: saas
+        domain: rapidflow.example
+
+  reinsurance:
+    - entity_id: munich_re
+      name: Munich Re
+      config_id: reins_treaty_excess_of_loss
+      domain: munichre.com
+      registry_id: DE-Munich-HRB42039
+      minimum_viable_input:
+        revenue: 67146000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: Munich Re
+        treaty_type: xol
+        subject_business: property_cat
+        domain: munichre.com
+    - entity_id: swiss_re
+      name: Swiss Re
+      config_id: reins_treaty_excess_of_loss
+      domain: swissre.com
+      registry_id: CH-Zurich-CHE-103.728.497
+      minimum_viable_input:
+        revenue: 50003000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: Swiss Re
+        treaty_type: xol
+        subject_business: property_cat
+        domain: swissre.com
+    - entity_id: hannover_re
+      name: Hannover Re
+      config_id: reins_treaty_proportional
+      domain: hannover-re.com
+      registry_id: DE-Hannover-HRB6778
+      minimum_viable_input:
+        revenue: 30040000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_proportional
+        cedent_name: Hannover Re
+        treaty_type: proportional
+        subject_business: casualty
+        domain: hannover-re.com
+    - entity_id: scor
+      name: SCOR SE
+      config_id: reins_treaty_proportional
+      domain: scor.com
+      registry_id: FR-Paris-562033357
+      minimum_viable_input:
+        revenue: 21360000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_proportional
+        cedent_name: SCOR SE
+        treaty_type: proportional
+        subject_business: life
+        domain: scor.com
+    - entity_id: renaissance_re
+      name: RenaissanceRe Holdings Ltd.
+      config_id: reins_treaty_excess_of_loss
+      domain: renre.com
+      registry_id: BM-Hamilton-EC20793
+      minimum_viable_input:
+        revenue: 9210000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: RenaissanceRe
+        treaty_type: xol
+        subject_business: property_cat
+        domain: renre.com
+    - entity_id: partner_re
+      name: PartnerRe Ltd.
+      config_id: reins_treaty_excess_of_loss
+      domain: partnerre.com
+      registry_id: BM-Hamilton-PR00001
+      minimum_viable_input:
+        revenue: 8310000000
+        limit: 200000000
+        deductible: 5000000
+        product_type: treaty_xol
+        cedent_name: PartnerRe
+        treaty_type: xol
+        subject_business: casualty
+        domain: partnerre.com
+    - entity_id: arch_capital
+      name: Arch Capital Group Ltd.
+      config_id: reins_treaty_aggregate
+      domain: archcapgroup.com
+      registry_id: BM-Hamilton-EC39246
+      minimum_viable_input:
+        revenue: 14050000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: treaty_aggregate
+        cedent_name: Arch Capital
+        treaty_type: aggregate_stop_loss
+        subject_business: mortgage
+        domain: archcapgroup.com
+    - entity_id: everest_re
+      name: Everest Group, Ltd.
+      config_id: reins_facultative
+      domain: everestre.com
+      registry_id: BM-Hamilton-EC35146
+      minimum_viable_input:
+        revenue: 14780000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: facultative_single_risk
+        cedent_name: Everest Group
+        treaty_type: facultative
+        subject_business: property
+        domain: everestre.com
+    - entity_id: berkshire_re
+      name: Berkshire Hathaway Reinsurance Group
+      config_id: reins_facultative
+      domain: berkshirehathaway.com
+      registry_id: US-Delaware-BRK000001
+      minimum_viable_input:
+        revenue: 25000000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: facultative_single_risk
+        cedent_name: BH Reinsurance Group
+        treaty_type: facultative
+        subject_business: specialty
+        domain: berkshirehathaway.com
+    - entity_id: small_regional_reins
+      name: Regional Mutual Reinsurance Co
+      config_id: reins_sme
+      domain: regionalmutualre.example
+      registry_id: US-Vermont-VTRE00001
+      minimum_viable_input:
+        revenue: 180000000
+        limit: 15000000
+        deductible: 250000
+        product_type: treaty_proportional
+        cedent_name: Regional Mutual Re
+        treaty_type: proportional
+        subject_business: homeowners
+        domain: regionalmutualre.example
+
+  crop:
+    - entity_id: adm_crop
+      name: Archer-Daniels-Midland Company
+      config_id: crop_multi_peril
+      domain: adm.com
+      registry_id: US-Delaware-0000007084
+      minimum_viable_input:
+        acreage: 500000
+        limit: 100000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: soybean
+        state_country: US-IL
+        domain: adm.com
+    - entity_id: cargill
+      name: Cargill, Incorporated
+      config_id: crop_multi_peril
+      domain: cargill.com
+      registry_id: US-Minnesota-0000017230
+      minimum_viable_input:
+        acreage: 750000
+        limit: 150000000
+        deductible: 2500000
+        product_type: multi_peril_crop_insurance
+        crop_type: corn
+        state_country: US-IA
+        domain: cargill.com
+    - entity_id: bunge
+      name: Bunge Global SA
+      config_id: crop_multi_peril
+      domain: bunge.com
+      registry_id: CH-Geneva-CHE-228.400.003
+      minimum_viable_input:
+        acreage: 400000
+        limit: 100000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: soybean
+        state_country: BR-MT
+        domain: bunge.com
+    - entity_id: corteva
+      name: Corteva, Inc.
+      config_id: crop_yield_protection
+      domain: corteva.com
+      registry_id: US-Delaware-0001755672
+      minimum_viable_input:
+        acreage: 350000
+        limit: 75000000
+        deductible: 1000000
+        product_type: yield_protection
+        crop_type: corn
+        state_country: US-IA
+        domain: corteva.com
+    - entity_id: land_olakes
+      name: Land O'Lakes, Inc.
+      config_id: crop_multi_peril
+      domain: landolakes.com
+      registry_id: US-Minnesota-LO000001
+      minimum_viable_input:
+        acreage: 280000
+        limit: 75000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: corn
+        state_country: US-MN
+        domain: landolakes.com
+    - entity_id: chs_inc
+      name: CHS Inc.
+      config_id: crop_multi_peril
+      domain: chsinc.com
+      registry_id: US-Minnesota-CHS00001
+      minimum_viable_input:
+        acreage: 320000
+        limit: 75000000
+        deductible: 1000000
+        product_type: multi_peril_crop_insurance
+        crop_type: wheat
+        state_country: US-ND
+        domain: chsinc.com
+    - entity_id: tyson_livestock
+      name: Tyson Foods (livestock operations)
+      config_id: crop_livestock
+      domain: tysonfoods.com
+      registry_id: US-Delaware-0000100493
+      minimum_viable_input:
+        acreage: 100000
+        limit: 50000000
+        deductible: 1000000
+        product_type: livestock_mortality
+        crop_type: livestock
+        state_country: US-AR
+        domain: tysonfoods.com
+    - entity_id: jbs_sa
+      name: JBS S.A.
+      config_id: crop_livestock
+      domain: jbs.com.br
+      registry_id: BR-Sao_Paulo-02916265
+      minimum_viable_input:
+        acreage: 150000
+        limit: 50000000
+        deductible: 1000000
+        product_type: livestock_mortality
+        crop_type: livestock
+        state_country: BR-MT
+        domain: jbs.com.br
+    - entity_id: parametric_farm_ag
+      name: ParaFarm Agronomics Ltd
+      config_id: crop_parametric_weather
+      domain: parafarm.example
+      registry_id: UK-London-PF00012345
+      minimum_viable_input:
+        acreage: 15000
+        limit: 10000000
+        deductible: 100000
+        product_type: parametric_weather
+        crop_type: wheat
+        state_country: UK-ENG
+        domain: parafarm.example
+    - entity_id: small_orchard
+      name: Blossom Hill Orchard (SME)
+      config_id: crop_sme
+      domain: blossomhill.example
+      registry_id: US-California-SB00012321
+      minimum_viable_input:
+        acreage: 85
+        limit: 1000000
+        deductible: 10000
+        product_type: multi_peril_crop_insurance
+        crop_type: apple
+        state_country: US-CA
+        domain: blossomhill.example
+
+  specie:
+    - entity_id: christies
+      name: Christie's International plc
+      config_id: specie_fine_art_gallery
+      domain: christies.com
+      registry_id: UK-London-01184537
+      minimum_viable_input:
+        tiv: 5000000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: christies.com
+    - entity_id: sothebys
+      name: Sotheby's
+      config_id: specie_fine_art_gallery
+      domain: sothebys.com
+      registry_id: US-Delaware-0000823094
+      minimum_viable_input:
+        tiv: 4200000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: sothebys.com
+    - entity_id: phillips
+      name: Phillips Auctioneers LLC
+      config_id: specie_fine_art_gallery
+      domain: phillips.com
+      registry_id: US-Delaware-PH00000001
+      minimum_viable_input:
+        tiv: 850000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: phillips.com
+    - entity_id: bonhams
+      name: Bonhams
+      config_id: specie_fine_art_gallery
+      domain: bonhams.com
+      registry_id: UK-London-04326104
+      minimum_viable_input:
+        tiv: 650000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: bonhams.com
+    - entity_id: brinks
+      name: The Brink's Company
+      config_id: specie_vault_cash
+      domain: brinks.com
+      registry_id: US-Virginia-0000078890
+      minimum_viable_input:
+        tiv: 3500000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: vault_cash
+        specie_type: vault_cash
+        domain: brinks.com
+    - entity_id: loomis_cit
+      name: Loomis AB
+      config_id: specie_vault_cash
+      domain: loomis.com
+      registry_id: SE-Stockholm-5566268600
+      minimum_viable_input:
+        tiv: 2800000000
+        limit: 250000000
+        deductible: 5000000
+        product_type: vault_cash
+        specie_type: vault_cash
+        domain: loomis.com
+    - entity_id: tiffany
+      name: Tiffany & Co.
+      config_id: specie_jewelry_precious_metals
+      domain: tiffany.com
+      registry_id: US-Delaware-0000098246
+      minimum_viable_input:
+        tiv: 1800000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: tiffany.com
+    - entity_id: cartier
+      name: Cartier International SNC
+      config_id: specie_jewelry_precious_metals
+      domain: cartier.com
+      registry_id: FR-Paris-552110720
+      minimum_viable_input:
+        tiv: 2200000000
+        limit: 150000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: cartier.com
+    - entity_id: harry_winston
+      name: Harry Winston, Inc.
+      config_id: specie_jewelry_precious_metals
+      domain: harrywinston.com
+      registry_id: US-Delaware-HW000001
+      minimum_viable_input:
+        tiv: 1100000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: jewelry_precious_metals
+        specie_type: jewelry
+        domain: harrywinston.com
+    - entity_id: boutique_gallery_sme
+      name: Luminous Gallery LLC (SME)
+      config_id: specie_sme
+      domain: luminousgallery.example
+      registry_id: US-New_York-NY00012321
+      minimum_viable_input:
+        tiv: 7500000
+        limit: 5000000
+        deductible: 50000
+        product_type: fine_art_gallery
+        specie_type: fine_art
+        domain: luminousgallery.example
+
+  captive:
+    - entity_id: walmart_captive
+      name: Walmart Single-Parent Captive
+      config_id: captive_single_parent
+      domain: walmart.com
+      registry_id: BM-Hamilton-WMT-CAP
+      minimum_viable_input:
+        parent_revenue: 648125000000
+        limit: 100000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: walmart.com
+    - entity_id: mcdonalds_captive
+      name: McDonald's Single-Parent Captive
+      config_id: captive_single_parent
+      domain: mcdonalds.com
+      registry_id: BM-Hamilton-MCD-CAP
+      minimum_viable_input:
+        parent_revenue: 25494000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: mcdonalds.com
+    - entity_id: exxon_captive
+      name: Ancon Insurance Company (ExxonMobil captive)
+      config_id: captive_single_parent
+      domain: exxonmobil.com
+      registry_id: US-Vermont-VT-ANCON
+      minimum_viable_input:
+        parent_revenue: 344582000000
+        limit: 250000000
+        deductible: 10000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: US-VT
+        domain: exxonmobil.com
+    - entity_id: toyota_captive
+      name: Toyota Financial Services Insurance
+      config_id: captive_single_parent
+      domain: toyota-global.com
+      registry_id: KY-Cayman-KY-TOYOTA
+      minimum_viable_input:
+        parent_revenue: 274497000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: KY
+        domain: toyota-global.com
+    - entity_id: mars_captive
+      name: Mars Inc Captive
+      config_id: captive_single_parent
+      domain: mars.com
+      registry_id: BM-Hamilton-MARS-001
+      minimum_viable_input:
+        parent_revenue: 45000000000
+        limit: 75000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: BM
+        domain: mars.com
+    - entity_id: koch_captive
+      name: Koch Industries Captive Insurance Co
+      config_id: captive_single_parent
+      domain: kochind.com
+      registry_id: US-Vermont-VT-KOCH
+      minimum_viable_input:
+        parent_revenue: 125000000000
+        limit: 150000000
+        deductible: 5000000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: US-VT
+        domain: kochind.com
+    - entity_id: novartis_captive
+      name: Novartis International Reinsurance
+      config_id: captive_single_parent
+      domain: novartis.com
+      registry_id: JE-Jersey-JE-NOVARTIS
+      minimum_viable_input:
+        parent_revenue: 50545000000
+        limit: 100000000
+        deductible: 2500000
+        product_type: single_parent_captive
+        captive_structure: single_parent
+        domicile: JE
+        domain: novartis.com
+    - entity_id: chiropractic_group_rrg
+      name: American Chiropractic Network RRG
+      config_id: captive_risk_retention_group
+      domain: acn-rrg.example
+      registry_id: US-Vermont-VT-ACN-RRG
+      minimum_viable_input:
+        parent_revenue: 180000000
+        limit: 25000000
+        deductible: 500000
+        product_type: risk_retention_group
+        captive_structure: rrg
+        domicile: US-VT
+        domain: acn-rrg.example
+    - entity_id: industrial_group_captive
+      name: Industrial Insurance Group Captive
+      config_id: captive_group
+      domain: industrialgroup.example
+      registry_id: BM-Hamilton-IGC-001
+      minimum_viable_input:
+        parent_revenue: 2500000000
+        limit: 50000000
+        deductible: 1000000
+        product_type: group_captive
+        captive_structure: group
+        domicile: BM
+        domain: industrialgroup.example
+    - entity_id: sme_protected_cell
+      name: Small Business Protected Cell #47
+      config_id: captive_cell_protected
+      domain: pcc-platform.example
+      registry_id: GG-Guernsey-GG-PCC-047
+      minimum_viable_input:
+        parent_revenue: 85000000
+        limit: 10000000
+        deductible: 100000
+        product_type: cell_protected_captive
+        captive_structure: protected_cell
+        domicile: GG
+        domain: pcc-platform.example

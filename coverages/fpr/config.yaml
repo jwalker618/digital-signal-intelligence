@@ -2,7 +2,7 @@ financial_political_risk:
   fpr_trade_credit:
     metadata:
       name: DSI Trade Credit Insurance Model
-      description: "Trade credit \u2014 buyer default, insolvency, protracted default, political risk on receivables"
+      description: Trade credit — buyer default, insolvency, protracted default, political risk on receivables
       version: 2.3.0
       product_types:
       - trade_credit
@@ -81,6 +81,7 @@ financial_political_risk:
     - id: buyer_creditworthiness
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -102,6 +103,7 @@ financial_political_risk:
     - id: payment_terms_exposure
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -121,6 +123,7 @@ financial_political_risk:
     - id: buyer_concentration
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -142,6 +145,7 @@ financial_political_risk:
     - id: country_risk_exposure
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -161,6 +165,7 @@ financial_political_risk:
     - id: trade_dispute_frequency
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -176,6 +181,7 @@ financial_political_risk:
     - id: sector_cyclicality
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -192,6 +198,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -211,6 +218,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -232,6 +240,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -247,6 +256,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -266,6 +276,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -284,6 +295,350 @@ financial_political_risk:
           severity:
             correlation_direction: positive
             weight: 0.2
+    - id: sector_credit_spread
+      inference_utility_function: sector_credit_spread_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: fpr_primary_derived_01
+      inference_utility_function: fpr_derived_01_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_02
+      inference_utility_function: fpr_derived_02_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_03
+      inference_utility_function: fpr_derived_03_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_04
+      inference_utility_function: fpr_derived_04_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_05
+      inference_utility_function: fpr_derived_05_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_06
+      inference_utility_function: fpr_derived_06_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_07
+      inference_utility_function: fpr_derived_07_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_08
+      inference_utility_function: fpr_derived_08_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_09
+      inference_utility_function: fpr_derived_09_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_10
+      inference_utility_function: fpr_derived_10_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_11
+      inference_utility_function: fpr_derived_11_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_12
+      inference_utility_function: fpr_derived_12_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_13
+      inference_utility_function: fpr_derived_13_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_14
+      inference_utility_function: fpr_derived_14_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_15
+      inference_utility_function: fpr_derived_15_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_16
+      inference_utility_function: fpr_derived_16_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_17
+      inference_utility_function: fpr_derived_17_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_18
+      inference_utility_function: fpr_derived_18_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_19
+      inference_utility_function: fpr_derived_19_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_20
+      inference_utility_function: fpr_derived_20_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_21
+      inference_utility_function: fpr_derived_21_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_22
+      inference_utility_function: fpr_derived_22_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_23
+      inference_utility_function: fpr_derived_23_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_24
+      inference_utility_function: fpr_derived_24_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_25
+      inference_utility_function: fpr_derived_25_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_26
+      inference_utility_function: fpr_derived_26_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+    - id: fpr_primary_derived_27
+      inference_utility_function: fpr_derived_27_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          severity:
+            correlation_direction: positive
+            weight: 0.01
+    - id: fpr_primary_derived_28
+      inference_utility_function: fpr_derived_28_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: structured_data
+        risk:
+          correlation_direction: positive
+          weight: 0.01
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.01
     groups:
       three_layer_assessment:
       - id: structured_data
@@ -609,13 +964,13 @@ financial_political_risk:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.6
+      max_premium_to_revenue_ratio: 0.03
       max_ilf_factor: 10.0
   fpr_political_risk:
     metadata:
       name: DSI Political Risk & Violence Model
-      description: "Political risk \u2014 expropriation, currency inconvertibility, political violence, contract frustration"
+      description: Political risk — expropriation, currency inconvertibility, political violence, contract frustration
       version: 2.3.0
       product_types:
       - political_risk
@@ -680,7 +1035,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Local partner \u2014 may mitigate or amplify risk"
+        note: Local partner — may mitigate or amplify risk
     - id: resource_extraction
       question: Is this a natural resource extraction investment (oil, gas, mining)?
       query_condition:
@@ -688,11 +1043,12 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Resource extraction \u2014 elevated nationalisation risk"
+        note: Resource extraction — elevated nationalisation risk
     signal_registry:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -712,6 +1068,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -733,6 +1090,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -748,6 +1106,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -767,6 +1126,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -785,6 +1145,86 @@ financial_political_risk:
           severity:
             correlation_direction: positive
             weight: 0.2
+    - id: acled_incident_density
+      inference_utility_function: acled_incident_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: wb_wgi_score
+      inference_utility_function: wb_wgi_score_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.04
+          severity:
+            correlation_direction: negative
+            weight: 0.04
+    - id: ofac_country_tier
+      inference_utility_function: ofac_country_tier_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: capital_controls_watchlist
+      inference_utility_function: capital_controls_watchlist_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
+    - id: bit_treaty_coverage
+      inference_utility_function: bit_treaty_coverage_basefunction
+      proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: negative
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: negative
+            weight: 0.03
+          severity:
+            correlation_direction: negative
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -1118,13 +1558,13 @@ financial_political_risk:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.75
+      max_premium_to_revenue_ratio: 0.03
       max_ilf_factor: 10.0
   fpr_surety:
     metadata:
       name: DSI Surety & Contract Bond Model
-      description: "Surety bonds \u2014 performance, payment, bid, maintenance; contractor financial strength focus"
+      description: Surety bonds — performance, payment, bid, maintenance; contractor financial strength focus
       version: 2.3.0
       product_types:
       - surety_bond
@@ -1189,7 +1629,7 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "Government contract \u2014 Miller Act bond"
+        note: Government contract — Miller Act bond
     - id: joint_venture
       question: Is this a joint venture project with shared bonding obligations?
       query_condition:
@@ -1197,11 +1637,12 @@ financial_political_risk:
         action: FLAG
         override: null
         applied: null
-        note: "JV bonding \u2014 partner credit exposure"
+        note: JV bonding — partner credit exposure
     signal_registry:
     - id: principal_financial_strength
       inference_utility_function: principal_financial_strength_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1217,6 +1658,7 @@ financial_political_risk:
     - id: project_execution_track_record
       inference_utility_function: project_execution_track_record_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1232,6 +1674,7 @@ financial_political_risk:
     - id: backlog_to_capacity
       inference_utility_function: backlog_to_capacity_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1256,6 +1699,7 @@ financial_political_risk:
     - id: bond_default_history
       inference_utility_function: bond_default_history_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1277,6 +1721,7 @@ financial_political_risk:
     - id: obligee_complexity
       inference_utility_function: obligee_complexity_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -1609,16 +2054,36 @@ financial_political_risk:
             factor: 0.8
           - deductible: 500000
             factor: 0.7
+        contract_bond:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.05
+          - deductible: 50000
+            factor: 1.0
+          - deductible: 100000
+            factor: 0.9
+          - deductible: 250000
+            factor: 0.8
+          - deductible: 500000
+            factor: 0.7
+          ilf_curve:
+            anchor_limit: 5000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.0
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.4
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0
   fpr_kidnap_ransom:
     metadata:
       name: DSI Kidnap & Ransom Model
-      description: "K&R \u2014 kidnap, ransom, extortion, detention, hijack; crisis response included"
+      description: K&R — kidnap, ransom, extortion, detention, hijack; crisis response included
       version: 2.3.0
       product_types:
       - kidnap_ransom
@@ -1685,6 +2150,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -1704,6 +2170,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1725,6 +2192,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1740,6 +2208,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1759,6 +2228,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1780,6 +2250,7 @@ financial_political_risk:
     - id: travel_exposure_profile
       inference_utility_function: travel_exposure_profile_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1796,6 +2267,7 @@ financial_political_risk:
     - id: country_threat_level
       inference_utility_function: country_threat_level_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.kr_threat_level
@@ -1815,6 +2287,7 @@ financial_political_risk:
     - id: executive_protection
       inference_utility_function: executive_protection_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1830,6 +2303,7 @@ financial_political_risk:
     - id: crisis_response_capability
       inference_utility_function: crisis_response_capability_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1842,6 +2316,7 @@ financial_political_risk:
     - id: expatriate_population
       inference_utility_function: expatriate_population_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -1855,6 +2330,54 @@ financial_political_risk:
           size:
             correlation_direction: positive
             weight: 0.15
+    - id: acled_kfr_rate_country
+      inference_utility_function: acled_kfr_rate_country_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: public_record
+        risk:
+          correlation_direction: positive
+          weight: 0.06
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.05
+          severity:
+            correlation_direction: positive
+            weight: 0.05
+    - id: travel_pattern_density
+      inference_utility_function: travel_pattern_density_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: behavioural
+        risk:
+          correlation_direction: positive
+          weight: 0.05
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.04
+          severity:
+            correlation_direction: positive
+            weight: 0.04
+    - id: executive_exposure_footprint
+      inference_utility_function: executive_exposure_footprint_basefunction
+      proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
+      three_layer_assessment:
+        group_id: corporate_footprint
+        risk:
+          correlation_direction: positive
+          weight: 0.04
+        loss:
+          frequency:
+            correlation_direction: positive
+            weight: 0.03
+          severity:
+            correlation_direction: positive
+            weight: 0.03
     groups:
       three_layer_assessment:
       - id: public_record
@@ -2167,13 +2690,13 @@ financial_political_risk:
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.7
+      max_premium_to_revenue_ratio: 0.02
       max_ilf_factor: 10.0
   fpr_sme:
     metadata:
       name: DSI Financial & Political Risk SME Model
-      description: "Simplified FPR for smaller exposures \u2014 trade credit + political risk combined"
+      description: Simplified FPR for smaller exposures — trade credit + political risk combined
       version: 2.3.0
       product_types:
       - trade_credit
@@ -2231,6 +2754,7 @@ financial_political_risk:
     - id: buyer_creditworthiness
       inference_utility_function: buyer_creditworthiness_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2252,6 +2776,7 @@ financial_political_risk:
     - id: payment_terms_exposure
       inference_utility_function: payment_terms_exposure_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2271,6 +2796,7 @@ financial_political_risk:
     - id: buyer_concentration
       inference_utility_function: buyer_concentration_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2292,6 +2818,7 @@ financial_political_risk:
     - id: country_risk_exposure
       inference_utility_function: country_risk_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2311,6 +2838,7 @@ financial_political_risk:
     - id: trade_dispute_frequency
       inference_utility_function: trade_dispute_frequency_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2326,6 +2854,7 @@ financial_political_risk:
     - id: sector_cyclicality
       inference_utility_function: sector_cyclicality_basefunction
       proxy_tier: COHORT_INFERENCE
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: structured_data
         risk:
@@ -2342,6 +2871,7 @@ financial_political_risk:
     - id: sovereign_risk_rating
       inference_utility_function: sovereign_risk_rating_basefunction
       proxy_tier: DIRECT_OBSERVABLE
+      expectation_level: UNIVERSAL
       categories:
         group_id: public_record
         source: metadata.sovereign_risk_rating
@@ -2361,6 +2891,7 @@ financial_political_risk:
     - id: expropriation_risk
       inference_utility_function: expropriation_risk_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2382,6 +2913,7 @@ financial_political_risk:
     - id: currency_inconvertibility
       inference_utility_function: currency_inconvertibility_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2397,6 +2929,7 @@ financial_political_risk:
     - id: contract_frustration
       inference_utility_function: contract_frustration_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2416,6 +2949,7 @@ financial_political_risk:
     - id: political_violence_exposure
       inference_utility_function: political_violence_exposure_basefunction
       proxy_tier: INFERRED_PROXY
+      expectation_level: UNIVERSAL
       three_layer_assessment:
         group_id: public_record
         risk:
@@ -2747,9 +3281,27 @@ financial_political_risk:
             factor: 0.78
           - deductible: 250000
             factor: 0.68
+        political_risk:
+          deductible_factors:
+          - deductible: 10000
+            factor: 1.15
+          - deductible: 25000
+            factor: 1.0
+          - deductible: 50000
+            factor: 0.88
+          - deductible: 100000
+            factor: 0.78
+          - deductible: 250000
+            factor: 0.68
+          ilf_curve:
+            anchor_limit: 1000000
+            curve: bounded_exponential
+            params:
+              k: 0.02
+              max_ilf: 5.0
     guardrails:
       modifier_floor: 0.1
       modifier_cap: 2.5
-      max_premium_to_limit_ratio: 0.35
-      max_premium_to_revenue_ratio: 0.01
+      max_premium_to_limit_ratio: 0.5
+      max_premium_to_revenue_ratio: 0.05
       max_ilf_factor: 10.0

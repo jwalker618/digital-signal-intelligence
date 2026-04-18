@@ -22,64 +22,33 @@ from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
 # Import all extractors
-from ....extractors.stubs.do import (
-    # Network Authority
-    AuditorQualityExtractor, LegalCounselExtractor, BankingRelationshipExtractor,
-    InvestorQualityExtractor, BoardNetworkExtractor, IndexInclusionExtractor,
-    AnalystCoverageExtractor,
-    # Governance
-    BoardIndependenceExtractor, BoardDiversityExtractor, CEOChairSeparationExtractor,
-    CommitteeStructureExtractor, BoardRefreshmentExtractor, RelatedPartyExtractor,
-    CompensationStructureExtractor, ShareholderRightsExtractor,
-    # Financial
-    AuditOpinionExtractor, InternalControlsExtractor, RestatementExtractor,
-    FilingTimelinessExtractor, RevenueRecognitionExtractor, DebtCovenantExtractor,
-    StockVolatilityExtractor, ShortInterestExtractor,
-    # Litigation
-    SecuritiesLitigationExtractor, DerivativeLitigationExtractor, SECEnforcementExtractor,
-    RegulatoryActionExtractor, PendingLitigationExtractor, WhistleblowerExtractor,
-    # Executive
-    ExecutiveStabilityExtractor, CFOQualityExtractor, InsiderTradingExtractor,
-    ExecutiveBackgroundExtractor, TradingPlanExtractor,
-    # Corporate Footprint
-    InvestorRelationsExtractor, GovernancePageExtractor, ESGReportingExtractor,
-    PressReleaseExtractor, LeadershipVisibilityExtractor, HiringSignalsExtractor,
-    # Structured Data
-    ESGRatingExtractor, GovernanceRatingExtractor, ISSGovernanceExtractor,
-    # Categorical
-    CompanyTypeExtractor, DOIndustryExtractor, StockExchangeExtractor,
-)
-from ....extractors.stubs.common import IndustryAssociationExtractor, CreditRatingExtractor
 
 # Import all aggregators
-from ....aggregators.implementations.do import (
-    # Network Authority
-    AuditorQualityAggregator, LegalCounselAggregator, DOBankingRelationshipAggregator,
-    InvestorQualityAggregator, BoardNetworkAggregator, IndexInclusionAggregator,
-    AnalystCoverageAggregator,
-    # Governance
-    BoardIndependenceAggregator, BoardDiversityAggregator, CEOChairSeparationAggregator,
-    CommitteeStructureAggregator, BoardRefreshmentAggregator, RelatedPartyAggregator,
-    CompensationStructureAggregator, ShareholderRightsAggregator,
-    # Financial
-    AuditOpinionAggregator, InternalControlsAggregator, RestatementAggregator,
-    FilingTimelinessAggregator, RevenueRecognitionAggregator, DebtCovenantAggregator,
-    StockVolatilityAggregator, ShortInterestAggregator,
-    # Litigation
-    SecuritiesLitigationAggregator, DerivativeLitigationAggregator, SECEnforcementAggregator,
-    DORegulatoryActionAggregator, PendingLitigationAggregator, WhistleblowerAggregator,
-    # Executive
-    ExecutiveStabilityAggregator, CFOQualityAggregator, InsiderTradingAggregator,
-    ExecutiveBackgroundAggregator, TradingPlanAggregator,
-    # Corporate Footprint
-    InvestorRelationsAggregator, GovernancePageAggregator, ESGReportingAggregator,
-    PressReleaseAggregator, LeadershipVisibilityAggregator, HiringSignalsAggregator,
-    # Structured Data
-    ESGRatingAggregator, GovernanceRatingAggregator, ISSGovernanceAggregator,
-    # Categorical
-    CompanyTypeAggregator, DOIndustryAggregator, StockExchangeAggregator,
-)
-from ....aggregators.implementations.common import IndustryEngagementAggregator, CreditRatingAggregator
+
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
+
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
 
 
 def _run_pipeline(signal_id: str, extractor, aggregator, entity_id: str, context, score_field: str, default: float = 50, **extract_kwargs) -> SignalResult:

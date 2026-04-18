@@ -283,7 +283,7 @@ class TestSeedCompanyAppetite:
         With entity-based appetite, no-entity submissions pass by default.
         This test verifies the seed script's evaluate_appetite calls succeed.
         """
-        from seed_dsi_bench import COMPANIES, build_submission_data
+        from seed.bench import COMPANIES, build_submission_data
         failures = []
         for co in COMPANIES:
             submission_data = build_submission_data(co)

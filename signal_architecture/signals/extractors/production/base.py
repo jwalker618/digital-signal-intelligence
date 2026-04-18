@@ -301,6 +301,34 @@ class ProductionExtractor(BaseExtractor):
             result.metadata['response_time_ms'] = elapsed_ms
             result.metadata['source_version'] = self.SOURCE_VERSION
 
+            # V6/E2 (follow-up 1.1) — build + attach a Provenance record
+            # to every successful extraction. Persisting into the
+            # signal_provenance table is a job of the extractor
+            # orchestrator (seen the context object it gets called from);
+            # we attach the dataclass to metadata so the orchestrator
+            # can hand it to the persistence layer without re-running
+            # the hash.
+            try:
+                from signal_architecture.signals.provenance import (
+                    build_provenance,
+                )
+                provenance = build_provenance(
+                    source_name=self.SOURCE_NAME,
+                    source_url=f"dsi://extractor/{self.SOURCE_NAME}",
+                    response_body=result.data or {},
+                    response_status_code=(
+                        200 if result.success else 599
+                    ),
+                    extractor_version=self.SOURCE_VERSION,
+                    cache_hit=False,
+                )
+                result.metadata["provenance"] = provenance.to_dict()
+            except Exception as prov_exc:  # pragma: no cover
+                logger.debug(
+                    "%s: provenance build failed (non-blocking): %s",
+                    self.SOURCE_NAME, prov_exc,
+                )
+
             # Cache successful results
             if context and result.success:
                 self._cache_result(entity_id, result, context, **kwargs)

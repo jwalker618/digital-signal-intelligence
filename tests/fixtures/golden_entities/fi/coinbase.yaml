@@ -12,7 +12,7 @@ minimum_viable_input:
   industry_sector: CRYPTO
   domain: coinbase.com
 expected:
-  composite_score: 320.0
+  composite_score: 160.0
   tier: 5
   decision: decline
   recommended_premium: 52500.0

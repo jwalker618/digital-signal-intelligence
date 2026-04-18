@@ -344,6 +344,31 @@ EXPOSURE_SIZE_BANDS = [
     ("ULTRA",       200_000_000_000),
 ]
 
+# Basis-specific scale factors. Different basis fields have very different
+# typical numeric magnitudes: revenue/tiv/assets are in the range 10^6-10^11,
+# but underlying_premium is typically 1-2% of the limit (10^4-10^8), payroll
+# is typically 20-40% of revenue, and fleet_value is 5-15% of revenue.
+# Without this scaling the calibration harness feeds revenue-scale values
+# into tiny-basis configs and produces premiums that always hit guardrails.
+BASIS_SCALE = {
+    # Umbrella primary-premium is typically 0.1-0.3% of annual revenue
+    # for large commercial accounts. 0.002 places the EXPOSURE_SIZE_BANDS
+    # from $1k (MICRO) up to $400M (ULTRA) — the high end being a
+    # national-carrier primary book. Realistic for umbrella calibration.
+    "underlying_premium": 0.002,
+    "payroll":            0.30,   # payroll ≈ 30% of revenue for typical employer
+    "fleet_value":        0.10,   # fleet value ≈ 10% of revenue for transport
+    "bonded_obligation":  0.20,   # contract-surety bonded amount
+    "subject_premium":    0.03,   # reinsurance subject premium on ceded book
+    "gross_written_premium": 0.05,
+}
+
+
+def _scale_basis_value(raw_value: int, basis_field: str) -> int:
+    """Apply BASIS_SCALE to a raw EXPOSURE_SIZE_BANDS value."""
+    factor = BASIS_SCALE.get(basis_field, 1.0)
+    return max(1_000, int(raw_value * factor))
+
 # Limit cohorts to test (for DECOUPLED configs)
 LIMIT_COHORTS = [
     1_000_000,
@@ -452,9 +477,19 @@ def generate_fixtures_for_config(
 
     # Choose exposure sizes based on method, filtered by routing constraints
     if is_multiplier:
+        # Scale the standard band values to the basis field's typical
+        # magnitude (e.g. underlying_premium is ~2% of revenue, payroll
+        # ~30% of revenue). Without this, umbrella / WC / auto / surety
+        # configs see revenue-scale synthetic values and always hit
+        # guardrails. See BASIS_SCALE dict for per-field factors.
         exposure_sizes = [
-            (label, val) for label, val in EXPOSURE_SIZE_BANDS
-            if val >= basis_floor and (basis_ceiling == 0 or val <= basis_ceiling)
+            (label, _scale_basis_value(val, basis_field))
+            for label, val in EXPOSURE_SIZE_BANDS
+            if _scale_basis_value(val, basis_field) >= basis_floor
+            and (
+                basis_ceiling == 0
+                or _scale_basis_value(val, basis_field) <= basis_ceiling
+            )
         ]
         if not exposure_sizes:
             # Generate exposure sizes within routing bounds
@@ -483,8 +518,26 @@ def generate_fixtures_for_config(
             else:
                 test_deds = all_deds
 
+            # Tier rate is used below to skip economically-impossible
+            # (basis, limit) combos — where raw premium would exceed 3x
+            # the limit we don't bother pricing the fixture (guaranteed
+            # to clamp, drags the guardrail-hit-rate diagnostic without
+            # telling us anything about pricing calibration).
+            tier_app = band.interpretation.application
+            tier_rate = (tier_app.applied or 0) if tier_app else 0
+
             for size_label, basis_value in exposure_sizes:
                 for limit in limit_options:
+                    # Skip unrealistic (basis, limit) pairings where raw
+                    # premium is guaranteed to clamp to the limit cap —
+                    # e.g. MEGA underlying-premium against a $5M umbrella
+                    # limit isn't sold in the real market. Caps the
+                    # harness's fixture set to economically-sensible
+                    # scenarios.
+                    if is_multiplier and tier_rate > 0 and basis_value > 0 and limit > 0:
+                        raw_est = tier_rate * basis_value
+                        if raw_est > 1.5 * limit:
+                            continue
                     for ded in test_deds:
                         for mod_scenario, mod_factor in MODIFIER_SCENARIOS.items():
                             submission = {
@@ -494,7 +547,15 @@ def generate_fixtures_for_config(
                             }
 
                             if is_multiplier and basis_value > 0:
-                                submission[basis_field] = basis_value
+                                # When the config prices "basis=limit" the
+                                # basis field IS limit — skip the overwrite
+                                # so submission's limit matches the fixture
+                                # label (otherwise the diagnostic checks use
+                                # a different limit than the pricer and the
+                                # premium_exceeds_limit_ratio check reads
+                                # nonsensical P/Ls).
+                                if basis_field != "limit":
+                                    submission[basis_field] = basis_value
                                 # Provide revenue for guardrail check
                                 # Revenue is typically 2-10x the insured value
                                 submission["revenue"] = max(basis_value * 3, limit * 10)
@@ -879,7 +940,7 @@ class CalibrationHarness:
                     fixture_label=r.fixture.label,
                     check="premium_exceeds_limit_ratio",
                     detail=(
-                        f"Premium ${r.premium:,.0f} exceeds {pl_cap:.0%} of "
+                        f"[{r.fixture.label}] Premium ${r.premium:,.0f} exceeds {pl_cap:.0%} of "
                         f"limit ${r.fixture.limit:,.0f} "
                         f"(P/L={r.pl_ratio:.2%})"
                     ),

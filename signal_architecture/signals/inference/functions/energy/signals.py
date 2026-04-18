@@ -10,43 +10,32 @@ from typing import Dict, Any
 from ....types import SignalResult, InferenceContext
 from ....inference.registry import register_inference_function
 
-from ....extractors.stubs.energy import (
-    EnergyPartnerQualityExtractor, ContractorQualityExtractor, EnergyBankingRelationshipExtractor,
-    InsuranceHistoryExtractor, RegulatorRelationshipExtractor, OfftakeQualityExtractor,
-    OSHATRIRExtractor, OSHAViolationsExtractor, BSEEIncidentExtractor, ProcessSafetyExtractor,
-    FatalityHistoryExtractor, MajorIncidentExtractor, NearMissReportingExtractor,
-    EPAViolationExtractor, SpillHistoryExtractor, EmissionsComplianceExtractor,
-    FlaringIntensityExtractor, MethaneEmissionsExtractor, RemediationExtractor,
-    ProductionConsistencyExtractor, FacilityActivityExtractor, WellIntegrityExtractor,
-    MaintenancePatternExtractor, OperationalEfficiencyExtractor,
-    LeverageExtractor, AROCoverageExtractor, CapexTrendExtractor, RestructuringExtractor,
-    AssetAgeExtractor, ConcentrationExtractor, TechnologyProfileExtractor,
-    DecommissioningExtractor, PermitStatusExtractor,
-    SafetyCommunicationExtractor, EnergyESGReportingExtractor, TechnicalHiringExtractor,
-    IndustryPresenceExtractor, DisclosureQualityExtractor, HSELeadershipExtractor,
-    EnergyESGRatingExtractor, BenchmarkExtractor,
-    OperatorTypeExtractor, OperationSegmentExtractor, GeographicFocusExtractor,
-)
-from ....extractors.stubs.common import IndustryAssociationExtractor, CreditRatingExtractor
 
-from ....aggregators.implementations.energy import (
-    EnergyPartnerQualityAggregator, ContractorQualityAggregator, EnergyBankingRelationshipAggregator,
-    InsuranceHistoryAggregator, RegulatorRelationshipAggregator, OfftakeQualityAggregator,
-    OSHATRIRAggregator, OSHAViolationsAggregator, BSEEIncidentAggregator, ProcessSafetyAggregator,
-    FatalityHistoryAggregator, MajorIncidentAggregator, NearMissReportingAggregator,
-    EPAViolationAggregator, SpillHistoryAggregator, EmissionsComplianceAggregator,
-    FlaringIntensityAggregator, MethaneEmissionsAggregator, RemediationAggregator,
-    ProductionConsistencyAggregator, FacilityActivityAggregator, WellIntegrityAggregator,
-    MaintenancePatternAggregator, OperationalEfficiencyAggregator,
-    LeverageAggregator, AROCoverageAggregator, CapexTrendAggregator, RestructuringAggregator,
-    AssetAgeAggregator, ConcentrationAggregator, TechnologyProfileAggregator,
-    DecommissioningAggregator, PermitStatusAggregator,
-    SafetyCommunicationAggregator, EnergyESGReportingAggregator, TechnicalHiringAggregator,
-    IndustryPresenceAggregator, DisclosureQualityAggregator, HSELeadershipAggregator,
-    EnergyESGRatingAggregator, BenchmarkAggregator,
-    OperatorTypeAggregator, OperationSegmentAggregator, GeographicFocusAggregator,
-)
-from ....aggregators.implementations.common import IndustryEngagementAggregator, CreditRatingAggregator
+
+# V6/E10 neutral stand-ins — real extractor wiring lands via the
+# D-series production extractors (Stage 6). Until then every call
+# returns a neutral SignalResult(score=50, confidence=0.5).
+
+async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+    """Neutral scoring stand-in. Accepts the legacy
+    (signal_id, extractor, aggregator, entity_id, context, ...)
+    signature but ignores the extractor + aggregator args."""
+    return SignalResult(
+        signal_id=signal_id,
+        score=float(default),
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
+
+
+async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+    """Neutral categorical stand-in — see _run_pipeline."""
+    return SignalResult(
+        signal_id=signal_id,
+        category=default,
+        confidence=0.5,
+        execution_time_ms=0.0,
+    )
 
 
 def _run_pipeline(signal_id, extractor, aggregator, entity_id, context, score_field, default=50, **kw):
