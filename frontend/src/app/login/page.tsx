@@ -1,19 +1,25 @@
-// A-3b: Login page (email/password + SSO redirect).
-//
-// Public page -- no auth required. On success the auth store holds a
-// valid session and SessionGuard in the root layout takes over routing.
-
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Loader2 } from "lucide-react";
+import { Check, Loader2, Lightbulb, LightbulbOff } from "lucide-react";
 
+import "@/app/globals.css";
 import { useAuthStore } from "@/store/authStore";
 import { MFAVerify } from "@/components/auth/MFAVerify";
+import { SidebarIconBtn } from "@/components/layout/nav";
 
 export default function LoginPage() {
+
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const html = document.documentElement;
+    if (isDark) html.classList.add("dark");
+    else html.classList.remove("dark");
+  }, [isDark]);
+
   const router = useRouter();
   const params = useSearchParams();
   const nextPath = params.get("next") ?? "/";
@@ -67,98 +73,96 @@ export default function LoginPage() {
     }
   }
 
-  return (
-    <main className="min-h-screen flex items-center justify-center bg-dsi-background">
-      <div className="w-full max-w-md border-3 border-dsi-outline rounded-lg p-8 bg-dsi-contrast-background/5">
-        <header className="mb-6">
-          <h1 className="font-inter text-3xl tracking-wide">
-            Digital Signal Intelligence
-          </h1>
-          <p className="opacity-70 text-sm mt-1">
-            Sign in to continue
-          </p>
-        </header>
 
-        {mfaChallengePending ? (
-          <MFAVerify />
-        ) : (
-          <>
-            <form onSubmit={onSubmit} className="flex flex-col gap-4">
-              <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-70">Email</span>
+  return (
+    <>
+      <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-dsi-contrast-background">
+        
+        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+          
+          <img
+             alt="DSI Logo"
+             src={
+              isDark
+                ? "/Standard_Generate_Logo_and_DSI.svg"
+                : "/BlackWhite_Generate_Logo_and_DSI.svg"
+            }
+            className="w-20 h-20 mx-auto w-auto" 
+          />
+
+          <div className="flex items-center justify-between mt-10">
+            
+            <h2 className="text-center text-2xl/9 font-bold tracking-tight text-dsi-background">
+              Sign in to your account
+            </h2>
+            <SidebarIconBtn
+              icon={isDark ? LightbulbOff : Lightbulb}
+              onClick={() => setIsDark(!isDark)}
+              className="text-dsi-background hover:text-dsi-selected"
+            />
+          </div>
+      
+        </div>
+
+        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
+          <form action="#" method="POST" className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm/6 font-medium text-dsi-background">
+                Email address
+              </label>
+              <div className="mt-2">
                 <input
+                  id="email"
+                  name="email"
                   type="email"
+                  required
                   autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
+                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
                 />
-              </label>
-              <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-70">Password</span>
+              </div>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between">
+                <label htmlFor="password" className="block text-sm/6 font-medium text-dsi-background">
+                  Password
+                </label>
+                <div className="text-sm">
+                  <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
+                    Forgot password?
+                  </a>
+                </div>
+              </div>
+              <div className="mt-2">
                 <input
+                  id="password"
+                  name="password"
                   type="password"
-                  autoComplete="current-password"
                   required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
+                  autoComplete="current-password"
+                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
                 />
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                Remember me on this device
-              </label>
-              {error && <div className="text-sm text-dsi-negative">{error}</div>}
+              </div>
+            </div>
+
+            <div>
               <button
                 type="submit"
-                disabled={submitting}
-                className="flex items-center justify-center gap-2 bg-dsi-contrast-background text-dsi-background py-2 rounded font-semibold disabled:opacity-50"
+                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
               >
-                {submitting && <Loader2 className="icon animate-spin" />}
                 Sign in
               </button>
-              <Link
-                href="/reset-password"
-                className="text-sm text-dsi-selected self-center hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </form>
-
-            <div className="my-6 flex items-center gap-3 opacity-60">
-              <span className="flex-1 border-t border-dsi-outline/40" />
-              <span className="text-xs tracking-widest">OR</span>
-              <span className="flex-1 border-t border-dsi-outline/40" />
             </div>
+          </form>
 
-            <div className="flex flex-col gap-2">
-              <label className="flex flex-col gap-1">
-                <span className="text-sm opacity-70">Tenant (for SSO)</span>
-                <input
-                  value={tenantSlug}
-                  onChange={(e) => setTenantSlug(e.target.value)}
-                  placeholder="e.g. acme-re"
-                  className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={onSSO}
-                disabled={submitting}
-                className="border-2 border-dsi-outline text-dsi-contrast-background py-2 rounded hover:bg-dsi-outline/10 disabled:opacity-50"
-              >
-                Continue with SSO
-              </button>
-            </div>
-          </>
-        )}
+          <p className="mt-10 text-center text-sm/6 text-gray-400">
+            Not a member?{' '}
+            <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
+              Start a 14 day free trial
+            </a>
+          </p>
+        </div>
       </div>
-    </main>
-  );
+    </>
+  )
 }
