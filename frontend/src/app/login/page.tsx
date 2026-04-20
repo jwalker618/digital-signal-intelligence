@@ -6,18 +6,13 @@ import { Loader2, Lightbulb, LightbulbOff } from "lucide-react";
 
 import "@/app/globals.css";
 import { useAuthStore } from "@/store/authStore";
+import { useThemeStore } from "@/store/themeStore";
 import { MFAVerify } from "@/components/auth/MFAVerify";
 import { SidebarIconBtn } from "@/components/layout/nav";
 
 export default function LoginPage() {
-
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    const html = document.documentElement;
-    if (isDark) html.classList.add("dark");
-    else html.classList.remove("dark");
-  }, [isDark]);
+  const isDark = useThemeStore((s) => s.isDark);
+  const toggleDark = useThemeStore((s) => s.toggleDark);
 
   const router = useRouter();
   const params = useSearchParams();
@@ -89,7 +84,7 @@ export default function LoginPage() {
             
             <SidebarIconBtn
               icon={isDark ? LightbulbOff : Lightbulb}
-              onClick={() => setIsDark(!isDark)}
+              onClick={toggleDark}
               className="text-dsi-background hover:text-dsi-selected"
             />
 
