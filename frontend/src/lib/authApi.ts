@@ -43,12 +43,11 @@ function authHeaders(accessToken: string | null): Record<string, string> {
 export async function login(
   email: string,
   password: string,
-  rememberMe: boolean,
 ): Promise<LoginResponse> {
   const res = await fetch(apiUrl("/api/v1/auth/login"), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password, remember_me: rememberMe }),
+    body: JSON.stringify({ email, password, }),
   });
   return parseJsonOrError(res);
 }

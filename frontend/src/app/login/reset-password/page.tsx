@@ -53,41 +53,59 @@ function RequestResetForm() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-dsi-background">
-      <div className="w-full max-w-md border-3 border-dsi-outline rounded-lg p-8">
-        <h1 className="font-inter text-2xl tracking-wide mb-4">
+    
+    <main className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+        
+        <h1 className="text-left text-2xl font-bold text-dsi-background mb-5">
           Reset password
         </h1>
         {submitted ? (
-          <p className="text-sm opacity-80">
+          <p className="text-sm">
             If an account exists for <strong>{email}</strong>, a reset link
             has been sent. Check your inbox.
           </p>
         ) : (
-          <form onSubmit={onSubmit} className="flex flex-col gap-4">
+          
+          <form onSubmit={onSubmit} className="space-y-3">
+            
             <label className="flex flex-col gap-1">
-              <span className="text-sm opacity-70">Email</span>
+              
+              <span className="
+                block mb-1
+                text-xs text-dsi-background"
+                >Email
+              </span>
+              
               <input
-                type="email"
+                id="email" name="email" type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
+                
+                className="w-full dsi-inputbox"
               />
+
             </label>
+            
             <button
               type="submit"
               disabled={busy}
-              className="flex items-center justify-center gap-2 bg-dsi-contrast-background text-dsi-background py-2 rounded font-semibold disabled:opacity-50"
+              className="w-full flex flex-col dsi-actionbutton"
             >
               {busy && <Loader2 className="icon animate-spin" />}
-              Send reset link
+              Send Reset Link
             </button>
           </form>
         )}
-        <div className="mt-6">
-          <Link href="/login" className="text-sm text-dsi-selected hover:underline">
-            Back to sign in
+        <div className="mt-3">
+          <Link 
+            href="/login" 
+            className="
+              font-bold
+              text-dsi-outline hover:text-dsi-selected">
+            Back To Sign In
           </Link>
         </div>
       </div>
@@ -131,22 +149,34 @@ function SetNewPasswordForm({
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-dsi-background">
-      <div className="w-full max-w-md border-3 border-dsi-outline rounded-lg p-8">
-        <h1 className="font-inter text-2xl tracking-wide mb-4">
+    
+    <main className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
+      
+      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+
+        <h1 className="text-left text-2xl font-bold text-dsi-background mb-5">
           Choose a new password
         </h1>
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        
+        <form onSubmit={onSubmit} className="space-y-3">
+          
           <label className="flex flex-col gap-1">
-            <span className="text-sm opacity-70">New password</span>
+            <span className="
+              block mb-1
+              text-xs text-dsi-background"
+              >New password
+            </span>
+            
             <input
-              type="password"
+              id="password" name="password" type="password"
               required
               value={pw}
               onChange={(e) => setPw(e.target.value)}
-              className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
+              
+              className="w-full dsi-inputbox"
             />
           </label>
+
           <div className="flex items-center gap-2 text-xs opacity-80">
             <div className="flex-1 h-1 bg-dsi-outline/30 rounded overflow-hidden">
               <div
@@ -156,25 +186,36 @@ function SetNewPasswordForm({
             </div>
             <span>{strength.label}</span>
           </div>
+          
           <label className="flex flex-col gap-1">
-            <span className="text-sm opacity-70">Confirm</span>
+            <span className="
+              block mb-1
+              text-xs text-dsi-background"
+            >Confirm
+            </span>
+            
             <input
-              type="password"
+              id="password" name="password" type="password"
               required
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
-              className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 rounded"
+              
+              className="w-full dsi-inputbox"
             />
           </label>
+
           {error && <div className="text-sm text-dsi-negative">{error}</div>}
+          
           <button
             type="submit"
             disabled={busy}
-            className="flex items-center justify-center gap-2 bg-dsi-contrast-background text-dsi-background py-2 rounded font-semibold disabled:opacity-50"
+            
+            className="w-full flex flex-col dsi-actionbutton"
           >
             {busy && <Loader2 className="icon animate-spin" />}
             Set new password
           </button>
+
         </form>
       </div>
     </main>

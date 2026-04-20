@@ -2,8 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
-import { Check, Loader2, Lightbulb, LightbulbOff } from "lucide-react";
+import { Loader2, Lightbulb, LightbulbOff } from "lucide-react";
 
 import "@/app/globals.css";
 import { useAuthStore } from "@/store/authStore";
@@ -26,16 +25,11 @@ export default function LoginPage() {
 
   const login = useAuthStore((s) => s.login);
   const loginSSO = useAuthStore((s) => s.loginSSO);
-  // Subscribe to the *result* of isAuthenticated(), not the function
-  // reference. The function itself is stable on the Zustand store, so
-  // selecting it would never trigger a re-render when the underlying
-  // user/token state flips to authenticated after login.
   const isAuthed = useAuthStore((s) => s.isAuthenticated());
   const mfaChallengePending = useAuthStore((s) => s.mfaChallengePending);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [tenantSlug, setTenantSlug] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -50,7 +44,7 @@ export default function LoginPage() {
     setSubmitting(true);
     setError(null);
     try {
-      await login(email.trim().toLowerCase(), password, rememberMe);
+      await login(email.trim().toLowerCase(), password,);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -73,95 +67,156 @@ export default function LoginPage() {
     }
   }
 
-
   return (
     <>
-      <div className="flex min-h-full flex-col justify-center px-6 py-12 lg:px-8 bg-dsi-contrast-background">
+      <div className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
         
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           
           <img
              alt="DSI Logo"
-             src={
-              isDark
-                ? "/Standard_Generate_Logo_and_DSI.svg"
-                : "/BlackWhite_Generate_Logo_and_DSI.svg"
-            }
+             src={isDark ? 
+              "/Standard_Generate_Logo_and_DSI.svg" : "/BlackWhite_Generate_Logo_and_DSI.svg"
+              }
             className="w-20 h-20 mx-auto w-auto" 
           />
 
-          <div className="flex items-center justify-between mt-10">
+          <div className="flex items-center justify-between mt-10 mb-5">
             
-            <h2 className="text-center text-2xl/9 font-bold tracking-tight text-dsi-background">
+            <h2 className="text-center text-2xl font-bold text-dsi-background">
               Sign in to your account
             </h2>
+            
             <SidebarIconBtn
               icon={isDark ? LightbulbOff : Lightbulb}
               onClick={() => setIsDark(!isDark)}
               className="text-dsi-background hover:text-dsi-selected"
             />
+
           </div>
       
         </div>
 
-        <div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
-          <form action="#" method="POST" className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm/6 font-medium text-dsi-background">
-                Email address
-              </label>
-              <div className="mt-2">
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  autoComplete="email"
-                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
-                />
-              </div>
-            </div>
+        {mfaChallengePending ? (
+          <MFAVerify />
+        ) : (
+          <>
 
-            <div>
-              <div className="flex items-center justify-between">
-                <label htmlFor="password" className="block text-sm/6 font-medium text-dsi-background">
-                  Password
+          <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+            
+            <form onSubmit={onSubmit} className="space-y-3">
+
+              <div>
+                
+                <label 
+                  htmlFor="email" 
+                  className="
+                    block mb-1
+                    text-xs text-dsi-background"
+                  >Email Address
                 </label>
-                <div className="text-sm">
-                  <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
-                    Forgot password?
+                
+                <div> 
+                  <input
+                    id="email" name="email" type="email" autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    
+                    className="w-full dsi-inputbox"
+                  />
+                </div>
+                
+              </div>
+
+              <div>
+                
+                <div className="flex items-center justify-between content-center">
+                  <label   
+                    htmlFor="password" 
+                    className="
+                      block mb-1
+                      text-xs text-dsi-background
+                      ">Password
+                    </label>
+                </div>
+                
+                <div>  
+                  <input
+                    id="password" name="password" type="password" autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    
+                    className="w-full dsi-inputbox"
+                  />
+                </div>
+
+              </div>
+
+              <div>
+
+                {error && <div className="text-sm text-dsi-negative">{error}</div>}
+                <button
+                  id="submit" name="submit" type="submit" disabled={submitting}
+                  
+                  className="w-full flex flex-col dsi-actionbutton"
+                >
+                  {submitting && <Loader2 className="icon animate-spin" />}
+                  Sign in
+                </button>
+
+                <div className="text-sm mt-2">
+                  <a href="/login/reset-password" 
+                    className="
+                      font-bold
+                      text-dsi-outline hover:text-dsi-selected">
+                    Forgot Password?
                   </a>
                 </div>
+
               </div>
-              <div className="mt-2">
+              
+            </form>
+
+            <div className="my-6 flex items-center gap-3">
+              <span className="flex-1 border-t border-dsi-outline/50" />
+              <span className="text-xs tracking-widest text-dsi-selected">OR</span>
+              <span className="flex-1 border-t border-dsi-outline/50" />
+            </div>
+
+            <div className="flex flex-col">
+              
+              <label className="flex flex-col">
+                <span className="
+                  block mb-1
+                  text-xs text-dsi-background"
+                  >Tenant (for SSO)</span>
+                
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  autoComplete="current-password"
-                  className="block w-full rounded-md bg-white/5 px-3 py-1.5 text-base text-white outline-1 -outline-offset-1 outline-white/10 placeholder:text-gray-500 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-500 sm:text-sm/6"
+                  value={tenantSlug}
+                  onChange={(e) => setTenantSlug(e.target.value)}
+                  placeholder="e.g. your company domain"
+                  
+                  className="w-full dsi-inputbox"
                 />
-              </div>
-            </div>
-
-            <div>
+              </label>
+              
               <button
-                type="submit"
-                className="flex w-full justify-center rounded-md bg-indigo-500 px-3 py-1.5 text-sm/6 font-semibold text-white hover:bg-indigo-400 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-              >
-                Sign in
+                type="button"
+                onClick={onSSO}
+                disabled={submitting}
+                
+                className="mt-3 dsi-actionbutton"
+                > Continue with SSO
               </button>
-            </div>
-          </form>
 
-          <p className="mt-10 text-center text-sm/6 text-gray-400">
-            Not a member?{' '}
-            <a href="#" className="font-semibold text-indigo-400 hover:text-indigo-300">
-              Start a 14 day free trial
-            </a>
-          </p>
-        </div>
+            </div>
+        
+          </div>
+          
+          </>
+        )}
       </div>
     </>
   )

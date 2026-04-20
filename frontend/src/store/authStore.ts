@@ -40,7 +40,7 @@ interface AuthState {
 
   // --- actions ---
   boot: () => Promise<void>;
-  login: (email: string, password: string, rememberMe: boolean) => Promise<void>;
+  login: (email: string, password: string, ) => Promise<void>;
   verifyMFA: (code: string) => Promise<void>;
   loginSSO: (tenantSlug: string) => Promise<void>;
   refresh: () => Promise<boolean>;
@@ -99,9 +99,9 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
-      login: async (email, password, rememberMe) => {
+      login: async (email, password) => {
         set({ error: null });
-        const resp = await apiLogin(email, password, rememberMe);
+        const resp = await apiLogin(email, password);
         set({
           accessToken: resp.access_token,
           refreshToken: resp.refresh_token,
