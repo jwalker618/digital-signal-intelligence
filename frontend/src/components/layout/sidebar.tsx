@@ -32,6 +32,7 @@ import {
 
 import { useDsiStore } from "@/store/dsiStore";
 import { useAuthStore } from "@/store/authStore";
+import { useThemeStore } from "@/store/themeStore";
 
 import { NavGroup, NavItem, SidebarIconBtn } from "./nav";
 import { DRILL_DOWN_CATEGORIES, SUBMISSIONS_CHILDREN } from "./navConfig";
@@ -40,8 +41,6 @@ import UserMenu from "./userMenu";
 interface SidebarProps {
   isOpen: boolean;
   onToggleOpen: () => void;
-  isDark: boolean;
-  onToggleDark: () => void;
   /** Bottom-row height — matches the main area's title bar height. */
   collapsedWidthPx: number | null;
   sidebarRef: React.Ref<HTMLElement>;
@@ -50,13 +49,14 @@ interface SidebarProps {
 export default function Sidebar({
   isOpen,
   onToggleOpen,
-  isDark,
-  onToggleDark,
   collapsedWidthPx,
   sidebarRef,
 }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+
+  const isDark = useThemeStore((s) => s.isDark);
+  const toggleDark = useThemeStore((s) => s.toggleDark);
 
   const {
     activeMenu,
@@ -291,7 +291,7 @@ export default function Sidebar({
             <SidebarIconBtn icon={Bug} />
             <SidebarIconBtn
               icon={isDark ? LightbulbOff : Lightbulb}
-              onClick={onToggleDark}
+              onClick={toggleDark}
             />
           </div>
         </div>

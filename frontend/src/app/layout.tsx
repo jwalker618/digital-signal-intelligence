@@ -7,6 +7,7 @@ import { IBM_Plex_Sans, Inter } from "next/font/google";
 import { UserProvider } from "@/context/UserContext";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { NotificationToastHost } from "@/components/shared/NotificationToast";
+import { useThemeStore } from "@/store/themeStore";
 
 import Sidebar from "@/components/layout/sidebar";
 import TitleBar from "@/components/layout/titleBar";
@@ -26,7 +27,7 @@ const inter = Inter({
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [isDark, setIsDark] = useState(false);
+  const isDark = useThemeStore((s) => s.isDark);
 
   const pathname = usePathname();
   const isPublicAuthPage =
@@ -87,8 +88,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                   sidebarRef={sidebarRef}
                   isOpen={isOpen}
                   onToggleOpen={() => setIsOpen(!isOpen)}
-                  isDark={isDark}
-                  onToggleDark={() => setIsDark(!isDark)}
                   collapsedWidthPx={collapsedWidthPx}
                 />
 
