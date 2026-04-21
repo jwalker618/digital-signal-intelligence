@@ -20,7 +20,6 @@ import { passwordResetRequest } from "@/lib/authApi";
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
   const [resetSent, setResetSent] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -42,17 +41,14 @@ export default function ProfilePage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-dsi-pad"></div>
-      
-      <CardGrid cols="grid-cols-[80%_20%]">
-        
-        <StandardCard 
-          title="Account" 
+      <CardGrid cols="grid-cols-[4fr_1fr]">
+
+        <StandardCard
+          title="Account"
           lucideIcon={UserRound}
-          spanClass="col-[80%]"
+          spanClass="row-span-3"
           >
-          
+
           <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
             
             <dt className="dsi-analysis-description">Email</dt>
@@ -91,10 +87,10 @@ export default function ProfilePage() {
         
         </StandardCard>
 
-        <StandardCard 
-          title="Two-factor authentication" 
+        <StandardCard
+          title="Two-factor authentication"
           lucideIcon={ShieldUser}
-          spanClass="col-[20%]">
+        >
           {user.mfa_enabled ? (
             <p className="text-sm text-dsi-selected">
               MFA is enabled on your account.
@@ -104,11 +100,11 @@ export default function ProfilePage() {
           )}
         </StandardCard>
 
-        <StandardCard 
-          title="Password" 
+        <StandardCard
+          title="Password"
           lucideIcon={KeyRound}
-          spanClass="col-[20%]">
-          
+        >
+
           {resetSent ? (
             <p className="text-sm">
               A reset link has been sent to <strong>{user.email}</strong>.
@@ -132,12 +128,11 @@ export default function ProfilePage() {
         </StandardCard>
 
         <StandardCard
-
-          title="Notifications" 
+          title="Notifications"
           lucideIcon={Bell}
-          spanClass="col-[20%]">
+        >
           <NotificationPreferences />
-        
+
         </StandardCard>
 
       </CardGrid>

@@ -9,7 +9,9 @@ export interface DsiState {
   setActiveMenu: (menu: string) => void;
   previousMenu: string;
   updateDecision: (quoteCode: string, quoteDecision: string, referralDecision: string | null) => Promise<void>;
-  navigateBack: () => void; 
+  navigateBack: () => void;
+  /** Leave a submission without resetting activeMenu (unlike navigateBack). */
+  clearSubmissionContext: () => void;
 
   // Title Bar Menu Actions and Quick Action
   hasPageActions: boolean;
@@ -153,7 +155,18 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       activeVersion: null,
       activeReferral: null
     }));
-  },  
+  },
+
+  clearSubmissionContext: () => {
+    set({
+      activeSubmission: null,
+      activeQuote: null,
+      activeVersion: null,
+      activeReferral: null,
+      activeCommercial: null,
+      activeRisk: null,
+    });
+  },
 
   updateDecision: async (quoteCode: string, quoteAction: string, referralAction: string | null) => {
     try {
