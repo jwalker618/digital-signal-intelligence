@@ -10,12 +10,14 @@ import { useRouter } from "next/navigation";
 import { CircleUserRound, LogOut } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
+import { useDsiStore } from "@/store/dsiStore";
 import { SidebarIconBtn } from "./nav";
 
 export default function UserMenu() {
   const router = useRouter();
   const authUser = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
   const [isOpen, setIsOpen] = useState(false);
 
   const closeAnd = (fn: () => void | Promise<void>) => async () => {
@@ -42,7 +44,10 @@ export default function UserMenu() {
           >
 
           <button
-            onClick={closeAnd(() => router.push("/profile"))}
+            onClick={closeAnd(() => {
+              setActiveMenu("Your Profile");
+              router.push("/profile");
+            })}
             className="dsi-actiontext"
           >
             <CircleUserRound className="icon" /> Profile
