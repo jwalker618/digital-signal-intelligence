@@ -6,6 +6,13 @@
  * that needs matching foreground + background classes).
  */
 
+import {
+  LucideIcon,
+  ShieldCheck,
+  ShieldQuestionMark,
+  ShieldX,
+} from "lucide-react";
+
 export interface StatusPaletteEntry {
   text: string;
   bg: string;
@@ -18,6 +25,27 @@ export const DECISION_PALETTE: Record<string, StatusPaletteEntry> = {
   refer:   { text: "text-dsi-refer", bg: "bg-dsi-refer",     },
   decline: { text: "text-dsi-decline", bg: "bg-dsi-decline",  },
   pending: { text: "text-dsi-muted", bg: "bg-dsi-muted",       },
+};
+
+/**
+ * Submission header card — decision → (bg, icon) pair.
+ *
+ * Different shape than the {text, bg} palettes because the submission
+ * header shows a large shield icon alongside the banner; the icon maps
+ * 1:1 with the decision.
+ */
+export type Decision = "approve" | "refer" | "decline" | "pending";
+
+export interface DecisionVisual {
+  bg: string;
+  icon: LucideIcon;
+}
+
+export const SUBMISSION_DECISION: Record<Decision, DecisionVisual> = {
+  approve: { bg: "bg-dsi-approve", icon: ShieldCheck },
+  refer:   { bg: "bg-dsi-refer",   icon: ShieldQuestionMark },
+  decline: { bg: "bg-dsi-decline", icon: ShieldX },
+  pending: { bg: "bg-dsi-muted",   icon: ShieldQuestionMark },
 };
 
 /** Signal/condition actions — used in badges and row tags. */
