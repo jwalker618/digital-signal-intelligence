@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
 
   if (!user) {
-    return <main className="p-6 opacity-70">Loading profile…</main>;
+    return <main className="dsi-user-message">Loading profile…</main>;
   }
 
   async function requestReset(e: FormEvent) {

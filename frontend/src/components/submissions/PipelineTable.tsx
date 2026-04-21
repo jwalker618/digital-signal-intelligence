@@ -7,7 +7,12 @@ import ViewCanvas from "@/components/ViewCanvas";
 import { useDsiStore } from "@/store/dsiStore";
 import { StatusPill } from "@/components/base/content/primatives";
 import { DECISION_PALETTE } from "@/lib/statusPalette";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { 
+  formatText,
+  formatCurrency, 
+  formatNumber 
+} from "@/lib/format";
+
 import "@/app/globals.css";
 
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
@@ -82,6 +87,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
 
   return (
     <ViewCanvas unstyledMain={true}>
+      
       <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
 
         {/* FIXED TOP SECTION */}
@@ -92,8 +98,8 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
             {type !== "full" && " (or status = DRAFT)."}
           </h1>
           {hasAnyFilter && (
-            <button onClick={clearAllFilters} className="flex items-center gap-1 text-xs text-dsi-selected hover:opacity-70 transition-opacity">
-              <X className="w-3 h-3" /> Clear filters
+            <button onClick={clearAllFilters} className="flex dsi-actiontext gap-1">
+              Clear filters <X className="icon" /> 
             </button>
           )}
         </div>
@@ -105,8 +111,10 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
             {/* STICKY HEADER WITH FILTER CONTROLS */}
             <thead className="sticky top-0 z-20 bg-dsi-background">
               {/* Column titles */}
-              <tr className="text-dsi-contrast-background font-semibold text-sm uppercase underline">
-                <th className="py-3">
+              
+              <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                
+                <th className="p-1.5">
                   <ColumnFilterHeader
                     label="Client"
                     filterKey="client"
@@ -115,7 +123,8 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     hasValue={!!clientFilter}
                   />
                 </th>
-                <th className="py-3 px-2">
+
+                <th className="p-1.5">
                   <ColumnFilterHeader
                     label="Coverage"
                     filterKey="coverage"
@@ -124,11 +133,11 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     hasValue={!!coverageFilter}
                   />
                 </th>
-                <th className="py-3 px-2 text-center text-wrap">Final Composite Score</th>
-                <th className="py-3 px-2 text-center text-wrap">Final Tier</th>
-                <th className="py-3 px-2 text-center text-wrap">Recommended Technical Premium</th>
-                <th className="py-3 px-2 text-center text-wrap">Recommended Technical Limit</th>
-                <th className="py-3 px-2 text-center text-wrap">
+                <th className="p-1.5">Final Composite Score</th>
+                <th className="p-1.5">Final Tier</th>
+                <th className="p-1.5">Recommended Technical Premium</th>
+                <th className="p-1.5">Recommended Technical Limit</th>
+                <th className="p-1.5">
                   {type === "full" ? (
                     <ColumnFilterHeader
                       label="Decision"
@@ -143,8 +152,9 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
 
               {/* Filter input row — shown when a filter is active */}
               {activeFilter && (
-                <tr className="bg-dsi-analysis/40">
-                  <td className="py-1 pr-1">
+                <tr className="bg-dsi-analysis border-b-2 border-dsi-outline">
+                  
+                  <td className="p-1.5">
                     {activeFilter === 'client' && (
                       <input
                         autoFocus
@@ -152,11 +162,12 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                         value={clientFilter}
                         onChange={(e) => setClientFilter(e.target.value)}
                         placeholder="Search clients..."
-                        className="w-full bg-dsi-background border border-dsi-outline/30 rounded px-2 py-1 text-sm outline-none focus:border-dsi-selected text-dsi-contrast-background"
+                        className="w-full text-xs dsi-inputbox"
                       />
                     )}
                   </td>
-                  <td className="py-1 px-2">
+
+                  <td className="p-1.5">
                     {activeFilter === 'coverage' && (
                       <input
                         autoFocus
@@ -164,18 +175,20 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                         value={coverageFilter}
                         onChange={(e) => setCoverageFilter(e.target.value)}
                         placeholder="Search coverage..."
-                        className="w-full bg-dsi-background border border-dsi-outline/30 rounded px-2 py-1 text-sm outline-none focus:border-dsi-selected text-dsi-contrast-background"
+                        className="w-full text-xs dsi-inputbox"
                       />
                     )}
                   </td>
-                  <td colSpan={4}></td>
-                  <td className="py-1 px-2">
+
+                  <td className="p-1.5" colSpan={4}></td>
+
+                  <td className="p-1.5">
                     {activeFilter === 'decision' && type === 'full' && (
                       <select
                         autoFocus
                         value={decisionFilter}
                         onChange={(e) => setDecisionFilter(e.target.value)}
-                        className="w-full bg-dsi-background border border-dsi-outline/30 rounded px-2 py-1 text-sm outline-none focus:border-dsi-selected text-dsi-contrast-background"
+                        className="w-full text-xs dsi-inputbox"
                       >
                         <option value="">All</option>
                         {uniqueDecisions.map(d => (
@@ -184,6 +197,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                       </select>
                     )}
                   </td>
+                  
                 </tr>
               )}
             </thead>
@@ -196,14 +210,14 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                     onClick={() => handleRowClick(sub)}
                     className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
                   >
-                    <td className="py-3 px-1">{sub.entity_name}</td>
-                    <td className="py-3 px-2">{sub.coverage_configuration}</td>
-                    <td className="py-3 px-2 text-right">{formatNumber(sub.final_composite_score)}</td>
-                    <td className="py-3 px-2 text-right">{sub.final_tier}</td>
-                    <td className="py-3 px-2 text-right">{formatCurrency(sub.recommended_premium)}</td>
-                    <td className="py-3 px-2 text-right">{formatCurrency(sub.recommended_limit)}</td>
+                    <td className="p-1.5">{formatText(sub.entity_name,"capitalize")}</td>
+                    <td className="p-1.5">{formatText(sub.coverage_configuration)}</td>
+                    <td className="p-1.5 text-right">{formatNumber(sub.final_composite_score)}</td>
+                    <td className="p-1.5 text-right">{sub.final_tier}</td>
+                    <td className="p-1.5 text-right">{formatCurrency(sub.recommended_premium,0,"USD")}</td>
+                    <td className="p-1.5 text-right">{formatCurrency(sub.recommended_limit,0,"USD")}</td>
 
-                    <td className="py-3 px-2">
+                    <td className="p-1.5">
                       {type === "full" ? (
                         <StatusPill palette={DECISION_PALETTE} status={sub.decision}>
                           {sub.decision || "—"}
@@ -239,7 +253,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
           </table>
 
           {displayData.length === 0 && (
-            <div className="text-center py-8 text-dsi-selected opacity-70 italic">
+            <div className="dsi-user-message">
               {hasAnyFilter ? 'No submissions match the current filters.' : 'No submissions found.'}
             </div>
           )}
@@ -271,7 +285,7 @@ function ColumnFilterHeader({ label, filterKey, activeFilter, setActiveFilter, h
         className={`p-0.5 rounded transition-colors ${isActive || hasValue ? 'text-dsi-selected' : 'opacity-30 hover:opacity-70'}`}
         title={`Filter by ${label}`}
       >
-        <Filter className="w-3.5 h-3.5" />
+        <Filter className="icon" />
       </button>
     </div>
   );

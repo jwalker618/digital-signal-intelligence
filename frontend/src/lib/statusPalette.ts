@@ -7,16 +7,17 @@
  */
 
 export interface StatusPaletteEntry {
-  bg: string;
   text: string;
+  bg: string;
 }
+
 
 /** Decision outcomes — big coloured banner / pill. */
 export const DECISION_PALETTE: Record<string, StatusPaletteEntry> = {
-  approve: { bg: "bg-dsi-approve/15", text: "text-dsi-positive" },
-  refer:   { bg: "bg-dsi-refer/15",   text: "text-dsi-warning"  },
-  decline: { bg: "bg-dsi-decline/15", text: "text-dsi-negative" },
-  pending: { bg: "bg-dsi-muted/15",   text: "text-dsi-muted"    },
+  approve: { text: "text-dsi-approve", bg: "bg-dsi-approve",  },
+  refer:   { text: "text-dsi-refer", bg: "bg-dsi-refer",     },
+  decline: { text: "text-dsi-decline", bg: "bg-dsi-decline",  },
+  pending: { text: "text-dsi-muted", bg: "bg-dsi-muted",       },
 };
 
 /** Signal/condition actions — used in badges and row tags. */

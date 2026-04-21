@@ -7,11 +7,13 @@ import { AlertTriangle, CheckCircle2, RefreshCw } from "lucide-react";
 
 import { api, fmtDate } from "@/lib/api";
 import { formatNumber, formatPercent } from "@/lib/format";
+
 import type {
   ExtractorHealth,
   PipelineMetrics,
   SystemHealth,
 } from "@/types/admin";
+
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 export default function AdminSystemHealthPage() {
