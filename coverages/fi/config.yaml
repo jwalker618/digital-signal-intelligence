@@ -2592,7 +2592,7 @@ financial_institutions:
       proxy_tier: DIRECT_OBSERVABLE
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.05
@@ -2608,7 +2608,7 @@ financial_institutions:
       proxy_tier: DIRECT_OBSERVABLE
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: public_record
         risk:
           correlation_direction: positive
           weight: 0.04

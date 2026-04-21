@@ -4595,8 +4595,17 @@ def seed_data(
 
             submission_data = build_submission_data(co)
 
+            if is_synthetic and co.get("_entity_id"):
+                entity = _get_entity_for_coverage(
+                    co["coverage"], entity_override=co["_entity_id"]
+                )
+            else:
+                entity = _get_entity_for_coverage(co["coverage"])
+
             # Step 0a: Appetite check — reject before running the model
-            appetite_result = evaluate_appetite(co["coverage"], submission_data)
+            appetite_result = evaluate_appetite(
+                co["coverage"], submission_data, entity=entity,
+            )
             if not appetite_result.fit:
                 stats["outside_appetite"] += 1
                 print(f"  [{i:>2}/{len(COMPANIES)}] {co['entity_name']:30s}  "
@@ -5193,12 +5202,6 @@ def seed_data(
             db.add(audit_log)
 
             # === 8. COMMERCIAL TERMS & RISK TERMS ===
-            if is_synthetic and co.get("_entity_id"):
-                entity = _get_entity_for_coverage(
-                    co["coverage"], entity_override=co["_entity_id"]
-                )
-            else:
-                entity = _get_entity_for_coverage(co["coverage"])
             ct, rt = build_commercial_terms(
                 mv_id=mv_id,
                 entity=entity,

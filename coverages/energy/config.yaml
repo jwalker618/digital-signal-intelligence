@@ -10632,7 +10632,7 @@ energy:
       max_limit: 1000000000
     pricing:
       base_limit_reference: 10000000
-      base_deductible_reference: 50000
+      base_deductible_reference: 500000
       by_product_type:
         property_damage:
           ilf_curve:
@@ -13566,7 +13566,7 @@ energy:
       valid_deductibles: [100000, 250000, 500000, 1000000, 5000000]
     pricing:
       base_limit_reference: 100000000
-      base_deductible_reference: 1000000
+      base_deductible_reference: 500000
       by_product_type:
         property:
           ilf_curve: {anchor_limit: 100000000, curve: bounded_exponential, params: {max_ilf: 6.0, k: 0.020}}
