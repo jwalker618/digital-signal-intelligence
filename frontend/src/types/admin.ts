@@ -4,7 +4,7 @@ export type HealthStatus = "green" | "amber" | "red";
 
 export interface SystemHealth {
   status: HealthStatus;
-  components: Record<string, { status: HealthStatus; detail?: string }>;
+  components?: Record<string, { status: HealthStatus; detail?: string }>;
   checked_at: string;
 }
 

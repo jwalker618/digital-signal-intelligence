@@ -82,7 +82,7 @@ export default function AdminSystemHealthPage() {
             </div>
           </div>
           <ul className="divide-y divide-dsi-outline/20">
-            {Object.entries(health.components).map(([name, c]) => (
+            {Object.entries(health.components ?? {}).map(([name, c]) => (
               <li key={name} className="flex items-center gap-3 py-1 text-sm">
                 <StatusBadge status={c.status} />
                 <span className="font-mono">{name}</span>
