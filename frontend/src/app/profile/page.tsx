@@ -1,45 +1,17 @@
 // A-3h: User profile page.
-//
-// Modular section layout so A-4 (Push Notifications) can add a
-// preferences section without restructuring.
 
 "use client";
 
 import { useState, FormEvent } from "react";
 import { ShieldCheck, UserRound, KeyRound, LogOut, Bell } from "lucide-react";
 
-import {
-  CardGrid,
-  SectionCard,
-  SubmissionHeaderCard,
-  Decision,
-} from "@/components/base/cards";
+import ViewCanvas from "@/components/ViewCanvas";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 
 import { useAuthStore } from "@/store/authStore";
 import { MFASetup } from "@/components/auth/MFASetup";
 import { NotificationPreferences } from "@/components/profile/NotificationPreferences";
 import { passwordResetRequest } from "@/lib/authApi";
-
-function Section({
-  title,
-  icon: Icon,
-  children,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  children: React.ReactNode;
-}) {
-  
-  return (
-    <section className="border-2 border-dsi-outline rounded p-4 flex flex-col gap-3">
-      <header className="flex items-center gap-2 text-dsi-selected">
-        <Icon className="icon" />
-        <span className="font-semibold tracking-wider">{title}</span>
-      </header>
-      {children}
-    </section>
-  );
-}
 
 export default function ProfilePage() {
   const user = useAuthStore((s) => s.user);
@@ -48,9 +20,7 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
 
   if (!user) {
-    return (
-      <main className="p-6 opacity-70">Loading profile…</main>
-    );
+    return <main className="p-6 opacity-70">Loading profile…</main>;
   }
 
   async function requestReset(e: FormEvent) {
@@ -66,88 +36,73 @@ export default function ProfilePage() {
   }
 
   return (
-
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
+    <ViewCanvas>
       <CardGrid>
-
-        <h1 className="font-inter text-2xl tracking-wide mb-6">Your profile</h1>
-        <div className="grid gap-4 max-w-3xl">
-          <Section title="Account" icon={UserRound}>
-            <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
-              <dt className="opacity-60">Email</dt>
-              <dd>{user.email ?? "—"}</dd>
-              <dt className="opacity-60">User ID</dt>
-              <dd className="font-mono text-xs">{user.user_id}</dd>
-              <dt className="opacity-60">Tenant</dt>
-              <dd className="font-mono text-xs">{user.tenant_id}</dd>
-              <dt className="opacity-60">Role</dt>
-              <dd>{user.role ?? "—"}</dd>
-              <dt className="opacity-60">Permissions</dt>
-              <dd className="flex flex-wrap gap-1">
-                {user.permissions.map((p) => (
-                  <span
-                    key={p}
-                    className="font-mono text-xs px-2 py-0.5 border border-dsi-outline/40 rounded"
-                  >
-                    {p}
-                  </span>
-                ))}
-              </dd>
-            </dl>
-          </Section>
-
-          <Section title="Two-factor authentication" icon={ShieldCheck}>
-            {user.mfa_enabled ? (
-              <p className="text-sm text-dsi-selected">
-                MFA is enabled on your account.
-              </p>
-            ) : (
-              <MFASetup />
-            )}
-          </Section>
-
-          <Section title="Password" icon={KeyRound}>
-            {resetSent ? (
-              <p className="text-sm">
-                A reset link has been sent to <strong>{user.email}</strong>.
-              </p>
-            ) : (
-              <form onSubmit={requestReset}>
-                <p className="text-sm opacity-80 mb-2">
-                  Change your password by sending yourself a reset link.
-                </p>
-                <button
-                  type="submit"
-                  disabled={busy}
-                  className="bg-dsi-contrast-background text-dsi-background py-2 px-4 rounded font-semibold disabled:opacity-50"
+        <StandardCard title="Account" lucideIcon={UserRound}>
+          <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
+            <dt className="opacity-60">Email</dt>
+            <dd>{user.email ?? "—"}</dd>
+            <dt className="opacity-60">User ID</dt>
+            <dd className="font-mono text-xs">{user.user_id}</dd>
+            <dt className="opacity-60">Tenant</dt>
+            <dd className="font-mono text-xs">{user.tenant_id}</dd>
+            <dt className="opacity-60">Role</dt>
+            <dd>{user.role ?? "—"}</dd>
+            <dt className="opacity-60">Permissions</dt>
+            <dd className="flex flex-wrap gap-1">
+              {user.permissions.map((p) => (
+                <span
+                  key={p}
+                  className="font-mono text-xs px-2 py-0.5 border border-dsi-outline/40 rounded"
                 >
-                  {busy ? "Sending…" : "Send reset link"}
-                </button>
-              </form>
-            )}
-          </Section>
+                  {p}
+                </span>
+              ))}
+            </dd>
+          </dl>
+        </StandardCard>
 
-          <Section title="Notifications" icon={Bell}>
-            <NotificationPreferences />
-          </Section>
+        <StandardCard title="Two-factor authentication" lucideIcon={ShieldCheck}>
+          {user.mfa_enabled ? (
+            <p className="text-sm text-dsi-selected">
+              MFA is enabled on your account.
+            </p>
+          ) : (
+            <MFASetup />
+          )}
+        </StandardCard>
 
-          <Section title="Session" icon={LogOut}>
-            <button
-              onClick={() => logout()}
-              className="
-                self-start 
-                border-2 border-dsi-outline 
-                bg-red
-                py-2 px-4 
-                rounded 
-                hover:text-dsi-selected"
-            >
-              Sign out
-            </button>
-          </Section>
-        </div>
+        <StandardCard title="Password" lucideIcon={KeyRound}>
+          {resetSent ? (
+            <p className="text-sm">
+              A reset link has been sent to <strong>{user.email}</strong>.
+            </p>
+          ) : (
+            <form onSubmit={requestReset}>
+              <p className="text-sm opacity-80 mb-2">
+                Change your password by sending yourself a reset link.
+              </p>
+              <button
+                type="submit"
+                disabled={busy}
+                className="dsi-actionbutton"
+              >
+                {busy ? "Sending…" : "Send reset link"}
+              </button>
+            </form>
+          )}
+        </StandardCard>
+
+        <StandardCard title="Notifications" lucideIcon={Bell}>
+          <NotificationPreferences />
+        </StandardCard>
+
+        <StandardCard title="Session" lucideIcon={LogOut}>
+          <button onClick={() => logout()} className="dsi-actionbutton">
+            Sign out
+          </button>
+        </StandardCard>
       </CardGrid>
-    </div>
-
+    </ViewCanvas>
   );
 }
