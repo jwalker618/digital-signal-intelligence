@@ -11,6 +11,8 @@ import { MoreVertical } from "lucide-react";
 import { useDsiStore } from "@/store/dsiStore";
 import { useAuthStore } from "@/store/authStore";
 
+import "@/app/globals.css";
+
 export default function TitleBar() {
   const activeSubmission = useDsiStore((s) => s.activeSubmission);
   const activeMenu = useDsiStore((s) => s.activeMenu);
@@ -26,9 +28,9 @@ export default function TitleBar() {
         border-b-3 border-dsi-outline 
         items-center justify-between 
         px-dsi-main"
-      style={{ 
-        height: "var(--cw)" 
-      }}
+        style={{ 
+          height: "var(--cw)" 
+        }}
     >
       <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
         <span className="flex items-center gap-4">
@@ -53,11 +55,8 @@ export default function TitleBar() {
         {sessionWarning && (
           <div
             className="
-              p-1.5
-              bg-dsi-outline
-              border-b-1 border-dsi-selected
-              text-dsi-contrast-background text-xs
-              rounded-md shadow-sm"
+              absolute left-[75%]
+              dsi-notificationpill"
           >
             {sessionWarning}
           </div>

@@ -113,7 +113,7 @@ export default function Sidebar({
       {/* NAVIGATION */}
       {isOpen && (
         <nav
-          className="absolute left-10 right-0 py-dsi-pad overflow-y-auto overflow-x-hidden no-scrollbar"
+          className="absolute left-dsi-indent right-0 py-dsi-pad overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             top: collapsedWidthPx ?? 64,
             bottom: collapsedWidthPx ?? 64,

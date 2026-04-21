@@ -43,7 +43,7 @@
 }
 
 :root {
- 
+
   --dsi-outline: #ffffff;
   --dsi-contrast-background: #7A766F;
   --dsi-background: #E8E3DA;
@@ -144,6 +144,26 @@
   @apply hover:border-2;
   @apply hover:border-dsi-selected;
   @apply hover:text-dsi-selected;
+}
+
+@utility dsi-notificationpill {
+  @apply p-1.5;
+  @apply bg-dsi-outline;
+  @apply border-b-1 border-dsi-selected;
+  @apply text-dsi-contrast-background; 
+  @apply text-xs;
+  @apply rounded-md;
+  @apply shadow-sm;
+}
+
+@utility dsi-actiontext {
+  @apply flex;
+  @apply gap-dsi-pad; 
+  @apply p-1.5;
+  @apply text-left; 
+  @apply items-center;
+  @apply hover:text-dsi-selected ;
+  @apply text-sm;
 }
 
 @utility dsi-popup-header {
