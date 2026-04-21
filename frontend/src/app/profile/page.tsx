@@ -41,6 +41,8 @@ export default function ProfilePage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-dsi-pad"></div>
+      
       <CardGrid cols="grid-cols-[4fr_1fr]">
 
         <StandardCard
@@ -92,7 +94,7 @@ export default function ProfilePage() {
           lucideIcon={ShieldUser}
         >
           {user.mfa_enabled ? (
-            <p className="text-sm text-dsi-selected">
+            <p className="text-sm">
               MFA is enabled on your account.
             </p>
           ) : (
@@ -104,27 +106,29 @@ export default function ProfilePage() {
           title="Password"
           lucideIcon={KeyRound}
         >
-
-          {resetSent ? (
-            <p className="text-sm">
-              A reset link has been sent to <strong>{user.email}</strong>.
-            </p>
-          ) : (
-            
-            <form onSubmit={requestReset}>
+            {resetSent ? (
               <p className="text-xs pb-2">
-                Change your password by sending yourself a reset link.
+                A reset link has been sent to <strong>{user.email}</strong>.
               </p>
-              <button
-                type="submit"
-                disabled={busy}
-                className="dsi-actionbutton"
-              >
-                {busy ? "Sending…" : "Send Reset Link"}
-              </button>
-            </form>
+            ) : (
+              
+              <form onSubmit={requestReset} className="flex flex-col">
+                
+                <p className="text-xs pb-2">
+                  Change your password by sending yourself a reset link.
+                </p>
 
-          )}
+                <button
+                  type="submit"
+                  disabled={busy}
+                  className="dsi-actionbutton"
+                  >{busy ? "Sending…" : "Send Reset Link"}
+                </button>
+
+              </form>
+
+            )}
+
         </StandardCard>
 
         <StandardCard

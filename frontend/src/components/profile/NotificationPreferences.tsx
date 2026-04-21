@@ -125,7 +125,7 @@ export function NotificationPreferences() {
 
   return (
     
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       
       <div className="flex flex-col">
         
@@ -138,7 +138,7 @@ export function NotificationPreferences() {
             <button
               onClick={onDisable}
               disabled={busy === "disable"}
-              className="dsi-actionbutton mr-dsi-pad"
+              className="dsi-actionbutton"
             >Disable
             </button>
           </>
@@ -151,7 +151,7 @@ export function NotificationPreferences() {
             <button
               onClick={onEnable}
               disabled={busy === "enable" || permission === "denied"}
-              className="dsi-actionbutton mr-dsi-pad"
+              className="dsi-actionbutton"
             >{busy === "enable" && <Loader2 className="icon animate-spin" />}Enable
             </button>
           </>
@@ -159,20 +159,15 @@ export function NotificationPreferences() {
       </div>
 
       {permission === "granted" && (
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col">
+          
           <button
             onClick={onTest}
             disabled={busy === "test"}
-            className="border-2 border-dsi-outline py-1 px-3 rounded text-sm flex items-center gap-2"
-          >
-            {busy === "test" ? (
-              <Loader2 className="icon animate-spin" />
-            ) : (
-              <Send className="icon" />
-            )}
-            Send test notification
+            className="dsi-actionbutton flex"
+          >Send Test Notification
           </button>
-          {testResult && <span className="text-xs opacity-80">{testResult}</span>}
+          {testResult && <span className="text-xs">{testResult}</span>}
         </div>
       )}
 

@@ -106,7 +106,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
 
       {stage === "idle" && (
         <>
-          <p className="text-xs pb-2 mr-dsi-pad">
+          <p className="text-xs pb-2">
             Protect your account with an authenticator app (Google
             Authenticator, etc).
           </p>
@@ -114,7 +114,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
           <button
             onClick={beginSetup}
             disabled={busy}
-            className="dsi-actionbutton mr-dsi-pad"
+            className="dsi-actionbutton"
           >
             {busy ? "Starting…" : "Set up MFA"}
           </button>
@@ -124,20 +124,20 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
       {stage === "qr" && otpauthUri && secret && (
         <>
           
-          <p className="text-xs pb-2 mr-dsi-pad">
+          <p className="text-xs pb-2">
             Scan this URI in your authenticator app, or enter the secret
             manually. Then enter the 6-digit code to confirm.
           </p>
           
-          <div className="dsi-notificationpill mr-dsi-pad wrap-anywhere border-none">
+          <div className="dsi-notificationpill wrap-anywhere border-none">
             {otpauthUri}
           </div>
 
-          <p className="text-xs pt-2 pb-2 mr-dsi-pad">
+          <p className="text-xs pt-2 pb-2">
             Secret:{" "}
           </p>          
 
-          <div className="dsi-notificationpill mr-dsi-pad wrap-anywhere border-none">
+          <div className="dsi-notificationpill wrap-anywhere border-none">
             {secret}
           </div>
 
@@ -150,14 +150,14 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
               }
               inputMode="numeric"
               maxLength={6}
-              className="dsi-inputbox mr-dsi-pad text-right"
+              className="dsi-inputbox text-right"
               placeholder="000000"
             />
             
             <button
               type="submit"
               disabled={busy || code.length !== 6}
-              className="dsi-actionbutton mr-dsi-pad"
+              className="dsi-actionbutton"
             >
               {busy ? <Loader2 className="icon animate-spin" /> : "Verify"}
             </button>
@@ -174,7 +174,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
             <span className="font-semibold">Save your backup codes</span>
           </div>
           
-          <p className="text-xs pb-2 mr-dsi-pad">
+          <p className="text-xs pb-2">
             Each code can be used once if you lose access to your
             authenticator. They are shown exactly once -- save them now.
           </p>
