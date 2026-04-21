@@ -38,43 +38,34 @@ export default function SummaryTab() {
 
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
-      <CardGrid>
+      <CardGrid cols="grid-cols-[2fr_9fr_9fr]">
         <SubmissionHeaderCard
           decision={decision}
           title={decision}
           subtitle={subtitle}
-          spanClass="col-span-1 md:col-span-2 lg:col-span-3"
+          spanClass="col-span-3"
           headerRight={<DecisionStatusFields />}
         >
           <HeroMetricsGrid />
         </SubmissionHeaderCard>
 
-        {/* Popups */}
-        <SectionCard section="who"       spanClass="col-span-1" />
-        <SectionCard section="discovery" spanClass="col-span-1" />
+        {/* Left column (10%): Who stacked on Discovery */}
+        <SectionCard section="who"       spanClass="col-start-1" />
+        <SectionCard section="discovery" spanClass="col-start-1" />
 
-        {/* Three-pillar assessment — full width */}
-        <SectionCard
-          section="threePillar"
-          spanClass="col-span-1 md:col-span-2 lg:col-span-3"
-        />
-
-        {/* Commercial + Risk Terms */}
-        <SectionCard
-          section="commercial"
-          spanClass="col-span-1 md:col-span-2 lg:col-span-1"
-        />
-        <SectionCard
-          section="riskTerms"
-          spanClass="col-span-1 md:col-span-2 lg:col-span-2"
-        />
+        {/* Commercial + Risk Terms (45% each), each spanning both left-column rows */}
+        <SectionCard section="commercial" spanClass="col-start-2 row-span-2" />
+        <SectionCard section="riskTerms"  spanClass="col-start-3 row-span-2" />
 
         {/* Notes — full width */}
         <SectionCard
           section="notes"
           title={notesTitle}
-          spanClass="col-span-1 md:col-span-2 lg:col-span-3"
+          spanClass="col-span-3"
         />
+
+        {/* Three-pillar assessment — preserved below notes, not in the new spec */}
+        <SectionCard section="threePillar" spanClass="col-span-3" />
       </CardGrid>
     </div>
   );
