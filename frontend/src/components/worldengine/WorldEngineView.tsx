@@ -5,7 +5,8 @@ import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   Orbit, Target, Zap, AlertTriangle, ArrowRight, RotateCcw,
-  Plus, X, Radio, TrendingUp
+  Plus, X, Radio,
+  Sparkles, TrendingDown, Network as NetworkIcon,
 } from "lucide-react";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
@@ -14,6 +15,14 @@ import {
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
 import { formatNumber, formatCurrency, formatPercent } from "@/lib/format";
 import { tooltipStyle } from "@/lib/chartConfig";
+import { api, fmtDate, fmtRelative } from "@/lib/api";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import type {
+  DriftAlert,
+  MaturityState,
+  RelationshipRow,
+  WorldEngineStats,
+} from "@/types/worldEngine";
 
 const TIER_COLORS = ['var(--dsi-positive)', 'var(--dsi-info)', 'var(--dsi-warning)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
 
@@ -34,9 +43,44 @@ export default function WorldEngineView() {
   const [pendingScope, setPendingScope] = useState('all');
   const [pendingMagnitude, setPendingMagnitude] = useState(SHOCK_SCENARIOS[0].magnitude);
 
+  // Backend world-model state (/api/v1/world-engine/*)
+  const [maturity, setMaturity] = useState<MaturityState | null>(null);
+  const [weStats, setWeStats] = useState<WorldEngineStats | null>(null);
+  const [alerts, setAlerts] = useState<DriftAlert[]>([]);
+  const [rels, setRels] = useState<RelationshipRow[]>([]);
+  const [ackBusy, setAckBusy] = useState<string | null>(null);
+
+  async function loadWorldModel() {
+    const [m, s, a, r] = await Promise.all([
+      api.get<MaturityState>("/api/v1/world-engine/maturity").catch(() => null),
+      api.get<WorldEngineStats>("/api/v1/world-engine/stats").catch(() => null),
+      api
+        .get<{ alerts: DriftAlert[] }>("/api/v1/world-engine/drift-alerts?status=open")
+        .catch(() => ({ alerts: [] as DriftAlert[] })),
+      api
+        .get<{ relationships: RelationshipRow[] }>("/api/v1/world-engine/relationships?limit=50")
+        .catch(() => ({ relationships: [] as RelationshipRow[] })),
+    ]);
+    setMaturity(m);
+    setWeStats(s);
+    setAlerts(a.alerts ?? []);
+    setRels(r.relationships ?? []);
+  }
+
+  async function acknowledgeAlert(alertId: string) {
+    setAckBusy(alertId);
+    try {
+      await api.post(`/api/v1/world-engine/drift-alerts/${alertId}/acknowledge`);
+      await loadWorldModel();
+    } finally {
+      setAckBusy(null);
+    }
+  }
+
   useEffect(() => {
     setHasPageActions(false);
     if (submissions.length === 0) fetchSubmissions();
+    void loadWorldModel();
   }, []);
 
   // Sync magnitude when pending scenario changes
@@ -111,7 +155,149 @@ export default function WorldEngineView() {
           <Orbit className="w-8 h-8 text-dsi-selected" />
           <div>
             <h1 className="text-2xl font-black tracking-wide">World Engine</h1>
-            <p className="text-xs opacity-50">Portfolio intelligence &bull; Shock simulation &bull; Emerging risk analysis</p>
+            <p className="text-xs opacity-50">World model &bull; Portfolio intelligence &bull; Shock simulation &bull; Emerging risk analysis</p>
+          </div>
+        </div>
+
+        {/* ═══ WORLD MODEL ═══ */}
+        <div className="flex flex-col mb-4">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <Sparkles className="icon"/><span className="text-sm">World Model</span>
+            <span className="text-[10px] opacity-40 ml-2">
+              {maturity ? `${maturity.assessed_entity_count} entities` : "No data"}
+            </span>
+          </div>
+          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="border border-dsi-outline/20 rounded-lg p-3">
+                <span className="text-xs opacity-60 block mb-1">Maturity Stage</span>
+                <span className="text-xl font-black text-dsi-selected">
+                  {maturity?.stage ?? "—"}
+                </span>
+                {maturity && (
+                  <span className="block text-[10px] opacity-60 mt-1">
+                    coverage {formatPercent(maturity.coverage_ratio, 1)}
+                  </span>
+                )}
+              </div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3">
+                <span className="text-xs opacity-60 block mb-1">Active Relationships</span>
+                <span className="text-xl font-black text-dsi-selected">
+                  {weStats?.active_relationships ?? "—"}
+                </span>
+                {weStats && (
+                  <span className="block text-[10px] opacity-60 mt-1">
+                    {weStats.total_relationships} total &middot; {weStats.inactive_relationships} inactive
+                  </span>
+                )}
+              </div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3">
+                <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
+                <span className={`text-xl font-black ${weStats && weStats.drift_alerts_open > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
+                  {weStats?.drift_alerts_open ?? "—"}
+                </span>
+              </div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3">
+                <span className="text-xs opacity-60 block mb-1">Assessed Entities</span>
+                <span className="text-xl font-black text-dsi-selected">
+                  {weStats?.assessed_entities ?? maturity?.assessed_entity_count ?? "—"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ═══ OPEN DRIFT ALERTS ═══ */}
+        <div className="flex flex-col mb-4">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <TrendingDown className="icon text-dsi-warning"/><span className="text-sm">Open Drift Alerts</span>
+            <span className="text-[10px] opacity-40 ml-2">{alerts.length} open</span>
+          </div>
+          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs underline opacity-70 text-left">
+                  <th className="py-2 px-dsi-pad">Signal</th>
+                  <th className="py-2 px-2">Severity</th>
+                  <th className="py-2 px-2">Type</th>
+                  <th className="py-2 px-2">Detected</th>
+                  <th className="py-2 px-2">Summary</th>
+                  <th className="py-2 px-dsi-pad"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {alerts.map((a) => (
+                  <tr key={a.id} className="border-t border-dsi-outline/10">
+                    <td className="py-2 px-dsi-pad font-mono text-xs">{a.signal_id}</td>
+                    <td className="py-2 px-2"><StatusBadge status={a.severity} /></td>
+                    <td className="py-2 px-2 text-xs">{a.drift_type}</td>
+                    <td className="py-2 px-2 text-xs">{fmtRelative(a.detected_at)}</td>
+                    <td className="py-2 px-2 opacity-80">{a.summary}</td>
+                    <td className="py-2 px-dsi-pad">
+                      <button
+                        onClick={() => void acknowledgeAlert(a.id)}
+                        disabled={ackBusy === a.id}
+                        className="text-xs text-dsi-selected hover:underline disabled:opacity-50"
+                      >
+                        Acknowledge
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {alerts.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="py-4 px-dsi-pad opacity-60 text-center text-xs">
+                      No open alerts.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* ═══ DISCOVERED RELATIONSHIPS ═══ */}
+        <div className="flex flex-col mb-4">
+          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+            <NetworkIcon className="icon"/><span className="text-sm">Discovered Relationships</span>
+            <span className="text-[10px] opacity-40 ml-2">{rels.length} recent</span>
+          </div>
+          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-xs underline opacity-70 text-left">
+                  <th className="py-2 px-dsi-pad">Source</th>
+                  <th className="py-2 px-2">→ Target</th>
+                  <th className="py-2 px-2">Type</th>
+                  <th className="py-2 px-2 text-right">Strength</th>
+                  <th className="py-2 px-2 text-right">Conf.</th>
+                  <th className="py-2 px-2 text-right">Evid.</th>
+                  <th className="py-2 px-2">Status</th>
+                  <th className="py-2 px-dsi-pad">Discovered</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rels.map((r) => (
+                  <tr key={r.id} className="border-t border-dsi-outline/10">
+                    <td className="py-2 px-dsi-pad font-mono text-xs">{r.source_entity}</td>
+                    <td className="py-2 px-2 font-mono text-xs">{r.target_entity}</td>
+                    <td className="py-2 px-2 text-xs">{r.relationship_type}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(r.strength, 2)}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatPercent(r.confidence)}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{r.evidence_count}</td>
+                    <td className="py-2 px-2"><StatusBadge status={r.status} /></td>
+                    <td className="py-2 px-dsi-pad text-xs opacity-70">{fmtDate(r.created_at)}</td>
+                  </tr>
+                ))}
+                {rels.length === 0 && (
+                  <tr>
+                    <td colSpan={8} className="py-4 px-dsi-pad opacity-60 text-center text-xs">
+                      No relationships discovered yet.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
 

@@ -4,8 +4,9 @@
  * Sidebar — the app shell's left navigation.
  *
  * Two modes, driven by whether there's an active submission:
- *   • Top-level: permission-gated entries for Submissions, World Engine,
- *     Config, Recalibration, Admin.
+ *   • Top-level: Submissions expander, World Engine, Admin expander
+ *     (System Health / Configs / Users & Roles / Audit Log / Loss
+ *     Register / Recalibration).
  *   • Drill-down: Summary leaf + three named categories (Commercial,
  *     Risk Terms, Technical Assessment) each with its own tab list.
  *
@@ -25,8 +26,6 @@ import {
   Orbit,
   PanelRightClose,
   PanelRightOpen,
-  Sliders,
-  TrendingUpDown,
   Wrench,
 } from "lucide-react";
 
@@ -35,7 +34,11 @@ import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 
 import { NavGroup, NavItem, SidebarIconBtn } from "./nav";
-import { DRILL_DOWN_CATEGORIES, SUBMISSIONS_CHILDREN } from "./navConfig";
+import {
+  ADMIN_CHILDREN,
+  DRILL_DOWN_CATEGORIES,
+  SUBMISSIONS_CHILDREN,
+} from "./navConfig";
 import UserMenu from "./userMenu";
 
 interface SidebarProps {
@@ -74,8 +77,10 @@ export default function Sidebar({
   const hasPermission = useAuthStore((s) => s.hasPermission);
   const canViewSubmissions = hasPermission("assessment:read");
   const canViewWorldEngine = hasPermission("world_engine:view");
+  const canViewAnyAdmin = ADMIN_CHILDREN.some((i) => hasPermission(i.permission));
 
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
+  const [isAdminExpanded, setIsAdminExpanded] = useState(false);
 
   return (
     <aside
@@ -230,54 +235,43 @@ export default function Sidebar({
                   </div>
                 )}
 
-                {hasPermission("config:read") && (
-                  <div className="mt-2">
-                    <NavItem
-                      icon={Sliders}
-                      label="Config"
-                      isActive={!!pathname?.startsWith("/admin/configs")}
-                      onClick={() => {
-                        clearSubmissionContext();
-                        setActiveMenu("Config");
-                        onToggleOpen();
-                        router.push("/admin/configs");
-                      }}
-                    />
-                  </div>
-                )}
+                {canViewAnyAdmin && (
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setIsAdminExpanded(!isAdminExpanded)}
+                      className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Wrench className="icon shrink-0" />
+                        <span className="text-sm tracking-wider">Admin</span>
+                      </div>
+                    </button>
 
-                {hasPermission("recalibration:view") && (
-                  <div className="mt-2">
-                    <NavItem
-                      icon={TrendingUpDown}
-                      label="Recalibration"
-                      isActive={!!pathname?.startsWith("/admin/recalibration")}
-                      onClick={() => {
-                        clearSubmissionContext();
-                        setActiveMenu("Recalibration");
-                        onToggleOpen();
-                        router.push("/admin/recalibration");
-                      }}
-                    />
-                  </div>
-                )}
-
-                {hasPermission("admin:system") && (
-                  <div className="mt-2">
-                    <NavItem
-                      icon={Wrench}
-                      label="Admin"
-                      isActive={
-                        pathname === "/admin" ||
-                        !!pathname?.startsWith("/admin/")
-                      }
-                      onClick={() => {
-                        clearSubmissionContext();
-                        setActiveMenu("Admin");
-                        onToggleOpen();
-                        router.push("/admin");
-                      }}
-                    />
+                    {isAdminExpanded && (
+                      <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
+                        {ADMIN_CHILDREN.filter((item) =>
+                          hasPermission(item.permission),
+                        ).map((item) => (
+                          <li key={item.name}>
+                            <NavItem
+                              icon={item.icon}
+                              label={item.name}
+                              isActive={
+                                pathname === item.href ||
+                                (item.href !== "/admin" &&
+                                  !!pathname?.startsWith(item.href + "/"))
+                              }
+                              onClick={() => {
+                                clearSubmissionContext();
+                                setActiveMenu(item.name);
+                                onToggleOpen();
+                                router.push(item.href);
+                              }}
+                            />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                 )}
               </>

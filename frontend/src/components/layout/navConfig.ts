@@ -11,6 +11,7 @@
 
 import {
   LucideIcon,
+  Activity,
   Building2,
   Calculator,
   ChartNoAxesGantt,
@@ -18,8 +19,10 @@ import {
   FileCheck,
   FileStack,
   FileText,
+  FileX,
   FlaskConical,
   Globe,
+  History,
   Layers,
   Network,
   RefreshCw,
@@ -27,12 +30,19 @@ import {
   Bot,
   Scale,
   TrendingUpDown,
+  Users,
   UserStar,
 } from "lucide-react";
 
 export interface NavLeaf {
   name: string;
   icon: LucideIcon;
+}
+
+/** Admin children carry a route + permission; the Submissions children do not. */
+export interface AdminNavLeaf extends NavLeaf {
+  href: string;
+  permission: string;
 }
 
 export interface NavCategory {
@@ -46,6 +56,16 @@ export const SUBMISSIONS_CHILDREN: NavLeaf[] = [
   { name: "Referral Pipeline", icon: UserStar },
   { name: "Full Pipeline", icon: Rows4 },
   { name: "Performance Metrics", icon: Bot },
+];
+
+/** Children of the Admin expander, shown in top-level mode. */
+export const ADMIN_CHILDREN: AdminNavLeaf[] = [
+  { name: "System Health",  icon: Activity,        href: "/admin",                permission: "admin:system" },
+  { name: "Configs",        icon: FileStack,       href: "/admin/configs",        permission: "config:read" },
+  { name: "Users & Roles",  icon: Users,           href: "/admin/users",          permission: "admin:users" },
+  { name: "Audit Log",      icon: History,         href: "/admin/audit",          permission: "admin:audit" },
+  { name: "Loss Register",  icon: FileX,           href: "/admin/losses",         permission: "assessment:write" },
+  { name: "Recalibration",  icon: TrendingUpDown,  href: "/admin/recalibration",  permission: "recalibration:view" },
 ];
 
 /** Drill-down categories shown when a submission is active. */
