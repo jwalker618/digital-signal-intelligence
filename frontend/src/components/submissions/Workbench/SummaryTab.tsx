@@ -49,6 +49,9 @@ export default function SummaryTab() {
           <HeroMetricsGrid />
         </SubmissionHeaderCard>
 
+        {/* Three-pillar assessment — full width */}
+        <SectionCard section="threePillar" spanClass="col-span-3" />
+
         {/* Left column (10%): Who stacked on Discovery */}
         <SectionCard section="who"       spanClass="col-start-1" />
         <SectionCard section="discovery" spanClass="col-start-1" />
@@ -63,9 +66,6 @@ export default function SummaryTab() {
           title={notesTitle}
           spanClass="col-span-3"
         />
-
-        {/* Three-pillar assessment — preserved below notes, not in the new spec */}
-        <SectionCard section="threePillar" spanClass="col-span-3" />
       </CardGrid>
     </div>
   );
