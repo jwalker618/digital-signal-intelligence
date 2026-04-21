@@ -38,7 +38,7 @@ export default function SummaryTab() {
 
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
-      <CardGrid cols="grid-cols-[2fr_9fr_9fr]">
+      <CardGrid cols="grid-cols-[2fr_9fr_9fr] grid-flow-dense">
         <SubmissionHeaderCard
           decision={decision}
           title={decision}
