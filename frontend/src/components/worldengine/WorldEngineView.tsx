@@ -18,9 +18,9 @@ import { tooltipStyle } from "@/lib/chartConfig";
 import { api, fmtDate, fmtRelative } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import type {
+  DiscoveredRelationship,
   DriftAlert,
   MaturityState,
-  RelationshipRow,
   WorldEngineStats,
 } from "@/types/worldEngine";
 
@@ -47,7 +47,7 @@ export default function WorldEngineView() {
   const [maturity, setMaturity] = useState<MaturityState | null>(null);
   const [weStats, setWeStats] = useState<WorldEngineStats | null>(null);
   const [alerts, setAlerts] = useState<DriftAlert[]>([]);
-  const [rels, setRels] = useState<RelationshipRow[]>([]);
+  const [rels, setRels] = useState<DiscoveredRelationship[]>([]);
   const [ackBusy, setAckBusy] = useState<string | null>(null);
 
   async function loadWorldModel() {
@@ -55,11 +55,11 @@ export default function WorldEngineView() {
       api.get<MaturityState>("/api/v1/world-engine/maturity").catch(() => null),
       api.get<WorldEngineStats>("/api/v1/world-engine/stats").catch(() => null),
       api
-        .get<{ alerts: DriftAlert[] }>("/api/v1/world-engine/drift-alerts?status=open")
+        .get<{ alerts: DriftAlert[] }>("/api/v1/world-engine/drift-alerts?unacknowledged_only=true")
         .catch(() => ({ alerts: [] as DriftAlert[] })),
       api
-        .get<{ relationships: RelationshipRow[] }>("/api/v1/world-engine/relationships?limit=50")
-        .catch(() => ({ relationships: [] as RelationshipRow[] })),
+        .get<{ relationships: DiscoveredRelationship[] }>("/api/v1/world-engine/relationships?limit=50")
+        .catch(() => ({ relationships: [] as DiscoveredRelationship[] })),
     ]);
     setMaturity(m);
     setWeStats(s);
@@ -171,37 +171,42 @@ export default function WorldEngineView() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="border border-dsi-outline/20 rounded-lg p-3">
                 <span className="text-xs opacity-60 block mb-1">Maturity Stage</span>
-                <span className="text-xl font-black text-dsi-selected">
+                <span className="text-xl font-black text-dsi-selected uppercase">
                   {maturity?.stage ?? "—"}
                 </span>
                 {maturity && (
                   <span className="block text-[10px] opacity-60 mt-1">
-                    coverage {formatPercent(maturity.coverage_ratio, 1)}
+                    {formatNumber(maturity.time_depth_months, 1)} months of data
                   </span>
                 )}
               </div>
               <div className="border border-dsi-outline/20 rounded-lg p-3">
                 <span className="text-xs opacity-60 block mb-1">Active Relationships</span>
                 <span className="text-xl font-black text-dsi-selected">
-                  {weStats?.active_relationships ?? "—"}
+                  {weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
                 </span>
-                {weStats && (
+                {maturity && (
                   <span className="block text-[10px] opacity-60 mt-1">
-                    {weStats.total_relationships} total &middot; {weStats.inactive_relationships} inactive
+                    {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
                   </span>
                 )}
               </div>
               <div className="border border-dsi-outline/20 rounded-lg p-3">
                 <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
-                <span className={`text-xl font-black ${weStats && weStats.drift_alerts_open > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
-                  {weStats?.drift_alerts_open ?? "—"}
+                <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
+                  {weStats?.drift_alerts_unacknowledged ?? "—"}
                 </span>
               </div>
               <div className="border border-dsi-outline/20 rounded-lg p-3">
                 <span className="text-xs opacity-60 block mb-1">Assessed Entities</span>
                 <span className="text-xl font-black text-dsi-selected">
-                  {weStats?.assessed_entities ?? maturity?.assessed_entity_count ?? "—"}
+                  {maturity?.assessed_entity_count ?? "—"}
                 </span>
+                {maturity && (
+                  <span className="block text-[10px] opacity-60 mt-1">
+                    {maturity.entities_with_temporal_data} with history
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -228,11 +233,11 @@ export default function WorldEngineView() {
               <tbody>
                 {alerts.map((a) => (
                   <tr key={a.id} className="border-t border-dsi-outline/10">
-                    <td className="py-2 px-dsi-pad font-mono text-xs">{a.signal_id}</td>
+                    <td className="py-2 px-dsi-pad font-mono text-xs">{a.source_signal ?? "—"}</td>
                     <td className="py-2 px-2"><StatusBadge status={a.severity} /></td>
-                    <td className="py-2 px-2 text-xs">{a.drift_type}</td>
+                    <td className="py-2 px-2 text-xs">{a.alert_type}</td>
                     <td className="py-2 px-2 text-xs">{fmtRelative(a.detected_at)}</td>
-                    <td className="py-2 px-2 opacity-80">{a.summary}</td>
+                    <td className="py-2 px-2 opacity-80">{a.description}</td>
                     <td className="py-2 px-dsi-pad">
                       <button
                         onClick={() => void acknowledgeAlert(a.id)}
@@ -266,26 +271,26 @@ export default function WorldEngineView() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs underline opacity-70 text-left">
-                  <th className="py-2 px-dsi-pad">Source</th>
-                  <th className="py-2 px-2">→ Target</th>
-                  <th className="py-2 px-2">Type</th>
-                  <th className="py-2 px-2 text-right">Strength</th>
-                  <th className="py-2 px-2 text-right">Conf.</th>
-                  <th className="py-2 px-2 text-right">Evid.</th>
-                  <th className="py-2 px-2">Status</th>
+                  <th className="py-2 px-dsi-pad">Source signal</th>
+                  <th className="py-2 px-2">→ Target signal</th>
+                  <th className="py-2 px-2">Direction</th>
+                  <th className="py-2 px-2 text-right">Correlation</th>
+                  <th className="py-2 px-2 text-right">Influence</th>
+                  <th className="py-2 px-2 text-right">Population</th>
+                  <th className="py-2 px-2">Lifecycle</th>
                   <th className="py-2 px-dsi-pad">Discovered</th>
                 </tr>
               </thead>
               <tbody>
                 {rels.map((r) => (
                   <tr key={r.id} className="border-t border-dsi-outline/10">
-                    <td className="py-2 px-dsi-pad font-mono text-xs">{r.source_entity}</td>
-                    <td className="py-2 px-2 font-mono text-xs">{r.target_entity}</td>
-                    <td className="py-2 px-2 text-xs">{r.relationship_type}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(r.strength, 2)}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{formatPercent(r.confidence)}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{r.evidence_count}</td>
-                    <td className="py-2 px-2"><StatusBadge status={r.status} /></td>
+                    <td className="py-2 px-dsi-pad font-mono text-xs">{r.source_signal}</td>
+                    <td className="py-2 px-2 font-mono text-xs">{r.target_signal}</td>
+                    <td className="py-2 px-2 text-xs">{r.direction.replaceAll("_", " ")}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(r.correlation_rho, 2)}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{formatPercent(r.influence_weight)}</td>
+                    <td className="py-2 px-2 text-right tabular-nums">{r.population_size}</td>
+                    <td className="py-2 px-2"><StatusBadge status={r.lifecycle_state} /></td>
                     <td className="py-2 px-dsi-pad text-xs opacity-70">{fmtDate(r.created_at)}</td>
                   </tr>
                 ))}

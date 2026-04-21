@@ -6,6 +6,13 @@
  * that needs matching foreground + background classes).
  */
 
+import {
+  LucideIcon,
+  ShieldCheck,
+  ShieldQuestionMark,
+  ShieldX,
+} from "lucide-react";
+
 export interface StatusPaletteEntry {
   text: string;
   bg: string;
@@ -18,6 +25,27 @@ export const DECISION_PALETTE: Record<string, StatusPaletteEntry> = {
   refer:   { text: "text-dsi-refer", bg: "bg-dsi-refer",     },
   decline: { text: "text-dsi-decline", bg: "bg-dsi-decline",  },
   pending: { text: "text-dsi-muted", bg: "bg-dsi-muted",       },
+};
+
+/**
+ * Submission header card — decision → (bg, icon) pair.
+ *
+ * Different shape than the {text, bg} palettes because the submission
+ * header shows a large shield icon alongside the banner; the icon maps
+ * 1:1 with the decision.
+ */
+export type Decision = "approve" | "refer" | "decline" | "pending";
+
+export interface DecisionVisual {
+  bg: string;
+  icon: LucideIcon;
+}
+
+export const SUBMISSION_DECISION: Record<Decision, DecisionVisual> = {
+  approve: { bg: "bg-dsi-approve", icon: ShieldCheck },
+  refer:   { bg: "bg-dsi-refer",   icon: ShieldQuestionMark },
+  decline: { bg: "bg-dsi-decline", icon: ShieldX },
+  pending: { bg: "bg-dsi-muted",   icon: ShieldQuestionMark },
 };
 
 /** Signal/condition actions — used in badges and row tags. */
@@ -44,6 +72,7 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   pending_review: { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   validating:     { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   calibrating:    { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
+  provisional:    { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
 
   red:            { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
   critical:       { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
@@ -57,6 +86,8 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   archived:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   superseded:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   inactive:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  candidate:      { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  deprecated:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
 };
 
 /** Generic tone — for ad-hoc pills not tied to a domain enum. */

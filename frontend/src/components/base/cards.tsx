@@ -3,10 +3,7 @@
 import "@/app/globals.css";
 import { useState } from "react";
 
-import {
-  ArrowUpRight, LucideIcon, ShieldCheck,
-  ShieldQuestionMark, ShieldX,
-} from "lucide-react";
+import { ArrowUpRight, LucideIcon } from "lucide-react";
 
 import Modal from "@/components/base/modal";
 
@@ -16,18 +13,12 @@ import {
   SectionWrapper,
 } from "@/components/submissions/Workbench/content/sections";
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/*  Shared types                                                              */
-/* ────────────────────────────────────────────────────────────────────────── */
+import {
+  Decision,
+  SUBMISSION_DECISION,
+} from "@/lib/statusPalette";
 
-export type Decision = "approve" | "refer" | "decline" | "pending";
-
-const SUBMISSION_DECISION: Record<Decision, {bg: string, icon: LucideIcon}> = {
-  approve: {bg: "bg-dsi-approve", icon: ShieldCheck},
-  refer:   {bg: "bg-dsi-refer", icon: ShieldQuestionMark},
-  decline: {bg: "bg-dsi-decline", icon: ShieldX},
-  pending: {bg: "bg-dsi-muted", icon: ShieldQuestionMark},
-};
+export type { Decision };
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  CardGrid — the dashboard responsive grid wrapper.                         */
