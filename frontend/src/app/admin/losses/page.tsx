@@ -1,18 +1,20 @@
 // FE: Loss Register (C-1).
 //
-// Lists loss events with inline filters, plus a CSV import form
-// (file-drag-enabled) and a "link all" action to re-run retrospective
-// attachment against submissions.
+// Lists loss events with inline filters, CSV bulk import, and a
+// "link all" action that re-runs retrospective attachment against
+// submissions.
 
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
 import { AlertTriangle, Link2, Upload } from "lucide-react";
 
+import ViewCanvas from "@/components/ViewCanvas";
 import { api, fmtDate } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuthStore } from "@/store/authStore";
+import { useDsiStore } from "@/store/dsiStore";
 import type { LossEvent } from "@/types/recalibration";
 
 interface Filters {
@@ -24,6 +26,8 @@ interface Filters {
 const EMPTY: Filters = { coverage: "", status: "", linked: "" };
 
 export default function LossesPage() {
+  const setPageQuickAction = useDsiStore((s) => s.setPageQuickAction);
+
   const [items, setItems] = useState<LossEvent[]>([]);
   const [filters, setFilters] = useState<Filters>(EMPTY);
   const [loading, setLoading] = useState(false);
@@ -70,9 +74,7 @@ export default function LossesPage() {
       const res = await fetch("/api/v1/losses/import", {
         method: "POST",
         body: fd,
-        headers: {
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
+        headers: { Authorization: `Bearer ${getAccessToken()}` },
       });
       const text = await res.text();
       const parsed = text ? JSON.parse(text) : null;
@@ -111,150 +113,138 @@ export default function LossesPage() {
     }
   }
 
+  useEffect(() => {
+    setPageQuickAction(
+      <button
+        onClick={() => void linkAll()}
+        disabled={busy !== null}
+        className="dsi-actiontext disabled:opacity-50"
+      >
+        <Link2 className="icon" /> Link all
+      </button>,
+    );
+    return () => setPageQuickAction(null);
+  }, [busy, setPageQuickAction]);
+
   return (
-    <main className="p-6 flex flex-col gap-4">
-      <header className="flex items-center gap-3">
-        <h1 className="font-inter text-2xl tracking-wide">Loss Register</h1>
-        <button
-          onClick={() => void linkAll()}
-          disabled={busy !== null}
-          className="ml-auto flex items-center gap-1 border-2 border-dsi-outline py-1 px-3 rounded text-sm"
-        >
-          <Link2 className="w-4 h-4" /> Link all
-        </button>
-      </header>
+    <ViewCanvas unstyledMain={true}>
+      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
 
-      {error && (
-        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
-        </div>
-      )}
-
-      <section className="border-2 border-dsi-outline rounded p-3">
-        <h2 className="font-semibold tracking-wider mb-2 flex items-center gap-2">
-          <Upload className="w-4 h-4" /> Bulk import CSV
-        </h2>
-        <form
-          onSubmit={uploadCsv}
-          className="flex items-center gap-2 text-sm"
-          encType="multipart/form-data"
-        >
-          <input
-            type="file"
-            name="file"
-            accept=".csv,text/csv"
-            required
-            className="text-xs"
-          />
-          <button
-            type="submit"
-            disabled={busy === "import"}
-            className="bg-dsi-contrast-background text-dsi-background py-1 px-3 rounded text-sm font-semibold disabled:opacity-50"
-          >
-            {busy === "import" ? "Importing…" : "Import"}
-          </button>
-          {importResult && (
-            <span className="text-xs opacity-80">{importResult}</span>
-          )}
-        </form>
-      </section>
-
-      <section className="border-2 border-dsi-outline rounded p-3 flex flex-wrap items-end gap-2">
-        <Field label="Coverage">
-          <input
-            value={filters.coverage}
-            onChange={(e) => setFilters({ ...filters, coverage: e.target.value })}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm font-mono w-24"
-          />
-        </Field>
-        <Field label="Status">
-          <input
-            value={filters.status}
-            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm w-32"
-          />
-        </Field>
-        <Field label="Linked">
-          <select
-            value={filters.linked}
-            onChange={(e) =>
-              setFilters({ ...filters, linked: e.target.value as Filters["linked"] })
-            }
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm"
-          >
-            <option value="">Any</option>
-            <option value="true">Linked</option>
-            <option value="false">Unlinked</option>
-          </select>
-        </Field>
-        <button
-          onClick={() => void load()}
-          disabled={loading}
-          className="bg-dsi-contrast-background text-dsi-background py-1 px-3 rounded text-sm font-semibold"
-        >
-          Apply
-        </button>
-      </section>
-
-      <section className="border-2 border-dsi-outline rounded">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs uppercase opacity-60 text-left">
-              <th className="py-1 px-3">Entity</th>
-              <th className="py-1 px-3">Coverage</th>
-              <th className="py-1 px-3">Event date</th>
-              <th className="py-1 px-3 text-right">Gross</th>
-              <th className="py-1 px-3 text-right">Net</th>
-              <th className="py-1 px-3">Status</th>
-              <th className="py-1 px-3">Linked</th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((l) => (
-              <tr key={l.id} className="border-t border-dsi-outline/20">
-                <td className="py-1 px-3">{l.entity_name}</td>
-                <td className="py-1 px-3 font-mono text-xs">{l.coverage}</td>
-                <td className="py-1 px-3 text-xs">{fmtDate(l.event_date)}</td>
-                <td className="py-1 px-3 text-right tabular-nums">
-                  {formatCurrency(l.gross_amount)}
-                </td>
-                <td className="py-1 px-3 text-right tabular-nums opacity-80">
-                  {l.net_amount != null ? formatCurrency(l.net_amount) : "—"}
-                </td>
-                <td className="py-1 px-3">
-                  <StatusBadge status={l.status} />
-                </td>
-                <td className="py-1 px-3 text-xs">
-                  {l.quote_id ? "yes" : "no"}
-                </td>
-              </tr>
-            ))}
-            {items.length === 0 && !loading && (
-              <tr>
-                <td colSpan={7} className="p-4 opacity-60 text-center">
-                  No loss events.
-                </td>
-              </tr>
+        {/* FIXED TOP */}
+        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm">
+          <div className="flex items-center gap-3 pb-2">
+            <h1>Showing {items.length} loss events.</h1>
+            {importResult && (
+              <span className="text-xs opacity-80 ml-auto">{importResult}</span>
             )}
-          </tbody>
-        </table>
-      </section>
-    </main>
-  );
-}
+          </div>
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-0.5">
-      <span className="text-xs opacity-60">{label}</span>
-      {children}
-    </label>
+          <form
+            onSubmit={uploadCsv}
+            encType="multipart/form-data"
+            className="flex items-center gap-2 pb-2"
+          >
+            <Upload className="icon opacity-60" />
+            <input
+              type="file"
+              name="file"
+              accept=".csv,text/csv"
+              required
+              className="text-xs"
+            />
+            <button
+              type="submit"
+              disabled={busy === "import"}
+              className="dsi-actionbutton disabled:opacity-50"
+            >
+              {busy === "import" ? "Importing…" : "Import CSV"}
+            </button>
+          </form>
+
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">Coverage</span>
+              <input
+                value={filters.coverage}
+                onChange={(e) => setFilters({ ...filters, coverage: e.target.value })}
+                className="dsi-inputbox w-24 font-mono"
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">Status</span>
+              <input
+                value={filters.status}
+                onChange={(e) => setFilters({ ...filters, status: e.target.value })}
+                className="dsi-inputbox w-32"
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">Linked</span>
+              <select
+                value={filters.linked}
+                onChange={(e) =>
+                  setFilters({ ...filters, linked: e.target.value as Filters["linked"] })
+                }
+                className="dsi-inputbox"
+              >
+                <option value="">Any</option>
+                <option value="true">Linked</option>
+                <option value="false">Unlinked</option>
+              </select>
+            </label>
+            <button
+              onClick={() => void load()}
+              disabled={loading}
+              className="dsi-actionbutton"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+            <AlertTriangle className="icon" /> {error}
+          </div>
+        )}
+
+        {/* SCROLLABLE TABLE */}
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
+          <table className="w-full text-left whitespace-nowrap border-collapse">
+            <thead className="sticky top-0 z-20 bg-dsi-background">
+              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <th className="p-1.5">Entity</th>
+                <th className="p-1.5">Coverage</th>
+                <th className="p-1.5">Event date</th>
+                <th className="p-1.5 text-right">Gross</th>
+                <th className="p-1.5 text-right">Net</th>
+                <th className="p-1.5">Status</th>
+                <th className="p-1.5">Linked</th>
+              </tr>
+            </thead>
+            <tbody>
+              {items.map((l) => (
+                <tr key={l.id} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                  <td className="p-1.5">{l.entity_name}</td>
+                  <td className="p-1.5 font-mono text-xs">{l.coverage}</td>
+                  <td className="p-1.5 text-xs">{fmtDate(l.event_date)}</td>
+                  <td className="p-1.5 text-right tabular-nums">{formatCurrency(l.gross_amount)}</td>
+                  <td className="p-1.5 text-right tabular-nums opacity-80">
+                    {l.net_amount != null ? formatCurrency(l.net_amount) : "—"}
+                  </td>
+                  <td className="p-1.5"><StatusBadge status={l.status} /></td>
+                  <td className="p-1.5 text-xs">{l.quote_id ? "yes" : "no"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {items.length === 0 && !loading && (
+            <div className="dsi-user-message">No loss events.</div>
+          )}
+        </div>
+      </div>
+    </ViewCanvas>
   );
 }
 
