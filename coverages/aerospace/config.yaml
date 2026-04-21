@@ -2327,7 +2327,7 @@ aerospace:
       proxy_tier: DIRECT_OBSERVABLE
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -2343,7 +2343,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.03
@@ -2880,7 +2880,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.04
@@ -2893,7 +2893,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.04
@@ -3386,7 +3386,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.03
@@ -3934,7 +3934,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: negative
           weight: 0.03
@@ -3947,7 +3947,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.03
@@ -4342,7 +4342,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.04
@@ -4355,7 +4355,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: technical_infrastructure
         risk:
           correlation_direction: positive
           weight: 0.05
@@ -4371,7 +4371,7 @@ aerospace:
       proxy_tier: INFERRED_PROXY
       expectation_level: UNIVERSAL
       three_layer_assessment:
-        group_id: structured_data
+        group_id: public_record
         risk:
           correlation_direction: negative
           weight: 0.04
