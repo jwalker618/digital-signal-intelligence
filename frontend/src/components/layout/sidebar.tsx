@@ -68,6 +68,7 @@ export default function Sidebar({
     setActiveCategory,
     expandedCategories,
     toggleCategory,
+    clearSubmissionContext,
   } = useDsiStore();
 
   const hasPermission = useAuthStore((s) => s.hasPermission);
@@ -200,8 +201,10 @@ export default function Sidebar({
                               label={item.name}
                               isActive={activeMenu === item.name}
                               onClick={() => {
+                                clearSubmissionContext();
                                 setActiveMenu(item.name);
                                 onToggleOpen();
+                                router.push("/");
                               }}
                             />
                           </li>
@@ -218,6 +221,7 @@ export default function Sidebar({
                       label="World Engine"
                       isActive={!!pathname?.startsWith("/world-engine")}
                       onClick={() => {
+                        clearSubmissionContext();
                         setActiveMenu("World Engine");
                         onToggleOpen();
                         router.push("/world-engine");
@@ -233,6 +237,7 @@ export default function Sidebar({
                       label="Config"
                       isActive={!!pathname?.startsWith("/admin/configs")}
                       onClick={() => {
+                        clearSubmissionContext();
                         setActiveMenu("Config");
                         onToggleOpen();
                         router.push("/admin/configs");
@@ -248,6 +253,7 @@ export default function Sidebar({
                       label="Recalibration"
                       isActive={!!pathname?.startsWith("/admin/recalibration")}
                       onClick={() => {
+                        clearSubmissionContext();
                         setActiveMenu("Recalibration");
                         onToggleOpen();
                         router.push("/admin/recalibration");
@@ -266,6 +272,7 @@ export default function Sidebar({
                         !!pathname?.startsWith("/admin/")
                       }
                       onClick={() => {
+                        clearSubmissionContext();
                         setActiveMenu("Admin");
                         onToggleOpen();
                         router.push("/admin");
