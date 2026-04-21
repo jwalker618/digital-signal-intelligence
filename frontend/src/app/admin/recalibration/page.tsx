@@ -1,28 +1,27 @@
 // FE: Recalibration governance dashboard (C-3).
 //
-// Lists proposals with status filter. Each row links to the detail
-// page which holds the approve / reject / deploy / simulate actions.
+// Lists proposals with a compact status/coverage filter bar. Each row
+// links to the detail page which holds the approve / reject / deploy /
+// simulate actions.
 
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
+import ViewCanvas from "@/components/ViewCanvas";
 import { api, fmtRelative } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import { useDsiStore } from "@/store/dsiStore";
 import type { ProposalSummary } from "@/types/recalibration";
 
-const STATUSES = [
-  "",
-  "DRAFT",
-  "PENDING_REVIEW",
-  "APPROVED",
-  "REJECTED",
-  "DEPLOYED",
-];
+const STATUSES = ["", "DRAFT", "PENDING_REVIEW", "APPROVED", "REJECTED", "DEPLOYED"];
 
 export default function RecalibrationPage() {
+  const router = useRouter();
+  const setPageQuickAction = useDsiStore((s) => s.setPageQuickAction);
+
   const [items, setItems] = useState<ProposalSummary[]>([]);
   const [status, setStatus] = useState("");
   const [coverage, setCoverage] = useState("");
@@ -53,113 +52,98 @@ export default function RecalibrationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    setPageQuickAction(
+      <button
+        onClick={() => void load()}
+        disabled={loading}
+        className="dsi-actiontext disabled:opacity-50"
+      >
+        <RefreshCw className={`icon ${loading ? "animate-spin" : ""}`} />
+        Refresh
+      </button>,
+    );
+    return () => setPageQuickAction(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
   return (
-    <main className="p-6 flex flex-col gap-4">
-      <header className="flex items-center gap-3">
-        <h1 className="font-inter text-2xl tracking-wide">Recalibration</h1>
-        <button
-          onClick={() => void load()}
-          disabled={loading}
-          className="ml-auto flex items-center gap-1 border-2 border-dsi-outline py-1 px-3 rounded text-sm"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </button>
-      </header>
+    <ViewCanvas unstyledMain={true}>
+      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
 
-      {error && (
-        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
+        {/* FIXED TOP */}
+        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm flex items-center gap-3">
+          <h1>Showing {items.length} proposals.</h1>
+          <div className="flex items-center gap-2 ml-auto">
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              className="dsi-inputbox"
+            >
+              {STATUSES.map((s) => (
+                <option key={s} value={s}>{s || "All statuses"}</option>
+              ))}
+            </select>
+            <input
+              value={coverage}
+              onChange={(e) => setCoverage(e.target.value)}
+              placeholder="Coverage"
+              className="dsi-inputbox w-32"
+            />
+            <button onClick={() => void load()} className="dsi-actionbutton">
+              Apply
+            </button>
+          </div>
         </div>
-      )}
 
-      <section className="flex items-end gap-2 border-2 border-dsi-outline rounded p-3">
-        <label className="flex flex-col gap-0.5">
-          <span className="text-xs opacity-60">Status</span>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm"
-          >
-            {STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s || "All"}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col gap-0.5">
-          <span className="text-xs opacity-60">Coverage</span>
-          <input
-            value={coverage}
-            onChange={(e) => setCoverage(e.target.value)}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm font-mono w-24"
-          />
-        </label>
-        <button
-          onClick={() => void load()}
-          className="bg-dsi-contrast-background text-dsi-background py-1 px-3 rounded text-sm font-semibold"
-        >
-          Apply
-        </button>
-      </section>
+        {error && (
+          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+            <AlertTriangle className="icon" /> {error}
+          </div>
+        )}
 
-      <section className="border-2 border-dsi-outline rounded">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs uppercase opacity-60 text-left">
-              <th className="py-1 px-3">Coverage</th>
-              <th className="py-1 px-3">Config</th>
-              <th className="py-1 px-3">Trigger</th>
-              <th className="py-1 px-3 text-right">Sample</th>
-              <th className="py-1 px-3 text-right">Weights</th>
-              <th className="py-1 px-3 text-right">Tiers</th>
-              <th className="py-1 px-3">Proposed</th>
-              <th className="py-1 px-3">Status</th>
-              <th className="py-1 px-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.map((p) => (
-              <tr key={p.id} className="border-t border-dsi-outline/20">
-                <td className="py-1 px-3 font-mono text-xs">{p.coverage}</td>
-                <td className="py-1 px-3 font-mono text-xs">{p.config_name}</td>
-                <td className="py-1 px-3 text-xs opacity-80">{p.trigger}</td>
-                <td className="py-1 px-3 text-right tabular-nums">
-                  {p.sample_size}
-                </td>
-                <td className="py-1 px-3 text-right tabular-nums">
-                  {p.weight_change_count}
-                </td>
-                <td className="py-1 px-3 text-right tabular-nums">
-                  {p.tier_change_count}
-                </td>
-                <td className="py-1 px-3 text-xs opacity-80">
-                  {fmtRelative(p.proposed_at)}
-                </td>
-                <td className="py-1 px-3">
-                  <StatusBadge status={p.status} />
-                </td>
-                <td className="py-1 px-3">
-                  <Link
-                    href={`/admin/recalibration/${p.id}`}
-                    className="text-dsi-selected hover:underline text-xs"
-                  >
-                    Review →
-                  </Link>
-                </td>
+        {/* SCROLLABLE TABLE */}
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
+          <table className="w-full text-left whitespace-nowrap border-collapse">
+            <thead className="sticky top-0 z-20 bg-dsi-background">
+              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <th className="p-1.5">Coverage</th>
+                <th className="p-1.5">Config</th>
+                <th className="p-1.5">Trigger</th>
+                <th className="p-1.5 text-right">Sample</th>
+                <th className="p-1.5 text-right">Weights</th>
+                <th className="p-1.5 text-right">Tiers</th>
+                <th className="p-1.5">Proposed</th>
+                <th className="p-1.5">Status</th>
+                <th className="p-1.5"></th>
               </tr>
-            ))}
-            {items.length === 0 && !loading && (
-              <tr>
-                <td colSpan={9} className="p-4 opacity-60 text-center">
-                  No proposals.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </section>
-    </main>
+            </thead>
+            <tbody>
+              {items.map((p) => (
+                <tr
+                  key={p.id}
+                  onClick={() => router.push(`/admin/recalibration/${p.id}`)}
+                  className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
+                >
+                  <td className="p-1.5 font-mono text-xs">{p.coverage}</td>
+                  <td className="p-1.5 font-mono text-xs">{p.config_name}</td>
+                  <td className="p-1.5 text-xs opacity-80">{p.trigger}</td>
+                  <td className="p-1.5 text-right tabular-nums">{p.sample_size}</td>
+                  <td className="p-1.5 text-right tabular-nums">{p.weight_change_count}</td>
+                  <td className="p-1.5 text-right tabular-nums">{p.tier_change_count}</td>
+                  <td className="p-1.5 text-xs opacity-80">{fmtRelative(p.proposed_at)}</td>
+                  <td className="p-1.5"><StatusBadge status={p.status} /></td>
+                  <td className="p-1.5 text-xs text-dsi-selected">Review →</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          {items.length === 0 && !loading && (
+            <div className="dsi-user-message">No proposals.</div>
+          )}
+        </div>
+      </div>
+    </ViewCanvas>
   );
 }

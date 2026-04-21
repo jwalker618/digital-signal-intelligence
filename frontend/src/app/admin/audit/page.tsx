@@ -5,12 +5,14 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { AlertTriangle, Download, Filter } from "lucide-react";
+import { Fragment, useEffect, useState } from "react";
+import { AlertTriangle, Download } from "lucide-react";
 
+import ViewCanvas from "@/components/ViewCanvas";
 import { api, fmtDate } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
 import { StateDiffViewer } from "@/components/shared/StateDiffViewer";
+import { useDsiStore } from "@/store/dsiStore";
 import type { AuditEventRow } from "@/types/admin";
 
 interface QueryState {
@@ -28,6 +30,8 @@ const EMPTY: QueryState = {
 };
 
 export default function AuditPage() {
+  const setPageQuickAction = useDsiStore((s) => s.setPageQuickAction);
+
   const [query, setQuery] = useState<QueryState>(EMPTY);
   const [events, setEvents] = useState<AuditEventRow[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -83,172 +87,159 @@ export default function AuditPage() {
     if (query.date_from) params.set("date_from", query.date_from);
     if (query.date_to) params.set("date_to", query.date_to);
     params.set("format", "csv");
-    const url = `/api/v1/admin/audit/export?${params.toString()}`;
-    window.open(url, "_blank");
+    window.open(`/api/v1/admin/audit/export?${params.toString()}`, "_blank");
   }
 
+  useEffect(() => {
+    setPageQuickAction(
+      <button onClick={exportCsv} className="dsi-actiontext">
+        <Download className="icon" /> Export CSV
+      </button>,
+    );
+    return () => setPageQuickAction(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
+
   return (
-    <main className="p-6 flex flex-col gap-4">
-      <header className="flex items-center gap-3">
-        <h1 className="font-inter text-2xl tracking-wide">Audit Log</h1>
-        <button
-          onClick={exportCsv}
-          className="ml-auto flex items-center gap-1 border-2 border-dsi-outline py-1 px-3 rounded text-sm"
-        >
-          <Download className="w-4 h-4" />
-          Export CSV
-        </button>
-      </header>
+    <ViewCanvas unstyledMain={true}>
+      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
 
-      <section className="border-2 border-dsi-outline rounded p-3 flex flex-wrap items-end gap-2">
-        <Filter className="w-4 h-4 opacity-60" />
-        <Field label="Action">
-          <input
-            value={query.action_type}
-            onChange={(e) => setQuery({ ...query, action_type: e.target.value })}
-            placeholder="CONFIG_DEPLOY"
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm font-mono w-40"
-          />
-        </Field>
-        <Field label="Resource">
-          <input
-            value={query.resource_type}
-            onChange={(e) =>
-              setQuery({ ...query, resource_type: e.target.value })
-            }
-            placeholder="config_version"
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm font-mono w-40"
-          />
-        </Field>
-        <Field label="From">
-          <input
-            type="date"
-            value={query.date_from}
-            onChange={(e) => setQuery({ ...query, date_from: e.target.value })}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm"
-          />
-        </Field>
-        <Field label="To">
-          <input
-            type="date"
-            value={query.date_to}
-            onChange={(e) => setQuery({ ...query, date_to: e.target.value })}
-            className="border-2 border-dsi-outline bg-dsi-background px-2 py-1 rounded text-sm"
-          />
-        </Field>
-        <button
-          onClick={applyFilters}
-          disabled={loading}
-          className="bg-dsi-contrast-background text-dsi-background py-1 px-3 rounded text-sm font-semibold"
-        >
-          Apply
-        </button>
-        <button
-          onClick={() => {
-            setQuery(EMPTY);
-            setCursor(null);
-          }}
-          className="border-2 border-dsi-outline py-1 px-3 rounded text-sm"
-        >
-          Reset
-        </button>
-      </section>
+        {/* FIXED TOP */}
+        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm">
+          <div className="flex items-center gap-3 pb-2">
+            <h1>Showing {events.length} events.</h1>
+          </div>
 
-      {error && (
-        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
-        </div>
-      )}
-
-      <section className="border-2 border-dsi-outline rounded">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="text-xs uppercase opacity-60 text-left">
-              <th className="py-1 px-3">When</th>
-              <th className="py-1 px-3">Action</th>
-              <th className="py-1 px-3">Resource</th>
-              <th className="py-1 px-3">User</th>
-              <th className="py-1 px-3">Latency</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((e) => {
-              const open = expanded === e.id;
-              return (
-                <>
-                  <tr
-                    key={e.id}
-                    className="border-t border-dsi-outline/20 hover:bg-dsi-outline/5 cursor-pointer"
-                    onClick={() => setExpanded(open ? null : e.id)}
-                  >
-                    <td className="py-1 px-3 text-xs whitespace-nowrap">
-                      {fmtDate(e.created_at)}
-                    </td>
-                    <td className="py-1 px-3 font-mono text-xs">
-                      {e.action_type}
-                    </td>
-                    <td className="py-1 px-3 text-xs">
-                      {e.resource_type}
-                      {e.resource_id && (
-                        <span className="opacity-60"> · {e.resource_id}</span>
-                      )}
-                    </td>
-                    <td className="py-1 px-3 font-mono text-[10px] opacity-70">
-                      {e.user_id ? e.user_id.slice(0, 8) : "—"}
-                    </td>
-                    <td className="py-1 px-3 tabular-nums text-xs">
-                      {e.duration_ms ? `${formatNumber(e.duration_ms)} ms` : "—"}
-                    </td>
-                  </tr>
-                  {open && (
-                    <tr className="border-t border-dsi-outline/20 bg-dsi-outline/5">
-                      <td colSpan={5} className="p-3">
-                        <StateDiffViewer
-                          before={e.before_state}
-                          after={e.after_state}
-                        />
-                      </td>
-                    </tr>
-                  )}
-                </>
-              );
-            })}
-            {events.length === 0 && !loading && (
-              <tr>
-                <td colSpan={5} className="p-4 opacity-60 text-center">
-                  No events match these filters.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-        {nextCursor && (
-          <div className="p-2 text-center">
+          <div className="flex flex-wrap items-end gap-2">
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">Action</span>
+              <input
+                value={query.action_type}
+                onChange={(e) => setQuery({ ...query, action_type: e.target.value })}
+                placeholder="CONFIG_DEPLOY"
+                className="dsi-inputbox w-40 font-mono"
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">Resource</span>
+              <input
+                value={query.resource_type}
+                onChange={(e) => setQuery({ ...query, resource_type: e.target.value })}
+                placeholder="config_version"
+                className="dsi-inputbox w-40 font-mono"
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">From</span>
+              <input
+                type="date"
+                value={query.date_from}
+                onChange={(e) => setQuery({ ...query, date_from: e.target.value })}
+                className="dsi-inputbox"
+              />
+            </label>
+            <label className="flex flex-col gap-0.5">
+              <span className="text-xs opacity-60">To</span>
+              <input
+                type="date"
+                value={query.date_to}
+                onChange={(e) => setQuery({ ...query, date_to: e.target.value })}
+                className="dsi-inputbox"
+              />
+            </label>
             <button
-              onClick={loadMore}
+              onClick={applyFilters}
               disabled={loading}
-              className="border-2 border-dsi-outline py-1 px-4 rounded text-sm"
+              className="dsi-actionbutton"
             >
-              Load more
+              Apply
+            </button>
+            <button
+              onClick={() => { setQuery(EMPTY); setCursor(null); }}
+              className="dsi-actiontext"
+            >
+              Reset
             </button>
           </div>
-        )}
-      </section>
-    </main>
-  );
-}
+        </div>
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="flex flex-col gap-0.5">
-      <span className="text-xs opacity-60">{label}</span>
-      {children}
-    </label>
+        {error && (
+          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+            <AlertTriangle className="icon" /> {error}
+          </div>
+        )}
+
+        {/* SCROLLABLE TABLE */}
+        <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
+          <table className="w-full text-left whitespace-nowrap border-collapse">
+            <thead className="sticky top-0 z-20 bg-dsi-background">
+              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <th className="p-1.5">When</th>
+                <th className="p-1.5">Action</th>
+                <th className="p-1.5">Resource</th>
+                <th className="p-1.5">User</th>
+                <th className="p-1.5 text-right">Latency</th>
+              </tr>
+            </thead>
+            <tbody>
+              {events.map((e) => {
+                const open = expanded === e.id;
+                return (
+                  <Fragment key={e.id}>
+                    <tr
+                      onClick={() => setExpanded(open ? null : e.id)}
+                      className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
+                    >
+                      <td className="p-1.5 text-xs whitespace-nowrap">
+                        {fmtDate(e.created_at)}
+                      </td>
+                      <td className="p-1.5 font-mono text-xs">{e.action_type}</td>
+                      <td className="p-1.5 text-xs">
+                        {e.resource_type}
+                        {e.resource_id && (
+                          <span className="opacity-60"> · {e.resource_id}</span>
+                        )}
+                      </td>
+                      <td className="p-1.5 font-mono text-[10px] opacity-70">
+                        {e.user_id ? e.user_id.slice(0, 8) : "—"}
+                      </td>
+                      <td className="p-1.5 text-right tabular-nums text-xs">
+                        {e.duration_ms ? `${formatNumber(e.duration_ms)} ms` : "—"}
+                      </td>
+                    </tr>
+                    {open && (
+                      <tr className="bg-dsi-analysis/40">
+                        <td colSpan={5} className="p-3">
+                          <StateDiffViewer
+                            before={e.before_state}
+                            after={e.after_state}
+                          />
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {events.length === 0 && !loading && (
+            <div className="dsi-user-message">No events match these filters.</div>
+          )}
+
+          {nextCursor && (
+            <div className="pt-dsi-pad text-center">
+              <button
+                onClick={loadMore}
+                disabled={loading}
+                className="dsi-actionbutton inline-block disabled:opacity-50"
+              >
+                Load more
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </ViewCanvas>
   );
 }
