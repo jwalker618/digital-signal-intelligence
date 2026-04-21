@@ -18,6 +18,7 @@ export default function UserMenu() {
   const authUser = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
+  const clearSubmissionContext = useDsiStore((s) => s.clearSubmissionContext);
   const [isOpen, setIsOpen] = useState(false);
 
   const closeAnd = (fn: () => void | Promise<void>) => async () => {
@@ -45,7 +46,7 @@ export default function UserMenu() {
 
           <button
             onClick={closeAnd(() => {
-
+              clearSubmissionContext();
               setActiveMenu("Your Profile");
               router.push("/profile");
             })}
