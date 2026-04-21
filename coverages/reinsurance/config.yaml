@@ -857,7 +857,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 8000
+            value: 8000
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -868,7 +868,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 12000
+            value: 12000
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -879,7 +879,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 18000
+            value: 18000
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -890,7 +890,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 30000
+            value: 30000
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -901,7 +901,7 @@ reinsurance:
           action: DECLINE
           application:
             method: PREMIUM_BASE
-            applied: 50000
+            value: 50000
     loss_tier_bands:
       bands:
       - id: 1
@@ -1893,7 +1893,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 8000
+            value: 8000
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -1904,7 +1904,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 12000
+            value: 12000
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -1915,7 +1915,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 18000
+            value: 18000
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -1926,7 +1926,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 30000
+            value: 30000
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -1937,7 +1937,7 @@ reinsurance:
           action: DECLINE
           application:
             method: PREMIUM_BASE
-            applied: 50000
+            value: 50000
     loss_tier_bands:
       bands:
       - id: 1
@@ -2929,7 +2929,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 8000
+            value: 8000
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -2940,7 +2940,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 12000
+            value: 12000
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -2951,7 +2951,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 18000
+            value: 18000
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -2962,7 +2962,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 30000
+            value: 30000
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -2973,7 +2973,7 @@ reinsurance:
           action: DECLINE
           application:
             method: PREMIUM_BASE
-            applied: 50000
+            value: 50000
     loss_tier_bands:
       bands:
       - id: 1
@@ -3965,7 +3965,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 8000
+            value: 8000
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -3976,7 +3976,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 12000
+            value: 12000
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -3987,7 +3987,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 18000
+            value: 18000
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -3998,7 +3998,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 30000
+            value: 30000
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -4009,7 +4009,7 @@ reinsurance:
           action: DECLINE
           application:
             method: PREMIUM_BASE
-            applied: 50000
+            value: 50000
     loss_tier_bands:
       bands:
       - id: 1
@@ -5001,7 +5001,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 8000
+            value: 8000
       - id: 2
         label: STANDARD_PLUS
         description: Good risk - automatic approval, standard pricing
@@ -5012,7 +5012,7 @@ reinsurance:
           action: APPROVE
           application:
             method: PREMIUM_BASE
-            applied: 12000
+            value: 12000
       - id: 3
         label: STANDARD
         description: Average risk - may require referral
@@ -5023,7 +5023,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 18000
+            value: 18000
       - id: 4
         label: SUBSTANDARD
         description: Elevated risk - requires senior review
@@ -5034,7 +5034,7 @@ reinsurance:
           action: REFER
           application:
             method: PREMIUM_BASE
-            applied: 30000
+            value: 30000
       - id: 5
         label: DECLINE
         description: Unacceptable risk - decline
@@ -5045,7 +5045,7 @@ reinsurance:
           action: DECLINE
           application:
             method: PREMIUM_BASE
-            applied: 50000
+            value: 50000
     loss_tier_bands:
       bands:
       - id: 1
