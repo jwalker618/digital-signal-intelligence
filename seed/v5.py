@@ -475,6 +475,139 @@ def report_world_engine(db: Session) -> None:
         logger.warning("[WE-1] maturity evaluation failed: %s", exc)
 
 
+def seed_world_engine_intelligence(db: Session) -> tuple[int, int]:
+    """Seed a handful of discovered relationships + drift alerts so the
+    frontend World Model / Drift / Relationships sections render something
+    illustrative out of the box.
+
+    Idempotent: skips if the registry already has records (any prior run or
+    a real engine scan will have populated them).
+    """
+    from world_engine.registry.store import IntelligenceRegistry
+    from world_engine.types import (
+        CausalDirection,
+        DiscoveredRelationship,
+        DriftAlert,
+        DriftSeverity,
+        LifecycleState,
+        StateTransition,
+    )
+
+    registry = IntelligenceRegistry(db)
+
+    existing_rels = db.execute(
+        text("SELECT COUNT(*) FROM we_relationships")
+    ).scalar() or 0
+    existing_alerts = db.execute(
+        text("SELECT COUNT(*) FROM we_drift_alerts")
+    ).scalar() or 0
+    if existing_rels > 0 and existing_alerts > 0:
+        logger.info(
+            "[WE] skipping synthetic seed (registry already has %d relationships, %d alerts)",
+            existing_rels,
+            existing_alerts,
+        )
+        return existing_rels, existing_alerts
+
+    now = datetime.now(timezone.utc)
+
+    # ---- Relationships ----------------------------------------------------
+    # Each entry: (source, target, direction, lag, rho, effect, influence,
+    #              target_state, coverage_scope)
+    rel_fixtures = [
+        ("cyber_posture",     "claim_frequency",    CausalDirection.A_CAUSES_B,      6.0,  -0.64, 0.42, 0.78, LifecycleState.ACTIVE,      ["cyber_general"]),
+        ("privacy_maturity",  "regulatory_exposure",CausalDirection.A_CAUSES_B,      9.0,  -0.51, 0.31, 0.64, LifecycleState.ACTIVE,      ["cyber_general"]),
+        ("revenue_growth",    "premium_adequacy",   CausalDirection.BIDIRECTIONAL,   3.0,   0.47, 0.22, 0.55, LifecycleState.ACTIVE,      ["general_liability", "property"]),
+        ("third_party_risk",  "claim_severity",     CausalDirection.A_CAUSES_B,     12.0,   0.58, 0.39, 0.70, LifecycleState.PROVISIONAL, ["cyber_general", "tech_eo"]),
+        ("operational_tempo", "loss_volatility",    CausalDirection.A_CAUSES_B,      4.0,   0.33, 0.18, 0.40, LifecycleState.PROVISIONAL, ["property"]),
+        ("supply_chain_depth","business_interruption_loss", CausalDirection.A_CAUSES_B, 6.0, 0.41, 0.27, 0.00, LifecycleState.CANDIDATE, ["property", "tech_eo"]),
+    ]
+
+    relationships_created = 0
+    for src, tgt, direction, lag, rho, eff, weight, target_state, scope in rel_fixtures:
+        rel = DiscoveredRelationship(
+            id=str(uuid.uuid4()),
+            source_signal=src,
+            target_signal=tgt,
+            direction=direction,
+            lag_months=lag,
+            correlation_rho=rho,
+            effect_size=eff,
+            confounders_tested=["industry_class", "revenue_band"],
+            holdout_rho=rho * 0.9 if target_state == LifecycleState.ACTIVE else None,
+            holdout_p_value=0.02 if target_state == LifecycleState.ACTIVE else None,
+            predictive_hit_rate=0.68 if target_state == LifecycleState.ACTIVE else None,
+            population_size=random.randint(220, 480),
+            coverage_scope=scope,
+            lifecycle_state=LifecycleState.CANDIDATE,  # store always starts as candidate
+            state_entered_at=now,
+            influence_weight=weight,
+            created_at=now - timedelta(days=random.randint(30, 180)),
+            updated_at=now,
+        )
+        rel_id = registry.register_candidate(rel)
+
+        if target_state == LifecycleState.PROVISIONAL:
+            registry.transition_state(
+                rel_id,
+                LifecycleState.PROVISIONAL,
+                reason="Seed: synthetic provisional promotion",
+                evidence={"source": "seed_v5", "synthetic": True},
+            )
+        elif target_state == LifecycleState.ACTIVE:
+            registry.transition_state(
+                rel_id,
+                LifecycleState.PROVISIONAL,
+                reason="Seed: synthetic provisional promotion",
+                evidence={"source": "seed_v5", "synthetic": True},
+            )
+            registry.transition_state(
+                rel_id,
+                LifecycleState.ACTIVE,
+                reason="Seed: synthetic activation",
+                evidence={"source": "seed_v5", "synthetic": True},
+            )
+        relationships_created += 1
+
+    # ---- Drift alerts -----------------------------------------------------
+    alert_fixtures = [
+        ("regime_change",        DriftSeverity.CRITICAL, "cyber_posture",    "claim_frequency",
+         "Sign flip observed in cyber_posture → claim_frequency over the last 8 weeks."),
+        ("signal_degradation",   DriftSeverity.WARNING,  "privacy_maturity", None,
+         "privacy_maturity coverage has dropped below the 60% reporting threshold."),
+        ("correlation_inversion",DriftSeverity.WARNING,  "third_party_risk", "claim_severity",
+         "Correlation strength trending toward zero; relationship may be weakening."),
+        ("relationship_shift",   DriftSeverity.INFO,     "operational_tempo","loss_volatility",
+         "Lag estimate increased from 4 to 6 months; monitor over next scan cycle."),
+    ]
+
+    alerts_created = 0
+    for alert_type, severity, src, tgt, desc in alert_fixtures:
+        alert = DriftAlert(
+            id=str(uuid.uuid4()),
+            alert_type=alert_type,
+            severity=severity,
+            source_signal=src,
+            target_signal=tgt,
+            relationship_id=None,
+            description=desc,
+            evidence={"source": "seed_v5", "synthetic": True},
+            detected_at=now - timedelta(hours=random.randint(2, 72)),
+            acknowledged=False,
+            acknowledged_at=None,
+        )
+        registry.store_drift_alert(alert)
+        alerts_created += 1
+
+    db.commit()
+    logger.info(
+        "[WE] seeded %d relationships and %d drift alerts",
+        relationships_created,
+        alerts_created,
+    )
+    return relationships_created, alerts_created
+
+
 # ==============================================================================
 # Entry point
 # ==============================================================================
@@ -488,6 +621,7 @@ def run() -> int:
         config_version_id = seed_config_version(db, users)
         losses_created, losses_linked = seed_loss_events(db, tenant)
         proposal_id = seed_recalibration(db, tenant, users)
+        we_rels, we_alerts = seed_world_engine_intelligence(db)
         report_world_engine(db)
 
         print("\n" + "=" * 70)
@@ -501,6 +635,7 @@ def run() -> int:
             f"  Loss events: {losses_created} created, {losses_linked} linked"
         )
         print(f"  Recalibration proposal: {proposal_id or 'none'}")
+        print(f"  World Engine: {we_rels} relationships, {we_alerts} drift alerts")
         print("=" * 70 + "\n")
         return 0
     except Exception as exc:  # noqa: BLE001

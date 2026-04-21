@@ -72,6 +72,7 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   pending_review: { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   validating:     { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   calibrating:    { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
+  provisional:    { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
 
   red:            { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
   critical:       { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
@@ -85,6 +86,8 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   archived:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   superseded:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   inactive:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  candidate:      { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  deprecated:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
 };
 
 /** Generic tone — for ad-hoc pills not tied to a domain enum. */
