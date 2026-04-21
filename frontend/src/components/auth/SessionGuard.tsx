@@ -4,14 +4,15 @@
 //   - Trigger authStore.boot() on first mount (refresh from persisted
 //     refresh_token, fetch /me, populate user).
 //   - Redirect to /login if the session is missing or expired.
-//   - Show a toast 30 minutes before expiry warning the user.
 //   - Auto-refresh on token near-expiry.
+//   - Publish a session-expiry warning string to authStore 30 minutes
+//     before expiry; TitleBar renders it.
 //
 // Public pages (/login, /reset-password, /sso/callback) bypass the guard.
 
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -31,11 +32,11 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   const isBooting = useAuthStore((s) => s.isBooting);
   const sessionExpiresAt = useAuthStore((s) => s.sessionExpiresAt);
   const refresh = useAuthStore((s) => s.refresh);
+  const setSessionWarning = useAuthStore((s) => s.setSessionWarning);
   // Subscribe to the computed boolean, not the function reference, so the
   // guard re-runs its redirect effect whenever auth state actually changes.
   const isAuthed = useAuthStore((s) => s.isAuthenticated());
 
-  const [warning, setWarning] = useState<string | null>(null);
   const bootedRef = useRef(false);
 
   // Boot once
@@ -69,13 +70,13 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
         void refresh();
       } else if (remaining < WARN_THRESHOLD_MS) {
         const mins = Math.ceil(remaining / 60_000);
-        setWarning(`Session expires in ${mins} minute${mins === 1 ? "" : "s"}.`);
+        setSessionWarning(`Session expires in ${mins} minute${mins === 1 ? "" : "s"}.`);
       } else {
-        setWarning(null);
+        setSessionWarning(null);
       }
     }, 15_000);
     return () => clearInterval(interval);
-  }, [sessionExpiresAt, refresh, router]);
+  }, [sessionExpiresAt, refresh, router, setSessionWarning]);
 
   const isPublic = PUBLIC_PATHS.some((p) => pathname?.startsWith(p));
 
@@ -87,24 +88,5 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return (
-    <>
-      {warning && !isPublic && (
-        <div className="
-          fixed left-[80%] 
-          p-1.5 z-50 
-          bg-dsi-outline 
-          border-b-1 border-dsi-selected
-          text-dsi-contrast-background text-xs 
-          rounded-md shadow-sm" 
-          style={{ 
-            top: "var(--cw)" 
-          }}     
-          >
-          {warning}
-        </div>
-      )}
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

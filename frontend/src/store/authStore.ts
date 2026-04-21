@@ -37,6 +37,7 @@ interface AuthState {
   mfaChallengePending: boolean;
   error: string | null;
   isBooting: boolean;
+  sessionWarning: string | null;
 
   // --- actions ---
   boot: () => Promise<void>;
@@ -46,6 +47,7 @@ interface AuthState {
   refresh: () => Promise<boolean>;
   logout: () => Promise<void>;
   setError: (msg: string | null) => void;
+  setSessionWarning: (msg: string | null) => void;
 
   // --- selectors ---
   isAuthenticated: () => boolean;
@@ -68,6 +70,7 @@ export const useAuthStore = create<AuthState>()(
       mfaChallengePending: false,
       error: null,
       isBooting: true,
+      sessionWarning: null,
 
       boot: async () => {
         // On app load: if we have a refresh token, swap it for a fresh
@@ -170,6 +173,8 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setError: (msg) => set({ error: msg }),
+
+      setSessionWarning: (msg) => set({ sessionWarning: msg }),
 
       isAuthenticated: () => {
         const s = get();

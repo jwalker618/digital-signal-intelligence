@@ -9,6 +9,7 @@
 import { MoreVertical } from "lucide-react";
 
 import { useDsiStore } from "@/store/dsiStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function TitleBar() {
   const activeSubmission = useDsiStore((s) => s.activeSubmission);
@@ -16,6 +17,7 @@ export default function TitleBar() {
   const previousMenu = useDsiStore((s) => s.previousMenu);
   const pageQuickAction = useDsiStore((s) => s.pageQuickAction);
   const hasPageActions = useDsiStore((s) => s.hasPageActions);
+  const sessionWarning = useAuthStore((s) => s.sessionWarning);
 
   return (
     <div
@@ -47,6 +49,20 @@ export default function TitleBar() {
       </h1>
 
       <div className="flex items-center gap-2 px-dsi-main">
+        {/* Session expiry warning (driven by SessionGuard → authStore) */}
+        {sessionWarning && (
+          <div
+            className="
+              p-1.5
+              bg-dsi-outline
+              border-b-1 border-dsi-selected
+              text-dsi-contrast-background text-xs
+              rounded-md shadow-sm"
+          >
+            {sessionWarning}
+          </div>
+        )}
+
         {/* Quick action slot (optional, page-provided) */}
         {pageQuickAction}
 
