@@ -19,8 +19,14 @@ export default function TitleBar() {
 
   return (
     <div
-      className="border-b-3 border-dsi-outline flex items-center justify-between px-dsi-main"
-      style={{ height: "var(--cw)" }}
+      className="
+        flex
+        border-b-3 border-dsi-outline 
+        items-center justify-between 
+        px-dsi-main"
+      style={{ 
+        height: "var(--cw)" 
+      }}
     >
       <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
         <span className="flex items-center gap-4">

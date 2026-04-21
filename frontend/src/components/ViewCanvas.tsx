@@ -17,13 +17,12 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div 
         className="
           absolute top-0 
-          left-dsi-gap 
-          right-dsi-gap 
+          left-dsi-gap right-dsi-gap 
           overflow-auto
           text-dsi-contrast-background"
-        style={{ 
-          height: topContext ? ('var(--cw)') : (0) ,
-        }}
+          style={{ 
+            height: topContext ? ('var(--cw)') : (0) ,
+          }}
       >
         {topContext}
       </div>
@@ -32,22 +31,21 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div
         className="
           absolute 
-          left-dsi-gap 
-          right-dsi-gap 
+          left-dsi-gap right-dsi-gap 
           overflow-auto
           no-scrollbar"
-        style={{
-          top: topContext ? ('var(--cw)') : (0) ,
-          bottom: bottomContext ? ('var(--cw)') : (0) ,
-        }}
+          style={{
+            top: topContext ? ('var(--cw)') : (0) ,
+            bottom: bottomContext ? ('var(--cw)') : (0) ,
+          }}
       >
         {/* Conditionally render the default panel styling OR raw children */}
         {unstyledMain ? (
           children
         ) : (
           <div className="
-            text-dsi-contrast-analysis 
-            min-h-full 
+            min-h-full  
+            text-dsi-contrast-analysis  
             p-dsi-pad">
             {children}
           </div>
@@ -58,13 +56,12 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div
         className="
           absolute bottom-0 
-          left-dsi-gap 
-          right-dsi-gap 
+          left-dsi-gap right-dsi-gap 
           overflow-auto 
           text-dsi-contrast-background"
-        style={{ 
-          height: bottomContext ? ('var(--cw)') : (0) 
-        }}
+          style={{ 
+            height: bottomContext ? ('var(--cw)') : (0) 
+          }}
       >
         {bottomContext}
       </div>

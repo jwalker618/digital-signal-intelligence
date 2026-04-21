@@ -15,6 +15,8 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
+import "@/app/globals.css";
+
 import { useAuthStore } from "@/store/authStore";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
@@ -88,7 +90,17 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   return (
     <>
       {warning && !isPublic && (
-        <div className="fixed top-2 right-2 z-50 bg-dsi-warning/90 text-dsi-background text-sm px-3 py-2 rounded shadow">
+        <div className="
+          fixed left-[80%] 
+          p-1.5 z-50 
+          bg-dsi-outline 
+          border-b-1 border-dsi-selected
+          text-dsi-contrast-background text-xs 
+          rounded-md shadow-sm" 
+          style={{ 
+            top: "var(--cw)" 
+          }}     
+          >
           {warning}
         </div>
       )}

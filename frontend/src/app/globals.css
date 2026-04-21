@@ -43,6 +43,7 @@
 }
 
 :root {
+ 
   --dsi-outline: #ffffff;
   --dsi-contrast-background: #7A766F;
   --dsi-background: #E8E3DA;
@@ -144,8 +145,6 @@
   @apply hover:border-dsi-selected;
   @apply hover:text-dsi-selected;
 }
-
-
 
 @utility dsi-popup-header {
   @apply flex;
