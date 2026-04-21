@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { IBM_Plex_Sans, Inter } from "next/font/google";
 
-import { UserProvider } from "@/context/UserContext";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { NotificationToastHost } from "@/components/shared/NotificationToast";
 import { useThemeStore } from "@/store/themeStore";
@@ -76,42 +75,40 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body
         className={`${ibmPlex.variable} ${inter.variable} font-ibm h-screen w-screen overflow-hidden`}
       >
-        <UserProvider>
-          <SessionGuard>
-            <NotificationToastHost />
+        <SessionGuard>
+          <NotificationToastHost />
 
-            {isPublicAuthPage ? (
-              children
-            ) : (
-              <div className="relative h-full w-full">
-                <Sidebar
-                  sidebarRef={sidebarRef}
-                  isOpen={isOpen}
-                  onToggleOpen={() => setIsOpen(!isOpen)}
-                  collapsedWidthPx={collapsedWidthPx}
-                />
+          {isPublicAuthPage ? (
+            children
+          ) : (
+            <div className="relative h-full w-full">
+              <Sidebar
+                sidebarRef={sidebarRef}
+                isOpen={isOpen}
+                onToggleOpen={() => setIsOpen(!isOpen)}
+                collapsedWidthPx={collapsedWidthPx}
+              />
 
-                <main
-                  className="absolute top-0 right-0 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col transition-none"
-                  style={
-                    {
-                      left: collapsedWidthPx ? `${collapsedWidthPx}px` : "5%",
-                      "--cw": collapsedWidthPx
-                        ? `${collapsedWidthPx}px`
-                        : "80px",
-                    } as React.CSSProperties
-                  }
-                >
-                  <TitleBar />
+              <main
+                className="absolute top-0 right-0 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col transition-none"
+                style={
+                  {
+                    left: collapsedWidthPx ? `${collapsedWidthPx}px` : "5%",
+                    "--cw": collapsedWidthPx
+                      ? `${collapsedWidthPx}px`
+                      : "80px",
+                  } as React.CSSProperties
+                }
+              >
+                <TitleBar />
 
-                  <div className="relative flex-1 overflow-hidden">
-                    {children}
-                  </div>
-                </main>
-              </div>
-            )}
-          </SessionGuard>
-        </UserProvider>
+                <div className="relative flex-1 overflow-hidden">
+                  {children}
+                </div>
+              </main>
+            </div>
+          )}
+        </SessionGuard>
       </body>
     </html>
   );
