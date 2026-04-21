@@ -45,6 +45,7 @@ export default function UserMenu() {
 
           <button
             onClick={closeAnd(() => {
+
               setActiveMenu("Your Profile");
               router.push("/profile");
             })}

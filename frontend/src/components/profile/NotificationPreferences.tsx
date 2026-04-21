@@ -124,35 +124,35 @@ export function NotificationPreferences() {
   }
 
   return (
+    
     <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
+      
+      <div className="flex flex-col">
+        
         {permission === "granted" ? (
           <>
-            <Bell className="icon text-dsi-selected" />
-            <span className="text-sm text-dsi-selected">
+            <span className="text-xs pb-2">
               Push notifications enabled
             </span>
+            
             <button
               onClick={onDisable}
               disabled={busy === "disable"}
-              className="ml-auto border-2 border-dsi-outline py-1 px-3 rounded text-sm"
-            >
-              Disable
+              className="dsi-actionbutton mr-dsi-pad"
+            >Disable
             </button>
           </>
         ) : (
           <>
-            <BellOff className="icon opacity-70" />
-            <span className="text-sm opacity-80">
+            <span className="text-xs pb-2">
               Push notifications are {permission === "denied" ? "blocked" : "off"}.
             </span>
+            
             <button
               onClick={onEnable}
               disabled={busy === "enable" || permission === "denied"}
-              className="ml-auto bg-dsi-contrast-background text-dsi-background py-1 px-3 rounded text-sm font-semibold disabled:opacity-50 flex items-center gap-2"
-            >
-              {busy === "enable" && <Loader2 className="icon animate-spin" />}
-              Enable
+              className="dsi-actionbutton mr-dsi-pad"
+            >{busy === "enable" && <Loader2 className="icon animate-spin" />}Enable
             </button>
           </>
         )}
@@ -211,7 +211,7 @@ export function NotificationPreferences() {
         </table>
       )}
 
-      {error && <div className="text-sm text-dsi-negative">{error}</div>}
+      {error && <div className="dsi-user-message text-left">{error}</div>}
     </div>
   );
 }

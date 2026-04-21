@@ -79,6 +79,7 @@ export const StandardCard = ({
   );
 };
 
+
 /** POPUP CARD---------------------------------------------------------------------------------------------- */
 
 /** GUIDANCE
@@ -243,6 +244,7 @@ export const SectionCard = ({
   title,
   wrapper,
 }: SectionCardProps) => {
+  
   const def = SECTIONS[section];
   const Wrapper = (wrapper ?? def.wrapper) === "popup" ? PopupCard : StandardCard;
   const Body = def.content;

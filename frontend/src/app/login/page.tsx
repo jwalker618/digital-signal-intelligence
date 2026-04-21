@@ -20,7 +20,7 @@ import { SidebarIconBtn } from "@/components/layout/nav";
 
 export default function LoginPage() {
 
-  const [isSSO, onToggleSSO] = useState(true);
+  const [isSSO, onToggleSSO] = useState(false);
 
   const isDark = useThemeStore((s) => s.isDark);
   const toggleDark = useThemeStore((s) => s.toggleDark);

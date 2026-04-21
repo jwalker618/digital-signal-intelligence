@@ -10,7 +10,14 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { Download, KeyRound, Loader2, ShieldCheck } from "lucide-react";
+import { 
+  Download, 
+  KeyRound, 
+  Loader2, 
+  ShieldCheck 
+} from "lucide-react";
+
+import "@/app/globals.css";
 
 import { useAuthStore } from "@/store/authStore";
 import { mfaBackupCodes, mfaSetup, mfaVerify } from "@/lib/authApi";
@@ -94,24 +101,20 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
   // string + a basic <canvas>-free guidance box; a dedicated QR lib
   // is out of scope for this phase.
   return (
-    <div className="flex flex-col gap-4 border-2 border-dsi-outline rounded p-4">
-      <header className="flex items-center gap-2 text-dsi-selected">
-        <ShieldCheck className="icon" />
-        <span className="font-semibold tracking-wider">
-          Two-Factor Authentication
-        </span>
-      </header>
+    
+    <div className="flex flex-col">
 
       {stage === "idle" && (
         <>
-          <p className="text-sm opacity-80">
+          <p className="text-xs pb-2 mr-dsi-pad">
             Protect your account with an authenticator app (Google
-            Authenticator, 1Password, Authy, etc).
+            Authenticator, etc).
           </p>
+          
           <button
             onClick={beginSetup}
             disabled={busy}
-            className="self-start bg-dsi-contrast-background text-dsi-background py-2 px-4 rounded font-semibold disabled:opacity-50"
+            className="dsi-actionbutton mr-dsi-pad"
           >
             {busy ? "Starting…" : "Set up MFA"}
           </button>
@@ -120,18 +123,25 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
 
       {stage === "qr" && otpauthUri && secret && (
         <>
-          <p className="text-sm opacity-80">
+          
+          <p className="text-xs pb-2 mr-dsi-pad">
             Scan this URI in your authenticator app, or enter the secret
             manually. Then enter the 6-digit code to confirm.
           </p>
-          <div className="bg-dsi-background border-2 border-dsi-outline rounded p-3 font-mono text-xs break-all">
+          
+          <div className="dsi-notificationpill mr-dsi-pad wrap-anywhere border-none">
             {otpauthUri}
           </div>
-          <div className="text-xs opacity-70">
+
+          <p className="text-xs pt-2 pb-2 mr-dsi-pad">
             Secret:{" "}
-            <span className="font-mono tracking-widest">{secret}</span>
+          </p>          
+
+          <div className="dsi-notificationpill mr-dsi-pad wrap-anywhere border-none">
+            {secret}
           </div>
-          <form onSubmit={verify} className="flex items-center gap-2">
+
+          <form onSubmit={verify} className="flex flex-col pt-2 pb-2 gap-2">
             <input
               autoFocus
               value={code}
@@ -140,46 +150,57 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
               }
               inputMode="numeric"
               maxLength={6}
-              className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 font-mono text-xl tracking-[0.3em] text-center rounded w-40"
+              className="dsi-inputbox mr-dsi-pad text-right"
               placeholder="000000"
             />
+            
             <button
               type="submit"
               disabled={busy || code.length !== 6}
-              className="bg-dsi-contrast-background text-dsi-background py-2 px-4 rounded font-semibold disabled:opacity-50"
+              className="dsi-actionbutton mr-dsi-pad"
             >
               {busy ? <Loader2 className="icon animate-spin" /> : "Verify"}
             </button>
+
           </form>
         </>
       )}
 
       {stage === "backup-codes" && (
         <>
+          
           <div className="flex items-center gap-2 text-dsi-selected">
             <KeyRound className="icon" />
             <span className="font-semibold">Save your backup codes</span>
           </div>
-          <p className="text-sm opacity-80">
+          
+          <p className="text-xs pb-2 mr-dsi-pad">
             Each code can be used once if you lose access to your
             authenticator. They are shown exactly once -- save them now.
           </p>
-          <ul className="grid grid-cols-2 gap-2 font-mono text-sm">
+          
+          <ul className="grid grid-cols-2 gap-2">
             {backupCodes.map((c) => (
               <li
                 key={c}
-                className="border border-dsi-outline/40 bg-dsi-background px-2 py-1 rounded text-center"
+                className="
+                  dsi-analysis-item 
+                  font-normal text-xs p-1.5
+                  border-r border-b border-dsi-outline 
+                  rounded-sm"
               >
                 {c}
               </li>
             ))}
           </ul>
+          
           <button
             onClick={downloadCodes}
-            className="self-start border-2 border-dsi-outline py-1 px-3 rounded flex items-center gap-2"
+            className="dsi-actionbutton"
           >
             <Download className="icon" /> Download as .txt
           </button>
+
           <label className="flex items-center gap-2 text-sm">
             <input
               type="checkbox"
@@ -188,12 +209,12 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
             />
             I have saved my backup codes
           </label>
+
           <button
             disabled={!acknowledged}
             onClick={finish}
-            className="self-start bg-dsi-contrast-background text-dsi-background py-2 px-4 rounded font-semibold disabled:opacity-50"
-          >
-            Done
+            className="dsi-actionbutton"
+          >Done
           </button>
         </>
       )}
@@ -204,7 +225,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
         </p>
       )}
 
-      {error && <div className="text-sm text-dsi-negative">{error}</div>}
+      {error && <div className="dsi-user-message text-left">{error}</div>}
     </div>
   );
 }

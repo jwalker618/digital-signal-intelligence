@@ -222,7 +222,6 @@
   @apply text-left;
 }
 
-
 @utility dsi-analysis-item {
   @apply pt-1;
   @apply content-center;
