@@ -49,6 +49,8 @@ export interface BaseCardProps {
   lucideIcon?: LucideIcon;
   spanClass?: string;
   children?: React.ReactNode;
+  /** Right-aligned slot on the header row — e.g. a count pill or action button. */
+  headerRight?: React.ReactNode;
 }
 
 /** STANDARD CARD---------------------------------------------------------------------------------------------- */
@@ -58,12 +60,14 @@ export const StandardCard = ({
   title,
   children,
   spanClass = "col-span-1",
+  headerRight,
 }: BaseCardProps) => {
   return (
     <div className={`flex flex-col h-full ${spanClass}`}>
       <div className="dsi-section-header">
         {Icon && <Icon className="icon"/>}
-        <span className="text-sm">{title}</span>
+        <span className={`text-sm ${headerRight ? "flex-1" : ""}`}>{title}</span>
+        {headerRight}
       </div>
       <div className="dsi-section-analysis">{children}</div>
     </div>
