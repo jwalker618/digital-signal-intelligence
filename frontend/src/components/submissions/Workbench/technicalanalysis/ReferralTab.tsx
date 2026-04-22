@@ -149,11 +149,8 @@ export default function ReferralTab() {
       </div>
 
       {/* TRIGGERS + CONDITIONS — accordion style */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <ShieldAlert className="icon text-dsi-negative"/><span className="text-sm">Referral Context</span>
-        </div>
-        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Referral Context" lucideIcon={ShieldAlert}>
           {/* Triggers — expandable */}
           <div onClick={() => toggleGroup('triggers')} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors">
             <div className="flex items-center gap-2">
@@ -202,7 +199,7 @@ export default function ReferralTab() {
           {expandedGroups['ref_conditions'] && referralConditions.length === 0 && (
             <div className="pl-8 py-3 text-xs opacity-40 italic">No referral-type conditions triggered.</div>
           )}
-        </div>
+        </StandardCard>
       </div>
 
       {/* G2: SIGNAL AUDIT — GROUP ACCORDION */}
