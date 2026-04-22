@@ -276,23 +276,22 @@ export default function ExposureTab() {
           {/* =======================================================================
               CHART ROW 1: SCATTER MATRIX (decision-colored)
               ======================================================================= */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-              <ScatterIcon className="icon"/><span className="text-sm">Exposure Magnitude vs. Overall Risk</span>
-            </div>
-            <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-              <PeerScatterChart
-                points={exposureScatterData.map((p: any) => ({ x: p.x_magnitude, y: p.y_composite, decision: p.decision }))}
-                subject={{
-                  x: activeVersion.exposure_size_score || 0,
-                  y: activeVersion.pure_composite_score || 0,
-                }}
-                xLabel="Exposure Magnitude Score (0-100)"
-                yLabel="Pure Composite Score (0-1000)"
-                xName="Magnitude Score"
-                yName="Risk Score"
-              />
-            </div>
+          <div className="pt-2 pb-2">
+            <StandardCard title="Exposure Magnitude vs. Overall Risk" lucideIcon={ScatterIcon}>
+              <div className="py-2">
+                <PeerScatterChart
+                  points={exposureScatterData.map((p: any) => ({ x: p.x_magnitude, y: p.y_composite, decision: p.decision }))}
+                  subject={{
+                    x: activeVersion.exposure_size_score || 0,
+                    y: activeVersion.pure_composite_score || 0,
+                  }}
+                  xLabel="Exposure Magnitude Score (0-100)"
+                  yLabel="Pure Composite Score (0-1000)"
+                  xName="Magnitude Score"
+                  yName="Risk Score"
+                />
+              </div>
+            </StandardCard>
           </div>
 
           {/* =======================================================================
