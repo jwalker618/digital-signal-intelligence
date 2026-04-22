@@ -51,8 +51,8 @@ export const SUBMISSION_DECISION: Record<Decision, DecisionVisual> = {
 /** Signal/condition actions — used in badges and row tags. */
 export const ACTION_PALETTE: Record<string, StatusPaletteEntry> = {
   modifier:      { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
-  referral:      { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
-  refer:         { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
+  referral:      { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
+  refer:         { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   tier_override: { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
   flag:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   note:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
@@ -67,11 +67,11 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   approved:       { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
   active:         { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
 
-  amber:          { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
-  warning:        { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
-  pending_review: { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
-  validating:     { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
-  calibrating:    { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
+  amber:          { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
+  warning:        { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
+  pending_review: { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
+  validating:     { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
+  calibrating:    { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   provisional:    { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
 
   red:            { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
@@ -94,7 +94,7 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
 export const TONE_PALETTE: Record<string, StatusPaletteEntry> = {
   positive: { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
   negative: { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
-  warning:  { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
+  warning:  { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   info:     { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
   muted:    { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
 };

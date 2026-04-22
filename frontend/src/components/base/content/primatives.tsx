@@ -32,7 +32,7 @@ const TEXTALIGN_CLASS: Record<Align, string> = {
 
 const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
   { at: 40, color: "var(--dsi-approve)" },
-  { at: 70, color: "var(--dsi-warning)" },
+  { at: 70, color: "var(--dsi-refer)" },
   { at: Infinity, color: "var(--dsi-negative)" },
 ];
 
@@ -864,7 +864,7 @@ const METRIC_CARD_TONE: Record<
   selected: { border: "border-dsi-selected/30", bg: "bg-dsi-selected/5", text: "text-dsi-selected" },
   positive: { border: "border-dsi-approve/30", bg: "bg-dsi-approve/5", text: "text-dsi-approve" },
   negative: { border: "border-dsi-negative/30", bg: "bg-dsi-negative/5", text: "text-dsi-negative" },
-  warning:  { border: "border-dsi-warning/30",  bg: "bg-dsi-warning/5",  text: "text-dsi-warning"  },
+  warning:  { border: "border-dsi-refer/30",  bg: "bg-dsi-refer/5",  text: "text-dsi-refer"  },
   info:     { border: "border-dsi-info/30",     bg: "bg-dsi-info/5",     text: "text-dsi-info"     },
   muted:    { border: "border-dsi-muted/30",    bg: "bg-dsi-muted/5",    text: "text-dsi-muted"    },
 };

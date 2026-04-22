@@ -110,11 +110,11 @@ export default function ReferralTab() {
       />
 
       {/* REFERRAL CONTEXT HEADER */}
-      <div className="flex items-stretch gap-4 rounded-xl border-2 border-dsi-warning/30 bg-dsi-warning/5 px-dsi-pad py-4 mt-2 mb-4">
-        <div className="flex items-center gap-3 pr-6 border-r border-dsi-warning/20">
-          <ShieldAlert className="w-8 h-8 text-dsi-warning" />
+      <div className="flex items-stretch gap-4 rounded-xl border-2 border-dsi-refer/30 bg-dsi-refer/5 px-dsi-pad py-4 mt-2 mb-4">
+        <div className="flex items-center gap-3 pr-6 border-r border-dsi-refer/20">
+          <ShieldAlert className="w-8 h-8 text-dsi-refer" />
           <div>
-            <span className="text-lg font-black uppercase tracking-wider text-dsi-warning">
+            <span className="text-lg font-black uppercase tracking-wider text-dsi-refer">
               {typeof activeReferral === 'object' && activeReferral?.status
                 ? activeReferral.status.replace(/_/g, ' ')
                 : 'Referred'}
@@ -249,7 +249,7 @@ export default function ReferralTab() {
                         <span className="font-bold text-sm">{groupId}</span>
                         <span className="text-[10px] opacity-40">({signals.length})</span>
                         {groupFlagged > 0 && (
-                          <span className="text-[10px] bg-dsi-warning/10 text-dsi-warning px-1.5 py-0.5 rounded font-bold">{groupFlagged} flagged</span>
+                          <span className="text-[10px] bg-dsi-refer/10 text-dsi-refer px-1.5 py-0.5 rounded font-bold">{groupFlagged} flagged</span>
                         )}
                         {groupAudited > 0 && (
                           <span className="text-[10px] bg-dsi-approve/10 text-dsi-approve px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
@@ -268,24 +268,24 @@ export default function ReferralTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-dsi-warning' : ''} ${sig.is_overridden ? 'border-l-2 border-l-dsi-approve' : ''}`}
+                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-dsi-refer' : ''} ${sig.is_overridden ? 'border-l-2 border-l-dsi-approve' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
-                            {isHighImpact && <Flame className="w-3 h-3 text-dsi-warning shrink-0" />}
-                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" />}
+                            {isHighImpact && <Flame className="w-3 h-3 text-dsi-refer shrink-0" />}
+                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3 h-3 text-dsi-refer shrink-0" />}
                             {sig.is_overridden && <Check className="w-3 h-3 text-dsi-approve shrink-0" />}
-                            <span className={`text-sm truncate max-w-[160px] ${isHighImpact ? 'text-dsi-warning font-bold' : ''}`} title={sig.signal_name || sig.code}>
+                            <span className={`text-sm truncate max-w-[160px] ${isHighImpact ? 'text-dsi-refer font-bold' : ''}`} title={sig.signal_name || sig.code}>
                               {(sig.signal_name || sig.code)?.replace(/_/g, ' ')}
                             </span>
                           </div>
                           <span className={`text-right text-sm ${sig.is_overridden ? 'text-dsi-approve font-bold' : ''}`}>
                             {formatNumber(sig.score, 1)}
                           </span>
-                          <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-dsi-warning font-bold' : 'opacity-70'}`}>
+                          <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-dsi-refer font-bold' : 'opacity-70'}`}>
                             {sig.confidence != null ? formatPercent(sig.confidence, 0) : '-'}
                           </span>
                           <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
-                          <span className={`text-right text-sm ${isHighImpact ? 'font-bold text-dsi-warning' : ''}`}>
+                          <span className={`text-right text-sm ${isHighImpact ? 'font-bold text-dsi-refer' : ''}`}>
                             {formatNumber(sig.contribution || sig.contribution_to_score, 2)}
                           </span>
                           <span className="text-center text-xs">

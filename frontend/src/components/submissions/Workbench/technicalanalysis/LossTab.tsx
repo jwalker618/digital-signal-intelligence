@@ -393,13 +393,13 @@ export default function LossTab() {
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
                     const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
-                                     isReferral ? 'bg-dsi-warning/15 text-dsi-warning' :
+                                     isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
                                      isTierOverride ? 'bg-dsi-negative/10 text-dsi-negative' :
                                      'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-warning' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-refer' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>

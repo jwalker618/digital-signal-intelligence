@@ -235,7 +235,7 @@ export default function RiskTab() {
                         </div>
                         
                         <div className="text-center mt-0.5">
-                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-approve' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-warning'}`}>
+                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-approve' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-refer'}`}>
                             {band.action}
                           </span>
                         </div>
@@ -277,7 +277,7 @@ export default function RiskTab() {
                       <div key={path.tier_id} className="border border-dsi-outline/15 rounded-lg p-3 text-wrap hover:bg-dsi-background/10 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-bold">Tier {path.tier_id} — {path.label}</span>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${path.action?.toLowerCase().includes('approve') ? 'bg-dsi-approve/10 text-dsi-approve' : 'bg-dsi-warning/10 text-dsi-warning'}`}>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${path.action?.toLowerCase().includes('approve') ? 'bg-dsi-approve/10 text-dsi-approve' : 'bg-dsi-refer/10 text-dsi-refer'}`}>
                             {path.action}
                           </span>
                         </div>
@@ -355,13 +355,13 @@ export default function RiskTab() {
                     {/* GROUP ROW */}
                     <div
                       onClick={() => toggleGroup(groupId)}
-                      className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors ${hasConditions ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                      className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors ${hasConditions ? 'border-l-2 border-l-dsi-refer' : ''}`}
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                         <span className="font-bold text-sm">{groupId}</span>
                         {groupConditions.length > 0 && (
-                          <span className="text-[10px] bg-dsi-warning/10 text-dsi-warning px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-[10px] bg-dsi-refer/10 text-dsi-refer px-1.5 py-0.5 rounded font-bold">
                             {groupConditions.length} cond
                           </span>
                         )}
@@ -371,7 +371,7 @@ export default function RiskTab() {
                       <span className="text-right text-sm opacity-60">{formatNumber(gs.risk_weight, 2)}</span>
                       <span className="text-right text-sm font-bold">{formatNumber(gs.risk_contribution, 1)}</span>
                       <span className="text-center">
-                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-approve' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
+                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-approve' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-refer' : 'text-dsi-negative'}`}>
                           {gs.signal_count || 0}/{gs.expected_signal_count || 0}
                         </span>
                       </span>
@@ -426,11 +426,11 @@ export default function RiskTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                          className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-refer' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
-                            {sigConditions.length > 0 && <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" />}
+                            {sigConditions.length > 0 && <AlertTriangle className="w-3 h-3 text-dsi-refer shrink-0" />}
                             {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
                             {sig.proxy_tier && <span className="text-[10px] opacity-30">T{sig.proxy_tier}</span>}
                           </div>

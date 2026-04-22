@@ -106,7 +106,7 @@ export function NotificationToastHost() {
           role="status"
           className={`border-2 rounded p-3 shadow text-sm bg-dsi-background
             ${n.tone === "error" ? "border-dsi-negative" : ""}
-            ${n.tone === "warn" ? "border-dsi-warning" : ""}
+            ${n.tone === "warn" ? "border-dsi-refer" : ""}
             ${n.tone === "info" ? "border-dsi-outline" : ""}`}
         >
           <div className="flex items-start justify-between gap-2">

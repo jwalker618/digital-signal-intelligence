@@ -30,12 +30,12 @@ import type {
   WorldEngineStats,
 } from "@/types/worldEngine";
 
-const TIER_COLORS = ['var(--dsi-approve)', 'var(--dsi-info)', 'var(--dsi-warning)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
+const TIER_COLORS = ['var(--dsi-approve)', 'var(--dsi-info)', 'var(--dsi-refer)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
   'High': 'text-dsi-negative',
-  'Elevated': 'text-dsi-warning',
-  'Moderate': 'text-dsi-warning',
+  'Elevated': 'text-dsi-refer',
+  'Moderate': 'text-dsi-refer',
   'Low-Moderate': 'text-dsi-muted',
   'Low': 'text-dsi-muted',
 };
@@ -193,7 +193,7 @@ export default function WorldEngineView() {
             </div>
             <div className="border border-dsi-outline/20 rounded-lg p-3">
               <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
-              <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
+              <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-refer" : "text-dsi-selected"}`}>
                 {weStats?.drift_alerts_unacknowledged ?? "—"}
               </span>
             </div>
@@ -317,7 +317,7 @@ export default function WorldEngineView() {
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNumber(portfolio.avgScore)}</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Approval Rate</span><span className="text-xl font-black text-dsi-approve">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-warning">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span></div>
+              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-refer">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span></div>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
@@ -469,7 +469,7 @@ export default function WorldEngineView() {
             <div>
               {/* Impact KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-warning">{shockResult.total_affected}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-refer">{shockResult.total_affected}</span></div>
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Tier Migrations</span><span className="text-xl font-black text-dsi-negative">{shockResult.tier_migrations}</span></div>
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Decision Changes</span><span className="text-xl font-black text-dsi-negative">{shockResult.decision_changes}</span></div>
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}`}>{`${shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K`}</span></div>

@@ -60,9 +60,9 @@ const GroupedList = ({
   totalLabel: string;
   total: React.ReactNode;
 }) => {
-  const border = tone === "negative" ? "border-dsi-negative/20" : "border-dsi-warning/20";
-  const headerBg = tone === "negative" ? "bg-dsi-negative/5 border-dsi-negative/10" : "bg-dsi-warning/5 border-dsi-warning/10";
-  const footerBg = tone === "negative" ? "bg-dsi-negative/5" : "bg-dsi-warning/5";
+  const border = tone === "negative" ? "border-dsi-negative/20" : "border-dsi-refer/20";
+  const headerBg = tone === "negative" ? "bg-dsi-negative/5 border-dsi-negative/10" : "bg-dsi-refer/5 border-dsi-refer/10";
+  const footerBg = tone === "negative" ? "bg-dsi-negative/5" : "bg-dsi-refer/5";
 
   return (
     <div className={`border ${border} rounded-lg overflow-hidden`}>

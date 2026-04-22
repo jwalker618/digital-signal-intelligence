@@ -188,7 +188,7 @@ export default function ModelVersionsTab() {
                               Tier {mvTier} ({mv.tier_label})
                             </span>
                             {tierChanged && (
-                              <span className="text-[10px] text-dsi-warning font-bold">
+                              <span className="text-[10px] text-dsi-refer font-bold">
                                 was Tier {prevTier}
                               </span>
                             )}
@@ -217,7 +217,7 @@ export default function ModelVersionsTab() {
                           <span>Cov: {formatPercent(mv.signal_coverage, 0)}</span>
                         )}
                         {condCount > 0 && (
-                          <span className="text-dsi-warning/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-refer/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
                         )}
                         {referralCount > 0 && (
                           <span className="text-dsi-negative/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>

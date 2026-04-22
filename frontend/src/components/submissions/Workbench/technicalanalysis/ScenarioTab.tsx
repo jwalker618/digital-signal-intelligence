@@ -479,10 +479,10 @@ export default function ScenarioTab() {
 
               {/* Guardrails */}
               {scenario.guardrails.warnings.length > 0 && (
-                <div className="mx-dsi-pad mt-2 p-2 border border-dsi-warning/20 bg-dsi-warning/5 rounded-lg">
+                <div className="mx-dsi-pad mt-2 p-2 border border-dsi-refer/20 bg-dsi-refer/5 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
-                    <ShieldAlert className="w-3.5 h-3.5 text-dsi-warning" />
-                    <span className="text-xs font-bold text-dsi-warning">Guardrails Active</span>
+                    <ShieldAlert className="w-3.5 h-3.5 text-dsi-refer" />
+                    <span className="text-xs font-bold text-dsi-refer">Guardrails Active</span>
                   </div>
                   {scenario.guardrails.warnings.map((w, i) => (
                     <p key={i} className="text-xs opacity-70 text-wrap ml-5">{w}</p>
