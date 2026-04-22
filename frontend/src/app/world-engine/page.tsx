@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
+import { CardGrid } from "@/components/base/cards";
 
 import {
   Orbit, Target, Zap, AlertTriangle, ArrowRight, RotateCcw,
@@ -155,10 +156,10 @@ export default function WorldEngineView() {
   return (
     
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
+      <CardGrid cols="grid-cols-1" className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
 
         {/* ═══ WORLD MODEL ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <Orbit className="icon"/><span className="text-sm">World Engine</span>
@@ -213,7 +214,7 @@ export default function WorldEngineView() {
         </div>
 
         {/* ═══ OPEN DRIFT ALERTS ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <TrendingDown className="icon text-dsi-warning"/><span className="text-sm">Open Drift Alerts</span>
             <span className="text-[10px] opacity-40 ml-2">{alerts.length} open</span>
@@ -262,7 +263,7 @@ export default function WorldEngineView() {
         </div>
 
         {/* ═══ DISCOVERED RELATIONSHIPS ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <NetworkIcon className="icon"/><span className="text-sm">Discovered Relationships</span>
             <span className="text-[10px] opacity-40 ml-2">{rels.length} recent</span>
@@ -307,7 +308,7 @@ export default function WorldEngineView() {
         </div>
 
         {/* ═══ PORTFOLIO OVERVIEW ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <Target className="icon"/><span className="text-sm">Portfolio Overview</span>
             <span className="text-[10px] opacity-40 ml-2">{portfolio.count} submissions</span>
@@ -356,7 +357,7 @@ export default function WorldEngineView() {
         </div>
 
         {/* ═══ EMERGING SCENARIOS ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
             <Radio className="icon text-dsi-warning"/><span className="text-sm">Emerging Scenarios</span>
             <span className="text-[10px] opacity-40 ml-2">Continuously monitored</span>
@@ -392,7 +393,7 @@ export default function WorldEngineView() {
         </div>
 
         {/* ═══ SHOCK SIMULATOR — multi-shock ═══ */}
-        <div className="flex flex-col mb-4">
+        <div className="flex flex-col">
           <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
             <div className="flex items-center gap-dsi-pad">
               <Zap className="icon"/><span className="text-sm">Shock Simulator</span>
@@ -456,7 +457,7 @@ export default function WorldEngineView() {
 
         {/* ═══ IMPACT DASHBOARD ═══ */}
         {shockResult && (
-          <div className="flex flex-col mb-4">
+          <div className="flex flex-col">
             <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
               <AlertTriangle className="icon text-dsi-warning"/>
               <span className="text-sm">Impact Analysis — {shockResult.shocks.length} shock{shockResult.shocks.length !== 1 ? 's' : ''} applied</span>
@@ -563,7 +564,7 @@ export default function WorldEngineView() {
           </div>
         )}
 
-      </div>
+      </CardGrid>
     </ViewCanvas>
   );
 }
