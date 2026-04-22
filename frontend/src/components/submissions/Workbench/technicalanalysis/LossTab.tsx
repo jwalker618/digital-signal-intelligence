@@ -204,11 +204,12 @@ export default function LossTab() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pt-2 pb-2">
 
             {/* COMPONENT B: SCATTER MATRIX (decision-colored) */}
-            <div className="lg:col-span-2 flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <ShieldAlert className="icon"/><span className="text-sm">Frequency vs. Severity Matrix</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+            <StandardCard
+              title="Frequency vs. Severity Matrix"
+              lucideIcon={ShieldAlert}
+              spanClass="lg:col-span-2"
+            >
+              <div className="py-2">
                 <PeerScatterChart
                   points={lossScatterData.map((p: any) => ({ x: p.x_propensity, y: p.y_severity, decision: p.decision }))}
                   subject={{
@@ -221,15 +222,12 @@ export default function LossTab() {
                   yName="Severity"
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* COMPONENT D: SUBJECT VELOCITY PANEL with previous scores */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <TrendingUp className="icon"/><span className="text-sm">Loss Trajectory</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <div className="pl-dsi-pad pr-dsi-pad space-y-3">
+            <StandardCard title="Loss Trajectory" lucideIcon={TrendingUp}>
+              <div className="py-2">
+                <div className="space-y-3">
 
                   {/* Overall trend */}
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
@@ -312,7 +310,7 @@ export default function LossTab() {
 
                 </div>
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
