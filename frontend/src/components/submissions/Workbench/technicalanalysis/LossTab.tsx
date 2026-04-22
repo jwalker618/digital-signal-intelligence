@@ -320,12 +320,13 @@ export default function LossTab() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pt-2 pb-2">
 
             {/* COHORT BENCHMARKING (2/3 width) */}
-            <div className="lg:col-span-2 flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <BarChart3 className="icon"/><span className="text-sm">Cohort Benchmarking</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
+            <StandardCard
+              title="Cohort Benchmarking"
+              lucideIcon={BarChart3}
+              spanClass="lg:col-span-2"
+            >
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <BenchmarkBarChart
                   data={lossCohortBenchmarks}
                   categoryKey="cohort_name"
@@ -337,14 +338,11 @@ export default function LossTab() {
                   emptyMessage="No cohort data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* LOSS GROUP SCORES BREAKDOWN (1/3 width) */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Layers className="icon"/><span className="text-sm">Loss Group Scores</span>
-              </div>
-              <div className="dsi-section-analysis overflow-y-auto border-collapse no-scrollbar max-h-[400px]">
+            <StandardCard title="Loss Group Scores" lucideIcon={Layers}>
+              <div className="overflow-y-auto no-scrollbar max-h-[400px]">
                 {groupEntries.length > 0 ? (
                   <div className="space-y-0">
                     {groupEntries.map(([group, detail]: [string, any]) => {
@@ -352,7 +350,7 @@ export default function LossTab() {
                       const sevScore = detail?.severity_score ?? 0;
                       const confidence = detail?.confidence;
                       return (
-                        <div key={group} className="px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                        <div key={group} className="py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs font-semibold truncate max-w-[140px]" title={group}>{group}</span>
                             {confidence != null && (
@@ -373,7 +371,7 @@ export default function LossTab() {
                   </div>
                 )}
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
