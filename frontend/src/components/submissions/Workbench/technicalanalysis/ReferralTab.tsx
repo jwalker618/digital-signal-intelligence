@@ -203,15 +203,13 @@ export default function ReferralTab() {
       </div>
 
       {/* G2: SIGNAL AUDIT — GROUP ACCORDION */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse justify-between items-center pr-dsi-pad">
-          <div className="flex items-center gap-dsi-pad">
-            <Layers className="icon"/><span className="text-sm">Signal Audit Matrix</span>
-            <span className="text-xs opacity-60 ml-2">({totalSignals} signals)</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4">
+      <div className="pt-2 pb-2">
+        <StandardCard
+          title="Signal Audit Matrix"
+          lucideIcon={Layers}
+          headerRight={<span className="text-xs opacity-60">({totalSignals} signals)</span>}
+        >
+          <div className="overflow-x-auto">
           {isFetchingRiskSignals ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-4">
               <Layers className="w-6 h-6 animate-spin" />
@@ -320,7 +318,8 @@ export default function ReferralTab() {
               })}
             </div>
           )}
-        </div>
+          </div>
+        </StandardCard>
       </div>
 
       {/* FINAL DECISION ACTIONS */}
