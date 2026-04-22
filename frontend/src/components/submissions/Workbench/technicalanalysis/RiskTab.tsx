@@ -488,12 +488,12 @@ export default function RiskTab() {
       {/* =======================================================================
           ACTIVE CONDITIONS — full width, bottom section
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <AlertTriangle className="icon"/>
-          <span className="text-sm">Active Conditions ({allConditions.length})</span>
-        </div>
-        <div className="dsi-section-analysis border-collapse">
+      <div className="pt-2 pb-2">
+        <StandardCard
+          title="Active Conditions"
+          lucideIcon={AlertTriangle}
+          headerRight={<span className="text-[10px] opacity-40">({allConditions.length})</span>}
+        >
           {conditionTypeSummary.length === 0 ? (
             <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">No conditions triggered.</div>
           ) : (
@@ -555,7 +555,7 @@ export default function RiskTab() {
               })}
             </div>
           )}
-        </div>
+        </StandardCard>
       </div>
 
     </div>
