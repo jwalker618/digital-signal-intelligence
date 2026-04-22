@@ -388,14 +388,13 @@ export default function ScenarioTab() {
           {/* ══════════════════════════════════════════════════════════════
               F5: PRICING CASCADE (PricingTab style)
               ══════════════════════════════════════════════════════════════ */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-              <PenLine className="icon"/><span className="text-sm">Pricing Cascade — Original vs Scenario</span>
-            </div>
-            <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4">
-
+          <div className="pt-2 pb-2">
+            <StandardCard
+              title="Pricing Cascade — Original vs Scenario"
+              lucideIcon={PenLine}
+            >
               {/* Grid: matching PricingTab cols */}
-              <div className="grid grid-cols-[50%_10%_20%_20%] px-dsi-pad">
+              <div className="grid grid-cols-[50%_10%_20%_20%]">
 
                 {/* TIER */}
                 <div className="flex gap-dsi-pad text-sm pb-2">
@@ -502,7 +501,7 @@ export default function ScenarioTab() {
               </div>
 
               {Math.abs(scenario.final_premium - scenario.original_final_premium) > 1 && (
-                <div className="px-dsi-pad pt-1 text-right">
+                <div className="pt-1 text-right">
                   <span className={`text-sm font-bold ${deltaColor(scenario.final_premium, scenario.original_final_premium)}`}>
                     {scenario.final_premium > scenario.original_final_premium ? '+' : ''}{formatCurrency(scenario.final_premium - scenario.original_final_premium)}
                     {scenario.original_final_premium > 0 && (
@@ -512,7 +511,7 @@ export default function ScenarioTab() {
                 </div>
               )}
 
-            </div>
+            </StandardCard>
           </div>
         </>
       )}
