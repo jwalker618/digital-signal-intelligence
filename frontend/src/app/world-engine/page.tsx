@@ -3,12 +3,13 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
-import { CardGrid, StandardCard } from "@/components/base/cards";
+import { 
+  CardGrid, 
+  StandardCard } from "@/components/base/cards";
 
 import {
-  Orbit, Target, Zap, AlertTriangle, ArrowRight, RotateCcw,
-  Plus, X, Radio,
-  Sparkles, TrendingDown, Network as NetworkIcon,
+  Orbit, Zap, AlertTriangle, 
+  Plus, X, Radio, Link, ChartCandlestick, Eye,
 } from "lucide-react";
 
 import {
@@ -17,10 +18,10 @@ import {
 } from "recharts";
 
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
-import { formatNumber, formatCurrency, formatPercent } from "@/lib/format";
+import { formatNumber, formatCurrency, formatPercent, formatText, formatTimeRelative, formatDate } from "@/lib/format";
 
 import { tooltipStyle } from "@/lib/chartConfig";
-import { api, fmtDate, fmtRelative } from "@/lib/api";
+import { api, } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 
 import type {
@@ -163,47 +164,51 @@ export default function WorldEngineView() {
           title="World Engine"
           lucideIcon={Orbit}
           headerRight={
-            <span className="text-xs">
+            <span className="text-xs content-center">
               ({maturity ? `${maturity.assessed_entity_count} entities` : "No data"})
             </span>
           }
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="border border-dsi-outline/20 rounded-lg p-3">
-              <span className="text-xs opacity-60 block mb-1">Maturity Stage</span>
-              <span className="text-xl font-black text-dsi-selected uppercase">
-                {maturity?.stage ?? "—"}
-              </span>
+            
+            <div className="dsi-contentbox flex flex-col">
+
+              <span className="dsi-analysis-description text-center">Maturity Stage</span>
+              <span className="dsi-analysis-item text-center text-xl">{maturity?.stage ?? "—"}</span>
+              
               {maturity && (
-                <span className="block text-[10px] opacity-60 mt-1">
+                <span className="dsi-analysis-item text-xs font-normal text-center">
                   {formatNumber(maturity.time_depth_months, 1)} months of data
                 </span>
               )}
             </div>
-            <div className="border border-dsi-outline/20 rounded-lg p-3">
-              <span className="text-xs opacity-60 block mb-1">Active Relationships</span>
-              <span className="text-xl font-black text-dsi-selected">
-                {weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
+
+            <div className="dsi-contentbox flex flex-col">
+
+              <span className="dsi-analysis-description text-center">Active Relationships</span>
+              <span className="dsi-analysis-item text-center text-xl">{weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
               </span>
               {maturity && (
-                <span className="block text-[10px] opacity-60 mt-1">
+                <span className="dsi-analysis-item text-xs font-normal text-center">
                   {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
                 </span>
               )}
             </div>
-            <div className="border border-dsi-outline/20 rounded-lg p-3">
-              <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
-              <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-refer" : "text-dsi-selected"}`}>
+            
+            <div className="dsi-contentbox flex flex-col">
+
+              <span className="dsi-analysis-description text-center">Open Drift Alerts</span>
+              <span className={`dsi-analysis-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-decline" : "text-dsi-contrast-background"}`}>
                 {weStats?.drift_alerts_unacknowledged ?? "—"}
               </span>
             </div>
-            <div className="border border-dsi-outline/20 rounded-lg p-3">
-              <span className="text-xs opacity-60 block mb-1">Assessed Entities</span>
-              <span className="text-xl font-black text-dsi-selected">
-                {maturity?.assessed_entity_count ?? "—"}
-              </span>
+            
+            <div className="dsi-contentbox flex flex-col">
+
+              <span className="dsi-analysis-description text-center">Assessed Entities</span>
+              <span className="dsi-analysis-item text-center text-xl">{maturity?.assessed_entity_count ?? "—"}</span>
               {maturity && (
-                <span className="block text-[10px] opacity-60 mt-1">
+                <span className="dsi-analysis-item text-xs font-normal text-center">
                   {maturity.entities_with_temporal_data} with history
                 </span>
               )}
@@ -214,43 +219,45 @@ export default function WorldEngineView() {
         {/* ═══ OPEN DRIFT ALERTS ═══ */}
         <StandardCard
           title="Open Drift Alerts"
-          lucideIcon={TrendingDown}
-          headerRight={<span className="text-[10px] opacity-40">{alerts.length} open</span>}
+          lucideIcon={Eye}
+          headerRight={<span className="text-xs content-center">{alerts.length} open</span>}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs underline opacity-70 text-left">
-                  <th className="py-2 px-dsi-pad">Signal</th>
-                  <th className="py-2 px-2">Severity</th>
-                  <th className="py-2 px-2">Type</th>
-                  <th className="py-2 px-2">Detected</th>
-                  <th className="py-2 px-2">Summary</th>
-                  <th className="py-2 px-dsi-pad"></th>
+                <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                  <th className="p-1.5 text-left">Signal</th>
+                  <th className="p-1.5 text-left">Severity</th>
+                  <th className="p-1.5 text-left">Type</th>
+                  <th className="p-1.5 text-center">Detected</th>
+                  <th className="p-1.5 text-left">Summary</th>
+                  <th className="p-1.5 text-right"></th>
                 </tr>
               </thead>
               <tbody>
                 {alerts.map((a) => (
-                  <tr key={a.id} className="border-t border-dsi-outline/10">
-                    <td className="py-2 px-dsi-pad font-mono text-xs">{a.source_signal ?? "—"}</td>
-                    <td className="py-2 px-2"><StatusBadge status={a.severity} /></td>
-                    <td className="py-2 px-2 text-xs">{a.alert_type}</td>
-                    <td className="py-2 px-2 text-xs">{fmtRelative(a.detected_at)}</td>
-                    <td className="py-2 px-2 opacity-80">{a.description}</td>
-                    <td className="py-2 px-dsi-pad">
+                  <tr key={a.id} className="cursor-pointer text-dsi-contrast-background hover:text-dsi-selected">
+                    <td className="p-1.5 text-left">{formatText(a.source_signal ?? "—","capitalize")}</td>
+                    <td className="p-1.5 text-left"><StatusBadge status={formatText(a.severity,"capitalize")} /></td>
+                    <td className="p-1.5 text-left">{formatText(a.alert_type,"capitalize")}</td>
+                    <td className="p-1.5 text-center">{formatTimeRelative(a.detected_at)}</td>
+                    <td className="p-1.5 text-left">{formatText(a.description,"capitalize")}</td>
+                    <td className="p-1.5 text-right">
+                      
                       <button
                         onClick={() => void acknowledgeAlert(a.id)}
                         disabled={ackBusy === a.id}
-                        className="text-xs text-dsi-selected hover:underline disabled:opacity-50"
+                        className="dsi-actionbutton content-end"
                       >
                         Acknowledge
                       </button>
+
                     </td>
                   </tr>
                 ))}
                 {alerts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="py-4 px-dsi-pad opacity-60 text-center text-xs">
+                    <td colSpan={6} className="dsi-user-message">
                       No open alerts.
                     </td>
                   </tr>
@@ -263,39 +270,39 @@ export default function WorldEngineView() {
         {/* ═══ DISCOVERED RELATIONSHIPS ═══ */}
         <StandardCard
           title="Discovered Relationships"
-          lucideIcon={NetworkIcon}
-          headerRight={<span className="text-[10px] opacity-40">{rels.length} recent</span>}
+          lucideIcon={Link}
+          headerRight={<span className="text-xs content-center">{rels.length} recent</span>}
         >
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs underline opacity-70 text-left">
-                  <th className="py-2 px-dsi-pad">Source signal</th>
-                  <th className="py-2 px-2">→ Target signal</th>
-                  <th className="py-2 px-2">Direction</th>
-                  <th className="py-2 px-2 text-right">Correlation</th>
-                  <th className="py-2 px-2 text-right">Influence</th>
-                  <th className="py-2 px-2 text-right">Population</th>
-                  <th className="py-2 px-2">Lifecycle</th>
-                  <th className="py-2 px-dsi-pad">Discovered</th>
+                <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                  <th className="p-1.5 text-left">Source signal</th>
+                  <th className="p-1.5 text-left">Target signal</th>
+                  <th className="p-1.5 text-left">Direction</th>
+                  <th className="p-1.5 text-center">Correlation</th>
+                  <th className="p-1.5 text-center">Influence</th>
+                  <th className="p-1.5 text-center">Population</th>
+                  <th className="p-1.5 text-left">Lifecycle</th>
+                  <th className="p-1.5 text-center">Discovered</th>
                 </tr>
               </thead>
               <tbody>
                 {rels.map((r) => (
-                  <tr key={r.id} className="border-t border-dsi-outline/10">
-                    <td className="py-2 px-dsi-pad font-mono text-xs">{r.source_signal}</td>
-                    <td className="py-2 px-2 font-mono text-xs">{r.target_signal}</td>
-                    <td className="py-2 px-2 text-xs">{r.direction.replaceAll("_", " ")}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{formatNumber(r.correlation_rho, 2)}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{formatPercent(r.influence_weight)}</td>
-                    <td className="py-2 px-2 text-right tabular-nums">{r.population_size}</td>
-                    <td className="py-2 px-2"><StatusBadge status={r.lifecycle_state} /></td>
-                    <td className="py-2 px-dsi-pad text-xs opacity-70">{fmtDate(r.created_at)}</td>
+                  <tr key={r.id} className="cursor-pointer text-dsi-contrast-background hover:text-dsi-selected">
+                    <td className="p-1.5 text-left">{formatText(r.source_signal,"capitalize")}</td>
+                    <td className="p-1.5 text-left">{formatText(r.target_signal,"capitalize")}</td>
+                    <td className="p-1.5 text-left">{formatText(r.direction.replaceAll("_", " "),"capitalize")}</td>
+                    <td className="p-1.5 text-center tabular-nums">{formatNumber(r.correlation_rho, 2)}</td>
+                    <td className="p-1.5 text-center tabular-nums">{formatPercent(r.influence_weight)}</td>
+                    <td className="p-1.5 text-center tabular-nums">{r.population_size}</td>
+                    <td className="p-1.5 text-left"><StatusBadge status={formatText(r.lifecycle_state,"capitalize")} /></td>
+                    <td className="p-1.5 text-center">{formatDate(r.created_at)}</td>
                   </tr>
                 ))}
                 {rels.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="py-4 px-dsi-pad opacity-60 text-center text-xs">
+                    <td colSpan={8} className="dsi-user-message">
                       No relationships discovered yet.
                     </td>
                   </tr>
@@ -308,22 +315,41 @@ export default function WorldEngineView() {
         {/* ═══ PORTFOLIO OVERVIEW ═══ */}
         <StandardCard
           title="Portfolio Overview"
-          lucideIcon={Target}
-          headerRight={<span className="text-[10px] opacity-40">{portfolio.count} submissions</span>}
+          lucideIcon={ChartCandlestick}
+          headerRight={<span className="text-xs content-center">{portfolio.count} submissions</span>}
         >
           <div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Total Submissions</span><span className="text-xl font-black text-dsi-selected">{portfolio.count}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Average Score</span><span className="text-xl font-black text-dsi-selected">{formatNumber(portfolio.avgScore)}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Approval Rate</span><span className="text-xl font-black text-dsi-approve">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span></div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Referral Rate</span><span className="text-xl font-black text-dsi-refer">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span></div>
+              <div className="dsi-contentbox flex flex-col">
+                <span className="dsi-analysis-description text-center">Total Submissions</span>
+                <span className="dsi-analysis-item text-center text-xl">{formatNumber(portfolio.count)}</span>
+                </div>
+              <div className="dsi-contentbox flex flex-col">
+                <span className="dsi-analysis-description text-center">Aggregate Premium</span>
+                <span className="dsi-analysis-item text-center text-xl">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span>
+                </div>
+              <div className="dsi-contentbox flex flex-col">
+                <span className="dsi-analysis-description text-center">Average Score</span>
+                <span className="dsi-analysis-item text-center text-xl">{formatNumber(portfolio.avgScore)}</span>
+                </div>
+              <div className="dsi-contentbox flex flex-col">
+                <span className="dsi-analysis-description text-center">Approval Rate</span>
+                <span className="dsi-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span>
+                </div>
+              <div className="dsi-contentbox flex flex-col">
+                <span className="dsi-analysis-description text-center">Referral Rate</span>
+                <span className="dsi-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span>
+                </div>
             </div>
+            
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              
               <div>
                 <span className="text-xs opacity-60 block mb-2">Tier Distribution</span>
                 <div className="h-[200px]">
+                  
                   <ResponsiveContainer width="100%" height="100%">
+                    
                     <BarChart data={tierChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
                       <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
@@ -333,13 +359,17 @@ export default function WorldEngineView() {
                         {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
                       </Bar>
                     </BarChart>
+
                   </ResponsiveContainer>
+
                 </div>
               </div>
               <div>
+
                 <span className="text-xs opacity-60 block mb-2">Sector Concentration</span>
                 <div className="space-y-2">
                   {covChartData.slice(0, 6).map((e) => (
+                    
                     <div key={e.coverage} className="flex items-center gap-3">
                       <span className="text-xs w-24 truncate opacity-70" title={e.coverage}>{e.coverage}</span>
                       <div className="flex-1 h-4 bg-dsi-background rounded-full overflow-hidden">
@@ -347,6 +377,7 @@ export default function WorldEngineView() {
                       </div>
                       <span className="text-xs font-bold w-12 text-right">{e.count} ({e.pct}%)</span>
                     </div>
+
                   ))}
                 </div>
               </div>
@@ -358,33 +389,38 @@ export default function WorldEngineView() {
         <StandardCard
           title="Emerging Scenarios"
           lucideIcon={Radio}
-          headerRight={<span className="text-[10px] opacity-40">Continuously monitored</span>}
+          headerRight={<span className="text-xs content-center">Continuously monitored</span>}
         >
           <div>
             {emergingScenarios.map((es) => (
-              <div key={es.id} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+              
+              <div key={es.id} className="flex items-center justify-between py-2.5 border-b border-dsi-outline/10 hover:text-dsi-selected">
                 <div className="flex-1 min-w-0 text-wrap">
                   <div className="flex items-center gap-2 mb-0.5">
-                    <span className="text-sm font-bold">{es.name}</span>
-                    <span className={`text-[10px] font-bold ${LIKELIHOOD_COLOR[es.likelihood_label] || 'opacity-50'}`}>
+                    
+                    <span className="text-sm font-bold">{formatText(es.name,"upper")}</span>
+                    <span className={`dsi-notificationpill p-1 border-none shadow-none ${LIKELIHOOD_COLOR[es.likelihood_label] || ''}`}>
                       {formatPercent(es.likelihood)} {es.likelihood_label}
                     </span>
+
                   </div>
-                  <p className="text-xs opacity-60 line-clamp-1">{es.description}</p>
-                  <div className="flex items-center gap-3 mt-1 text-[10px] opacity-40">
+                  
+                  <div className="flex items-center gap-3 mt-2 text-xs">
                     <span>Scope: {es.affected_scope}</span>
                     <span>Magnitude: ~{es.estimated_magnitude} pts</span>
                     <span>Horizon: {es.time_horizon}</span>
                     <span>Source: {es.source}</span>
                   </div>
+                  
                 </div>
+                
                 <button
                   onClick={() => applyEmerging(es)}
-                  className="shrink-0 ml-4 text-xs text-dsi-selected hover:opacity-70 flex items-center gap-1 border border-dsi-outline/20 px-2 py-1 rounded"
+                  className="dsi-actionbutton flex gap-2"
                   title="Simulate this scenario"
-                >
-                  <Zap className="w-3 h-3" /> Simulate
+                ><Zap className="icon" /> Simulate
                 </button>
+
               </div>
             ))}
           </div>
@@ -397,14 +433,9 @@ export default function WorldEngineView() {
           headerRight={
             <div className="flex items-center gap-dsi-pad">
               {activeShocks.length > 0 && (
-                <span className="text-[10px] bg-dsi-decline/15 text-dsi-decline px-2 py-0.5 rounded font-bold">
+                <span className="text-xs content-center">
                   {activeShocks.length} active
                 </span>
-              )}
-              {activeShocks.length > 0 && (
-                <button onClick={() => setActiveShocks([])} className="flex items-center gap-1 text-xs text-dsi-selected hover:opacity-70">
-                  <RotateCcw className="w-3 h-3" /> Clear All
-                </button>
               )}
             </div>
           }
@@ -413,30 +444,56 @@ export default function WorldEngineView() {
             {/* Add shock controls */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
               <div>
-                <span className="text-xs opacity-60 block mb-1">Scenario</span>
-                <select value={pendingScenario} onChange={(e) => setPendingScenario(e.target.value)} className="w-full bg-dsi-background border border-dsi-outline/30 rounded px-2 py-2 text-sm outline-none focus:border-dsi-selected">
+                
+                <span className="dsi-analysis-description text-center">Scenario</span>
+                
+                <select 
+                  value={pendingScenario} 
+                  onChange={(e) => setPendingScenario(e.target.value)} 
+                  className="
+                    w-full 
+                    bg-dsi-background mt-2
+                    rounded-md p-1.5 text-sm">
                   {SHOCK_SCENARIOS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
+
               </div>
               <div>
-                <span className="text-xs opacity-60 block mb-1">Scope</span>
-                <select value={pendingScope} onChange={(e) => setPendingScope(e.target.value)} className="w-full bg-dsi-background border border-dsi-outline/30 rounded px-2 py-2 text-sm outline-none focus:border-dsi-selected">
+                
+                <span className="dsi-analysis-description text-center">Scope</span>
+
+                <select 
+                  value={pendingScope} 
+                  onChange={(e) => setPendingScope(e.target.value)} 
+                  className="
+                    w-full 
+                    bg-dsi-background mt-2
+                    rounded-md p-1.5 text-sm">
                   <option value="all">All Submissions</option>
                   {coverages.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
+
               </div>
+              
               <div>
-                <span className="text-xs opacity-60 block mb-1">Magnitude: {pendingMagnitude} pts</span>
-                <input type="range" min="5" max="50" step="1" value={pendingMagnitude} onChange={(e) => setPendingMagnitude(Number(e.target.value))} className="w-full mt-1" />
+                <span className="dsi-analysis-description text-center">Magnitude: {pendingMagnitude} pts</span>
+                <input 
+                  type="range" min="5" max="50" step="1" 
+                  value={pendingMagnitude} 
+                  onChange={(e) => setPendingMagnitude(Number(e.target.value))} 
+                  className="w-full mt-1 justify-center content-center items-center" />
               </div>
+
               <div className="flex items-end">
-                <button onClick={addShock} className="w-full bg-dsi-selected text-dsi-background px-3 py-2 rounded font-bold text-sm hover:opacity-90 flex items-center justify-center gap-2">
-                  <Plus className="w-4 h-4" /> Add Shock
+                <button onClick={addShock} className="w-full dsi-actionbutton">
+                  <Plus className="icon" /> Add Shock
                 </button>
               </div>
+
               <div className="flex items-end">
-                <span className="text-[10px] opacity-40 text-wrap">{SHOCK_SCENARIOS.find(s => s.id === pendingScenario)?.description}</span>
+                <span className="text-xs text-wrap">{SHOCK_SCENARIOS.find(s => s.id === pendingScenario)?.description}</span>
               </div>
+
             </div>
 
             {/* Active shocks list */}
@@ -461,7 +518,7 @@ export default function WorldEngineView() {
             title={`Impact Analysis — ${shockResult.shocks.length} shock${shockResult.shocks.length !== 1 ? 's' : ''} applied`}
             lucideIcon={AlertTriangle}
             headerRight={
-              <span className="text-[10px] opacity-40">
+              <span className="text-xs content-center">
                 {shockResult.total_affected} of {submissions.length} affected
               </span>
             }
@@ -469,11 +526,28 @@ export default function WorldEngineView() {
             <div>
               {/* Impact KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-refer">{shockResult.total_affected}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Tier Migrations</span><span className="text-xl font-black text-dsi-decline">{shockResult.tier_migrations}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Decision Changes</span><span className="text-xl font-black text-dsi-decline">{shockResult.decision_changes}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}`}>{`${shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K`}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Change</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}`}>{shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span></div>
+                
+                <div className="dsi-contentbox flex flex-col">
+                  <span className="dsi-analysis-description text-center">Risks Affected</span>
+                  <span className="dsi-analysis-item text-center text-xl">{shockResult.total_affected}</span></div>
+                
+                <div className="dsi-contentbox flex flex-col">
+                  <span className="dsi-analysis-description text-center">Tier Migrations</span>
+                  <span className="dsi-analysis-item text-center text-xl">{shockResult.tier_migrations}</span></div>
+                
+                <div className="dsi-contentbox flex flex-col">
+                  <span className="dsi-analysis-description text-center">Decision Changes</span>
+                  <span className="dsi-analysis-item text-center text-xl">{shockResult.decision_changes}</span></div>
+                
+                <div className="dsi-contentbox flex flex-col">
+                  <span className="dsi-analysis-description text-center">Premium Impact</span>
+                  <span className="dsi-analysis-item text-center text-xl"> {shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K</span>
+                </div>
+                
+                <div className="dsi-contentbox flex flex-col">
+                  <span className="dsi-analysis-description text-center">Premium Change</span>
+                  <span className="dsi-analysis-item text-center text-xl"> {shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span>
+                </div>
               </div>
 
               {/* Before/After charts */}
@@ -513,46 +587,46 @@ export default function WorldEngineView() {
               </div>
 
               {/* Most Affected */}
-              <span className="text-xs opacity-60 block mb-2">Most Affected Submissions</span>
+              
+              <span className="text-xs">Most Affected Submissions</span>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
                   <thead>
-                    <tr className="text-xs underline opacity-70">
-                      <th className="py-2 pr-2">Entity</th>
-                      <th className="py-2 px-2 text-right">Before</th>
-                      <th className="py-2 px-2 text-center"><ArrowRight className="w-3 h-3 inline" /></th>
-                      <th className="py-2 px-2 text-right">After</th>
-                      <th className="py-2 px-2 text-right">Delta</th>
-                      <th className="py-2 px-2 text-center">Tier</th>
-                      <th className="py-2 px-2 text-center">Decision</th>
-                      <th className="py-2 px-2 text-right">Premium</th>
-                      <th className="py-2 px-2">Shocks</th>
+                    <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                      <th className="p-1.5 text-left">Entity</th>
+                      <th className="p-1.5 text-center">Before</th>
+                      <th className="p-1.5 text-center">After</th>
+                      <th className="p-1.5 text-center">Delta</th>
+                      <th className="p-1.5 text-center">Tier</th>
+                      <th className="p-1.5 text-center">Decision</th>
+                      <th className="p-1.5 text-center">Premium</th>
+                      <th className="p-1.5 text-center">Shocks</th>
                     </tr>
                   </thead>
                   <tbody>
                     {shockResult.affected.slice(0, 15).map((item, idx) => (
-                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`border-b border-dsi-outline/5 cursor-pointer hover:bg-dsi-background/20 ${item.tier_changed ? 'bg-dsi-decline/5' : ''}`}>
-                        <td className="py-2 pr-2 font-semibold">{item.original.entity_name}</td>
-                        <td className="py-2 px-2 text-right">{formatNumber(item.original_score, 0)}</td>
-                        <td className="py-2 px-2 text-center opacity-30">→</td>
-                        <td className="py-2 px-2 text-right text-dsi-decline font-bold">{formatNumber(item.shocked_score, 0)}</td>
-                        <td className="py-2 px-2 text-right text-dsi-decline">{item.score_delta}</td>
-                        <td className="py-2 px-2 text-center">
+                      
+                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`cursor-pointer text-dsi-contrast-background hover:text-dsi-selected ${item.tier_changed ? 'bg-dsi-decline/5' : ''}`}>
+                        <td className="p-1.5 text-left">{formatText(item.original.entity_name,"upper")}</td>
+                        <td className="p-1.5 text-center">{formatNumber(item.original_score, 0)}</td>
+                        <td className="p-1.5 text-center">{formatNumber(item.shocked_score, 0)}</td>
+                        <td className="p-1.5 text-center">{item.score_delta}</td>
+                        <td className="p-1.5 text-center">
                           {item.tier_changed
-                            ? <span className="text-dsi-decline font-bold">T{item.original_tier}→T{item.shocked_tier}</span>
-                            : <span className="opacity-50">T{item.original_tier}</span>}
+                            ? <span className="font-bold">T{item.original_tier}→T{item.shocked_tier}</span>
+                            : <span>T{item.original_tier}</span>}
                         </td>
-                        <td className="py-2 px-2 text-center">
+                        <td className="p-1.5 text-center">
                           {item.decision_changed
-                            ? <span className="text-dsi-decline font-bold">{item.original_decision}→{item.shocked_decision}</span>
-                            : <span className="opacity-50">{item.original_decision}</span>}
+                            ? <span className="font-bold">{formatText(item.original_decision,"upper")}→{formatText(item.shocked_decision,"upper")}</span>
+                            : <span>{formatText(item.original_decision,"upper")}</span>}
                         </td>
-                        <td className="py-2 px-2 text-right">
+                        <td className="p-1.5 text-right pr-dsi-pad">
                           {item.premium_delta !== 0
-                            ? <span className={item.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}>{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
-                            : <span className="opacity-30">—</span>}
+                            ? <span className="font-bold">{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
+                            : <span>—</span>}
                         </td>
-                        <td className="py-2 px-2 text-xs opacity-50 truncate max-w-[150px]" title={item.shocks_applied.join(', ')}>
+                        <td className="p-1.5 text-center" title={item.shocks_applied.join(', ')}>
                           {item.shocks_applied.length}×
                         </td>
                       </tr>
@@ -560,7 +634,7 @@ export default function WorldEngineView() {
                   </tbody>
                 </table>
                 {shockResult.affected.length > 15 && (
-                  <p className="text-xs opacity-40 mt-2">Showing top 15 of {shockResult.affected.length} affected.</p>
+                  <p className="text-xs mt-dsi-pad">Showing top 15 of {shockResult.affected.length} affected.</p>
                 )}
               </div>
             </div>

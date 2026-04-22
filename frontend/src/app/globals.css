@@ -167,6 +167,12 @@
   @apply pt-2 pb-2;
 }
 
+@utility dsi-contentbox {
+  @apply border border-dsi-outline/80; 
+  @apply rounded-md;
+  @apply p-2;
+}
+
 @utility dsi-grid-table-header {
   @apply pt-2;
   @apply text-sm text-wrap;
