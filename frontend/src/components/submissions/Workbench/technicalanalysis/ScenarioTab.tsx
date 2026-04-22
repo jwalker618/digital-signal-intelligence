@@ -9,6 +9,7 @@ import {
 import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
 import { formatNumber, formatCurrency } from "@/lib/format";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { StandardCard } from "@/components/base/cards";
 import { CompareRow } from "@/components/base/content/primatives";
 
 const deltaColor = (s: number, o: number) =>
@@ -131,25 +132,27 @@ export default function ScenarioTab() {
           {/* ══════════════════════════════════════════════════════════════
               F1/F2: GROUP → SIGNAL ACCORDION WITH OVERRIDES
               ══════════════════════════════════════════════════════════════ */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="dsi-section-header justify-between items-center overflow-x-hidden whitespace-nowrap border-collapse pr-dsi-pad">
-              <div className="flex items-center gap-dsi-pad">
-                <FlaskConical className="icon"/><span className="text-sm">Signal Overrides</span>
-                {Object.keys(signalOverrides).length > 0 && (
-                  <span className="text-[10px] bg-dsi-selected/20 text-dsi-selected px-2 py-0.5 rounded font-bold">
-                    {Object.keys(signalOverrides).length} modified
-                  </span>
-                )}
-              </div>
-              {hasAnyOverride && (
-                <button onClick={resetAll} className="flex items-center gap-2 text-xs hover:bg-dsi-outline/10 px-2 py-1 rounded transition-colors text-dsi-selected">
-                  <RotateCcw className="w-3 h-3" /> Reset All
-                </button>
-              )}
-            </div>
-
+          <div className="pt-2 pb-2">
+            <StandardCard
+              title="Signal Overrides"
+              lucideIcon={FlaskConical}
+              headerRight={
+                <div className="flex items-center gap-dsi-pad">
+                  {Object.keys(signalOverrides).length > 0 && (
+                    <span className="text-[10px] bg-dsi-selected/20 text-dsi-selected px-2 py-0.5 rounded font-bold">
+                      {Object.keys(signalOverrides).length} modified
+                    </span>
+                  )}
+                  {hasAnyOverride && (
+                    <button onClick={resetAll} className="flex items-center gap-2 text-xs hover:bg-dsi-outline/10 px-2 py-1 rounded transition-colors text-dsi-selected">
+                      <RotateCcw className="w-3 h-3" /> Reset All
+                    </button>
+                  )}
+                </div>
+              }
+            >
             {/* Composite comparison header */}
-            <div className="grid grid-cols-2 gap-4 bg-dsi-analysis border-x border-dsi-outline/10 px-dsi-pad py-3">
+            <div className="grid grid-cols-2 gap-4 py-3">
               <div>
                 <span className="opacity-50 block text-xs mb-1">Original Composite</span>
                 <span className="font-bold text-xl">{formatNumber(scenario.original_composite, 1)}</span>
@@ -282,6 +285,7 @@ export default function ScenarioTab() {
                 );
               })}
             </div>
+            </StandardCard>
           </div>
 
           {/* ══════════════════════════════════════════════════════════════
