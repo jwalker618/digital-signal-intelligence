@@ -457,13 +457,16 @@ export default function WorldEngineView() {
 
         {/* ═══ IMPACT DASHBOARD ═══ */}
         {shockResult && (
-          <div className="flex flex-col">
-            <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-              <AlertTriangle className="icon text-dsi-warning"/>
-              <span className="text-sm">Impact Analysis — {shockResult.shocks.length} shock{shockResult.shocks.length !== 1 ? 's' : ''} applied</span>
-              <span className="text-[10px] opacity-40 ml-2">{shockResult.total_affected} of {submissions.length} affected</span>
-            </div>
-            <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+          <StandardCard
+            title={`Impact Analysis — ${shockResult.shocks.length} shock${shockResult.shocks.length !== 1 ? 's' : ''} applied`}
+            lucideIcon={AlertTriangle}
+            headerRight={
+              <span className="text-[10px] opacity-40">
+                {shockResult.total_affected} of {submissions.length} affected
+              </span>
+            }
+          >
+            <div>
               {/* Impact KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-warning">{shockResult.total_affected}</span></div>
@@ -561,7 +564,7 @@ export default function WorldEngineView() {
                 )}
               </div>
             </div>
-          </div>
+          </StandardCard>
         )}
 
       </CardGrid>
