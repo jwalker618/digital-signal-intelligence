@@ -8,8 +8,9 @@ import {
   formatText,
 } from "@/lib/format";
 import { ExpandableGroupTable } from "@/components/base/content/primatives";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import {
-  Calculator, HandCoins, ArrowRightToLine, Paperclip,
+  Calculator, HandCoins, ArrowRightToLine,
   ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis,
 } from "lucide-react";
 
@@ -114,56 +115,15 @@ export default function PricingTab() {
       w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
-      {/* STICKY WRAPPER: Acts as a solid curtain to hide scrolling content */}
-      <div className="
-        sticky top-0 z-20
-        bg-dsi-background
-        pt-3 pb-2"
-        >
-
-        {/* SECTION HEADER */}
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
-        >
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-
-        {/* KEY INFORMATION CARD */}
-        <div className="
-          grid grid-cols-[10%_35%_55%] grid-rows-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-2 pb-2"
-        >
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span className="">
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
-              </span>
-            )}
-            {activeQuote?.status === 'bound' && (
-              <span className="">
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
-              </span>
-            )}
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       <div className="
         grid grid-cols-1 lg:grid-cols-3
