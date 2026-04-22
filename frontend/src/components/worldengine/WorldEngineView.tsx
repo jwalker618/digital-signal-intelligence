@@ -3,20 +3,25 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
+
 import {
   Orbit, Target, Zap, AlertTriangle, ArrowRight, RotateCcw,
   Plus, X, Radio,
   Sparkles, TrendingDown, Network as NetworkIcon,
 } from "lucide-react";
+
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer, Cell
 } from "recharts";
+
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
 import { formatNumber, formatCurrency, formatPercent } from "@/lib/format";
+
 import { tooltipStyle } from "@/lib/chartConfig";
 import { api, fmtDate, fmtRelative } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+
 import type {
   DiscoveredRelationship,
   DriftAlert,
@@ -35,6 +40,7 @@ const LIKELIHOOD_COLOR: Record<string, string> = {
 };
 
 export default function WorldEngineView() {
+  
   const { submissions, fetchSubmissions, fetchCoreSubmissionDetail, setHasPageActions } = useDsiStore();
 
   // Multi-shock state
@@ -147,26 +153,20 @@ export default function WorldEngineView() {
   };
 
   return (
+    
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full h-full overflow-y-auto no-scrollbar bg-dsi-background text-dsi-contrast-background p-dsi-pad animate-in fade-in duration-500 pb-12">
-
-        {/* HERO */}
-        <div className="flex items-center gap-4 mb-6">
-          <Orbit className="w-8 h-8 text-dsi-selected" />
-          <div>
-            <h1 className="text-2xl font-black tracking-wide">World Engine</h1>
-            <p className="text-xs opacity-50">World model &bull; Portfolio intelligence &bull; Shock simulation &bull; Emerging risk analysis</p>
-          </div>
-        </div>
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
 
         {/* ═══ WORLD MODEL ═══ */}
         <div className="flex flex-col mb-4">
+          
           <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Sparkles className="icon"/><span className="text-sm">World Model</span>
-            <span className="text-[10px] opacity-40 ml-2">
-              {maturity ? `${maturity.assessed_entity_count} entities` : "No data"}
+            <Orbit className="icon"/><span className="text-sm">World Engine</span>
+            <span className="text-xs content-center">
+              ({maturity ? `${maturity.assessed_entity_count} entities` : "No data"})
             </span>
           </div>
+
           <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="border border-dsi-outline/20 rounded-lg p-3">

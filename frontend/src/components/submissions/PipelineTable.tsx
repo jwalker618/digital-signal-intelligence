@@ -88,7 +88,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   return (
     <ViewCanvas unstyledMain={true}>
       
-      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
 
         {/* FIXED TOP SECTION */}
         <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm flex items-center justify-between">

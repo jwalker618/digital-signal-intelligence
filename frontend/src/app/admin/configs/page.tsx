@@ -1,15 +1,10 @@
-// FE: Config management dashboard (B-2).
-//
-// Lists (coverage, config_name) pairs with their active deployment +
-// draft count. Selecting a row loads version history below with
-// validate / calibrate / deploy actions.
-
 "use client";
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, RefreshCw, ShieldCheck } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import { formatNumber, formatPercent, formatText } from "@/lib/format";
 import { api, fmtDate } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { useAuthStore } from "@/store/authStore";
@@ -100,7 +95,7 @@ export default function ConfigsPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
 
         {/* FIXED TOP */}
         <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm flex items-center gap-3">
@@ -117,15 +112,17 @@ export default function ConfigsPage() {
         <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
 
           <table className="w-full text-left whitespace-nowrap border-collapse">
+
             <thead className="sticky top-0 z-20 bg-dsi-background">
               <tr className="dsi-grid-table-header text-dsi-contrast-background">
-                <th className="p-1.5">Coverage</th>
-                <th className="p-1.5">Config</th>
-                <th className="p-1.5 text-right">Active</th>
-                <th className="p-1.5 text-right">Drafts</th>
-                <th className="p-1.5"></th>
+                <th className="p-1.5 text-left">Coverage</th>
+                <th className="p-1.5 text-left ">Config</th>
+                <th className="p-1.5 text-left">Active</th>
+                <th className="p-1.5 text-left">Drafts</th>
+  
               </tr>
             </thead>
+            
             <tbody>
               {summaries.map((s) => (
                 <tr
@@ -133,11 +130,11 @@ export default function ConfigsPage() {
                   onClick={() => void loadHistory(s.coverage, s.config_name)}
                   className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
                 >
-                  <td className="p-1.5 font-mono">{s.coverage}</td>
-                  <td className="p-1.5 font-mono">{s.config_name}</td>
+                  <td className="p-1.5">{formatText(s.coverage,"upper")}</td>
+                  <td className="p-1.5">{formatText(s.config_name,"capitalize")}</td>
                   <td className="p-1.5 text-right tabular-nums">{s.active_version ?? "—"}</td>
                   <td className="p-1.5 text-right tabular-nums">{s.draft_count}</td>
-                  <td className="p-1.5 text-xs text-dsi-selected">History →</td>
+   
                 </tr>
               ))}
             </tbody>
