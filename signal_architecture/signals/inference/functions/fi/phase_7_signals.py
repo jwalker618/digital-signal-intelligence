@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,61 +41,61 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("capital_adequacy_basefunction")
-async def p7_01(entity_id, context):
+def p7_01(entity_id, context):
     """Capital Adequacy Ratio"""
-    return await _run_pipeline("capital_adequacy", CapitalAdequacyExtractor(), CapitalAdequacyAggregator(), entity_id, context)
+    return _run_pipeline("capital_adequacy", None, None, entity_id, context)
 
 
 @register_inference_function("loan_portfolio_quality_basefunction")
-async def p7_02(entity_id, context):
+def p7_02(entity_id, context):
     """Loan Portfolio Quality"""
-    return await _run_pipeline("loan_portfolio_quality", LoanPortfolioQualityExtractor(), LoanPortfolioQualityAggregator(), entity_id, context)
+    return _run_pipeline("loan_portfolio_quality", None, None, entity_id, context)
 
 
 @register_inference_function("regulatory_exam_results_basefunction")
-async def p7_03(entity_id, context):
+def p7_03(entity_id, context):
     """Regulatory Examination Results"""
-    return await _run_pipeline("regulatory_exam_results", RegulatoryExamResultsExtractor(), RegulatoryExamResultsAggregator(), entity_id, context)
+    return _run_pipeline("regulatory_exam_results", None, None, entity_id, context)
 
 
 @register_inference_function("bsa_aml_compliance_basefunction")
-async def p7_04(entity_id, context):
+def p7_04(entity_id, context):
     """BSA/AML Compliance"""
-    return await _run_pipeline("bsa_aml_compliance", BsaAmlComplianceExtractor(), BsaAmlComplianceAggregator(), entity_id, context)
+    return _run_pipeline("bsa_aml_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("interest_rate_sensitivity_basefunction")
-async def p7_05(entity_id, context):
+def p7_05(entity_id, context):
     """Interest Rate Sensitivity"""
-    return await _run_pipeline("interest_rate_sensitivity", InterestRateSensitivityExtractor(), InterestRateSensitivityAggregator(), entity_id, context)
+    return _run_pipeline("interest_rate_sensitivity", None, None, entity_id, context)
 
 
 @register_inference_function("regulatory_licensing_status_basefunction")
-async def p7_06(entity_id, context):
+def p7_06(entity_id, context):
     """Regulatory Licensing Status"""
-    return await _run_pipeline("regulatory_licensing_status", RegulatoryLicensingStatusExtractor(), RegulatoryLicensingStatusAggregator(), entity_id, context)
+    return _run_pipeline("regulatory_licensing_status", None, None, entity_id, context)
 
 
 @register_inference_function("crypto_asset_exposure_basefunction")
-async def p7_07(entity_id, context):
+def p7_07(entity_id, context):
     """Crypto/Digital Asset Exposure"""
-    return await _run_pipeline("crypto_asset_exposure", CryptoAssetExposureExtractor(), CryptoAssetExposureAggregator(), entity_id, context)
+    return _run_pipeline("crypto_asset_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("platform_technology_risk_basefunction")
-async def p7_08(entity_id, context):
+def p7_08(entity_id, context):
     """Platform Technology Risk"""
-    return await _run_pipeline("platform_technology_risk", PlatformTechnologyRiskExtractor(), PlatformTechnologyRiskAggregator(), entity_id, context)
+    return _run_pipeline("platform_technology_risk", None, None, entity_id, context)
 
 
 @register_inference_function("consumer_protection_compliance_basefunction")
-async def p7_09(entity_id, context):
+def p7_09(entity_id, context):
     """Consumer Protection Compliance"""
-    return await _run_pipeline("consumer_protection_compliance", ConsumerProtectionComplianceExtractor(), ConsumerProtectionComplianceAggregator(), entity_id, context)
+    return _run_pipeline("consumer_protection_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("partner_bank_dependency_basefunction")
-async def p7_10(entity_id, context):
+def p7_10(entity_id, context):
     """Partner Bank / BaaS Dependency"""
-    return await _run_pipeline("partner_bank_dependency", PartnerBankDependencyExtractor(), PartnerBankDependencyAggregator(), entity_id, context)
+    return _run_pipeline("partner_bank_dependency", None, None, entity_id, context)
 

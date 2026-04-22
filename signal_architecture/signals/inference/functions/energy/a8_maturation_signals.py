@@ -24,7 +24,7 @@ PROXY_TIER_CONFIDENCE = {
 def _neutral(signal_id: str, proxy_tier: str) -> SignalResult:
     return SignalResult(
         signal_id=signal_id,
-        score=500.0,
+        score=50.0,
         confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5),
         execution_time_ms=0.0,
     )
@@ -33,17 +33,17 @@ def _neutral(signal_id: str, proxy_tier: str) -> SignalResult:
 # ---- Nuclear --------------------------------------------------------
 
 @register_inference_function("nrc_inspection_findings_basefunction")
-async def energy_a8_01(entity_id: str, context: Any) -> SignalResult:
+def energy_a8_01(entity_id: str, context: Any) -> SignalResult:
     """Nuclear Regulatory Commission inspection findings (greens, whites, yellows)."""
     return _neutral("nrc_inspection_findings", "DIRECT_OBSERVABLE")
 
 @register_inference_function("nrc_enforcement_action_history_basefunction")
-async def energy_a8_02(entity_id: str, context: Any) -> SignalResult:
+def energy_a8_02(entity_id: str, context: Any) -> SignalResult:
     """NRC enforcement action history (orders, civil penalties)."""
     return _neutral("nrc_enforcement_action_history", "DIRECT_OBSERVABLE")
 
 @register_inference_function("decommissioning_trust_funding_basefunction")
-async def energy_a8_03(entity_id: str, context: Any) -> SignalResult:
+def energy_a8_03(entity_id: str, context: Any) -> SignalResult:
     """Decommissioning trust funding ratio vs projected decommissioning cost."""
     return _neutral("decommissioning_trust_funding", "DIRECT_OBSERVABLE")
 
@@ -51,11 +51,11 @@ async def energy_a8_03(entity_id: str, context: Any) -> SignalResult:
 # ---- Hydrogen -------------------------------------------------------
 
 @register_inference_function("electrolyser_technology_maturity_basefunction")
-async def energy_a8_04(entity_id: str, context: Any) -> SignalResult:
+def energy_a8_04(entity_id: str, context: Any) -> SignalResult:
     """Electrolyser technology maturity (TRL of PEM/Alkaline/SOEC stack)."""
     return _neutral("electrolyser_technology_maturity", "INFERRED_PROXY")
 
 @register_inference_function("offtake_counterparty_quality_basefunction")
-async def energy_a8_05(entity_id: str, context: Any) -> SignalResult:
+def energy_a8_05(entity_id: str, context: Any) -> SignalResult:
     """Offtake-counterparty quality (credit rating, tenor, take-or-pay terms)."""
     return _neutral("offtake_counterparty_quality", "DIRECT_OBSERVABLE")

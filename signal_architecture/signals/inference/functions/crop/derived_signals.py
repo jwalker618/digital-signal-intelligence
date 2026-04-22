@@ -43,204 +43,204 @@ def _padded(signal_id: str, entity_id: str) -> SignalResult:
 
 
 @register_inference_function("crop_derived_01_basefunction")
-async def crop_derived_01(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_01(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #01 — deterministic synthetic scaffold."""
     return _padded("crop_derived_01", entity_id)
 
 
 @register_inference_function("crop_derived_02_basefunction")
-async def crop_derived_02(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_02(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #02 — deterministic synthetic scaffold."""
     return _padded("crop_derived_02", entity_id)
 
 
 @register_inference_function("crop_derived_03_basefunction")
-async def crop_derived_03(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_03(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #03 — deterministic synthetic scaffold."""
     return _padded("crop_derived_03", entity_id)
 
 
 @register_inference_function("crop_derived_04_basefunction")
-async def crop_derived_04(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_04(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #04 — deterministic synthetic scaffold."""
     return _padded("crop_derived_04", entity_id)
 
 
 @register_inference_function("crop_derived_05_basefunction")
-async def crop_derived_05(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_05(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #05 — deterministic synthetic scaffold."""
     return _padded("crop_derived_05", entity_id)
 
 
 @register_inference_function("crop_derived_06_basefunction")
-async def crop_derived_06(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_06(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #06 — deterministic synthetic scaffold."""
     return _padded("crop_derived_06", entity_id)
 
 
 @register_inference_function("crop_derived_07_basefunction")
-async def crop_derived_07(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_07(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #07 — deterministic synthetic scaffold."""
     return _padded("crop_derived_07", entity_id)
 
 
 @register_inference_function("crop_derived_08_basefunction")
-async def crop_derived_08(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_08(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #08 — deterministic synthetic scaffold."""
     return _padded("crop_derived_08", entity_id)
 
 
 @register_inference_function("crop_derived_09_basefunction")
-async def crop_derived_09(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_09(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #09 — deterministic synthetic scaffold."""
     return _padded("crop_derived_09", entity_id)
 
 
 @register_inference_function("crop_derived_10_basefunction")
-async def crop_derived_10(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_10(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #10 — deterministic synthetic scaffold."""
     return _padded("crop_derived_10", entity_id)
 
 
 @register_inference_function("crop_derived_11_basefunction")
-async def crop_derived_11(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_11(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #11 — deterministic synthetic scaffold."""
     return _padded("crop_derived_11", entity_id)
 
 
 @register_inference_function("crop_derived_12_basefunction")
-async def crop_derived_12(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_12(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #12 — deterministic synthetic scaffold."""
     return _padded("crop_derived_12", entity_id)
 
 
 @register_inference_function("crop_derived_13_basefunction")
-async def crop_derived_13(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_13(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #13 — deterministic synthetic scaffold."""
     return _padded("crop_derived_13", entity_id)
 
 
 @register_inference_function("crop_derived_14_basefunction")
-async def crop_derived_14(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_14(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #14 — deterministic synthetic scaffold."""
     return _padded("crop_derived_14", entity_id)
 
 
 @register_inference_function("crop_derived_15_basefunction")
-async def crop_derived_15(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_15(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #15 — deterministic synthetic scaffold."""
     return _padded("crop_derived_15", entity_id)
 
 
 @register_inference_function("crop_derived_16_basefunction")
-async def crop_derived_16(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_16(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #16 — deterministic synthetic scaffold."""
     return _padded("crop_derived_16", entity_id)
 
 
 @register_inference_function("crop_derived_17_basefunction")
-async def crop_derived_17(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_17(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #17 — deterministic synthetic scaffold."""
     return _padded("crop_derived_17", entity_id)
 
 
 @register_inference_function("crop_derived_18_basefunction")
-async def crop_derived_18(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_18(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #18 — deterministic synthetic scaffold."""
     return _padded("crop_derived_18", entity_id)
 
 
 @register_inference_function("crop_derived_19_basefunction")
-async def crop_derived_19(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_19(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #19 — deterministic synthetic scaffold."""
     return _padded("crop_derived_19", entity_id)
 
 
 @register_inference_function("crop_derived_20_basefunction")
-async def crop_derived_20(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_20(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #20 — deterministic synthetic scaffold."""
     return _padded("crop_derived_20", entity_id)
 
 
 @register_inference_function("crop_derived_21_basefunction")
-async def crop_derived_21(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_21(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #21 — deterministic synthetic scaffold."""
     return _padded("crop_derived_21", entity_id)
 
 
 @register_inference_function("crop_derived_22_basefunction")
-async def crop_derived_22(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_22(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #22 — deterministic synthetic scaffold."""
     return _padded("crop_derived_22", entity_id)
 
 
 @register_inference_function("crop_derived_23_basefunction")
-async def crop_derived_23(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_23(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #23 — deterministic synthetic scaffold."""
     return _padded("crop_derived_23", entity_id)
 
 
 @register_inference_function("crop_derived_24_basefunction")
-async def crop_derived_24(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_24(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #24 — deterministic synthetic scaffold."""
     return _padded("crop_derived_24", entity_id)
 
 
 @register_inference_function("crop_derived_25_basefunction")
-async def crop_derived_25(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_25(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #25 — deterministic synthetic scaffold."""
     return _padded("crop_derived_25", entity_id)
 
 
 @register_inference_function("crop_derived_26_basefunction")
-async def crop_derived_26(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_26(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #26 — deterministic synthetic scaffold."""
     return _padded("crop_derived_26", entity_id)
 
 
 @register_inference_function("crop_derived_27_basefunction")
-async def crop_derived_27(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_27(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #27 — deterministic synthetic scaffold."""
     return _padded("crop_derived_27", entity_id)
 
 
 @register_inference_function("crop_derived_28_basefunction")
-async def crop_derived_28(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_28(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #28 — deterministic synthetic scaffold."""
     return _padded("crop_derived_28", entity_id)
 
 
 @register_inference_function("crop_derived_29_basefunction")
-async def crop_derived_29(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_29(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #29 — deterministic synthetic scaffold."""
     return _padded("crop_derived_29", entity_id)
 
 
 @register_inference_function("crop_derived_30_basefunction")
-async def crop_derived_30(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_30(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #30 — deterministic synthetic scaffold."""
     return _padded("crop_derived_30", entity_id)
 
 
 @register_inference_function("crop_derived_31_basefunction")
-async def crop_derived_31(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_31(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #31 — deterministic synthetic scaffold."""
     return _padded("crop_derived_31", entity_id)
 
 
 @register_inference_function("crop_derived_32_basefunction")
-async def crop_derived_32(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_32(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #32 — deterministic synthetic scaffold."""
     return _padded("crop_derived_32", entity_id)
 
 
 @register_inference_function("crop_derived_33_basefunction")
-async def crop_derived_33(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_33(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #33 — deterministic synthetic scaffold."""
     return _padded("crop_derived_33", entity_id)
 
 
 @register_inference_function("crop_derived_34_basefunction")
-async def crop_derived_34(entity_id: str, context: Any) -> SignalResult:
+def crop_derived_34(entity_id: str, context: Any) -> SignalResult:
     """crop derived signal #34 — deterministic synthetic scaffold."""
     return _padded("crop_derived_34", entity_id)

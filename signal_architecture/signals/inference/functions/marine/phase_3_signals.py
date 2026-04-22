@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,127 +41,127 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("cargo_commodity_class_basefunction")
-async def p3_01(entity_id, context):
+def p3_01(entity_id, context):
     """Cargo Commodity Classification"""
-    return await _run_categorical("cargo_commodity_class", CargoCommodityClassExtractor(), CargoCommodityClassAggregator(), entity_id, context)
+    return _run_categorical("cargo_commodity_class", None, None, entity_id, context)
 
 
 @register_inference_function("packaging_quality_basefunction")
-async def p3_02(entity_id, context):
+def p3_02(entity_id, context):
     """Packaging & Stowage Quality"""
-    return await _run_pipeline("packaging_quality", PackagingQualityExtractor(), PackagingQualityAggregator(), entity_id, context)
+    return _run_pipeline("packaging_quality", None, None, entity_id, context)
 
 
 @register_inference_function("transit_mode_basefunction")
-async def p3_03(entity_id, context):
+def p3_03(entity_id, context):
     """Transit Mode Risk"""
-    return await _run_categorical("transit_mode", TransitModeExtractor(), TransitModeAggregator(), entity_id, context)
+    return _run_categorical("transit_mode", None, None, entity_id, context)
 
 
 @register_inference_function("storage_exposure_basefunction")
-async def p3_04(entity_id, context):
+def p3_04(entity_id, context):
     """Storage & Warehousing Exposure"""
-    return await _run_pipeline("storage_exposure", StorageExposureExtractor(), StorageExposureAggregator(), entity_id, context)
+    return _run_pipeline("storage_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("theft_pilferage_exposure_basefunction")
-async def p3_05(entity_id, context):
+def p3_05(entity_id, context):
     """Theft & Pilferage Exposure"""
-    return await _run_pipeline("theft_pilferage_exposure", TheftPilferageExposureExtractor(), TheftPilferageExposureAggregator(), entity_id, context)
+    return _run_pipeline("theft_pilferage_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("temperature_control_basefunction")
-async def p3_06(entity_id, context):
+def p3_06(entity_id, context):
     """Temperature Control Adequacy"""
-    return await _run_pipeline("temperature_control", TemperatureControlExtractor(), TemperatureControlAggregator(), entity_id, context)
+    return _run_pipeline("temperature_control", None, None, entity_id, context)
 
 
 @register_inference_function("tanker_vetting_status_basefunction")
-async def p3_07(entity_id, context):
+def p3_07(entity_id, context):
     """Tanker Vetting Status"""
-    return await _run_pipeline("tanker_vetting_status", TankerVettingStatusExtractor(), TankerVettingStatusAggregator(), entity_id, context)
+    return _run_pipeline("tanker_vetting_status", None, None, entity_id, context)
 
 
 @register_inference_function("pollution_liability_exposure_basefunction")
-async def p3_08(entity_id, context):
+def p3_08(entity_id, context):
     """Pollution Liability Exposure"""
-    return await _run_pipeline("pollution_liability_exposure", PollutionLiabilityExposureExtractor(), PollutionLiabilityExposureAggregator(), entity_id, context)
+    return _run_pipeline("pollution_liability_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("double_hull_compliance_basefunction")
-async def p3_09(entity_id, context):
+def p3_09(entity_id, context):
     """Double Hull Compliance"""
-    return await _run_pipeline("double_hull_compliance", DoubleHullComplianceExtractor(), DoubleHullComplianceAggregator(), entity_id, context)
+    return _run_pipeline("double_hull_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("cargo_compatibility_basefunction")
-async def p3_10(entity_id, context):
+def p3_10(entity_id, context):
     """Cargo Compatibility & History"""
-    return await _run_pipeline("cargo_compatibility", CargoCompatibilityExtractor(), CargoCompatibilityAggregator(), entity_id, context)
+    return _run_pipeline("cargo_compatibility", None, None, entity_id, context)
 
 
 @register_inference_function("sts_operations_basefunction")
-async def p3_11(entity_id, context):
+def p3_11(entity_id, context):
     """Ship-to-Ship Transfer Operations"""
-    return await _run_pipeline("sts_operations", StsOperationsExtractor(), StsOperationsAggregator(), entity_id, context)
+    return _run_pipeline("sts_operations", None, None, entity_id, context)
 
 
 @register_inference_function("unit_type_basefunction")
-async def p3_12(entity_id, context):
+def p3_12(entity_id, context):
     """Offshore Unit Type"""
-    return await _run_categorical("unit_type", UnitTypeExtractor(), UnitTypeAggregator(), entity_id, context)
+    return _run_categorical("unit_type", None, None, entity_id, context)
 
 
 @register_inference_function("mooring_integrity_basefunction")
-async def p3_13(entity_id, context):
+def p3_13(entity_id, context):
     """Mooring System Integrity"""
-    return await _run_pipeline("mooring_integrity", MooringIntegrityExtractor(), MooringIntegrityAggregator(), entity_id, context)
+    return _run_pipeline("mooring_integrity", None, None, entity_id, context)
 
 
 @register_inference_function("dp_system_reliability_basefunction")
-async def p3_14(entity_id, context):
+def p3_14(entity_id, context):
     """Dynamic Positioning Reliability"""
-    return await _run_pipeline("dp_system_reliability", DpSystemReliabilityExtractor(), DpSystemReliabilityAggregator(), entity_id, context)
+    return _run_pipeline("dp_system_reliability", None, None, entity_id, context)
 
 
 @register_inference_function("metocean_exposure_basefunction")
-async def p3_15(entity_id, context):
+def p3_15(entity_id, context):
     """Metocean Exposure"""
-    return await _run_pipeline("metocean_exposure", MetoceanExposureExtractor(), MetoceanExposureAggregator(), entity_id, context)
+    return _run_pipeline("metocean_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("offshore_class_compliance_basefunction")
-async def p3_16(entity_id, context):
+def p3_16(entity_id, context):
     """Offshore Classification Compliance"""
-    return await _run_pipeline("offshore_class_compliance", OffshoreClassComplianceExtractor(), OffshoreClassComplianceAggregator(), entity_id, context)
+    return _run_pipeline("offshore_class_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("psc_detention_rate_basefunction")
-async def p3_17(entity_id, context):
+def p3_17(entity_id, context):
     """PSC Detention Rate"""
-    return await _run_pipeline("psc_detention_rate", PscDetentionRateExtractor(), PscDetentionRateAggregator(), entity_id, context)
+    return _run_pipeline("psc_detention_rate", None, None, entity_id, context)
 
 
 @register_inference_function("ism_audit_quality_basefunction")
-async def p3_18(entity_id, context):
+def p3_18(entity_id, context):
     """ISM Audit Quality"""
-    return await _run_pipeline("ism_audit_quality", IsmAuditQualityExtractor(), IsmAuditQualityAggregator(), entity_id, context)
+    return _run_pipeline("ism_audit_quality", None, None, entity_id, context)
 
 
 @register_inference_function("isps_compliance_basefunction")
-async def p3_19(entity_id, context):
+def p3_19(entity_id, context):
     """ISPS Compliance"""
-    return await _run_pipeline("isps_compliance", IspsComplianceExtractor(), IspsComplianceAggregator(), entity_id, context)
+    return _run_pipeline("isps_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("sanctions_screening_depth_basefunction")
-async def p3_20(entity_id, context):
+def p3_20(entity_id, context):
     """Sanctions Screening Depth"""
-    return await _run_pipeline("sanctions_screening_depth", SanctionsScreeningDepthExtractor(), SanctionsScreeningDepthAggregator(), entity_id, context)
+    return _run_pipeline("sanctions_screening_depth", None, None, entity_id, context)
 
 
 @register_inference_function("class_survey_currency_basefunction")
-async def p3_21(entity_id, context):
+def p3_21(entity_id, context):
     """Classification Survey Currency"""
-    return await _run_pipeline("class_survey_currency", ClassSurveyCurrencyExtractor(), ClassSurveyCurrencyAggregator(), entity_id, context)
+    return _run_pipeline("class_survey_currency", None, None, entity_id, context)
 

@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,349 +41,349 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("lateral_hire_volume_basefunction")
-async def p6_01(entity_id, context):
+def p6_01(entity_id, context):
     """Lateral Hire Volume"""
-    return await _run_pipeline("lateral_hire_volume", LateralHireVolumeExtractor(), LateralHireVolumeAggregator(), entity_id, context)
+    return _run_pipeline("lateral_hire_volume", None, None, entity_id, context)
 
 
 @register_inference_function("prior_acts_coverage_basefunction")
-async def p6_02(entity_id, context):
+def p6_02(entity_id, context):
     """Prior Acts Coverage"""
-    return await _run_pipeline("prior_acts_coverage", PriorActsCoverageExtractor(), PriorActsCoverageAggregator(), entity_id, context)
+    return _run_pipeline("prior_acts_coverage", None, None, entity_id, context)
 
 
 @register_inference_function("conflict_system_quality_basefunction")
-async def p6_03(entity_id, context):
+def p6_03(entity_id, context):
     """Conflict System Quality"""
-    return await _run_pipeline("conflict_system_quality", ConflictSystemQualityExtractor(), ConflictSystemQualityAggregator(), entity_id, context)
+    return _run_pipeline("conflict_system_quality", None, None, entity_id, context)
 
 
 @register_inference_function("trust_account_compliance_basefunction")
-async def p6_04(entity_id, context):
+def p6_04(entity_id, context):
     """Trust Account Compliance"""
-    return await _run_pipeline("trust_account_compliance", TrustAccountComplianceExtractor(), TrustAccountComplianceAggregator(), entity_id, context)
+    return _run_pipeline("trust_account_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("class_action_exposure_basefunction")
-async def p6_05(entity_id, context):
+def p6_05(entity_id, context):
     """Class Action Exposure"""
-    return await _run_pipeline("class_action_exposure", ClassActionExposureExtractor(), ClassActionExposureAggregator(), entity_id, context)
+    return _run_pipeline("class_action_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("partner_departure_rate_basefunction")
-async def p6_06(entity_id, context):
+def p6_06(entity_id, context):
     """Partner Departure Rate"""
-    return await _run_pipeline("partner_departure_rate", PartnerDepartureRateExtractor(), PartnerDepartureRateAggregator(), entity_id, context)
+    return _run_pipeline("partner_departure_rate", None, None, entity_id, context)
 
 
 @register_inference_function("matter_concentration_basefunction")
-async def p6_07(entity_id, context):
+def p6_07(entity_id, context):
     """Matter Concentration"""
-    return await _run_pipeline("matter_concentration", MatterConcentrationExtractor(), MatterConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("matter_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("case_concentration_basefunction")
-async def p6_08(entity_id, context):
+def p6_08(entity_id, context):
     """Case Concentration"""
-    return await _run_pipeline("case_concentration", CaseConcentrationExtractor(), CaseConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("case_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("contingency_fee_ratio_basefunction")
-async def p6_09(entity_id, context):
+def p6_09(entity_id, context):
     """Contingency Fee Ratio"""
-    return await _run_pipeline("contingency_fee_ratio", ContingencyFeeRatioExtractor(), ContingencyFeeRatioAggregator(), entity_id, context)
+    return _run_pipeline("contingency_fee_ratio", None, None, entity_id, context)
 
 
 @register_inference_function("trial_success_rate_basefunction")
-async def p6_10(entity_id, context):
+def p6_10(entity_id, context):
     """Trial Success Rate"""
-    return await _run_pipeline("trial_success_rate", TrialSuccessRateExtractor(), TrialSuccessRateAggregator(), entity_id, context)
+    return _run_pipeline("trial_success_rate", None, None, entity_id, context)
 
 
 @register_inference_function("statute_tracking_compliance_basefunction")
-async def p6_11(entity_id, context):
+def p6_11(entity_id, context):
     """Statute Tracking Compliance"""
-    return await _run_pipeline("statute_tracking_compliance", StatuteTrackingComplianceExtractor(), StatuteTrackingComplianceAggregator(), entity_id, context)
+    return _run_pipeline("statute_tracking_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("case_value_distribution_basefunction")
-async def p6_12(entity_id, context):
+def p6_12(entity_id, context):
     """Case Value Distribution"""
-    return await _run_pipeline("case_value_distribution", CaseValueDistributionExtractor(), CaseValueDistributionAggregator(), entity_id, context)
+    return _run_pipeline("case_value_distribution", None, None, entity_id, context)
 
 
 @register_inference_function("pcaob_inspection_deficiency_rate_basefunction")
-async def p6_13(entity_id, context):
+def p6_13(entity_id, context):
     """PCAOB Inspection Deficiency Rate"""
-    return await _run_pipeline("pcaob_inspection_deficiency_rate", PcaobInspectionDeficiencyRateExtractor(), PcaobInspectionDeficiencyRateAggregator(), entity_id, context)
+    return _run_pipeline("pcaob_inspection_deficiency_rate", None, None, entity_id, context)
 
 
 @register_inference_function("restatement_rate_basefunction")
-async def p6_14(entity_id, context):
+def p6_14(entity_id, context):
     """Restatement Rate"""
-    return await _run_pipeline("restatement_rate", RestatementRateExtractor(), RestatementRateAggregator(), entity_id, context)
+    return _run_pipeline("restatement_rate", None, None, entity_id, context)
 
 
 @register_inference_function("going_concern_accuracy_basefunction")
-async def p6_15(entity_id, context):
+def p6_15(entity_id, context):
     """Going Concern Accuracy"""
-    return await _run_pipeline("going_concern_accuracy", GoingConcernAccuracyExtractor(), GoingConcernAccuracyAggregator(), entity_id, context)
+    return _run_pipeline("going_concern_accuracy", None, None, entity_id, context)
 
 
 @register_inference_function("sec_enforcement_exposure_basefunction")
-async def p6_16(entity_id, context):
+def p6_16(entity_id, context):
     """SEC Enforcement Exposure"""
-    return await _run_pipeline("sec_enforcement_exposure", SecEnforcementExposureExtractor(), SecEnforcementExposureAggregator(), entity_id, context)
+    return _run_pipeline("sec_enforcement_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("audit_client_concentration_basefunction")
-async def p6_17(entity_id, context):
+def p6_17(entity_id, context):
     """Audit Client Concentration"""
-    return await _run_pipeline("audit_client_concentration", AuditClientConcentrationExtractor(), AuditClientConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("audit_client_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("audit_partner_rotation_compliance_basefunction")
-async def p6_18(entity_id, context):
+def p6_18(entity_id, context):
     """Audit Partner Rotation Compliance"""
-    return await _run_pipeline("audit_partner_rotation_compliance", AuditPartnerRotationComplianceExtractor(), AuditPartnerRotationComplianceAggregator(), entity_id, context)
+    return _run_pipeline("audit_partner_rotation_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("securities_litigation_exposure_basefunction")
-async def p6_19(entity_id, context):
+def p6_19(entity_id, context):
     """Securities Litigation Exposure"""
-    return await _run_pipeline("securities_litigation_exposure", SecuritiesLitigationExposureExtractor(), SecuritiesLitigationExposureAggregator(), entity_id, context)
+    return _run_pipeline("securities_litigation_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("design_defect_claims_basefunction")
-async def p6_20(entity_id, context):
+def p6_20(entity_id, context):
     """Design Defect Claims"""
-    return await _run_pipeline("design_defect_claims", DesignDefectClaimsExtractor(), DesignDefectClaimsAggregator(), entity_id, context)
+    return _run_pipeline("design_defect_claims", None, None, entity_id, context)
 
 
 @register_inference_function("building_code_compliance_basefunction")
-async def p6_21(entity_id, context):
+def p6_21(entity_id, context):
     """Building Code Compliance"""
-    return await _run_pipeline("building_code_compliance", BuildingCodeComplianceExtractor(), BuildingCodeComplianceAggregator(), entity_id, context)
+    return _run_pipeline("building_code_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("project_complexity_score_basefunction")
-async def p6_22(entity_id, context):
+def p6_22(entity_id, context):
     """Project Complexity Score"""
-    return await _run_pipeline("project_complexity_score", ProjectComplexityScoreExtractor(), ProjectComplexityScoreAggregator(), entity_id, context)
+    return _run_pipeline("project_complexity_score", None, None, entity_id, context)
 
 
 @register_inference_function("latent_defect_exposure_basefunction")
-async def p6_23(entity_id, context):
+def p6_23(entity_id, context):
     """Latent Defect Exposure"""
-    return await _run_pipeline("latent_defect_exposure", LatentDefectExposureExtractor(), LatentDefectExposureAggregator(), entity_id, context)
+    return _run_pipeline("latent_defect_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("sustainability_certification_basefunction")
-async def p6_24(entity_id, context):
+def p6_24(entity_id, context):
     """Sustainability Certification"""
-    return await _run_pipeline("sustainability_certification", SustainabilityCertificationExtractor(), SustainabilityCertificationAggregator(), entity_id, context)
+    return _run_pipeline("sustainability_certification", None, None, entity_id, context)
 
 
 @register_inference_function("pi_construction_phase_basefunction")
-async def p6_25(entity_id, context):
+def p6_25(entity_id, context):
     """Construction Phase"""
-    return await _run_categorical("pi_construction_phase", PiConstructionPhaseExtractor(), PiConstructionPhaseAggregator(), entity_id, context)
+    return _run_categorical("pi_construction_phase", None, None, entity_id, context)
 
 
 @register_inference_function("structural_failure_history_basefunction")
-async def p6_26(entity_id, context):
+def p6_26(entity_id, context):
     """Structural Failure History"""
-    return await _run_pipeline("structural_failure_history", StructuralFailureHistoryExtractor(), StructuralFailureHistoryAggregator(), entity_id, context)
+    return _run_pipeline("structural_failure_history", None, None, entity_id, context)
 
 
 @register_inference_function("pe_license_compliance_basefunction")
-async def p6_27(entity_id, context):
+def p6_27(entity_id, context):
     """PE License Compliance"""
-    return await _run_pipeline("pe_license_compliance", PeLicenseComplianceExtractor(), PeLicenseComplianceAggregator(), entity_id, context)
+    return _run_pipeline("pe_license_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("geotechnical_claim_frequency_basefunction")
-async def p6_28(entity_id, context):
+def p6_28(entity_id, context):
     """Geotechnical Claim Frequency"""
-    return await _run_pipeline("geotechnical_claim_frequency", GeotechnicalClaimFrequencyExtractor(), GeotechnicalClaimFrequencyAggregator(), entity_id, context)
+    return _run_pipeline("geotechnical_claim_frequency", None, None, entity_id, context)
 
 
 @register_inference_function("infrastructure_project_exposure_basefunction")
-async def p6_29(entity_id, context):
+def p6_29(entity_id, context):
     """Infrastructure Project Exposure"""
-    return await _run_pipeline("infrastructure_project_exposure", InfrastructureProjectExposureExtractor(), InfrastructureProjectExposureAggregator(), entity_id, context)
+    return _run_pipeline("infrastructure_project_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("project_size_concentration_basefunction")
-async def p6_30(entity_id, context):
+def p6_30(entity_id, context):
     """Project Size Concentration"""
-    return await _run_pipeline("project_size_concentration", ProjectSizeConcentrationExtractor(), ProjectSizeConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("project_size_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("remediation_cost_history_basefunction")
-async def p6_31(entity_id, context):
+def p6_31(entity_id, context):
     """Remediation Cost History"""
-    return await _run_pipeline("remediation_cost_history", RemediationCostHistoryExtractor(), RemediationCostHistoryAggregator(), entity_id, context)
+    return _run_pipeline("remediation_cost_history", None, None, entity_id, context)
 
 
 @register_inference_function("project_failure_rate_basefunction")
-async def p6_32(entity_id, context):
+def p6_32(entity_id, context):
     """Project Failure Rate"""
-    return await _run_pipeline("project_failure_rate", ProjectFailureRateExtractor(), ProjectFailureRateAggregator(), entity_id, context)
+    return _run_pipeline("project_failure_rate", None, None, entity_id, context)
 
 
 @register_inference_function("sla_compliance_basefunction")
-async def p6_33(entity_id, context):
+def p6_33(entity_id, context):
     """SLA Compliance"""
-    return await _run_pipeline("sla_compliance", SlaComplianceExtractor(), SlaComplianceAggregator(), entity_id, context)
+    return _run_pipeline("sla_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("data_breach_exposure_basefunction")
-async def p6_34(entity_id, context):
+def p6_34(entity_id, context):
     """Data Breach Exposure"""
-    return await _run_pipeline("data_breach_exposure", DataBreachExposureExtractor(), DataBreachExposureAggregator(), entity_id, context)
+    return _run_pipeline("data_breach_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("technology_stack_currency_basefunction")
-async def p6_35(entity_id, context):
+def p6_35(entity_id, context):
     """Technology Stack Currency"""
-    return await _run_pipeline("technology_stack_currency", TechnologyStackCurrencyExtractor(), TechnologyStackCurrencyAggregator(), entity_id, context)
+    return _run_pipeline("technology_stack_currency", None, None, entity_id, context)
 
 
 @register_inference_function("implementation_methodology_basefunction")
-async def p6_36(entity_id, context):
+def p6_36(entity_id, context):
     """Implementation Methodology"""
-    return await _run_pipeline("implementation_methodology", ImplementationMethodologyExtractor(), ImplementationMethodologyAggregator(), entity_id, context)
+    return _run_pipeline("implementation_methodology", None, None, entity_id, context)
 
 
 @register_inference_function("client_data_encryption_basefunction")
-async def p6_37(entity_id, context):
+def p6_37(entity_id, context):
     """Client Data Encryption"""
-    return await _run_pipeline("client_data_encryption", ClientDataEncryptionExtractor(), ClientDataEncryptionAggregator(), entity_id, context)
+    return _run_pipeline("client_data_encryption", None, None, entity_id, context)
 
 
 @register_inference_function("suitability_compliance_basefunction")
-async def p6_38(entity_id, context):
+def p6_38(entity_id, context):
     """Suitability Compliance"""
-    return await _run_pipeline("suitability_compliance", SuitabilityComplianceExtractor(), SuitabilityComplianceAggregator(), entity_id, context)
+    return _run_pipeline("suitability_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("complaint_per_aum_basefunction")
-async def p6_39(entity_id, context):
+def p6_39(entity_id, context):
     """Complaint Per AUM"""
-    return await _run_pipeline("complaint_per_aum", ComplaintPerAumExtractor(), ComplaintPerAumAggregator(), entity_id, context)
+    return _run_pipeline("complaint_per_aum", None, None, entity_id, context)
 
 
 @register_inference_function("regulatory_exam_results_basefunction")
-async def p6_40(entity_id, context):
+def p6_40(entity_id, context):
     """Regulatory Exam Results"""
-    return await _run_pipeline("regulatory_exam_results", RegulatoryExamResultsExtractor(), RegulatoryExamResultsAggregator(), entity_id, context)
+    return _run_pipeline("regulatory_exam_results", None, None, entity_id, context)
 
 
 @register_inference_function("churning_indicators_basefunction")
-async def p6_41(entity_id, context):
+def p6_41(entity_id, context):
     """Churning Indicators"""
-    return await _run_pipeline("churning_indicators", ChurningIndicatorsExtractor(), ChurningIndicatorsAggregator(), entity_id, context)
+    return _run_pipeline("churning_indicators", None, None, entity_id, context)
 
 
 @register_inference_function("fee_transparency_score_basefunction")
-async def p6_42(entity_id, context):
+def p6_42(entity_id, context):
     """Fee Transparency Score"""
-    return await _run_pipeline("fee_transparency_score", FeeTransparencyScoreExtractor(), FeeTransparencyScoreAggregator(), entity_id, context)
+    return _run_pipeline("fee_transparency_score", None, None, entity_id, context)
 
 
 @register_inference_function("valuation_accuracy_basefunction")
-async def p6_43(entity_id, context):
+def p6_43(entity_id, context):
     """Valuation Accuracy"""
-    return await _run_pipeline("valuation_accuracy", ValuationAccuracyExtractor(), ValuationAccuracyAggregator(), entity_id, context)
+    return _run_pipeline("valuation_accuracy", None, None, entity_id, context)
 
 
 @register_inference_function("negligent_misstatement_history_basefunction")
-async def p6_44(entity_id, context):
+def p6_44(entity_id, context):
     """Negligent Misstatement History"""
-    return await _run_pipeline("negligent_misstatement_history", NegligentMisstatementHistoryExtractor(), NegligentMisstatementHistoryAggregator(), entity_id, context)
+    return _run_pipeline("negligent_misstatement_history", None, None, entity_id, context)
 
 
 @register_inference_function("property_type_concentration_basefunction")
-async def p6_45(entity_id, context):
+def p6_45(entity_id, context):
     """Property Type Concentration"""
-    return await _run_pipeline("property_type_concentration", PropertyTypeConcentrationExtractor(), PropertyTypeConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("property_type_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("market_knowledge_currency_basefunction")
-async def p6_46(entity_id, context):
+def p6_46(entity_id, context):
     """Market Knowledge Currency"""
-    return await _run_pipeline("market_knowledge_currency", MarketKnowledgeCurrencyExtractor(), MarketKnowledgeCurrencyAggregator(), entity_id, context)
+    return _run_pipeline("market_knowledge_currency", None, None, entity_id, context)
 
 
 @register_inference_function("rics_compliance_basefunction")
-async def p6_47(entity_id, context):
+def p6_47(entity_id, context):
     """RICS Compliance"""
-    return await _run_pipeline("rics_compliance", RicsComplianceExtractor(), RicsComplianceAggregator(), entity_id, context)
+    return _run_pipeline("rics_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("contamination_assessment_accuracy_basefunction")
-async def p6_48(entity_id, context):
+def p6_48(entity_id, context):
     """Contamination Assessment Accuracy"""
-    return await _run_pipeline("contamination_assessment_accuracy", ContaminationAssessmentAccuracyExtractor(), ContaminationAssessmentAccuracyAggregator(), entity_id, context)
+    return _run_pipeline("contamination_assessment_accuracy", None, None, entity_id, context)
 
 
 @register_inference_function("regulatory_compliance_track_basefunction")
-async def p6_49(entity_id, context):
+def p6_49(entity_id, context):
     """Regulatory Compliance Track"""
-    return await _run_pipeline("regulatory_compliance_track", RegulatoryComplianceTrackExtractor(), RegulatoryComplianceTrackAggregator(), entity_id, context)
+    return _run_pipeline("regulatory_compliance_track", None, None, entity_id, context)
 
 
 @register_inference_function("remediation_effectiveness_basefunction")
-async def p6_50(entity_id, context):
+def p6_50(entity_id, context):
     """Remediation Effectiveness"""
-    return await _run_pipeline("remediation_effectiveness", RemediationEffectivenessExtractor(), RemediationEffectivenessAggregator(), entity_id, context)
+    return _run_pipeline("remediation_effectiveness", None, None, entity_id, context)
 
 
 @register_inference_function("long_tail_exposure_basefunction")
-async def p6_51(entity_id, context):
+def p6_51(entity_id, context):
     """Long Tail Exposure"""
-    return await _run_pipeline("long_tail_exposure", LongTailExposureExtractor(), LongTailExposureAggregator(), entity_id, context)
+    return _run_pipeline("long_tail_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("cercla_superfund_exposure_basefunction")
-async def p6_52(entity_id, context):
+def p6_52(entity_id, context):
     """CERCLA Superfund Exposure"""
-    return await _run_pipeline("cercla_superfund_exposure", CerclaSuperfundExposureExtractor(), CerclaSuperfundExposureAggregator(), entity_id, context)
+    return _run_pipeline("cercla_superfund_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("tax_opinion_quality_basefunction")
-async def p6_53(entity_id, context):
+def p6_53(entity_id, context):
     """Tax Opinion Quality"""
-    return await _run_pipeline("tax_opinion_quality", TaxOpinionQualityExtractor(), TaxOpinionQualityAggregator(), entity_id, context)
+    return _run_pipeline("tax_opinion_quality", None, None, entity_id, context)
 
 
 @register_inference_function("irs_examination_track_basefunction")
-async def p6_54(entity_id, context):
+def p6_54(entity_id, context):
     """IRS Examination Track"""
-    return await _run_pipeline("irs_examination_track", IrsExaminationTrackExtractor(), IrsExaminationTrackAggregator(), entity_id, context)
+    return _run_pipeline("irs_examination_track", None, None, entity_id, context)
 
 
 @register_inference_function("estate_planning_complexity_basefunction")
-async def p6_55(entity_id, context):
+def p6_55(entity_id, context):
     """Estate Planning Complexity"""
-    return await _run_pipeline("estate_planning_complexity", EstatePlanningComplexityExtractor(), EstatePlanningComplexityAggregator(), entity_id, context)
+    return _run_pipeline("estate_planning_complexity", None, None, entity_id, context)
 
 
 @register_inference_function("engagement_scope_clarity_basefunction")
-async def p6_56(entity_id, context):
+def p6_56(entity_id, context):
     """Engagement Scope Clarity"""
-    return await _run_pipeline("engagement_scope_clarity", EngagementScopeClarityExtractor(), EngagementScopeClarityAggregator(), entity_id, context)
+    return _run_pipeline("engagement_scope_clarity", None, None, entity_id, context)
 
 
 @register_inference_function("deliverable_acceptance_rate_basefunction")
-async def p6_57(entity_id, context):
+def p6_57(entity_id, context):
     """Deliverable Acceptance Rate"""
-    return await _run_pipeline("deliverable_acceptance_rate", DeliverableAcceptanceRateExtractor(), DeliverableAcceptanceRateAggregator(), entity_id, context)
+    return _run_pipeline("deliverable_acceptance_rate", None, None, entity_id, context)
 
 
 @register_inference_function("client_outcome_correlation_basefunction")
-async def p6_58(entity_id, context):
+def p6_58(entity_id, context):
     """Client Outcome Correlation"""
-    return await _run_pipeline("client_outcome_correlation", ClientOutcomeCorrelationExtractor(), ClientOutcomeCorrelationAggregator(), entity_id, context)
+    return _run_pipeline("client_outcome_correlation", None, None, entity_id, context)
 
