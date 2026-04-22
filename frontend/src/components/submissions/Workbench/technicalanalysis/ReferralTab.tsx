@@ -4,11 +4,13 @@ import { useEffect, useState, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   ShieldAlert, Edit3, Check, X, AlertTriangle, ArrowRight,
-  Layers, Eye, Flame, Paperclip, Clock, User,
+  Layers, Eye, Flame, Clock, User,
   ChevronDown, ChevronRight
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
 import { StatusPill } from "@/components/base/content/primatives";
+import { StandardCard } from "@/components/base/cards";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
 
 export default function ReferralTab() {
@@ -97,31 +99,15 @@ export default function ReferralTab() {
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
 
-      {/* STICKY HEADER */}
-      <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-        <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
-              </span>
-            )}
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       {/* REFERRAL CONTEXT HEADER */}
       <div className="flex items-stretch gap-4 rounded-xl border-2 border-dsi-warning/30 bg-dsi-warning/5 px-dsi-pad py-4 mt-2 mb-4">
