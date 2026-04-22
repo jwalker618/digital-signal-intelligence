@@ -130,7 +130,7 @@ export default function ReferralTab() {
             <span className="block text-[10px] uppercase opacity-50">Flagged</span>
           </div>
           <div className="text-center">
-            <span className="block text-xl font-black text-dsi-positive">{overrideCount}</span>
+            <span className="block text-xl font-black text-dsi-approve">{overrideCount}</span>
             <span className="block text-[10px] uppercase opacity-50">Audited</span>
           </div>
           <div className="text-center">
@@ -252,7 +252,7 @@ export default function ReferralTab() {
                           <span className="text-[10px] bg-dsi-warning/10 text-dsi-warning px-1.5 py-0.5 rounded font-bold">{groupFlagged} flagged</span>
                         )}
                         {groupAudited > 0 && (
-                          <span className="text-[10px] bg-dsi-positive/10 text-dsi-positive px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
+                          <span className="text-[10px] bg-dsi-approve/10 text-dsi-approve px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
                         )}
                       </div>
                       <span className="text-right text-sm">{formatNumber(gs?.risk_score, 1)}</span>
@@ -268,17 +268,17 @@ export default function ReferralTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-dsi-warning' : ''} ${sig.is_overridden ? 'border-l-2 border-l-dsi-positive' : ''}`}
+                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-dsi-warning' : ''} ${sig.is_overridden ? 'border-l-2 border-l-dsi-approve' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
                             {isHighImpact && <Flame className="w-3 h-3 text-dsi-warning shrink-0" />}
                             {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" />}
-                            {sig.is_overridden && <Check className="w-3 h-3 text-dsi-positive shrink-0" />}
+                            {sig.is_overridden && <Check className="w-3 h-3 text-dsi-approve shrink-0" />}
                             <span className={`text-sm truncate max-w-[160px] ${isHighImpact ? 'text-dsi-warning font-bold' : ''}`} title={sig.signal_name || sig.code}>
                               {(sig.signal_name || sig.code)?.replace(/_/g, ' ')}
                             </span>
                           </div>
-                          <span className={`text-right text-sm ${sig.is_overridden ? 'text-dsi-positive font-bold' : ''}`}>
+                          <span className={`text-right text-sm ${sig.is_overridden ? 'text-dsi-approve font-bold' : ''}`}>
                             {formatNumber(sig.score, 1)}
                           </span>
                           <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-dsi-warning font-bold' : 'opacity-70'}`}>
@@ -291,7 +291,7 @@ export default function ReferralTab() {
                           <span className="text-center text-xs">
                             {sig.was_absent ? <span className="text-dsi-negative font-bold">YES</span> : <span className="opacity-30">NO</span>}
                           </span>
-                          <span className="text-right text-sm font-bold text-dsi-positive">
+                          <span className="text-right text-sm font-bold text-dsi-approve">
                             {sig.is_overridden ? formatNumber(sig.audited_value, 2) : "—"}
                           </span>
                           <span className="text-xs opacity-80 truncate max-w-[90px]" title={sig.override_rationale}>
@@ -341,7 +341,7 @@ export default function ReferralTab() {
                 </button>
                 <button
                   onClick={() => handleFinalDecision("approve")}
-                  className="flex items-center gap-2 px-6 py-2 bg-dsi-positive text-white rounded font-semibold hover:bg-dsi-positive transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 bg-dsi-approve text-white rounded font-semibold hover:bg-dsi-approve transition-colors"
                 >
                   <Check className="w-5 h-5" /> Approve & Bind
                 </button>

@@ -31,7 +31,7 @@ const WaterfallStep = ({
 }) => {
   const toneBg =
     tone === "info"     ? "bg-dsi-info/5 border-dsi-info/20 text-dsi-info"
-    : tone === "positive" ? "bg-dsi-positive/5 border-dsi-positive/20 text-dsi-positive"
+    : tone === "positive" ? "bg-dsi-approve/5 border-dsi-approve/20 text-dsi-approve"
     : tone === "selected" ? "bg-dsi-selected/10 border-2 border-dsi-selected/30 text-dsi-selected"
     : "bg-dsi-background/30 border-dsi-outline/10";
   const valueSize = tone === "selected" ? "text-2xl font-black" : "text-lg font-bold";
@@ -143,7 +143,7 @@ export default function PremiumAssemblyTab() {
       : null;
 
   const discretionTone =
-    discretionPct != null && discretionPct > 0 ? "text-dsi-positive"
+    discretionPct != null && discretionPct > 0 ? "text-dsi-approve"
     : discretionPct != null && discretionPct < 0 ? "text-dsi-negative"
     : "";
 

@@ -60,12 +60,12 @@ export const ACTION_PALETTE: Record<string, StatusPaletteEntry> = {
 
 /** Health / lifecycle statuses — used by admin + world-engine dashboards. */
 export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
-  green:          { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
-  healthy:        { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
-  ok:             { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
-  deployed:       { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
-  approved:       { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
-  active:         { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
+  green:          { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  healthy:        { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  ok:             { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  deployed:       { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  approved:       { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  active:         { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
 
   amber:          { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   warning:        { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
@@ -92,7 +92,7 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
 
 /** Generic tone — for ad-hoc pills not tied to a domain enum. */
 export const TONE_PALETTE: Record<string, StatusPaletteEntry> = {
-  positive: { bg: "bg-dsi-positive/15", text: "text-dsi-positive" },
+  positive: { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
   negative: { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
   warning:  { bg: "bg-dsi-warning/15",  text: "text-dsi-warning"  },
   info:     { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },

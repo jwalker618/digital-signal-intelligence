@@ -156,7 +156,7 @@ export default function ExposureTab() {
                   </div>
                   <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-positive/30 via-dsi-muted/30 to-dsi-warning/30 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-approve/30 via-dsi-muted/30 to-dsi-warning/30 rounded-full"
                       style={{ width: '100%' }}
                     />
                     {/* Position marker */}

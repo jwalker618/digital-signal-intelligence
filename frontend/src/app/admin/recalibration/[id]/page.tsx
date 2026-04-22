@@ -197,7 +197,7 @@ export default function ProposalDetailPage({
             <button
               onClick={() => void act("approve", true)}
               disabled={!canEdit || busy !== null}
-              className="flex items-center gap-1 bg-dsi-positive/20 border border-dsi-positive py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-dsi-approve/20 border border-dsi-approve py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" /> Approve
             </button>

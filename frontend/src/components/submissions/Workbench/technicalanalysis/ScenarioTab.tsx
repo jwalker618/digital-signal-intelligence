@@ -13,7 +13,7 @@ import { StandardCard } from "@/components/base/cards";
 import { CompareRow } from "@/components/base/content/primatives";
 
 const deltaColor = (s: number, o: number) =>
-  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-positive';
+  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-approve';
 
 export default function ScenarioTab() {
   const {
@@ -168,7 +168,7 @@ export default function ScenarioTab() {
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
-                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
+                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-negative' : 'text-dsi-approve'}`}>
                       → Tier {scenario.tier.tier_id}
                     </span>
                   )}

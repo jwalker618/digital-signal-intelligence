@@ -160,7 +160,7 @@ export default function ModelVersionsTab() {
                           </span>
                         </div>
                         {mv.is_latest && (
-                          <span className="text-[10px] bg-dsi-positive/10 text-dsi-positive px-2 py-0.5 rounded font-bold uppercase">
+                          <span className="text-[10px] bg-dsi-approve/10 text-dsi-approve px-2 py-0.5 rounded font-bold uppercase">
                             Active
                           </span>
                         )}
@@ -175,7 +175,7 @@ export default function ModelVersionsTab() {
                               {mvScore != null ? formatNumber(mvScore, 1) : "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
-                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}`}>
+                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}`}>
                                 {scoreDelta > 0 ? '+' : ''}{formatNumber(scoreDelta, 1)}
                               </span>
                             )}

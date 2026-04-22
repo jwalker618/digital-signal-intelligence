@@ -95,7 +95,7 @@ export default function LossTab() {
 
   const getTrendIcon = (trend: string) => {
     const t = trend?.toLowerCase() || '';
-    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-positive" />;
+    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-approve" />;
     if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-negative" />;
     return <Minus className="w-4 h-4 opacity-50" />;
   };
@@ -107,7 +107,7 @@ export default function LossTab() {
     return 'Stable';
   };
 
-  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-negative' : v < 0 ? 'text-dsi-positive' : 'opacity-50';
+  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-negative' : v < 0 ? 'text-dsi-approve' : 'opacity-50';
 
   return (
     <div className="
@@ -165,7 +165,7 @@ export default function LossTab() {
             <KpiTile
               label="Score Velocity"
               value={
-                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}>
+                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}>
                   {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
                 </span>
               }

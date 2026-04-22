@@ -48,8 +48,8 @@ const CoverageItemList = ({
     return <p className="text-xs opacity-50 italic text-center py-4">{emptyMessage}</p>;
   }
 
-  const bgClass = tone === "positive" ? "bg-dsi-positive/5 border-dsi-positive/10" : "bg-dsi-negative/5 border-dsi-negative/10";
-  const iconClass = tone === "positive" ? "text-dsi-positive" : "text-dsi-negative";
+  const bgClass = tone === "positive" ? "bg-dsi-approve/5 border-dsi-approve/10" : "bg-dsi-negative/5 border-dsi-negative/10";
+  const iconClass = tone === "positive" ? "text-dsi-approve" : "text-dsi-negative";
 
   return (
     <div className="flex flex-col gap-2">
