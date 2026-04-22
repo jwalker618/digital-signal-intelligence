@@ -186,13 +186,10 @@ export default function RiskTab() {
       {/* =======================================================================
           TIER POSITION — full width, enhanced visualisation
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Gauge className="icon"/><span className="text-sm">Tier Position & Improvement Paths</span>
-        </div>
+      <div className="pt-2 pb-2">
+        <StandardCard title="Tier Position & Improvement Paths" lucideIcon={Gauge}>
         <div className="
-          border-b-3 border-dsi-contrast-background 
-          overflow-x-hidden border-collapse rounded-b-xl 
+          overflow-x-hidden
           bg-dsi-analysis shadow-sm 
           pt-dsi-gap pb-4"
           >
@@ -308,6 +305,7 @@ export default function RiskTab() {
             </div>
           )}
         </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
