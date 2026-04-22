@@ -395,34 +395,15 @@ export default function PricingTab() {
         </StandardCard>
 
 
-        {/* RIGHT COLUMN: Recommended Quote Details + Limit Options (Merged) */}
-        <div className="flex flex-col">
+        {/* RIGHT COLUMN: Recommended Quote Details + Limit Options */}
+        <div className="flex flex-col gap-2">
 
-          {/* SECTION HEADER: Recommended Quote Details */}
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
+          <StandardCard
+            title="Recommended Quote Details"
+            lucideIcon={HandCoins}
           >
-            <HandCoins className="icon"/><span className="text-sm">Recommended Quote Details</span>
-          </div>
-
-          {/* TOP BODY: KPIs (No rounding, no bottom shadow) */}
-          <div className="
-            flex flex-col
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis
-            "
-            >
-            {/* RECOMMENDED QUOTE KPIs */}
-            <div className="
-              grid grid-cols-2 grid-rows-1
-              pl-dsi-pad
-              pt-2 pb-4"
-              >
-              <div className="
-                bg-dsi-selected/10 border-r-1 border-dsi-outline/50
-                overflow-x-hidden whitespace-nowrap border-collapse
-                pb-2 pt-1
-                text-dsi-selected"
-                >
+            <div className="grid grid-cols-2 grid-rows-1 pl-dsi-pad pt-2 pb-4">
+              <div className="bg-dsi-selected/10 border-r-1 border-dsi-outline/50 pb-2 pt-1 text-dsi-selected">
                 <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
                   Final Premium
                 </div>
@@ -430,12 +411,7 @@ export default function PricingTab() {
                   {formatCurrency(recommendedPremium)}
                 </div>
               </div>
-              <div className="
-                bg-dsi-selected/10
-                overflow-x-hidden whitespace-nowrap border-collapse
-                text-dsi-selected
-                mr-3"
-                >
+              <div className="bg-dsi-selected/10 text-dsi-selected mr-3">
                 <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
                   Final Limit
                 </div>
@@ -444,30 +420,13 @@ export default function PricingTab() {
                 </div>
               </div>
             </div>
-          </div>
+          </StandardCard>
 
-          {/* INNER SECTION HEADER: Calculated Quote Options (No top rounding) */}
-          <div className="
-            flex gap-dsi-pad
-            border-t-1 border-b-1 border-dsi-outline/50
-            overflow-x-hidden whitespace-nowrap border-collapse
-            bg-dsi-analysis/60
-            pl-dsi-pad
-            pt-2 pb-2
-          "
+          <StandardCard
+            title="Calculated Quote Options"
+            lucideIcon={CircleEllipsis}
+            spanClass="flex-1"
           >
-            <CircleEllipsis className="icon"/><span className="text-sm">Calculated Quote Options</span>
-          </div>
-
-          {/* BOTTOM BODY: Limit Options (Has bottom rounding & flex-1 to stretch) */}
-          <div className="
-            flex flex-col flex-1
-            border-b-3 border-dsi-contrast-background
-            overflow-x-hidden whitespace-nowrap border-collapse
-            rounded-b-xl
-            bg-dsi-analysis shadow-sm
-            pt-dsi-pad pb-dsi-pad
-            ">
 
             {/* =======================================================================
                 COMPONENT C: LIMIT OPTIONS
@@ -542,7 +501,7 @@ export default function PricingTab() {
                 </div>
               )}
             </div>
-          </div>
+          </StandardCard>
 
         </div>
 
