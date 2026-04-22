@@ -324,31 +324,30 @@ export default function ReferralTab() {
 
       {/* FINAL DECISION ACTIONS */}
       {(activeSubmission?.decision === "refer" || activeVersion?.decision === "refer") && (
-        <div className="flex flex-col pt-2 pb-2">
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-            <Check className="icon"/><span className="text-sm">Final Decision Actions</span>
-          </div>
-          <div className="flex flex-row items-center justify-between gap-4 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 pl-dsi-pad pr-dsi-pad">
-            <div className="text-sm opacity-60 text-wrap">
-              {overrideCount > 0
-                ? `${overrideCount} signal${overrideCount !== 1 ? 's' : ''} audited. ${flaggedCount > 0 ? `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} remaining.` : 'All flagged signals addressed.'}`
-                : `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} pending audit.`}
+        <div className="pt-2 pb-2">
+          <StandardCard title="Final Decision Actions" lucideIcon={Check}>
+            <div className="flex flex-row items-center justify-between gap-4 py-2">
+              <div className="text-sm opacity-60 text-wrap">
+                {overrideCount > 0
+                  ? `${overrideCount} signal${overrideCount !== 1 ? 's' : ''} audited. ${flaggedCount > 0 ? `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} remaining.` : 'All flagged signals addressed.'}`
+                  : `${flaggedCount} flagged signal${flaggedCount !== 1 ? 's' : ''} pending audit.`}
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleFinalDecision("decline")}
+                  className="flex items-center gap-2 px-6 py-2 border border-dsi-negative/50 text-dsi-negative rounded font-semibold hover:bg-dsi-negative/10 transition-colors"
+                >
+                  <X className="w-5 h-5" /> Decline Risk
+                </button>
+                <button
+                  onClick={() => handleFinalDecision("approve")}
+                  className="flex items-center gap-2 px-6 py-2 bg-dsi-positive text-white rounded font-semibold hover:bg-dsi-positive transition-colors"
+                >
+                  <Check className="w-5 h-5" /> Approve & Bind
+                </button>
+              </div>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => handleFinalDecision("decline")}
-                className="flex items-center gap-2 px-6 py-2 border border-dsi-negative/50 text-dsi-negative rounded font-semibold hover:bg-dsi-negative/10 transition-colors"
-              >
-                <X className="w-5 h-5" /> Decline Risk
-              </button>
-              <button
-                onClick={() => handleFinalDecision("approve")}
-                className="flex items-center gap-2 px-6 py-2 bg-dsi-positive text-white rounded font-semibold hover:bg-dsi-positive transition-colors"
-              >
-                <Check className="w-5 h-5" /> Approve & Bind
-              </button>
-            </div>
-          </div>
+          </StandardCard>
         </div>
       )}
 
