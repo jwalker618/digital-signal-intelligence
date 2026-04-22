@@ -355,12 +355,12 @@ export default function WorldEngineView() {
         </StandardCard>
 
         {/* ═══ EMERGING SCENARIOS ═══ */}
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Radio className="icon text-dsi-warning"/><span className="text-sm">Emerging Scenarios</span>
-            <span className="text-[10px] opacity-40 ml-2">Continuously monitored</span>
-          </div>
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-3 pb-3">
+        <StandardCard
+          title="Emerging Scenarios"
+          lucideIcon={Radio}
+          headerRight={<span className="text-[10px] opacity-40">Continuously monitored</span>}
+        >
+          <div>
             {emergingScenarios.map((es) => (
               <div key={es.id} className="flex items-center justify-between px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                 <div className="flex-1 min-w-0 text-wrap">
@@ -388,7 +388,7 @@ export default function WorldEngineView() {
               </div>
             ))}
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ SHOCK SIMULATOR — multi-shock ═══ */}
         <div className="flex flex-col">
