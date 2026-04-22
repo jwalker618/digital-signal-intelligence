@@ -212,12 +212,12 @@ export default function WorldEngineView() {
         </StandardCard>
 
         {/* ═══ OPEN DRIFT ALERTS ═══ */}
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <TrendingDown className="icon text-dsi-warning"/><span className="text-sm">Open Drift Alerts</span>
-            <span className="text-[10px] opacity-40 ml-2">{alerts.length} open</span>
-          </div>
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-x-auto">
+        <StandardCard
+          title="Open Drift Alerts"
+          lucideIcon={TrendingDown}
+          headerRight={<span className="text-[10px] opacity-40">{alerts.length} open</span>}
+        >
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs underline opacity-70 text-left">
@@ -258,7 +258,7 @@ export default function WorldEngineView() {
               </tbody>
             </table>
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ DISCOVERED RELATIONSHIPS ═══ */}
         <div className="flex flex-col">
