@@ -289,7 +289,7 @@ export default function ReferralTab() {
                             {formatNumber(sig.contribution || sig.contribution_to_score, 2)}
                           </span>
                           <span className="text-center text-xs">
-                            {sig.was_absent ? <span className="text-dsi-negative font-bold">YES</span> : <span className="opacity-30">NO</span>}
+                            {sig.was_absent ? <span className="text-dsi-decline font-bold">YES</span> : <span className="opacity-30">NO</span>}
                           </span>
                           <span className="text-right text-sm font-bold text-dsi-approve">
                             {sig.is_overridden ? formatNumber(sig.audited_value, 2) : "—"}
@@ -335,7 +335,7 @@ export default function ReferralTab() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => handleFinalDecision("decline")}
-                  className="flex items-center gap-2 px-6 py-2 border border-dsi-negative/50 text-dsi-negative rounded font-semibold hover:bg-dsi-negative/10 transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 border border-dsi-decline/50 text-dsi-decline rounded font-semibold hover:bg-dsi-decline/10 transition-colors"
                 >
                   <X className="w-5 h-5" /> Decline Risk
                 </button>

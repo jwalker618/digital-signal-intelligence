@@ -30,10 +30,10 @@ import type {
   WorldEngineStats,
 } from "@/types/worldEngine";
 
-const TIER_COLORS = ['var(--dsi-approve)', 'var(--dsi-info)', 'var(--dsi-refer)', 'var(--dsi-negative)', 'var(--dsi-negative)'];
+const TIER_COLORS = ['var(--dsi-approve)', 'var(--dsi-info)', 'var(--dsi-refer)', 'var(--dsi-decline)', 'var(--dsi-decline)'];
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
-  'High': 'text-dsi-negative',
+  'High': 'text-dsi-decline',
   'Elevated': 'text-dsi-refer',
   'Moderate': 'text-dsi-refer',
   'Low-Moderate': 'text-dsi-muted',
@@ -397,7 +397,7 @@ export default function WorldEngineView() {
           headerRight={
             <div className="flex items-center gap-dsi-pad">
               {activeShocks.length > 0 && (
-                <span className="text-[10px] bg-dsi-negative/15 text-dsi-negative px-2 py-0.5 rounded font-bold">
+                <span className="text-[10px] bg-dsi-decline/15 text-dsi-decline px-2 py-0.5 rounded font-bold">
                   {activeShocks.length} active
                 </span>
               )}
@@ -443,11 +443,11 @@ export default function WorldEngineView() {
             {activeShocks.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {activeShocks.map((shock, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-dsi-negative/10 border border-dsi-negative/20 rounded px-3 py-1.5 text-sm">
-                    <Zap className="w-3 h-3 text-dsi-negative" />
+                  <div key={idx} className="flex items-center gap-2 bg-dsi-decline/10 border border-dsi-decline/20 rounded px-3 py-1.5 text-sm">
+                    <Zap className="w-3 h-3 text-dsi-decline" />
                     <span className="font-semibold">{shock.scenario.name}</span>
                     <span className="opacity-50 text-xs">({shock.scope}, -{shock.magnitude}pts)</span>
-                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-dsi-negative"><X className="w-3 h-3" /></button>
+                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-dsi-decline"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
               </div>
@@ -470,10 +470,10 @@ export default function WorldEngineView() {
               {/* Impact KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Risks Affected</span><span className="text-xl font-black text-dsi-refer">{shockResult.total_affected}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Tier Migrations</span><span className="text-xl font-black text-dsi-negative">{shockResult.tier_migrations}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Decision Changes</span><span className="text-xl font-black text-dsi-negative">{shockResult.decision_changes}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}`}>{`${shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K`}</span></div>
-                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Change</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}`}>{shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Tier Migrations</span><span className="text-xl font-black text-dsi-decline">{shockResult.tier_migrations}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Decision Changes</span><span className="text-xl font-black text-dsi-decline">{shockResult.decision_changes}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Impact</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}`}>{`${shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K`}</span></div>
+                <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Premium Change</span><span className={`text-xl font-black ${shockResult.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}`}>{shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span></div>
               </div>
 
               {/* Before/After charts */}
@@ -531,25 +531,25 @@ export default function WorldEngineView() {
                   </thead>
                   <tbody>
                     {shockResult.affected.slice(0, 15).map((item, idx) => (
-                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`border-b border-dsi-outline/5 cursor-pointer hover:bg-dsi-background/20 ${item.tier_changed ? 'bg-dsi-negative/5' : ''}`}>
+                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`border-b border-dsi-outline/5 cursor-pointer hover:bg-dsi-background/20 ${item.tier_changed ? 'bg-dsi-decline/5' : ''}`}>
                         <td className="py-2 pr-2 font-semibold">{item.original.entity_name}</td>
                         <td className="py-2 px-2 text-right">{formatNumber(item.original_score, 0)}</td>
                         <td className="py-2 px-2 text-center opacity-30">→</td>
-                        <td className="py-2 px-2 text-right text-dsi-negative font-bold">{formatNumber(item.shocked_score, 0)}</td>
-                        <td className="py-2 px-2 text-right text-dsi-negative">{item.score_delta}</td>
+                        <td className="py-2 px-2 text-right text-dsi-decline font-bold">{formatNumber(item.shocked_score, 0)}</td>
+                        <td className="py-2 px-2 text-right text-dsi-decline">{item.score_delta}</td>
                         <td className="py-2 px-2 text-center">
                           {item.tier_changed
-                            ? <span className="text-dsi-negative font-bold">T{item.original_tier}→T{item.shocked_tier}</span>
+                            ? <span className="text-dsi-decline font-bold">T{item.original_tier}→T{item.shocked_tier}</span>
                             : <span className="opacity-50">T{item.original_tier}</span>}
                         </td>
                         <td className="py-2 px-2 text-center">
                           {item.decision_changed
-                            ? <span className="text-dsi-negative font-bold">{item.original_decision}→{item.shocked_decision}</span>
+                            ? <span className="text-dsi-decline font-bold">{item.original_decision}→{item.shocked_decision}</span>
                             : <span className="opacity-50">{item.original_decision}</span>}
                         </td>
                         <td className="py-2 px-2 text-right">
                           {item.premium_delta !== 0
-                            ? <span className={item.premium_delta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}>{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
+                            ? <span className={item.premium_delta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}>{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
                             : <span className="opacity-30">—</span>}
                         </td>
                         <td className="py-2 px-2 text-xs opacity-50 truncate max-w-[150px]" title={item.shocks_applied.join(', ')}>

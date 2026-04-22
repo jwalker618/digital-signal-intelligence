@@ -357,7 +357,7 @@ export default function ExposureTab() {
                     const isTierOverride = actionKey === 'tier_override';
                     const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
                                      isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
-                                     isTierOverride ? 'bg-dsi-negative/15 text-dsi-negative' :
+                                     isTierOverride ? 'bg-dsi-decline/15 text-dsi-decline' :
                                      'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">

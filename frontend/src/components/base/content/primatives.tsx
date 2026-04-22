@@ -33,7 +33,7 @@ const TEXTALIGN_CLASS: Record<Align, string> = {
 const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
   { at: 40, color: "var(--dsi-approve)" },
   { at: 70, color: "var(--dsi-refer)" },
-  { at: Infinity, color: "var(--dsi-negative)" },
+  { at: Infinity, color: "var(--dsi-decline)" },
 ];
 
 export type Padding = "sm" | "md" | "lg";
@@ -656,7 +656,7 @@ export const KpiTile = ({
 
 /** GUIDANCE
  * at: Inclusive upper bound. First matching entry wins.
- * colour: CSS value for `backgroundColor`, e.g. `"var(--dsi-negative)"`
+ * colour: CSS value for `backgroundColor`, e.g. `"var(--dsi-decline)"`
  */
 export interface ScoreBarThreshold {
   at: number;
@@ -863,7 +863,7 @@ const METRIC_CARD_TONE: Record<
 > = {
   selected: { border: "border-dsi-selected/30", bg: "bg-dsi-selected/5", text: "text-dsi-selected" },
   positive: { border: "border-dsi-approve/30", bg: "bg-dsi-approve/5", text: "text-dsi-approve" },
-  negative: { border: "border-dsi-negative/30", bg: "bg-dsi-negative/5", text: "text-dsi-negative" },
+  negative: { border: "border-dsi-decline/30", bg: "bg-dsi-decline/5", text: "text-dsi-decline" },
   warning:  { border: "border-dsi-refer/30",  bg: "bg-dsi-refer/5",  text: "text-dsi-refer"  },
   info:     { border: "border-dsi-info/30",     bg: "bg-dsi-info/5",     text: "text-dsi-info"     },
   muted:    { border: "border-dsi-muted/30",    bg: "bg-dsi-muted/5",    text: "text-dsi-muted"    },

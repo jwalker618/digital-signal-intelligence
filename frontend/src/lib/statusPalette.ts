@@ -53,7 +53,7 @@ export const ACTION_PALETTE: Record<string, StatusPaletteEntry> = {
   modifier:      { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
   referral:      { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   refer:         { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  tier_override: { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
+  tier_override: { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
   flag:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
   note:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
 };
@@ -74,11 +74,11 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
   calibrating:    { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   provisional:    { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
 
-  red:            { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
-  critical:       { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
-  rejected:       { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
-  locked:         { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
-  error:          { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
+  red:            { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
+  critical:       { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
+  rejected:       { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
+  locked:         { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
+  error:          { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
 
   info:           { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
 
@@ -93,7 +93,7 @@ export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
 /** Generic tone — for ad-hoc pills not tied to a domain enum. */
 export const TONE_PALETTE: Record<string, StatusPaletteEntry> = {
   positive: { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  negative: { bg: "bg-dsi-negative/15", text: "text-dsi-negative" },
+  negative: { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
   warning:  { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
   info:     { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
   muted:    { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },

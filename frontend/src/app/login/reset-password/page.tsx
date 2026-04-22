@@ -204,7 +204,7 @@ function SetNewPasswordForm({
             />
           </label>
 
-          {error && <div className="text-sm text-dsi-negative">{error}</div>}
+          {error && <div className="text-sm text-dsi-decline">{error}</div>}
           
           <button
             type="submit"

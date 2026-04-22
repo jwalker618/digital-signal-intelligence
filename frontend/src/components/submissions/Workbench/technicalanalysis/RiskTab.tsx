@@ -235,7 +235,7 @@ export default function RiskTab() {
                         </div>
                         
                         <div className="text-center mt-0.5">
-                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-approve' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-refer'}`}>
+                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-approve' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-decline' : 'text-dsi-refer'}`}>
                             {band.action}
                           </span>
                         </div>
@@ -371,7 +371,7 @@ export default function RiskTab() {
                       <span className="text-right text-sm opacity-60">{formatNumber(gs.risk_weight, 2)}</span>
                       <span className="text-right text-sm font-bold">{formatNumber(gs.risk_contribution, 1)}</span>
                       <span className="text-center">
-                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-approve' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-refer' : 'text-dsi-negative'}`}>
+                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-approve' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-refer' : 'text-dsi-decline'}`}>
                           {gs.signal_count || 0}/{gs.expected_signal_count || 0}
                         </span>
                       </span>
@@ -431,7 +431,7 @@ export default function RiskTab() {
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
                             {sigConditions.length > 0 && <AlertTriangle className="w-3 h-3 text-dsi-refer shrink-0" />}
-                            {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
+                            {sig.was_absent && <span className="text-[10px] text-dsi-decline font-bold">ABSENT</span>}
                             {sig.proxy_tier && <span className="text-[10px] opacity-30">T{sig.proxy_tier}</span>}
                           </div>
                           <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
@@ -529,7 +529,7 @@ export default function RiskTab() {
                               <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                               <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
                               {type === 'direct_query' && (
-                                <span className={`text-xs font-bold ${cond.response === true || cond.response === 'yes' ? 'text-dsi-approve' : cond.response === false || cond.response === 'no' ? 'text-dsi-negative' : 'opacity-70'}`}>
+                                <span className={`text-xs font-bold ${cond.response === true || cond.response === 'yes' ? 'text-dsi-approve' : cond.response === false || cond.response === 'no' ? 'text-dsi-decline' : 'opacity-70'}`}>
                                   Response: {typeof cond.response === 'boolean' ? (cond.response ? 'Yes' : 'No') : String(cond.response ?? 'N/A')}
                                 </span>
                               )}

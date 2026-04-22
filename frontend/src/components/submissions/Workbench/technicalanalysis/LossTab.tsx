@@ -96,7 +96,7 @@ export default function LossTab() {
   const getTrendIcon = (trend: string) => {
     const t = trend?.toLowerCase() || '';
     if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-approve" />;
-    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-negative" />;
+    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-decline" />;
     return <Minus className="w-4 h-4 opacity-50" />;
   };
 
@@ -107,7 +107,7 @@ export default function LossTab() {
     return 'Stable';
   };
 
-  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-negative' : v < 0 ? 'text-dsi-approve' : 'opacity-50';
+  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-decline' : v < 0 ? 'text-dsi-approve' : 'opacity-50';
 
   return (
     <div className="
@@ -165,7 +165,7 @@ export default function LossTab() {
             <KpiTile
               label="Score Velocity"
               value={
-                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}>
+                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}>
                   {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
                 </span>
               }
@@ -394,7 +394,7 @@ export default function LossTab() {
                     const isTierOverride = actionKey === 'tier_override';
                     const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
                                      isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
-                                     isTierOverride ? 'bg-dsi-negative/10 text-dsi-negative' :
+                                     isTierOverride ? 'bg-dsi-decline/10 text-dsi-decline' :
                                      'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">

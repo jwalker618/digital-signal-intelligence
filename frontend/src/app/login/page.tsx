@@ -185,7 +185,7 @@ export default function LoginPage() {
 
                   <div>
 
-                    {error && <div className="text-sm text-dsi-negative">{error}</div>}
+                    {error && <div className="text-sm text-dsi-decline">{error}</div>}
                     <button
                       id="submit" name="submit" type="submit" disabled={submitting}                      
                       className="w-full flex flex-col dsi-actionbutton"

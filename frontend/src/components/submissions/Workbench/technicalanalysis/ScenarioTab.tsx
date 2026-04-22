@@ -13,7 +13,7 @@ import { StandardCard } from "@/components/base/cards";
 import { CompareRow } from "@/components/base/content/primatives";
 
 const deltaColor = (s: number, o: number) =>
-  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-negative' : 'text-dsi-approve';
+  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-dsi-decline' : 'text-dsi-approve';
 
 export default function ScenarioTab() {
   const {
@@ -168,7 +168,7 @@ export default function ScenarioTab() {
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
-                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-negative' : 'text-dsi-approve'}`}>
+                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-dsi-decline' : 'text-dsi-approve'}`}>
                       → Tier {scenario.tier.tier_id}
                     </span>
                   )}
@@ -247,7 +247,7 @@ export default function ScenarioTab() {
                         <div key={`${sig.code}-${sidx}`} className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors">
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
-                            {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
+                            {sig.was_absent && <span className="text-[10px] text-dsi-decline font-bold">ABSENT</span>}
                           </div>
                           <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
                           <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>

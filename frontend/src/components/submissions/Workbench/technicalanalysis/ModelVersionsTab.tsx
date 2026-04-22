@@ -175,7 +175,7 @@ export default function ModelVersionsTab() {
                               {mvScore != null ? formatNumber(mvScore, 1) : "N/A"}
                             </span>
                             {scoreDelta != null && Math.abs(scoreDelta) > 0.1 && (
-                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-negative' : 'text-dsi-approve'}`}>
+                              <span className={`text-xs font-bold ${scoreDelta > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}`}>
                                 {scoreDelta > 0 ? '+' : ''}{formatNumber(scoreDelta, 1)}
                               </span>
                             )}
@@ -220,7 +220,7 @@ export default function ModelVersionsTab() {
                           <span className="text-dsi-refer/70">{condCount} condition{condCount !== 1 ? 's' : ''}</span>
                         )}
                         {referralCount > 0 && (
-                          <span className="text-dsi-negative/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
+                          <span className="text-dsi-decline/70">{referralCount} referral flag{referralCount !== 1 ? 's' : ''}</span>
                         )}
                         {notesCount > 0 && (
                           <span className="flex items-center gap-0.5">

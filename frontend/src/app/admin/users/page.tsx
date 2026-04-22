@@ -189,7 +189,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => void deactivate(u.id)}
                           disabled={busy === `deact:${u.id}`}
-                          className="text-xs text-dsi-negative hover:underline flex items-center gap-1 disabled:opacity-50"
+                          className="text-xs text-dsi-decline hover:underline flex items-center gap-1 disabled:opacity-50"
                         >
                           <UserX className="w-3 h-3" /> Deactivate
                         </button>
