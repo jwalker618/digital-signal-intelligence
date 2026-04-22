@@ -300,12 +300,9 @@ export default function ExposureTab() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
 
             {/* COMPONENT C: BAND BENCHMARKING */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <BarChart3 className="icon"/><span className="text-sm">Band Benchmarking</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
+            <StandardCard title="Band Benchmarking" lucideIcon={BarChart3}>
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <BenchmarkBarChart
                   data={exposureBandBenchmarks}
                   categoryKey="band_label"
@@ -317,15 +314,12 @@ export default function ExposureTab() {
                   emptyMessage="No band data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* COMPONENT D: TIER DISTRIBUTION */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Layers className="icon"/><span className="text-sm">Exposure by Final Tier</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
+            <StandardCard title="Exposure by Final Tier" lucideIcon={Layers}>
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
                 <BenchmarkBarChart
                   data={exposureTierDistribution}
                   categoryKey="tier"
@@ -340,7 +334,7 @@ export default function ExposureTab() {
                   emptyMessage="No tier data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
