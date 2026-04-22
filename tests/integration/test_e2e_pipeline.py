@@ -188,49 +188,6 @@ class TestWorkflowEngine:
 
 
 # =============================================================================
-# EXTRACTOR RESOLVER INTEGRATION
-# =============================================================================
-
-class TestExtractorResolver:
-    """Tests that the extractor resolver works in the pipeline context."""
-
-    def test_resolver_returns_stub(self):
-        """Resolver should return stub extractors by default."""
-        from signal_architecture.signals.extractors.resolver import get_extractor
-
-        ext = get_extractor("email_auth")
-        result = ext.extract("test-entity")
-
-        assert result.success or result.error is not None
-        assert result.source != ""
-
-    def test_resolver_all_cyber_extractors(self):
-        """All cyber extractors should be resolvable."""
-        from signal_architecture.signals.extractors.resolver import get_extractor
-
-        cyber_extractors = [
-            "email_auth", "dnssec", "tls_config", "security_headers",
-            "waf_presence", "cdn_usage", "cloud_infra", "security_txt",
-            "bug_bounty", "cve_exposure", "network_exposure",
-            "software_currency", "breach_history", "litigation_history",
-            "security_rating", "privacy_policy", "security_page",
-            "credential_exposure", "dark_web", "company_size",
-            "industry_classification", "operational_base",
-        ]
-
-        for name in cyber_extractors:
-            ext = get_extractor(name)
-            assert ext is not None, f"Failed to resolve extractor: {name}"
-
-    def test_stub_registration_with_factory(self):
-        """Stubs should register with factory for hybrid mode."""
-        from signal_architecture.signals.extractors.resolver import register_stubs_with_factory
-
-        count = register_stubs_with_factory()
-        assert count >= 30  # We have 36 mapped stubs
-
-
-# =============================================================================
 # GRAPH MODULE INTEGRATION
 # =============================================================================
 

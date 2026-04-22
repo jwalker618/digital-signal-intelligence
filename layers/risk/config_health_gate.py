@@ -76,6 +76,28 @@ class HealthCheckResult:
 # per active tier (non-DECLINE) and multiple limit levels.
 # ---------------------------------------------------------------------------
 
+def _revenue_for_guardrail(
+    config: CoverageConfig, base_value: float, limit: int,
+) -> int:
+    """Return a synthetic revenue that won't trip the revenue guardrail.
+
+    The pricer caps final premium at `revenue * max_premium_to_revenue_ratio`.
+    Fixture revenue of `limit * 20` is too low for tight SME configs
+    (0.10-0.20%) since their fixed base premium alone can exceed the cap.
+    Scale revenue up from the expected premium so structurally valid
+    configs don't emit capping warnings during gate fixture runs.
+    """
+    default = limit * 20
+    guardrails = getattr(config, "guardrails", None)
+    ratio = getattr(guardrails, "max_premium_to_revenue_ratio", 0) or 0
+    if ratio <= 0 or base_value <= 0:
+        return default
+    # Account for ~1.15 ILF uplift × 2× safety margin
+    expected_premium = base_value * 1.15 * 2.0
+    min_revenue = int(expected_premium / ratio)
+    return max(default, min_revenue)
+
+
 def _build_fixtures_for_config(config: CoverageConfig) -> List[Dict[str, Any]]:
     """Generate synthetic test fixtures for a configuration.
 
@@ -188,11 +210,17 @@ def _build_fixtures_for_config(config: CoverageConfig) -> List[Dict[str, Any]]:
             elif rate > 0:
                 # Categorical basis — the rate is applied to a category-derived
                 # base, not a submission field. Provide revenue for guardrail checks.
-                submission["revenue"] = limit * 20
+                submission["revenue"] = _revenue_for_guardrail(
+                    config, base_value, limit,
+                )
             else:
-                # PREMIUM_BASE method: fixed base premium, no basis needed
-                # Provide revenue proportional to the limit for guardrail checks
-                submission["revenue"] = limit * 20
+                # PREMIUM_BASE method: fixed base premium, no basis needed.
+                # Provide revenue large enough to clear the revenue guardrail
+                # so structurally valid configs don't emit capping warnings
+                # during gate fixture runs.
+                submission["revenue"] = _revenue_for_guardrail(
+                    config, base_value, limit,
+                )
 
             fixtures.append({
                 "tier": band.id,

@@ -24,28 +24,28 @@ PROXY_TIER_CONFIDENCE = {
 def _neutral(signal_id: str, proxy_tier: str) -> SignalResult:
     return SignalResult(
         signal_id=signal_id,
-        score=500.0,
+        score=50.0,
         confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5),
         execution_time_ms=0.0,
     )
 
 
 @register_inference_function("model_card_quality_basefunction")
-async def cyber_a8_01(entity_id: str, context: Any) -> SignalResult:
+def cyber_a8_01(entity_id: str, context: Any) -> SignalResult:
     """Published model-card completeness + quality (metrics, limits, bias)."""
     return _neutral("model_card_quality", "INFERRED_PROXY")
 
 @register_inference_function("training_data_provenance_basefunction")
-async def cyber_a8_02(entity_id: str, context: Any) -> SignalResult:
+def cyber_a8_02(entity_id: str, context: Any) -> SignalResult:
     """Training-data provenance disclosure (sources, licensing, consent)."""
     return _neutral("training_data_provenance", "INFERRED_PROXY")
 
 @register_inference_function("ai_governance_disclosure_basefunction")
-async def cyber_a8_03(entity_id: str, context: Any) -> SignalResult:
+def cyber_a8_03(entity_id: str, context: Any) -> SignalResult:
     """AI governance policy disclosure (responsible-AI framework, oversight)."""
     return _neutral("ai_governance_disclosure", "INFERRED_PROXY")
 
 @register_inference_function("ai_incident_history_basefunction")
-async def cyber_a8_04(entity_id: str, context: Any) -> SignalResult:
+def cyber_a8_04(entity_id: str, context: Any) -> SignalResult:
     """AIIDR (AI Incident Database) incident count + severity for vendor."""
     return _neutral("ai_incident_history", "DIRECT_OBSERVABLE")

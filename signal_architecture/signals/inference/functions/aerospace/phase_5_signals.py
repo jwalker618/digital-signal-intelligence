@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,121 +41,121 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("launch_vehicle_reliability_basefunction")
-async def p5_01(entity_id, context):
+def p5_01(entity_id, context):
     """Launch Vehicle Reliability"""
-    return await _run_pipeline("launch_vehicle_reliability", LaunchVehicleReliabilityExtractor(), LaunchVehicleReliabilityAggregator(), entity_id, context)
+    return _run_pipeline("launch_vehicle_reliability", None, None, entity_id, context)
 
 
 @register_inference_function("satellite_technology_maturity_basefunction")
-async def p5_02(entity_id, context):
+def p5_02(entity_id, context):
     """Satellite Technology Maturity"""
-    return await _run_pipeline("satellite_technology_maturity", SatelliteTechnologyMaturityExtractor(), SatelliteTechnologyMaturityAggregator(), entity_id, context)
+    return _run_pipeline("satellite_technology_maturity", None, None, entity_id, context)
 
 
 @register_inference_function("orbital_debris_exposure_basefunction")
-async def p5_03(entity_id, context):
+def p5_03(entity_id, context):
     """Orbital Debris & Collision Exposure"""
-    return await _run_pipeline("orbital_debris_exposure", OrbitalDebrisExposureExtractor(), OrbitalDebrisExposureAggregator(), entity_id, context)
+    return _run_pipeline("orbital_debris_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("in_orbit_anomaly_history_basefunction")
-async def p5_04(entity_id, context):
+def p5_04(entity_id, context):
     """In-Orbit Anomaly History"""
-    return await _run_pipeline("in_orbit_anomaly_history", InOrbitAnomalyHistoryExtractor(), InOrbitAnomalyHistoryAggregator(), entity_id, context)
+    return _run_pipeline("in_orbit_anomaly_history", None, None, entity_id, context)
 
 
 @register_inference_function("ground_segment_quality_basefunction")
-async def p5_05(entity_id, context):
+def p5_05(entity_id, context):
     """Ground Segment Quality"""
-    return await _run_pipeline("ground_segment_quality", GroundSegmentQualityExtractor(), GroundSegmentQualityAggregator(), entity_id, context)
+    return _run_pipeline("ground_segment_quality", None, None, entity_id, context)
 
 
 @register_inference_function("mission_profile_basefunction")
-async def p5_06(entity_id, context):
+def p5_06(entity_id, context):
     """Mission Profile"""
-    return await _run_categorical("mission_profile", MissionProfileExtractor(), MissionProfileAggregator(), entity_id, context)
+    return _run_categorical("mission_profile", None, None, entity_id, context)
 
 
 @register_inference_function("rotary_pilot_experience_basefunction")
-async def p5_07(entity_id, context):
+def p5_07(entity_id, context):
     """Pilot Experience & Currency"""
-    return await _run_pipeline("rotary_pilot_experience", RotaryPilotExperienceExtractor(), RotaryPilotExperienceAggregator(), entity_id, context)
+    return _run_pipeline("rotary_pilot_experience", None, None, entity_id, context)
 
 
 @register_inference_function("rotary_maintenance_quality_basefunction")
-async def p5_08(entity_id, context):
+def p5_08(entity_id, context):
     """Maintenance Programme Quality"""
-    return await _run_pipeline("rotary_maintenance_quality", RotaryMaintenanceQualityExtractor(), RotaryMaintenanceQualityAggregator(), entity_id, context)
+    return _run_pipeline("rotary_maintenance_quality", None, None, entity_id, context)
 
 
 @register_inference_function("landing_zone_quality_basefunction")
-async def p5_09(entity_id, context):
+def p5_09(entity_id, context):
     """Landing Zone & Operating Environment"""
-    return await _run_pipeline("landing_zone_quality", LandingZoneQualityExtractor(), LandingZoneQualityAggregator(), entity_id, context)
+    return _run_pipeline("landing_zone_quality", None, None, entity_id, context)
 
 
 @register_inference_function("passenger_liability_exposure_basefunction")
-async def p5_10(entity_id, context):
+def p5_10(entity_id, context):
     """Passenger Liability Exposure"""
-    return await _run_pipeline("passenger_liability_exposure", PassengerLiabilityExposureExtractor(), PassengerLiabilityExposureAggregator(), entity_id, context)
+    return _run_pipeline("passenger_liability_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("uas_operational_scope_basefunction")
-async def p5_11(entity_id, context):
+def p5_11(entity_id, context):
     """UAS Operational Scope"""
-    return await _run_categorical("uas_operational_scope", UasOperationalScopeExtractor(), UasOperationalScopeAggregator(), entity_id, context)
+    return _run_categorical("uas_operational_scope", None, None, entity_id, context)
 
 
 @register_inference_function("uas_regulatory_compliance_basefunction")
-async def p5_12(entity_id, context):
+def p5_12(entity_id, context):
     """UAS Regulatory Compliance"""
-    return await _run_pipeline("uas_regulatory_compliance", UasRegulatoryComplianceExtractor(), UasRegulatoryComplianceAggregator(), entity_id, context)
+    return _run_pipeline("uas_regulatory_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("airspace_integration_basefunction")
-async def p5_13(entity_id, context):
+def p5_13(entity_id, context):
     """Airspace Integration Safety"""
-    return await _run_pipeline("airspace_integration", AirspaceIntegrationExtractor(), AirspaceIntegrationAggregator(), entity_id, context)
+    return _run_pipeline("airspace_integration", None, None, entity_id, context)
 
 
 @register_inference_function("uas_payload_risk_basefunction")
-async def p5_14(entity_id, context):
+def p5_14(entity_id, context):
     """Payload & Third-Party Risk"""
-    return await _run_pipeline("uas_payload_risk", UasPayloadRiskExtractor(), UasPayloadRiskAggregator(), entity_id, context)
+    return _run_pipeline("uas_payload_risk", None, None, entity_id, context)
 
 
 @register_inference_function("uas_fleet_reliability_basefunction")
-async def p5_15(entity_id, context):
+def p5_15(entity_id, context):
     """UAS Fleet Reliability"""
-    return await _run_pipeline("uas_fleet_reliability", UasFleetReliabilityExtractor(), UasFleetReliabilityAggregator(), entity_id, context)
+    return _run_pipeline("uas_fleet_reliability", None, None, entity_id, context)
 
 
 @register_inference_function("mro_certification_scope_basefunction")
-async def p5_16(entity_id, context):
+def p5_16(entity_id, context):
     """MRO Certification Scope"""
-    return await _run_pipeline("mro_certification_scope", MroCertificationScopeExtractor(), MroCertificationScopeAggregator(), entity_id, context)
+    return _run_pipeline("mro_certification_scope", None, None, entity_id, context)
 
 
 @register_inference_function("workmanship_claims_history_basefunction")
-async def p5_17(entity_id, context):
+def p5_17(entity_id, context):
     """Workmanship Claims History"""
-    return await _run_pipeline("workmanship_claims_history", WorkmanshipClaimsHistoryExtractor(), WorkmanshipClaimsHistoryAggregator(), entity_id, context)
+    return _run_pipeline("workmanship_claims_history", None, None, entity_id, context)
 
 
 @register_inference_function("hangarkeepers_exposure_basefunction")
-async def p5_18(entity_id, context):
+def p5_18(entity_id, context):
     """Hangarkeepers Exposure"""
-    return await _run_pipeline("hangarkeepers_exposure", HangarkeepersExposureExtractor(), HangarkeepersExposureAggregator(), entity_id, context)
+    return _run_pipeline("hangarkeepers_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("quality_system_maturity_basefunction")
-async def p5_19(entity_id, context):
+def p5_19(entity_id, context):
     """Quality Management System Maturity"""
-    return await _run_pipeline("quality_system_maturity", QualitySystemMaturityExtractor(), QualitySystemMaturityAggregator(), entity_id, context)
+    return _run_pipeline("quality_system_maturity", None, None, entity_id, context)
 
 
 @register_inference_function("parts_traceability_basefunction")
-async def p5_20(entity_id, context):
+def p5_20(entity_id, context):
     """Parts Traceability & Supply Chain"""
-    return await _run_pipeline("parts_traceability", PartsTraceabilityExtractor(), PartsTraceabilityAggregator(), entity_id, context)
+    return _run_pipeline("parts_traceability", None, None, entity_id, context)
 

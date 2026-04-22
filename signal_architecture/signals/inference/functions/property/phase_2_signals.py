@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,163 +41,163 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("construction_class_basefunction")
-async def p2_01(entity_id, context):
+def p2_01(entity_id, context):
     """Construction Class"""
-    return await _run_categorical("construction_class", ConstructionClassExtractor(), ConstructionClassAggregator(), entity_id, context)
+    return _run_categorical("construction_class", None, None, entity_id, context)
 
 
 @register_inference_function("building_age_condition_basefunction")
-async def p2_02(entity_id, context):
+def p2_02(entity_id, context):
     """Building Age & Condition"""
-    return await _run_pipeline("building_age_condition", BuildingAgeConditionExtractor(), BuildingAgeConditionAggregator(), entity_id, context)
+    return _run_pipeline("building_age_condition", None, None, entity_id, context)
 
 
 @register_inference_function("building_code_compliance_basefunction")
-async def p2_03(entity_id, context):
+def p2_03(entity_id, context):
     """Building Code Compliance"""
-    return await _run_pipeline("building_code_compliance", BuildingCodeComplianceExtractor(), BuildingCodeComplianceAggregator(), entity_id, context)
+    return _run_pipeline("building_code_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("roof_condition_basefunction")
-async def p2_04(entity_id, context):
+def p2_04(entity_id, context):
     """Roof Condition"""
-    return await _run_pipeline("roof_condition", RoofConditionExtractor(), RoofConditionAggregator(), entity_id, context)
+    return _run_pipeline("roof_condition", None, None, entity_id, context)
 
 
 @register_inference_function("electrical_system_quality_basefunction")
-async def p2_05(entity_id, context):
+def p2_05(entity_id, context):
     """Electrical System Quality"""
-    return await _run_pipeline("electrical_system_quality", ElectricalSystemQualityExtractor(), ElectricalSystemQualityAggregator(), entity_id, context)
+    return _run_pipeline("electrical_system_quality", None, None, entity_id, context)
 
 
 @register_inference_function("renovation_history_basefunction")
-async def p2_06(entity_id, context):
+def p2_06(entity_id, context):
     """Renovation History"""
-    return await _run_pipeline("renovation_history", RenovationHistoryExtractor(), RenovationHistoryAggregator(), entity_id, context)
+    return _run_pipeline("renovation_history", None, None, entity_id, context)
 
 
 @register_inference_function("occupancy_hazard_grade_basefunction")
-async def p2_07(entity_id, context):
+def p2_07(entity_id, context):
     """Occupancy Hazard Grade"""
-    return await _run_categorical("occupancy_hazard_grade", OccupancyHazardGradeExtractor(), OccupancyHazardGradeAggregator(), entity_id, context)
+    return _run_categorical("occupancy_hazard_grade", None, None, entity_id, context)
 
 
 @register_inference_function("tenant_concentration_basefunction")
-async def p2_08(entity_id, context):
+def p2_08(entity_id, context):
     """Tenant Concentration"""
-    return await _run_pipeline("tenant_concentration", TenantConcentrationExtractor(), TenantConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("tenant_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("contents_value_density_basefunction")
-async def p2_09(entity_id, context):
+def p2_09(entity_id, context):
     """Contents Value Density"""
-    return await _run_pipeline("contents_value_density", ContentsValueDensityExtractor(), ContentsValueDensityAggregator(), entity_id, context)
+    return _run_pipeline("contents_value_density", None, None, entity_id, context)
 
 
 @register_inference_function("vacancy_rate_basefunction")
-async def p2_10(entity_id, context):
+def p2_10(entity_id, context):
     """Vacancy Rate"""
-    return await _run_pipeline("vacancy_rate", VacancyRateExtractor(), VacancyRateAggregator(), entity_id, context)
+    return _run_pipeline("vacancy_rate", None, None, entity_id, context)
 
 
 @register_inference_function("housekeeping_quality_basefunction")
-async def p2_11(entity_id, context):
+def p2_11(entity_id, context):
     """Housekeeping & Maintenance Quality"""
-    return await _run_pipeline("housekeeping_quality", HousekeepingQualityExtractor(), HousekeepingQualityAggregator(), entity_id, context)
+    return _run_pipeline("housekeeping_quality", None, None, entity_id, context)
 
 
 @register_inference_function("wind_zone_basefunction")
-async def p2_12(entity_id, context):
+def p2_12(entity_id, context):
     """Wind Zone Exposure"""
-    return await _run_pipeline("wind_zone", WindZoneExtractor(), WindZoneAggregator(), entity_id, context)
+    return _run_pipeline("wind_zone", None, None, entity_id, context)
 
 
 @register_inference_function("earthquake_zone_basefunction")
-async def p2_13(entity_id, context):
+def p2_13(entity_id, context):
     """Earthquake Zone Exposure"""
-    return await _run_pipeline("earthquake_zone", EarthquakeZoneExtractor(), EarthquakeZoneAggregator(), entity_id, context)
+    return _run_pipeline("earthquake_zone", None, None, entity_id, context)
 
 
 @register_inference_function("flood_zone_basefunction")
-async def p2_14(entity_id, context):
+def p2_14(entity_id, context):
     """Flood Zone Exposure"""
-    return await _run_pipeline("flood_zone", FloodZoneExtractor(), FloodZoneAggregator(), entity_id, context)
+    return _run_pipeline("flood_zone", None, None, entity_id, context)
 
 
 @register_inference_function("wildfire_zone_basefunction")
-async def p2_15(entity_id, context):
+def p2_15(entity_id, context):
     """Wildfire Zone Exposure"""
-    return await _run_pipeline("wildfire_zone", WildfireZoneExtractor(), WildfireZoneAggregator(), entity_id, context)
+    return _run_pipeline("wildfire_zone", None, None, entity_id, context)
 
 
 @register_inference_function("convective_storm_exposure_basefunction")
-async def p2_16(entity_id, context):
+def p2_16(entity_id, context):
     """Convective Storm Exposure"""
-    return await _run_pipeline("convective_storm_exposure", ConvectiveStormExposureExtractor(), ConvectiveStormExposureAggregator(), entity_id, context)
+    return _run_pipeline("convective_storm_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("geographic_concentration_basefunction")
-async def p2_17(entity_id, context):
+def p2_17(entity_id, context):
     """Geographic Concentration"""
-    return await _run_pipeline("geographic_concentration", GeographicConcentrationExtractor(), GeographicConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("geographic_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("sprinkler_coverage_basefunction")
-async def p2_18(entity_id, context):
+def p2_18(entity_id, context):
     """Sprinkler System Coverage"""
-    return await _run_categorical("sprinkler_coverage", SprinklerCoverageExtractor(), SprinklerCoverageAggregator(), entity_id, context)
+    return _run_categorical("sprinkler_coverage", None, None, entity_id, context)
 
 
 @register_inference_function("fire_alarm_quality_basefunction")
-async def p2_19(entity_id, context):
+def p2_19(entity_id, context):
     """Fire Alarm & Detection Quality"""
-    return await _run_pipeline("fire_alarm_quality", FireAlarmQualityExtractor(), FireAlarmQualityAggregator(), entity_id, context)
+    return _run_pipeline("fire_alarm_quality", None, None, entity_id, context)
 
 
 @register_inference_function("fire_department_response_basefunction")
-async def p2_20(entity_id, context):
+def p2_20(entity_id, context):
     """Fire Department Response"""
-    return await _run_pipeline("fire_department_response", FireDepartmentResponseExtractor(), FireDepartmentResponseAggregator(), entity_id, context)
+    return _run_pipeline("fire_department_response", None, None, entity_id, context)
 
 
 @register_inference_function("fire_separation_basefunction")
-async def p2_21(entity_id, context):
+def p2_21(entity_id, context):
     """Fire Separation & Compartmentation"""
-    return await _run_pipeline("fire_separation", FireSeparationExtractor(), FireSeparationAggregator(), entity_id, context)
+    return _run_pipeline("fire_separation", None, None, entity_id, context)
 
 
 @register_inference_function("water_supply_adequacy_basefunction")
-async def p2_22(entity_id, context):
+def p2_22(entity_id, context):
     """Water Supply Adequacy"""
-    return await _run_pipeline("water_supply_adequacy", WaterSupplyAdequacyExtractor(), WaterSupplyAdequacyAggregator(), entity_id, context)
+    return _run_pipeline("water_supply_adequacy", None, None, entity_id, context)
 
 
 @register_inference_function("revenue_concentration_basefunction")
-async def p2_23(entity_id, context):
+def p2_23(entity_id, context):
     """Revenue Concentration at Location"""
-    return await _run_pipeline("revenue_concentration", RevenueConcentrationExtractor(), RevenueConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("revenue_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("recovery_time_estimate_basefunction")
-async def p2_24(entity_id, context):
+def p2_24(entity_id, context):
     """Recovery Time Estimate"""
-    return await _run_pipeline("recovery_time_estimate", RecoveryTimeEstimateExtractor(), RecoveryTimeEstimateAggregator(), entity_id, context)
+    return _run_pipeline("recovery_time_estimate", None, None, entity_id, context)
 
 
 @register_inference_function("supply_chain_dependency_basefunction")
-async def p2_25(entity_id, context):
+def p2_25(entity_id, context):
     """Supply Chain Dependency"""
-    return await _run_pipeline("supply_chain_dependency", SupplyChainDependencyExtractor(), SupplyChainDependencyAggregator(), entity_id, context)
+    return _run_pipeline("supply_chain_dependency", None, None, entity_id, context)
 
 
 @register_inference_function("contingent_bi_exposure_basefunction")
-async def p2_26(entity_id, context):
+def p2_26(entity_id, context):
     """Contingent BI Exposure"""
-    return await _run_pipeline("contingent_bi_exposure", ContingentBiExposureExtractor(), ContingentBiExposureAggregator(), entity_id, context)
+    return _run_pipeline("contingent_bi_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("business_continuity_planning_basefunction")
-async def p2_27(entity_id, context):
+def p2_27(entity_id, context):
     """Business Continuity Planning"""
-    return await _run_pipeline("business_continuity_planning", BusinessContinuityPlanningExtractor(), BusinessContinuityPlanningAggregator(), entity_id, context)
+    return _run_pipeline("business_continuity_planning", None, None, entity_id, context)
 

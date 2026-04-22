@@ -15,8 +15,6 @@ from a hash of (entity_id, signal_id). These tests validate:
 """
 from __future__ import annotations
 
-import asyncio
-
 import pytest
 
 # Register everything at import time.
@@ -31,16 +29,16 @@ COVERAGES = [
 ]
 
 
-async def _call(fn_name: str, entity_id: str):
+def _call(fn_name: str, entity_id: str):
     fn = get_inference_function(fn_name)
-    return await fn(entity_id, None)
+    return fn(entity_id, None)
 
 
 @pytest.mark.parametrize("coverage", COVERAGES)
 def test_derived_signal_is_deterministic(coverage):
     fn_name = f"{coverage}_derived_01_basefunction"
-    r1 = asyncio.run(_call(fn_name, "entity-x"))
-    r2 = asyncio.run(_call(fn_name, "entity-x"))
+    r1 = _call(fn_name, "entity-x")
+    r2 = _call(fn_name, "entity-x")
     assert r1.score == r2.score
     assert r1.confidence == r2.confidence
 
@@ -48,23 +46,23 @@ def test_derived_signal_is_deterministic(coverage):
 @pytest.mark.parametrize("coverage", COVERAGES)
 def test_derived_signal_varies_across_entities(coverage):
     fn_name = f"{coverage}_derived_01_basefunction"
-    r1 = asyncio.run(_call(fn_name, "entity-a"))
-    r2 = asyncio.run(_call(fn_name, "entity-b"))
+    r1 = _call(fn_name, "entity-a")
+    r2 = _call(fn_name, "entity-b")
     # Two deterministic hashes should differ almost always.
     assert r1.score != r2.score
 
 
 @pytest.mark.parametrize("coverage", COVERAGES)
 def test_derived_signal_varies_across_signals(coverage):
-    r1 = asyncio.run(_call(f"{coverage}_derived_01_basefunction", "entity-a"))
-    r2 = asyncio.run(_call(f"{coverage}_derived_02_basefunction", "entity-a"))
+    r1 = _call(f"{coverage}_derived_01_basefunction", "entity-a")
+    r2 = _call(f"{coverage}_derived_02_basefunction", "entity-a")
     assert r1.score != r2.score
 
 
 @pytest.mark.parametrize("coverage", COVERAGES)
 def test_derived_signal_score_in_range(coverage):
     fn_name = f"{coverage}_derived_01_basefunction"
-    r = asyncio.run(_call(fn_name, "entity-a"))
+    r = _call(fn_name, "entity-a")
     assert 30.0 <= r.score <= 70.0
     assert 0.50 <= r.confidence <= 0.85
 

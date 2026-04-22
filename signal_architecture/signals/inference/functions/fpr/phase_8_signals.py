@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,127 +41,127 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("buyer_creditworthiness_basefunction")
-async def p8_01(entity_id, context):
+def p8_01(entity_id, context):
     """Buyer Creditworthiness"""
-    return await _run_pipeline("buyer_creditworthiness", BuyerCreditworthinessExtractor(), BuyerCreditworthinessAggregator(), entity_id, context)
+    return _run_pipeline("buyer_creditworthiness", None, None, entity_id, context)
 
 
 @register_inference_function("payment_terms_exposure_basefunction")
-async def p8_02(entity_id, context):
+def p8_02(entity_id, context):
     """Payment Terms Exposure"""
-    return await _run_pipeline("payment_terms_exposure", PaymentTermsExposureExtractor(), PaymentTermsExposureAggregator(), entity_id, context)
+    return _run_pipeline("payment_terms_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("buyer_concentration_basefunction")
-async def p8_03(entity_id, context):
+def p8_03(entity_id, context):
     """Buyer Concentration"""
-    return await _run_pipeline("buyer_concentration", BuyerConcentrationExtractor(), BuyerConcentrationAggregator(), entity_id, context)
+    return _run_pipeline("buyer_concentration", None, None, entity_id, context)
 
 
 @register_inference_function("country_risk_exposure_basefunction")
-async def p8_04(entity_id, context):
+def p8_04(entity_id, context):
     """Country Risk Exposure"""
-    return await _run_pipeline("country_risk_exposure", CountryRiskExposureExtractor(), CountryRiskExposureAggregator(), entity_id, context)
+    return _run_pipeline("country_risk_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("trade_dispute_frequency_basefunction")
-async def p8_05(entity_id, context):
+def p8_05(entity_id, context):
     """Trade Dispute Frequency"""
-    return await _run_pipeline("trade_dispute_frequency", TradeDisputeFrequencyExtractor(), TradeDisputeFrequencyAggregator(), entity_id, context)
+    return _run_pipeline("trade_dispute_frequency", None, None, entity_id, context)
 
 
 @register_inference_function("sector_cyclicality_basefunction")
-async def p8_06(entity_id, context):
+def p8_06(entity_id, context):
     """Sector Cyclicality"""
-    return await _run_pipeline("sector_cyclicality", SectorCyclicalityExtractor(), SectorCyclicalityAggregator(), entity_id, context)
+    return _run_pipeline("sector_cyclicality", None, None, entity_id, context)
 
 
 @register_inference_function("sovereign_risk_rating_basefunction")
-async def p8_07(entity_id, context):
+def p8_07(entity_id, context):
     """Sovereign Risk Rating"""
-    return await _run_categorical("sovereign_risk_rating", SovereignRiskRatingExtractor(), SovereignRiskRatingAggregator(), entity_id, context)
+    return _run_categorical("sovereign_risk_rating", None, None, entity_id, context)
 
 
 @register_inference_function("expropriation_risk_basefunction")
-async def p8_08(entity_id, context):
+def p8_08(entity_id, context):
     """Expropriation & Nationalisation Risk"""
-    return await _run_pipeline("expropriation_risk", ExpropriationRiskExtractor(), ExpropriationRiskAggregator(), entity_id, context)
+    return _run_pipeline("expropriation_risk", None, None, entity_id, context)
 
 
 @register_inference_function("currency_inconvertibility_basefunction")
-async def p8_09(entity_id, context):
+def p8_09(entity_id, context):
     """Currency Inconvertibility & Transfer Risk"""
-    return await _run_pipeline("currency_inconvertibility", CurrencyInconvertibilityExtractor(), CurrencyInconvertibilityAggregator(), entity_id, context)
+    return _run_pipeline("currency_inconvertibility", None, None, entity_id, context)
 
 
 @register_inference_function("contract_frustration_basefunction")
-async def p8_10(entity_id, context):
+def p8_10(entity_id, context):
     """Contract Frustration Risk"""
-    return await _run_pipeline("contract_frustration", ContractFrustrationExtractor(), ContractFrustrationAggregator(), entity_id, context)
+    return _run_pipeline("contract_frustration", None, None, entity_id, context)
 
 
 @register_inference_function("political_violence_exposure_basefunction")
-async def p8_11(entity_id, context):
+def p8_11(entity_id, context):
     """Political Violence Exposure"""
-    return await _run_pipeline("political_violence_exposure", PoliticalViolenceExposureExtractor(), PoliticalViolenceExposureAggregator(), entity_id, context)
+    return _run_pipeline("political_violence_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("principal_financial_strength_basefunction")
-async def p8_12(entity_id, context):
+def p8_12(entity_id, context):
     """Principal Financial Strength"""
-    return await _run_pipeline("principal_financial_strength", PrincipalFinancialStrengthExtractor(), PrincipalFinancialStrengthAggregator(), entity_id, context)
+    return _run_pipeline("principal_financial_strength", None, None, entity_id, context)
 
 
 @register_inference_function("project_execution_track_record_basefunction")
-async def p8_13(entity_id, context):
+def p8_13(entity_id, context):
     """Project Execution Track Record"""
-    return await _run_pipeline("project_execution_track_record", ProjectExecutionTrackRecordExtractor(), ProjectExecutionTrackRecordAggregator(), entity_id, context)
+    return _run_pipeline("project_execution_track_record", None, None, entity_id, context)
 
 
 @register_inference_function("backlog_to_capacity_basefunction")
-async def p8_14(entity_id, context):
+def p8_14(entity_id, context):
     """Backlog-to-Capacity Ratio"""
-    return await _run_pipeline("backlog_to_capacity", BacklogToCapacityExtractor(), BacklogToCapacityAggregator(), entity_id, context)
+    return _run_pipeline("backlog_to_capacity", None, None, entity_id, context)
 
 
 @register_inference_function("bond_default_history_basefunction")
-async def p8_15(entity_id, context):
+def p8_15(entity_id, context):
     """Bond Default & Claim History"""
-    return await _run_pipeline("bond_default_history", BondDefaultHistoryExtractor(), BondDefaultHistoryAggregator(), entity_id, context)
+    return _run_pipeline("bond_default_history", None, None, entity_id, context)
 
 
 @register_inference_function("obligee_complexity_basefunction")
-async def p8_16(entity_id, context):
+def p8_16(entity_id, context):
     """Obligee & Contract Complexity"""
-    return await _run_pipeline("obligee_complexity", ObligeeComplexityExtractor(), ObligeeComplexityAggregator(), entity_id, context)
+    return _run_pipeline("obligee_complexity", None, None, entity_id, context)
 
 
 @register_inference_function("travel_exposure_profile_basefunction")
-async def p8_17(entity_id, context):
+def p8_17(entity_id, context):
     """Travel Exposure Profile"""
-    return await _run_pipeline("travel_exposure_profile", TravelExposureProfileExtractor(), TravelExposureProfileAggregator(), entity_id, context)
+    return _run_pipeline("travel_exposure_profile", None, None, entity_id, context)
 
 
 @register_inference_function("country_threat_level_basefunction")
-async def p8_18(entity_id, context):
+def p8_18(entity_id, context):
     """Country Threat Level"""
-    return await _run_categorical("country_threat_level", CountryThreatLevelExtractor(), CountryThreatLevelAggregator(), entity_id, context)
+    return _run_categorical("country_threat_level", None, None, entity_id, context)
 
 
 @register_inference_function("executive_protection_basefunction")
-async def p8_19(entity_id, context):
+def p8_19(entity_id, context):
     """Executive Protection Measures"""
-    return await _run_pipeline("executive_protection", ExecutiveProtectionExtractor(), ExecutiveProtectionAggregator(), entity_id, context)
+    return _run_pipeline("executive_protection", None, None, entity_id, context)
 
 
 @register_inference_function("crisis_response_capability_basefunction")
-async def p8_20(entity_id, context):
+def p8_20(entity_id, context):
     """Crisis Response Capability"""
-    return await _run_pipeline("crisis_response_capability", CrisisResponseCapabilityExtractor(), CrisisResponseCapabilityAggregator(), entity_id, context)
+    return _run_pipeline("crisis_response_capability", None, None, entity_id, context)
 
 
 @register_inference_function("expatriate_population_basefunction")
-async def p8_21(entity_id, context):
+def p8_21(entity_id, context):
     """Expatriate Population"""
-    return await _run_pipeline("expatriate_population", ExpatriatePopulationExtractor(), ExpatriatePopulationAggregator(), entity_id, context)
+    return _run_pipeline("expatriate_population", None, None, entity_id, context)
 

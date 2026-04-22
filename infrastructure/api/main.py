@@ -128,15 +128,11 @@ async def lifespan(app: FastAPI):
 
     # Initialize extractor factory mode from feature flag
     try:
-        from signal_architecture.signals.extractors.resolver import register_stubs_with_factory
         from signal_architecture.signals.extractors.production.factory import set_default_mode
         from signal_architecture.signals.extractors.production import register_all_extractors
 
         # Register production extractors (available via factory)
         register_all_extractors()
-
-        # Register stubs as fallbacks
-        register_stubs_with_factory()
 
         # Set mode based on feature flag
         if settings.use_stubs:

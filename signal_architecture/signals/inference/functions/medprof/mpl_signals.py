@@ -5,7 +5,7 @@ MedProf Inference Functions (V6/B1 depth-first build)
 Registers inference functions for every signal declared in
 ``coverages/medprof/config.yaml``. The implementations are neutral
 scaffolds that exercise the scoring pipeline end-to-end — each
-function returns a SignalResult with score=500 (neutral) and
+function returns a SignalResult with score=50.0 (neutral) and
 confidence derived from the declared proxy tier. Real extractors wire
 in under Stage 6 (D-extractor depth) and replace these bodies
 without changing the @register_inference_function surface.
@@ -40,169 +40,169 @@ def _neutral_result(signal_id: str, proxy_tier: str) -> SignalResult:
     """
     return SignalResult(
         signal_id=signal_id,
-        score=500.0,
+        score=50.0,
         confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5),
         execution_time_ms=0.0,
     )
 
 
 @register_inference_function("audit_committee_basefunction")
-async def mp_001(entity_id: str, context: Any) -> SignalResult:
+def mp_001(entity_id: str, context: Any) -> SignalResult:
     """audit_committee"""
     return _neutral_result("audit_committee", "INFERRED_PROXY")
 
 @register_inference_function("board_composition_basefunction")
-async def mp_002(entity_id: str, context: Any) -> SignalResult:
+def mp_002(entity_id: str, context: Any) -> SignalResult:
     """board_composition"""
     return _neutral_result("board_composition", "INFERRED_PROXY")
 
 @register_inference_function("breach_history_basefunction")
-async def mp_003(entity_id: str, context: Any) -> SignalResult:
+def mp_003(entity_id: str, context: Any) -> SignalResult:
     """breach_history"""
     return _neutral_result("breach_history", "DIRECT_OBSERVABLE")
 
 @register_inference_function("business_continuity_basefunction")
-async def mp_004(entity_id: str, context: Any) -> SignalResult:
+def mp_004(entity_id: str, context: Any) -> SignalResult:
     """business_continuity"""
     return _neutral_result("business_continuity", "INFERRED_PROXY")
 
 @register_inference_function("compensation_practices_basefunction")
-async def mp_005(entity_id: str, context: Any) -> SignalResult:
+def mp_005(entity_id: str, context: Any) -> SignalResult:
     """compensation_practices"""
     return _neutral_result("compensation_practices", "INFERRED_PROXY")
 
 @register_inference_function("compliance_certifications_basefunction")
-async def mp_006(entity_id: str, context: Any) -> SignalResult:
+def mp_006(entity_id: str, context: Any) -> SignalResult:
     """compliance_certifications"""
     return _neutral_result("compliance_certifications", "INFERRED_PROXY")
 
 @register_inference_function("credit_rating_basefunction")
-async def mp_007(entity_id: str, context: Any) -> SignalResult:
+def mp_007(entity_id: str, context: Any) -> SignalResult:
     """credit_rating"""
     return _neutral_result("credit_rating", "DIRECT_OBSERVABLE")
 
 @register_inference_function("debt_ratio_basefunction")
-async def mp_008(entity_id: str, context: Any) -> SignalResult:
+def mp_008(entity_id: str, context: Any) -> SignalResult:
     """debt_ratio"""
     return _neutral_result("debt_ratio", "INFERRED_PROXY")
 
 @register_inference_function("disaster_recovery_basefunction")
-async def mp_009(entity_id: str, context: Any) -> SignalResult:
+def mp_009(entity_id: str, context: Any) -> SignalResult:
     """disaster_recovery"""
     return _neutral_result("disaster_recovery", "INFERRED_PROXY")
 
 @register_inference_function("enforcement_actions_basefunction")
-async def mp_010(entity_id: str, context: Any) -> SignalResult:
+def mp_010(entity_id: str, context: Any) -> SignalResult:
     """enforcement_actions"""
     return _neutral_result("enforcement_actions", "DIRECT_OBSERVABLE")
 
 @register_inference_function("executive_experience_basefunction")
-async def mp_011(entity_id: str, context: Any) -> SignalResult:
+def mp_011(entity_id: str, context: Any) -> SignalResult:
     """executive_experience"""
     return _neutral_result("executive_experience", "INFERRED_PROXY")
 
 @register_inference_function("funding_status_basefunction")
-async def mp_012(entity_id: str, context: Any) -> SignalResult:
+def mp_012(entity_id: str, context: Any) -> SignalResult:
     """funding_status"""
     return _neutral_result("funding_status", "INFERRED_PROXY")
 
 @register_inference_function("governance_disclosure_basefunction")
-async def mp_013(entity_id: str, context: Any) -> SignalResult:
+def mp_013(entity_id: str, context: Any) -> SignalResult:
     """governance_disclosure"""
     return _neutral_result("governance_disclosure", "INFERRED_PROXY")
 
 @register_inference_function("incident_response_basefunction")
-async def mp_014(entity_id: str, context: Any) -> SignalResult:
+def mp_014(entity_id: str, context: Any) -> SignalResult:
     """incident_response"""
     return _neutral_result("incident_response", "INFERRED_PROXY")
 
 @register_inference_function("industry_regulations_basefunction")
-async def mp_015(entity_id: str, context: Any) -> SignalResult:
+def mp_015(entity_id: str, context: Any) -> SignalResult:
     """industry_regulations"""
     return _neutral_result("industry_regulations", "INFERRED_PROXY")
 
 @register_inference_function("leadership_stability_basefunction")
-async def mp_016(entity_id: str, context: Any) -> SignalResult:
+def mp_016(entity_id: str, context: Any) -> SignalResult:
     """leadership_stability"""
     return _neutral_result("leadership_stability", "INFERRED_PROXY")
 
 @register_inference_function("license_status_basefunction")
-async def mp_017(entity_id: str, context: Any) -> SignalResult:
+def mp_017(entity_id: str, context: Any) -> SignalResult:
     """license_status"""
     return _neutral_result("license_status", "DIRECT_OBSERVABLE")
 
 @register_inference_function("liquidity_ratio_basefunction")
-async def mp_018(entity_id: str, context: Any) -> SignalResult:
+def mp_018(entity_id: str, context: Any) -> SignalResult:
     """liquidity_ratio"""
     return _neutral_result("liquidity_ratio", "INFERRED_PROXY")
 
 @register_inference_function("operational_resilience_basefunction")
-async def mp_019(entity_id: str, context: Any) -> SignalResult:
+def mp_019(entity_id: str, context: Any) -> SignalResult:
     """operational_resilience"""
     return _neutral_result("operational_resilience", "INFERRED_PROXY")
 
 @register_inference_function("penetration_testing_basefunction")
-async def mp_020(entity_id: str, context: Any) -> SignalResult:
+def mp_020(entity_id: str, context: Any) -> SignalResult:
     """penetration_testing"""
     return _neutral_result("penetration_testing", "INFERRED_PROXY")
 
 @register_inference_function("privacy_compliance_basefunction")
-async def mp_021(entity_id: str, context: Any) -> SignalResult:
+def mp_021(entity_id: str, context: Any) -> SignalResult:
     """privacy_compliance"""
     return _neutral_result("privacy_compliance", "INFERRED_PROXY")
 
 @register_inference_function("process_maturity_basefunction")
-async def mp_022(entity_id: str, context: Any) -> SignalResult:
+def mp_022(entity_id: str, context: Any) -> SignalResult:
     """process_maturity"""
     return _neutral_result("process_maturity", "INFERRED_PROXY")
 
 @register_inference_function("profitability_basefunction")
-async def mp_023(entity_id: str, context: Any) -> SignalResult:
+def mp_023(entity_id: str, context: Any) -> SignalResult:
     """profitability"""
     return _neutral_result("profitability", "INFERRED_PROXY")
 
 @register_inference_function("quality_management_basefunction")
-async def mp_024(entity_id: str, context: Any) -> SignalResult:
+def mp_024(entity_id: str, context: Any) -> SignalResult:
     """quality_management"""
     return _neutral_result("quality_management", "INFERRED_PROXY")
 
 @register_inference_function("regulatory_filings_basefunction")
-async def mp_025(entity_id: str, context: Any) -> SignalResult:
+def mp_025(entity_id: str, context: Any) -> SignalResult:
     """regulatory_filings"""
     return _neutral_result("regulatory_filings", "DIRECT_OBSERVABLE")
 
 @register_inference_function("revenue_growth_basefunction")
-async def mp_026(entity_id: str, context: Any) -> SignalResult:
+def mp_026(entity_id: str, context: Any) -> SignalResult:
     """revenue_growth"""
     return _neutral_result("revenue_growth", "INFERRED_PROXY")
 
 @register_inference_function("security_budget_basefunction")
-async def mp_027(entity_id: str, context: Any) -> SignalResult:
+def mp_027(entity_id: str, context: Any) -> SignalResult:
     """security_budget"""
     return _neutral_result("security_budget", "INFERRED_PROXY")
 
 @register_inference_function("security_certifications_basefunction")
-async def mp_028(entity_id: str, context: Any) -> SignalResult:
+def mp_028(entity_id: str, context: Any) -> SignalResult:
     """security_certifications"""
     return _neutral_result("security_certifications", "INFERRED_PROXY")
 
 @register_inference_function("security_team_basefunction")
-async def mp_029(entity_id: str, context: Any) -> SignalResult:
+def mp_029(entity_id: str, context: Any) -> SignalResult:
     """security_team"""
     return _neutral_result("security_team", "INFERRED_PROXY")
 
 @register_inference_function("stock_performance_basefunction")
-async def mp_030(entity_id: str, context: Any) -> SignalResult:
+def mp_030(entity_id: str, context: Any) -> SignalResult:
     """stock_performance"""
     return _neutral_result("stock_performance", "DIRECT_OBSERVABLE")
 
 @register_inference_function("technology_stack_basefunction")
-async def mp_031(entity_id: str, context: Any) -> SignalResult:
+def mp_031(entity_id: str, context: Any) -> SignalResult:
     """technology_stack"""
     return _neutral_result("technology_stack", "INFERRED_PROXY")
 
 @register_inference_function("vulnerability_management_basefunction")
-async def mp_032(entity_id: str, context: Any) -> SignalResult:
+def mp_032(entity_id: str, context: Any) -> SignalResult:
     """vulnerability_management"""
     return _neutral_result("vulnerability_management", "INFERRED_PROXY")
 

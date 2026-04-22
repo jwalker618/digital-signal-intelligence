@@ -14,7 +14,7 @@ from signal_architecture.signals.types import SignalResult
 # D-series production extractors (Stage 6). Until then every call
 # returns a neutral SignalResult(score=50, confidence=0.5).
 
-async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
+def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     """Neutral scoring stand-in. Accepts the legacy
     (signal_id, extractor, aggregator, entity_id, context, ...)
     signature but ignores the extractor + aggregator args."""
@@ -26,7 +26,7 @@ async def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
     )
 
 
-async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
+def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
     """Neutral categorical stand-in — see _run_pipeline."""
     return SignalResult(
         signal_id=signal_id,
@@ -41,313 +41,313 @@ async def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
 # =============================================================================
 
 @register_inference_function("connected_medical_device_security_basefunction")
-async def p7_01(entity_id, context):
+def p7_01(entity_id, context):
     """Connected Medical Device Security"""
-    return await _run_pipeline("connected_medical_device_security", ConnectedMedicalDeviceSecurityExtractor(), ConnectedMedicalDeviceSecurityAggregator(), entity_id, context)
+    return _run_pipeline("connected_medical_device_security", None, None, entity_id, context)
 
 
 @register_inference_function("ehr_system_resilience_basefunction")
-async def p7_02(entity_id, context):
+def p7_02(entity_id, context):
     """EHR System Resilience"""
-    return await _run_pipeline("ehr_system_resilience", EhrSystemResilienceExtractor(), EhrSystemResilienceAggregator(), entity_id, context)
+    return _run_pipeline("ehr_system_resilience", None, None, entity_id, context)
 
 
 @register_inference_function("hipaa_compliance_depth_basefunction")
-async def p7_03(entity_id, context):
+def p7_03(entity_id, context):
     """HIPAA Compliance Depth"""
-    return await _run_pipeline("hipaa_compliance_depth", HipaaComplianceDepthExtractor(), HipaaComplianceDepthAggregator(), entity_id, context)
+    return _run_pipeline("hipaa_compliance_depth", None, None, entity_id, context)
 
 
 @register_inference_function("clinical_system_segmentation_basefunction")
-async def p7_04(entity_id, context):
+def p7_04(entity_id, context):
     """Clinical Network Segmentation"""
-    return await _run_pipeline("clinical_system_segmentation", ClinicalSystemSegmentationExtractor(), ClinicalSystemSegmentationAggregator(), entity_id, context)
+    return _run_pipeline("clinical_system_segmentation", None, None, entity_id, context)
 
 
 @register_inference_function("phi_data_volume_basefunction")
-async def p7_05(entity_id, context):
+def p7_05(entity_id, context):
     """PHI Data Volume"""
-    return await _run_pipeline("phi_data_volume", PhiDataVolumeExtractor(), PhiDataVolumeAggregator(), entity_id, context)
+    return _run_pipeline("phi_data_volume", None, None, entity_id, context)
 
 
 @register_inference_function("hhs_breach_portal_history_basefunction")
-async def p7_06(entity_id, context):
+def p7_06(entity_id, context):
     """HHS Breach Portal History"""
-    return await _run_pipeline("hhs_breach_portal_history", HhsBreachPortalHistoryExtractor(), HhsBreachPortalHistoryAggregator(), entity_id, context)
+    return _run_pipeline("hhs_breach_portal_history", None, None, entity_id, context)
 
 
 @register_inference_function("payment_system_architecture_basefunction")
-async def p7_07(entity_id, context):
+def p7_07(entity_id, context):
     """Payment System Architecture"""
-    return await _run_pipeline("payment_system_architecture", PaymentSystemArchitectureExtractor(), PaymentSystemArchitectureAggregator(), entity_id, context)
+    return _run_pipeline("payment_system_architecture", None, None, entity_id, context)
 
 
 @register_inference_function("swift_controls_basefunction")
-async def p7_08(entity_id, context):
+def p7_08(entity_id, context):
     """SWIFT Controls"""
-    return await _run_pipeline("swift_controls", SwiftControlsExtractor(), SwiftControlsAggregator(), entity_id, context)
+    return _run_pipeline("swift_controls", None, None, entity_id, context)
 
 
 @register_inference_function("pci_compliance_depth_basefunction")
-async def p7_09(entity_id, context):
+def p7_09(entity_id, context):
     """PCI Compliance Depth"""
-    return await _run_pipeline("pci_compliance_depth", PciComplianceDepthExtractor(), PciComplianceDepthAggregator(), entity_id, context)
+    return _run_pipeline("pci_compliance_depth", None, None, entity_id, context)
 
 
 @register_inference_function("transaction_fraud_controls_basefunction")
-async def p7_10(entity_id, context):
+def p7_10(entity_id, context):
     """Transaction Fraud Controls"""
-    return await _run_pipeline("transaction_fraud_controls", TransactionFraudControlsExtractor(), TransactionFraudControlsAggregator(), entity_id, context)
+    return _run_pipeline("transaction_fraud_controls", None, None, entity_id, context)
 
 
 @register_inference_function("core_banking_resilience_basefunction")
-async def p7_11(entity_id, context):
+def p7_11(entity_id, context):
     """Core Banking Resilience"""
-    return await _run_pipeline("core_banking_resilience", CoreBankingResilienceExtractor(), CoreBankingResilienceAggregator(), entity_id, context)
+    return _run_pipeline("core_banking_resilience", None, None, entity_id, context)
 
 
 @register_inference_function("regulatory_examination_history_basefunction")
-async def p7_12(entity_id, context):
+def p7_12(entity_id, context):
     """Regulatory Examination History"""
-    return await _run_pipeline("regulatory_examination_history", RegulatoryExaminationHistoryExtractor(), RegulatoryExaminationHistoryAggregator(), entity_id, context)
+    return _run_pipeline("regulatory_examination_history", None, None, entity_id, context)
 
 
 @register_inference_function("ot_network_segmentation_basefunction")
-async def p7_13(entity_id, context):
+def p7_13(entity_id, context):
     """OT Network Segmentation"""
-    return await _run_pipeline("ot_network_segmentation", OtNetworkSegmentationExtractor(), OtNetworkSegmentationAggregator(), entity_id, context)
+    return _run_pipeline("ot_network_segmentation", None, None, entity_id, context)
 
 
 @register_inference_function("scada_security_posture_basefunction")
-async def p7_14(entity_id, context):
+def p7_14(entity_id, context):
     """SCADA Security Posture"""
-    return await _run_pipeline("scada_security_posture", ScadaSecurityPostureExtractor(), ScadaSecurityPostureAggregator(), entity_id, context)
+    return _run_pipeline("scada_security_posture", None, None, entity_id, context)
 
 
 @register_inference_function("safety_instrumented_system_basefunction")
-async def p7_15(entity_id, context):
+def p7_15(entity_id, context):
     """Safety Instrumented System Independence"""
-    return await _run_pipeline("safety_instrumented_system", SafetyInstrumentedSystemExtractor(), SafetyInstrumentedSystemAggregator(), entity_id, context)
+    return _run_pipeline("safety_instrumented_system", None, None, entity_id, context)
 
 
 @register_inference_function("ot_patching_cadence_basefunction")
-async def p7_16(entity_id, context):
+def p7_16(entity_id, context):
     """OT Patching Cadence"""
-    return await _run_pipeline("ot_patching_cadence", OtPatchingCadenceExtractor(), OtPatchingCadenceAggregator(), entity_id, context)
+    return _run_pipeline("ot_patching_cadence", None, None, entity_id, context)
 
 
 @register_inference_function("nerc_cip_compliance_basefunction")
-async def p7_17(entity_id, context):
+def p7_17(entity_id, context):
     """NERC CIP Compliance"""
-    return await _run_pipeline("nerc_cip_compliance", NercCipComplianceExtractor(), NercCipComplianceAggregator(), entity_id, context)
+    return _run_pipeline("nerc_cip_compliance", None, None, entity_id, context)
 
 
 @register_inference_function("secure_sdlc_maturity_basefunction")
-async def p7_18(entity_id, context):
+def p7_18(entity_id, context):
     """Secure SDLC Maturity"""
-    return await _run_pipeline("secure_sdlc_maturity", SecureSdlcMaturityExtractor(), SecureSdlcMaturityAggregator(), entity_id, context)
+    return _run_pipeline("secure_sdlc_maturity", None, None, entity_id, context)
 
 
 @register_inference_function("sbom_coverage_basefunction")
-async def p7_19(entity_id, context):
+def p7_19(entity_id, context):
     """SBOM Coverage"""
-    return await _run_pipeline("sbom_coverage", SbomCoverageExtractor(), SbomCoverageAggregator(), entity_id, context)
+    return _run_pipeline("sbom_coverage", None, None, entity_id, context)
 
 
 @register_inference_function("tenant_isolation_strength_basefunction")
-async def p7_20(entity_id, context):
+def p7_20(entity_id, context):
     """Tenant Isolation Strength"""
-    return await _run_pipeline("tenant_isolation_strength", TenantIsolationStrengthExtractor(), TenantIsolationStrengthAggregator(), entity_id, context)
+    return _run_pipeline("tenant_isolation_strength", None, None, entity_id, context)
 
 
 @register_inference_function("dependency_vulnerability_exposure_basefunction")
-async def p7_21(entity_id, context):
+def p7_21(entity_id, context):
     """Dependency Vulnerability Exposure"""
-    return await _run_pipeline("dependency_vulnerability_exposure", DependencyVulnerabilityExposureExtractor(), DependencyVulnerabilityExposureAggregator(), entity_id, context)
+    return _run_pipeline("dependency_vulnerability_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("api_security_posture_basefunction")
-async def p7_22(entity_id, context):
+def p7_22(entity_id, context):
     """API Security Posture"""
-    return await _run_pipeline("api_security_posture", ApiSecurityPostureExtractor(), ApiSecurityPostureAggregator(), entity_id, context)
+    return _run_pipeline("api_security_posture", None, None, entity_id, context)
 
 
 @register_inference_function("incident_notification_capability_basefunction")
-async def p7_23(entity_id, context):
+def p7_23(entity_id, context):
     """Incident Notification Capability"""
-    return await _run_pipeline("incident_notification_capability", IncidentNotificationCapabilityExtractor(), IncidentNotificationCapabilityAggregator(), entity_id, context)
+    return _run_pipeline("incident_notification_capability", None, None, entity_id, context)
 
 
 @register_inference_function("user_authentication_strength_basefunction")
-async def p7_24(entity_id, context):
+def p7_24(entity_id, context):
     """User Authentication Strength"""
-    return await _run_pipeline("user_authentication_strength", UserAuthenticationStrengthExtractor(), UserAuthenticationStrengthAggregator(), entity_id, context)
+    return _run_pipeline("user_authentication_strength", None, None, entity_id, context)
 
 
 @register_inference_function("data_retention_practices_basefunction")
-async def p7_25(entity_id, context):
+def p7_25(entity_id, context):
     """Data Retention Practices"""
-    return await _run_pipeline("data_retention_practices", DataRetentionPracticesExtractor(), DataRetentionPracticesAggregator(), entity_id, context)
+    return _run_pipeline("data_retention_practices", None, None, entity_id, context)
 
 
 @register_inference_function("credential_breach_monitoring_basefunction")
-async def p7_26(entity_id, context):
+def p7_26(entity_id, context):
     """Credential Breach Monitoring"""
-    return await _run_pipeline("credential_breach_monitoring", CredentialBreachMonitoringExtractor(), CredentialBreachMonitoringAggregator(), entity_id, context)
+    return _run_pipeline("credential_breach_monitoring", None, None, entity_id, context)
 
 
 @register_inference_function("content_moderation_capability_basefunction")
-async def p7_27(entity_id, context):
+def p7_27(entity_id, context):
     """Content Moderation Capability"""
-    return await _run_pipeline("content_moderation_capability", ContentModerationCapabilityExtractor(), ContentModerationCapabilityAggregator(), entity_id, context)
+    return _run_pipeline("content_moderation_capability", None, None, entity_id, context)
 
 
 @register_inference_function("user_data_encryption_basefunction")
-async def p7_28(entity_id, context):
+def p7_28(entity_id, context):
     """User Data Encryption"""
-    return await _run_pipeline("user_data_encryption", UserDataEncryptionExtractor(), UserDataEncryptionAggregator(), entity_id, context)
+    return _run_pipeline("user_data_encryption", None, None, entity_id, context)
 
 
 @register_inference_function("third_party_data_sharing_basefunction")
-async def p7_29(entity_id, context):
+def p7_29(entity_id, context):
     """Third Party Data Sharing Controls"""
-    return await _run_pipeline("third_party_data_sharing", ThirdPartyDataSharingExtractor(), ThirdPartyDataSharingAggregator(), entity_id, context)
+    return _run_pipeline("third_party_data_sharing", None, None, entity_id, context)
 
 
 @register_inference_function("production_ot_segmentation_basefunction")
-async def p7_30(entity_id, context):
+def p7_30(entity_id, context):
     """Production OT Segmentation"""
-    return await _run_pipeline("production_ot_segmentation", ProductionOtSegmentationExtractor(), ProductionOtSegmentationAggregator(), entity_id, context)
+    return _run_pipeline("production_ot_segmentation", None, None, entity_id, context)
 
 
 @register_inference_function("production_recovery_capability_basefunction")
-async def p7_31(entity_id, context):
+def p7_31(entity_id, context):
     """Production Recovery Capability"""
-    return await _run_pipeline("production_recovery_capability", ProductionRecoveryCapabilityExtractor(), ProductionRecoveryCapabilityAggregator(), entity_id, context)
+    return _run_pipeline("production_recovery_capability", None, None, entity_id, context)
 
 
 @register_inference_function("ip_protection_controls_basefunction")
-async def p7_32(entity_id, context):
+def p7_32(entity_id, context):
     """IP Protection Controls"""
-    return await _run_pipeline("ip_protection_controls", IpProtectionControlsExtractor(), IpProtectionControlsAggregator(), entity_id, context)
+    return _run_pipeline("ip_protection_controls", None, None, entity_id, context)
 
 
 @register_inference_function("supply_chain_digital_risk_basefunction")
-async def p7_33(entity_id, context):
+def p7_33(entity_id, context):
     """Supply Chain Digital Risk"""
-    return await _run_pipeline("supply_chain_digital_risk", SupplyChainDigitalRiskExtractor(), SupplyChainDigitalRiskAggregator(), entity_id, context)
+    return _run_pipeline("supply_chain_digital_risk", None, None, entity_id, context)
 
 
 @register_inference_function("ransomware_preparedness_basefunction")
-async def p7_34(entity_id, context):
+def p7_34(entity_id, context):
     """Ransomware Preparedness"""
-    return await _run_pipeline("ransomware_preparedness", RansomwarePreparednessExtractor(), RansomwarePreparednessAggregator(), entity_id, context)
+    return _run_pipeline("ransomware_preparedness", None, None, entity_id, context)
 
 
 @register_inference_function("point_to_point_encryption_basefunction")
-async def p7_35(entity_id, context):
+def p7_35(entity_id, context):
     """Point-to-Point Encryption"""
-    return await _run_pipeline("point_to_point_encryption", PointToPointEncryptionExtractor(), PointToPointEncryptionAggregator(), entity_id, context)
+    return _run_pipeline("point_to_point_encryption", None, None, entity_id, context)
 
 
 @register_inference_function("ecommerce_security_posture_basefunction")
-async def p7_36(entity_id, context):
+def p7_36(entity_id, context):
     """E-commerce Security Posture"""
-    return await _run_pipeline("ecommerce_security_posture", EcommerceSecurityPostureExtractor(), EcommerceSecurityPostureAggregator(), entity_id, context)
+    return _run_pipeline("ecommerce_security_posture", None, None, entity_id, context)
 
 
 @register_inference_function("store_network_isolation_basefunction")
-async def p7_37(entity_id, context):
+def p7_37(entity_id, context):
     """Store Network Isolation"""
-    return await _run_pipeline("store_network_isolation", StoreNetworkIsolationExtractor(), StoreNetworkIsolationAggregator(), entity_id, context)
+    return _run_pipeline("store_network_isolation", None, None, entity_id, context)
 
 
 @register_inference_function("loyalty_data_protection_basefunction")
-async def p7_38(entity_id, context):
+def p7_38(entity_id, context):
     """Loyalty Data Protection"""
-    return await _run_pipeline("loyalty_data_protection", LoyaltyDataProtectionExtractor(), LoyaltyDataProtectionAggregator(), entity_id, context)
+    return _run_pipeline("loyalty_data_protection", None, None, entity_id, context)
 
 
 @register_inference_function("pci_assessment_status_basefunction")
-async def p7_39(entity_id, context):
+def p7_39(entity_id, context):
     """PCI Assessment Status"""
-    return await _run_pipeline("pci_assessment_status", PciAssessmentStatusExtractor(), PciAssessmentStatusAggregator(), entity_id, context)
+    return _run_pipeline("pci_assessment_status", None, None, entity_id, context)
 
 
 @register_inference_function("access_provisioning_automation_basefunction")
-async def p7_40(entity_id, context):
+def p7_40(entity_id, context):
     """Access Provisioning Automation"""
-    return await _run_pipeline("access_provisioning_automation", AccessProvisioningAutomationExtractor(), AccessProvisioningAutomationAggregator(), entity_id, context)
+    return _run_pipeline("access_provisioning_automation", None, None, entity_id, context)
 
 
 @register_inference_function("essential_services_continuity_basefunction")
-async def p7_41(entity_id, context):
+def p7_41(entity_id, context):
     """Essential Services Continuity"""
-    return await _run_pipeline("essential_services_continuity", EssentialServicesContinuityExtractor(), EssentialServicesContinuityAggregator(), entity_id, context)
+    return _run_pipeline("essential_services_continuity", None, None, entity_id, context)
 
 
 @register_inference_function("legacy_system_exposure_basefunction")
-async def p7_42(entity_id, context):
+def p7_42(entity_id, context):
     """Legacy System Exposure"""
-    return await _run_pipeline("legacy_system_exposure", LegacySystemExposureExtractor(), LegacySystemExposureAggregator(), entity_id, context)
+    return _run_pipeline("legacy_system_exposure", None, None, entity_id, context)
 
 
 @register_inference_function("ms_isac_participation_basefunction")
-async def p7_43(entity_id, context):
+def p7_43(entity_id, context):
     """MS-ISAC Participation"""
-    return await _run_pipeline("ms_isac_participation", MsIsacParticipationExtractor(), MsIsacParticipationAggregator(), entity_id, context)
+    return _run_pipeline("ms_isac_participation", None, None, entity_id, context)
 
 
 @register_inference_function("citizen_data_volume_basefunction")
-async def p7_44(entity_id, context):
+def p7_44(entity_id, context):
     """Citizen Data Volume"""
-    return await _run_pipeline("citizen_data_volume", CitizenDataVolumeExtractor(), CitizenDataVolumeAggregator(), entity_id, context)
+    return _run_pipeline("citizen_data_volume", None, None, entity_id, context)
 
 
 @register_inference_function("ransomware_payment_governance_basefunction")
-async def p7_45(entity_id, context):
+def p7_45(entity_id, context):
     """Ransomware Payment Governance"""
-    return await _run_pipeline("ransomware_payment_governance", RansomwarePaymentGovernanceExtractor(), RansomwarePaymentGovernanceAggregator(), entity_id, context)
+    return _run_pipeline("ransomware_payment_governance", None, None, entity_id, context)
 
 
 @register_inference_function("cyber_incident_response_maturity_basefunction")
-async def p7_46(entity_id, context):
+def p7_46(entity_id, context):
     """Cyber Incident Response Maturity"""
-    return await _run_pipeline("cyber_incident_response_maturity", CyberIncidentResponseMaturityExtractor(), CyberIncidentResponseMaturityAggregator(), entity_id, context)
+    return _run_pipeline("cyber_incident_response_maturity", None, None, entity_id, context)
 
 
 @register_inference_function("client_data_classification_basefunction")
-async def p7_47(entity_id, context):
+def p7_47(entity_id, context):
     """Client Data Classification"""
-    return await _run_pipeline("client_data_classification", ClientDataClassificationExtractor(), ClientDataClassificationAggregator(), entity_id, context)
+    return _run_pipeline("client_data_classification", None, None, entity_id, context)
 
 
 @register_inference_function("ethical_wall_capability_basefunction")
-async def p7_48(entity_id, context):
+def p7_48(entity_id, context):
     """Ethical Wall Capability"""
-    return await _run_pipeline("ethical_wall_capability", EthicalWallCapabilityExtractor(), EthicalWallCapabilityAggregator(), entity_id, context)
+    return _run_pipeline("ethical_wall_capability", None, None, entity_id, context)
 
 
 @register_inference_function("email_security_posture_basefunction")
-async def p7_49(entity_id, context):
+def p7_49(entity_id, context):
     """Email Security Posture"""
-    return await _run_pipeline("email_security_posture", EmailSecurityPostureExtractor(), EmailSecurityPostureAggregator(), entity_id, context)
+    return _run_pipeline("email_security_posture", None, None, entity_id, context)
 
 
 @register_inference_function("client_data_encryption_at_rest_basefunction")
-async def p7_50(entity_id, context):
+def p7_50(entity_id, context):
     """Client Data Encryption at Rest"""
-    return await _run_pipeline("client_data_encryption_at_rest", ClientDataEncryptionAtRestExtractor(), ClientDataEncryptionAtRestAggregator(), entity_id, context)
+    return _run_pipeline("client_data_encryption_at_rest", None, None, entity_id, context)
 
 
 @register_inference_function("wire_transfer_controls_basefunction")
-async def p7_51(entity_id, context):
+def p7_51(entity_id, context):
     """Wire Transfer Controls"""
-    return await _run_pipeline("wire_transfer_controls", WireTransferControlsExtractor(), WireTransferControlsAggregator(), entity_id, context)
+    return _run_pipeline("wire_transfer_controls", None, None, entity_id, context)
 
 
 @register_inference_function("remote_access_security_basefunction")
-async def p7_52(entity_id, context):
+def p7_52(entity_id, context):
     """Remote Access Security"""
-    return await _run_pipeline("remote_access_security", RemoteAccessSecurityExtractor(), RemoteAccessSecurityAggregator(), entity_id, context)
+    return _run_pipeline("remote_access_security", None, None, entity_id, context)
 
