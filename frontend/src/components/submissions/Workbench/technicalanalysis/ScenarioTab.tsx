@@ -293,11 +293,8 @@ export default function ScenarioTab() {
               ══════════════════════════════════════════════════════════════ */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
             {/* Loss modifier calculation */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Shield className="icon"/><span className="text-sm">Loss Modifier Calculation</span>
-              </div>
-              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
+            <StandardCard title="Loss Modifier Calculation" lucideIcon={Shield}>
+              <div>
                 {/* Waterfall grid */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
@@ -327,14 +324,11 @@ export default function ScenarioTab() {
                   <span className="text-xs opacity-40">x</span>
                 </div>
               </div>
-            </div>
+            </StandardCard>
 
             {/* Exposure modifier calculation */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Shield className="icon"/><span className="text-sm">Exposure & Scaling</span>
-              </div>
-              <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-4 px-dsi-pad">
+            <StandardCard title="Exposure & Scaling" lucideIcon={Shield}>
+              <div>
                 {/* Exposure waterfall */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
                   <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-dsi-selected">Scenario</span>
@@ -388,7 +382,7 @@ export default function ScenarioTab() {
                   </div>
                 </div>
               </div>
-            </div>
+            </StandardCard>
           </div>
 
           {/* ══════════════════════════════════════════════════════════════
