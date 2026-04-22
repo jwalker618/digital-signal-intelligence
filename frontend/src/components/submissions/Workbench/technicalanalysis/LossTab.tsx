@@ -127,11 +127,9 @@ export default function LossTab() {
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all loss fields
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Target className="icon"/><span className="text-sm">Active Submission: Loss Profile</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Active Submission: Loss Profile" lucideIcon={Target}>
+        <div className="py-2">
           {/* Row 1: Primary KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 pl-dsi-pad pr-dsi-pad">
             <KpiTile
@@ -190,6 +188,7 @@ export default function LossTab() {
             )}
           </div>
         </div>
+        </StandardCard>
       </div>
 
       {isFetchingLossAnalytics ? (
