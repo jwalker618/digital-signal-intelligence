@@ -18,6 +18,163 @@ import {
 import { formatNumber } from "@/lib/format";
 import { getDecisionColor, tooltipStyle } from "@/lib/chartConfig";
 
+/** DISTRIBUTION BAR CHART---------------------------------------------------------------------------------------------- */
+
+export interface DistributionBarChartProps<T extends Record<string, unknown>> {
+  data: T[];
+  /** Field name on `T` for the x-axis category. */
+  categoryKey: keyof T & string;
+  /** Field name on `T` for the bar value (typically a count). */
+  valueKey: keyof T & string;
+  /**
+   * Per-bar colour resolver. Called once per row.
+   * Default: every bar painted `dsi-selected`.
+   */
+  colorFor?: (entry: T, index: number) => string;
+  /** Human-readable name for the bar value in the tooltip. */
+  valueName?: string;
+  /** Tooltip value formatter. Default: 0-decimal number. */
+  formatValue?: (value: number) => string;
+  /** Y-axis domain override. Default "auto", "auto". */
+  yDomain?: [number | "auto", number | "auto"];
+  /** Chart height in px. Default 200. */
+  height?: number;
+  /** Shown when `data` is empty. */
+  emptyMessage?: string;
+}
+
+/**
+ * Plain category → count bar chart. Used by the WorldEngineView tier
+ * distributions: one bar per tier, coloured by the caller's
+ * tier-index → colour map. Complements `BenchmarkBarChart`, which
+ * exists for the subject-vs-peer comparison pattern and isn't the
+ * right fit when every bar is its own "category".
+ */
+export const DistributionBarChart = <T extends Record<string, unknown>>({
+  data,
+  categoryKey,
+  valueKey,
+  colorFor = () => "var(--dsi-selected)",
+  valueName,
+  formatValue = (v) => formatNumber(v, 0),
+  yDomain = ["auto", "auto"],
+  height = 200,
+  emptyMessage = "No data available.",
+}: DistributionBarChartProps<T>) => {
+  if (!data || data.length === 0) {
+    return (
+      <div
+        className="flex items-center justify-center opacity-50 italic text-sm"
+        style={{ height }}
+      >
+        {emptyMessage}
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full" style={{ height }}>
+      <ResponsiveContainer width="100%" height="100%">
+        <BarChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="var(--dsi-outline)"
+            opacity={0.3}
+          />
+          <XAxis
+            dataKey={categoryKey}
+            stroke="var(--dsi-contrast-background)"
+            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
+          />
+          <YAxis
+            stroke="var(--dsi-contrast-background)"
+            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
+            domain={yDomain}
+          />
+          <RechartsTooltip
+            contentStyle={tooltipStyle}
+            cursor={{ fill: "var(--dsi-selected)", opacity: 0.2 }}
+            formatter={(value: unknown, name: string) => [
+              formatValue(Number(value)),
+              valueName ?? name,
+            ]}
+          />
+          <Bar dataKey={valueKey} radius={[4, 4, 0, 0]}>
+            {data.map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={colorFor(entry, index)} />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+/** HORIZONTAL BAR LIST---------------------------------------------------------------------------------------------- */
+
+export interface HorizontalBarListRow {
+  label: string;
+  /** Bar width as a 0–100 percent. */
+  percent: number;
+  /** Right-aligned annotation, e.g. "12 (30%)". */
+  valueLabel?: React.ReactNode;
+}
+
+export interface HorizontalBarListProps {
+  rows: HorizontalBarListRow[];
+  /** Optional cap — takes the first N rows. */
+  limit?: number;
+  /** Tailwind class for the label column width. Default "w-24". */
+  labelWidth?: string;
+  /** Tailwind class for the value column width. Default "w-16". */
+  valueWidth?: string;
+  emptyMessage?: string;
+}
+
+/**
+ * Stacked label / progress-bar / value rows — the "Sector Concentration"
+ * pattern in WorldEngineView, generalised. Pre-compute `percent`
+ * (0-100) and the right-hand `valueLabel` on the calling side so the
+ * primitive stays domain-agnostic.
+ */
+export const HorizontalBarList = ({
+  rows,
+  limit,
+  labelWidth = "w-24",
+  valueWidth = "w-16",
+  emptyMessage = "No data available.",
+}: HorizontalBarListProps) => {
+  const shown = limit ? rows.slice(0, limit) : rows;
+  if (shown.length === 0) {
+    return <p className="dsi-user-message">{emptyMessage}</p>;
+  }
+  return (
+    <div className="space-y-2">
+      {shown.map((r) => (
+        <div key={r.label} className="flex items-center gap-3">
+          <span
+            className={`text-xs truncate opacity-70 ${labelWidth}`}
+            title={r.label}
+          >
+            {r.label}
+          </span>
+          <div className="flex-1 h-4 bg-dsi-background rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full bg-dsi-selected/40"
+              style={{ width: `${Math.max(0, Math.min(100, r.percent))}%` }}
+            />
+          </div>
+          {r.valueLabel !== undefined && (
+            <span className={`text-xs font-bold text-right ${valueWidth}`}>
+              {r.valueLabel}
+            </span>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 /** BENCHMARK CHART---------------------------------------------------------------------------------------------- */
 
 export interface BenchmarkBarChartProps<T extends Record<string, unknown>> {

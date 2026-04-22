@@ -8,21 +8,19 @@ import {
   StandardCard } from "@/components/base/cards";
 
 import {
-  Orbit, Zap, AlertTriangle, 
+  Orbit, Zap, AlertTriangle,
   Plus, X, Radio, Link, ChartCandlestick, Eye,
 } from "lucide-react";
-
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer, Cell
-} from "recharts";
 
 import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScenarios, ShockResult } from "@/lib/shockEngine";
 import { formatNumber, formatCurrency, formatPercent, formatText, formatTimeRelative, formatDate } from "@/lib/format";
 
-import { tooltipStyle } from "@/lib/chartConfig";
 import { api, } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
+import {
+  DistributionBarChart,
+  HorizontalBarList,
+} from "@/components/base/charts/primatives";
 
 import type {
   DiscoveredRelationship,
@@ -346,40 +344,26 @@ export default function WorldEngineView() {
               
               <div>
                 <span className="text-xs opacity-60 block mb-2">Tier Distribution</span>
-                <div className="h-[200px]">
-                  
-                  <ResponsiveContainer width="100%" height="100%">
-                    
-                    <BarChart data={tierChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
-                      <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                      <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                      <RechartsTooltip contentStyle={tooltipStyle} />
-                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                        {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
-                      </Bar>
-                    </BarChart>
-
-                  </ResponsiveContainer>
-
-                </div>
+                <DistributionBarChart
+                  data={tierChartData}
+                  categoryKey="tier"
+                  valueKey="count"
+                  colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                  valueName="Count"
+                  height={200}
+                />
               </div>
               <div>
 
                 <span className="text-xs opacity-60 block mb-2">Sector Concentration</span>
-                <div className="space-y-2">
-                  {covChartData.slice(0, 6).map((e) => (
-                    
-                    <div key={e.coverage} className="flex items-center gap-3">
-                      <span className="text-xs w-24 truncate opacity-70" title={e.coverage}>{e.coverage}</span>
-                      <div className="flex-1 h-4 bg-dsi-background rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-dsi-selected/40" style={{ width: `${e.pct}%` }} />
-                      </div>
-                      <span className="text-xs font-bold w-12 text-right">{e.count} ({e.pct}%)</span>
-                    </div>
-
-                  ))}
-                </div>
+                <HorizontalBarList
+                  limit={6}
+                  rows={covChartData.map((e) => ({
+                    label: e.coverage,
+                    percent: Number(e.pct),
+                    valueLabel: `${e.count} (${e.pct}%)`,
+                  }))}
+                />
               </div>
             </div>
           </div>
@@ -554,35 +538,25 @@ export default function WorldEngineView() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div>
                   <span className="text-xs opacity-60 block mb-2">Tier Distribution — Before</span>
-                  <div className="h-[180px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={tierChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
-                        <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                        <RechartsTooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <DistributionBarChart
+                    data={tierChartData}
+                    categoryKey="tier"
+                    valueKey="count"
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                    valueName="Count"
+                    height={180}
+                  />
                 </div>
                 <div>
                   <span className="text-xs opacity-60 block mb-2">Tier Distribution — After {shockResult.shocks.length} Shock{shockResult.shocks.length !== 1 ? 's' : ''}</span>
-                  <div className="h-[180px]">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={afterTierData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
-                        <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
-                        <RechartsTooltip contentStyle={tooltipStyle} />
-                        <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {afterTierData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <DistributionBarChart
+                    data={afterTierData}
+                    categoryKey="tier"
+                    valueKey="count"
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                    valueName="Count"
+                    height={180}
+                  />
                 </div>
               </div>
 
