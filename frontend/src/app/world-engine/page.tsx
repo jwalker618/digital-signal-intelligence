@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
-import { CardGrid } from "@/components/base/cards";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 
 import {
   Orbit, Target, Zap, AlertTriangle, ArrowRight, RotateCcw,
@@ -159,59 +159,57 @@ export default function WorldEngineView() {
       <CardGrid cols="grid-cols-1" className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
 
         {/* ═══ WORLD MODEL ═══ */}
-        <div className="flex flex-col">
-          
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Orbit className="icon"/><span className="text-sm">World Engine</span>
-            <span className="text-xs content-center">
+        <StandardCard
+          title="World Engine"
+          lucideIcon={Orbit}
+          headerRight={
+            <span className="text-xs">
               ({maturity ? `${maturity.assessed_entity_count} entities` : "No data"})
             </span>
-          </div>
-
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Maturity Stage</span>
-                <span className="text-xl font-black text-dsi-selected uppercase">
-                  {maturity?.stage ?? "—"}
+          }
+        >
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="border border-dsi-outline/20 rounded-lg p-3">
+              <span className="text-xs opacity-60 block mb-1">Maturity Stage</span>
+              <span className="text-xl font-black text-dsi-selected uppercase">
+                {maturity?.stage ?? "—"}
+              </span>
+              {maturity && (
+                <span className="block text-[10px] opacity-60 mt-1">
+                  {formatNumber(maturity.time_depth_months, 1)} months of data
                 </span>
-                {maturity && (
-                  <span className="block text-[10px] opacity-60 mt-1">
-                    {formatNumber(maturity.time_depth_months, 1)} months of data
-                  </span>
-                )}
-              </div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Active Relationships</span>
-                <span className="text-xl font-black text-dsi-selected">
-                  {weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
+              )}
+            </div>
+            <div className="border border-dsi-outline/20 rounded-lg p-3">
+              <span className="text-xs opacity-60 block mb-1">Active Relationships</span>
+              <span className="text-xl font-black text-dsi-selected">
+                {weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
+              </span>
+              {maturity && (
+                <span className="block text-[10px] opacity-60 mt-1">
+                  {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
                 </span>
-                {maturity && (
-                  <span className="block text-[10px] opacity-60 mt-1">
-                    {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
-                  </span>
-                )}
-              </div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
-                <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
-                  {weStats?.drift_alerts_unacknowledged ?? "—"}
+              )}
+            </div>
+            <div className="border border-dsi-outline/20 rounded-lg p-3">
+              <span className="text-xs opacity-60 block mb-1">Open Drift Alerts</span>
+              <span className={`text-xl font-black ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-warning" : "text-dsi-selected"}`}>
+                {weStats?.drift_alerts_unacknowledged ?? "—"}
+              </span>
+            </div>
+            <div className="border border-dsi-outline/20 rounded-lg p-3">
+              <span className="text-xs opacity-60 block mb-1">Assessed Entities</span>
+              <span className="text-xl font-black text-dsi-selected">
+                {maturity?.assessed_entity_count ?? "—"}
+              </span>
+              {maturity && (
+                <span className="block text-[10px] opacity-60 mt-1">
+                  {maturity.entities_with_temporal_data} with history
                 </span>
-              </div>
-              <div className="border border-dsi-outline/20 rounded-lg p-3">
-                <span className="text-xs opacity-60 block mb-1">Assessed Entities</span>
-                <span className="text-xl font-black text-dsi-selected">
-                  {maturity?.assessed_entity_count ?? "—"}
-                </span>
-                {maturity && (
-                  <span className="block text-[10px] opacity-60 mt-1">
-                    {maturity.entities_with_temporal_data} with history
-                  </span>
-                )}
-              </div>
+              )}
             </div>
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ OPEN DRIFT ALERTS ═══ */}
         <div className="flex flex-col">
