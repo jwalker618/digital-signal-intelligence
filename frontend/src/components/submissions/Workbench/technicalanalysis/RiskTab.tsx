@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
-  Target, Activity, Paperclip, AlertTriangle, ShieldAlert, Glasses,
+  Target, Activity, AlertTriangle, ShieldAlert, Glasses,
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
 import { formatNumber, formatPercent, formatDate, formatText, formatCurrency } from "@/lib/format";
 import { KpiTile, StatusPill } from "@/components/base/content/primatives";
+import { StandardCard } from "@/components/base/cards";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
 
 export default function RiskTab() {
@@ -157,45 +159,20 @@ export default function RiskTab() {
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
 
-      {/* STICKY HEADER */}
-      <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-        <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? formatDate(activeQuote.valid_from) : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? formatDate(activeQuote.valid_until) : 'N/A'}</span>
-              </span>
-            )}
-            {activeQuote?.status === 'bound' && (
-              <span>
-                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? formatDate(activeQuote.bound_at) : 'N/A'}</span>
-                <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
-              </span>
-            )}
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       {/* KPIs */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse pr-dsi-pad">
-          <Glasses className="icon"/><span className="text-sm">Results</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pl-dsi-pad pr-dsi-pad">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Results" lucideIcon={Glasses}>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 py-2">
             <KpiTile label="Pure Composite Score" value={formatNumber(activeVersion.pure_composite_score, 1)} />
             <KpiTile label="Confidence"           value={formatPercent(activeVersion.confidence || 0, 0)} />
             <KpiTile label="Signal Coverage"      value={formatPercent(activeVersion.signal_coverage || 0, 0)} />
@@ -203,19 +180,16 @@ export default function RiskTab() {
             <KpiTile label="Final Composite Score" value={formatNumber(activeVersion.final_composite_score, 1)} variant="emphasis" />
             <KpiTile label="Final Tier"            value={`T${activeVersion.final_tier} (${activeVersion.tier_label})`} variant="emphasis" />
           </div>
-        </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
           TIER POSITION — full width, enhanced visualisation
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Gauge className="icon"/><span className="text-sm">Tier Position & Improvement Paths</span>
-        </div>
+      <div className="pt-2 pb-2">
+        <StandardCard title="Tier Position & Improvement Paths" lucideIcon={Gauge}>
         <div className="
-          border-b-3 border-dsi-contrast-background 
-          overflow-x-hidden border-collapse rounded-b-xl 
+          overflow-x-hidden
           bg-dsi-analysis shadow-sm 
           pt-dsi-gap pb-4"
           >
@@ -261,7 +235,7 @@ export default function RiskTab() {
                         </div>
                         
                         <div className="text-center mt-0.5">
-                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-positive' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-negative' : 'text-dsi-warning'}`}>
+                          <span className={`text-xs ${band.action?.toLowerCase().includes('approve') ? 'text-dsi-approve' : band.action?.toLowerCase().includes('decline') ? 'text-dsi-decline' : 'text-dsi-refer'}`}>
                             {band.action}
                           </span>
                         </div>
@@ -303,13 +277,13 @@ export default function RiskTab() {
                       <div key={path.tier_id} className="border border-dsi-outline/15 rounded-lg p-3 text-wrap hover:bg-dsi-background/10 transition-colors">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-bold">Tier {path.tier_id} — {path.label}</span>
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${path.action?.toLowerCase().includes('approve') ? 'bg-dsi-positive/10 text-dsi-positive' : 'bg-dsi-warning/10 text-dsi-warning'}`}>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded ${path.action?.toLowerCase().includes('approve') ? 'bg-dsi-approve/10 text-dsi-approve' : 'bg-dsi-refer/10 text-dsi-refer'}`}>
                             {path.action}
                           </span>
                         </div>
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-xs opacity-50">Score range: {path.target_range}</span>
-                          <span className="text-sm font-black text-dsi-positive">+{path.pts_needed} pts</span>
+                          <span className="text-sm font-black text-dsi-approve">+{path.pts_needed} pts</span>
                         </div>
                         {topLevers.length > 0 && (
                           <div className="text-[10px] opacity-50 border-t border-dsi-outline/10 pt-1.5 mt-1.5">
@@ -331,16 +305,15 @@ export default function RiskTab() {
             </div>
           )}
         </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
           GROUP → SIGNAL BREAKDOWN with contribution totals and pillar derivation
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse">
-          <Layers className="icon"/><span className="text-sm">Group & Signal Breakdown</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-auto whitespace-nowrap border-collapse">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Group & Signal Breakdown" lucideIcon={Layers}>
+        <div className="overflow-x-auto">
 
           {isFetchingRiskSignals ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-4">
@@ -382,13 +355,13 @@ export default function RiskTab() {
                     {/* GROUP ROW */}
                     <div
                       onClick={() => toggleGroup(groupId)}
-                      className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors ${hasConditions ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                      className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-2.5 border-t border-dsi-outline/20 cursor-pointer hover:bg-dsi-background/20 transition-colors ${hasConditions ? 'border-l-2 border-l-dsi-refer' : ''}`}
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                         <span className="font-bold text-sm">{groupId}</span>
                         {groupConditions.length > 0 && (
-                          <span className="text-[10px] bg-dsi-warning/10 text-dsi-warning px-1.5 py-0.5 rounded font-bold">
+                          <span className="text-[10px] bg-dsi-refer/10 text-dsi-refer px-1.5 py-0.5 rounded font-bold">
                             {groupConditions.length} cond
                           </span>
                         )}
@@ -398,7 +371,7 @@ export default function RiskTab() {
                       <span className="text-right text-sm opacity-60">{formatNumber(gs.risk_weight, 2)}</span>
                       <span className="text-right text-sm font-bold">{formatNumber(gs.risk_contribution, 1)}</span>
                       <span className="text-center">
-                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-positive' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-warning' : 'text-dsi-negative'}`}>
+                        <span className={`text-xs ${(gs.coverage_ratio ?? 0) >= 1 ? 'text-dsi-approve' : (gs.coverage_ratio ?? 0) >= 0.5 ? 'text-dsi-refer' : 'text-dsi-decline'}`}>
                           {gs.signal_count || 0}/{gs.expected_signal_count || 0}
                         </span>
                       </span>
@@ -453,12 +426,12 @@ export default function RiskTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-warning' : ''}`}
+                          className={`grid grid-cols-[1fr_70px_70px_90px_60px_120px_120px] gap-0 px-dsi-pad py-1.5 bg-dsi-background/10 hover:bg-dsi-background/20 transition-colors ${sigConditions.length > 0 ? 'border-l-2 border-l-dsi-refer' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
-                            {sigConditions.length > 0 && <AlertTriangle className="w-3 h-3 text-dsi-warning shrink-0" />}
-                            {sig.was_absent && <span className="text-[10px] text-dsi-negative font-bold">ABSENT</span>}
+                            {sigConditions.length > 0 && <AlertTriangle className="w-3 h-3 text-dsi-refer shrink-0" />}
+                            {sig.was_absent && <span className="text-[10px] text-dsi-decline font-bold">ABSENT</span>}
                             {sig.proxy_tier && <span className="text-[10px] opacity-30">T{sig.proxy_tier}</span>}
                           </div>
                           <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
@@ -509,17 +482,18 @@ export default function RiskTab() {
             </div>
           )}
         </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
           ACTIVE CONDITIONS — full width, bottom section
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <AlertTriangle className="icon"/>
-          <span className="text-sm">Active Conditions ({allConditions.length})</span>
-        </div>
-        <div className="dsi-section-analysis border-collapse">
+      <div className="pt-2 pb-2">
+        <StandardCard
+          title="Active Conditions"
+          lucideIcon={AlertTriangle}
+          headerRight={<span className="text-[10px] opacity-40">({allConditions.length})</span>}
+        >
           {conditionTypeSummary.length === 0 ? (
             <div className="flex items-center justify-center h-24 opacity-50 text-sm italic">No conditions triggered.</div>
           ) : (
@@ -555,7 +529,7 @@ export default function RiskTab() {
                               <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                               <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
                               {type === 'direct_query' && (
-                                <span className={`text-xs font-bold ${cond.response === true || cond.response === 'yes' ? 'text-dsi-positive' : cond.response === false || cond.response === 'no' ? 'text-dsi-negative' : 'opacity-70'}`}>
+                                <span className={`text-xs font-bold ${cond.response === true || cond.response === 'yes' ? 'text-dsi-approve' : cond.response === false || cond.response === 'no' ? 'text-dsi-decline' : 'opacity-70'}`}>
                                   Response: {typeof cond.response === 'boolean' ? (cond.response ? 'Yes' : 'No') : String(cond.response ?? 'N/A')}
                                 </span>
                               )}
@@ -581,7 +555,7 @@ export default function RiskTab() {
               })}
             </div>
           )}
-        </div>
+        </StandardCard>
       </div>
 
     </div>

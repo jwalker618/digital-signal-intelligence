@@ -143,7 +143,7 @@ export default function CommercialTermsTab() {
           <KpiTile label="Minimum Premium" value={formatCurrency(ct.minimum_gross_premium)} />
           <div>
             <span className="opacity-50 block text-xs mb-0.5">At Minimum?</span>
-            <span className={`font-bold ${ct.at_minimum_premium ? "text-dsi-warning" : ""}`}>
+            <span className={`font-bold ${ct.at_minimum_premium ? "text-dsi-refer" : ""}`}>
               {ct.at_minimum_premium ? "YES" : "No"}
             </span>
           </div>

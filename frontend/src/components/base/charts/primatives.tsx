@@ -95,13 +95,13 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="var(--dsi-chart-grid)"
+            stroke="var(--dsi-outline)"
             opacity={0.5}
           />
           <XAxis
             dataKey={categoryKey}
-            stroke="var(--dsi-chart-axis)"
-            tick={{ fill: "var(--dsi-chart-axis)", fontSize: 11 }}
+            stroke="var(--dsi-contrast-background)"
+            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
             interval={0}
             tickFormatter={(val: string) =>
               typeof val === "string" && val.length > maxCategoryLength
@@ -110,13 +110,13 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
             }
           />
           <YAxis
-            stroke="var(--dsi-chart-axis)"
-            tick={{ fill: "var(--dsi-chart-axis)", fontSize: 12 }}
+            stroke="var(--dsi-contrast-background)"
+            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
             domain={yDomain}
           />
           <RechartsTooltip
             contentStyle={tooltipStyle}
-            cursor={{ fill: "var(--dsi-chart-tooltip-bg)", opacity: 0.4 }}
+            cursor={{ fill: "var(--dsi-selected)", opacity: 0.4 }}
             formatter={(value: unknown, name: string) => [
               formatValue(Number(value)),
               valueName ?? name,
@@ -132,14 +132,14 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
           {subjectValue !== undefined && (
             <ReferenceLine
               y={subjectValue}
-              stroke="var(--dsi-chart-subject)"
+              stroke="var(--dsi-selected)"
               strokeDasharray="6 3"
               strokeWidth={2}
             >
               <Label
                 value={`Subject ${formatNumber(subjectValue, subjectValueDecimals)}`}
                 position="right"
-                fill="var(--dsi-chart-subject)"
+                fill="var(--dsi-selected)"
                 fontSize={11}
               />
             </ReferenceLine>
@@ -160,7 +160,7 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                         x={x + width / 2}
                         y={y - 6}
                         textAnchor="middle"
-                        fill="var(--dsi-chart-axis)"
+                        fill="var(--dsi-contrast-background)"
                         fontSize={10}
                       >
                         n={n}
@@ -175,8 +175,8 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                 key={`cell-${index}`}
                 fill={
                   entry[categoryKey] === subjectCategory
-                    ? "var(--dsi-chart-subject)"
-                    : "var(--dsi-chart-peer)"
+                    ? "var(--dsi-selected)"
+                    : "var(--dsi-analysis)"
                 }
               />
             ))}
@@ -263,20 +263,20 @@ export const PeerScatterChart = ({
           <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="var(--dsi-chart-grid)"
+              stroke="var(--dsi-outline)"
               opacity={0.5}
             />
             <XAxis
               type="number"
               dataKey="x"
               name={xName}
-              stroke="var(--dsi-chart-axis)"
-              tick={{ fill: "var(--dsi-chart-axis)", fontSize: 12 }}
+              stroke="var(--dsi-contrast-background)"
+              tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -15,
-                fill: "var(--dsi-chart-axis)",
+                fill: "var(--dsi-contrast-background)",
                 fontSize: 12,
               }}
             />
@@ -284,13 +284,13 @@ export const PeerScatterChart = ({
               type="number"
               dataKey="y"
               name={yName}
-              stroke="var(--dsi-chart-axis)"
-              tick={{ fill: "var(--dsi-chart-axis)", fontSize: 12 }}
+              stroke="var(--dsi-contrast-background)"
+              tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
               label={{
                 value: yLabel,
                 angle: -90,
                 position: "insideLeft",
-                fill: "var(--dsi-chart-axis)",
+                fill: "var(--dsi-contrast-background)",
                 fontSize: 12,
               }}
             />
@@ -306,13 +306,13 @@ export const PeerScatterChart = ({
             {/* Subject crosshair */}
             <ReferenceLine
               x={subject.x}
-              stroke="var(--dsi-chart-subject)"
+              stroke="var(--dsi-selected)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
             <ReferenceLine
               y={subject.y}
-              stroke="var(--dsi-chart-subject)"
+              stroke="var(--dsi-selected)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
@@ -332,7 +332,7 @@ export const PeerScatterChart = ({
             <Scatter
               name="Active Submission"
               data={[subject]}
-              fill="var(--dsi-chart-subject)"
+              fill="var(--dsi-selected)"
               shape="star"
             />
           </ScatterChart>

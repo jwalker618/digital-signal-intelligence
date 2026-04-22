@@ -4,8 +4,10 @@ import { useEffect, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   TrendingUp, TrendingDown, Activity, Target, ShieldAlert, BarChart3,
-  Paperclip, Minus, Clock, GitBranch, Layers, AlertTriangle
+  Minus, Clock, GitBranch, Layers, AlertTriangle
 } from "lucide-react";
+import { StandardCard } from "@/components/base/cards";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import {
   formatNumber, formatPercent, formatCurrency
 } from "@/lib/format";
@@ -93,8 +95,8 @@ export default function LossTab() {
 
   const getTrendIcon = (trend: string) => {
     const t = trend?.toLowerCase() || '';
-    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-positive" />;
-    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-negative" />;
+    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-dsi-approve" />;
+    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-dsi-decline" />;
     return <Minus className="w-4 h-4 opacity-50" />;
   };
 
@@ -105,71 +107,29 @@ export default function LossTab() {
     return 'Stable';
   };
 
-  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-negative' : v < 0 ? 'text-dsi-positive' : 'opacity-50';
+  const getVelocityColor = (v: number) => v > 0 ? 'text-dsi-decline' : v < 0 ? 'text-dsi-approve' : 'opacity-50';
 
   return (
     <div className="
       w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
-      {/* STICKY WRAPPER */}
-      <div className="
-        sticky top-0 z-20
-        bg-dsi-background
-        pt-3 pb-2"
-        >
-
-        {/* SECTION HEADER */}
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-
-        {/* KEY INFORMATION CARD */}
-        <div className="
-          grid grid-cols-[10%_35%_55%] grid-rows-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-2 pb-2"
-        >
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span className="">
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
-              </span>
-            )}
-            {activeQuote?.status === 'bound' && (
-              <span className="">
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
-              </span>
-            )}
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all loss fields
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Target className="icon"/><span className="text-sm">Active Submission: Loss Profile</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Active Submission: Loss Profile" lucideIcon={Target}>
+        <div className="py-2">
           {/* Row 1: Primary KPIs */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 pl-dsi-pad pr-dsi-pad">
             <KpiTile
@@ -205,7 +165,7 @@ export default function LossTab() {
             <KpiTile
               label="Score Velocity"
               value={
-                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-negative' : 'text-dsi-positive'}>
+                <span className={activeVersion.loss_score_velocity > 0 ? 'text-dsi-decline' : 'text-dsi-approve'}>
                   {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
                 </span>
               }
@@ -228,6 +188,7 @@ export default function LossTab() {
             )}
           </div>
         </div>
+        </StandardCard>
       </div>
 
       {isFetchingLossAnalytics ? (
@@ -243,11 +204,12 @@ export default function LossTab() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pt-2 pb-2">
 
             {/* COMPONENT B: SCATTER MATRIX (decision-colored) */}
-            <div className="lg:col-span-2 flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <ShieldAlert className="icon"/><span className="text-sm">Frequency vs. Severity Matrix</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+            <StandardCard
+              title="Frequency vs. Severity Matrix"
+              lucideIcon={ShieldAlert}
+              spanClass="lg:col-span-2"
+            >
+              <div className="py-2">
                 <PeerScatterChart
                   points={lossScatterData.map((p: any) => ({ x: p.x_propensity, y: p.y_severity, decision: p.decision }))}
                   subject={{
@@ -260,15 +222,12 @@ export default function LossTab() {
                   yName="Severity"
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* COMPONENT D: SUBJECT VELOCITY PANEL with previous scores */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <TrendingUp className="icon"/><span className="text-sm">Loss Trajectory</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <div className="pl-dsi-pad pr-dsi-pad space-y-3">
+            <StandardCard title="Loss Trajectory" lucideIcon={TrendingUp}>
+              <div className="py-2">
+                <div className="space-y-3">
 
                   {/* Overall trend */}
                   <div className="border border-dsi-outline/20 rounded-lg p-3">
@@ -351,7 +310,7 @@ export default function LossTab() {
 
                 </div>
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
@@ -361,12 +320,13 @@ export default function LossTab() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-2 pt-2 pb-2">
 
             {/* COHORT BENCHMARKING (2/3 width) */}
-            <div className="lg:col-span-2 flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <BarChart3 className="icon"/><span className="text-sm">Cohort Benchmarking</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
+            <StandardCard
+              title="Cohort Benchmarking"
+              lucideIcon={BarChart3}
+              spanClass="lg:col-span-2"
+            >
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Combined Loss Modifier across all cohorts. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <BenchmarkBarChart
                   data={lossCohortBenchmarks}
                   categoryKey="cohort_name"
@@ -378,14 +338,11 @@ export default function LossTab() {
                   emptyMessage="No cohort data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* LOSS GROUP SCORES BREAKDOWN (1/3 width) */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Layers className="icon"/><span className="text-sm">Loss Group Scores</span>
-              </div>
-              <div className="dsi-section-analysis overflow-y-auto border-collapse no-scrollbar max-h-[400px]">
+            <StandardCard title="Loss Group Scores" lucideIcon={Layers}>
+              <div className="overflow-y-auto no-scrollbar max-h-[400px]">
                 {groupEntries.length > 0 ? (
                   <div className="space-y-0">
                     {groupEntries.map(([group, detail]: [string, any]) => {
@@ -393,7 +350,7 @@ export default function LossTab() {
                       const sevScore = detail?.severity_score ?? 0;
                       const confidence = detail?.confidence;
                       return (
-                        <div key={group} className="px-dsi-pad py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                        <div key={group} className="py-2.5 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs font-semibold truncate max-w-[140px]" title={group}>{group}</span>
                             {confidence != null && (
@@ -414,7 +371,7 @@ export default function LossTab() {
                   </div>
                 )}
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
@@ -422,12 +379,13 @@ export default function LossTab() {
               LOSS-RELEVANT SIGNAL CONDITIONS
               ======================================================================= */}
           {lossConditions.length > 0 && (
-            <div className="flex flex-col pt-2 pb-2">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <AlertTriangle className="icon"/>
-                <span className="text-sm">Loss Signal Conditions ({lossConditions.length})</span>
-              </div>
-              <div className="dsi-section-analysis overflow-y-auto border-collapse max-h-[280px]">
+            <div className="pt-2 pb-2">
+              <StandardCard
+                title="Loss Signal Conditions"
+                lucideIcon={AlertTriangle}
+                headerRight={<span className="text-[10px] opacity-40">({lossConditions.length})</span>}
+              >
+              <div className="overflow-y-auto max-h-[280px]">
                 <div className="space-y-0">
                   {lossConditions.map((cond: any, idx: number) => {
                     const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
@@ -435,13 +393,13 @@ export default function LossTab() {
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
                     const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
-                                     isReferral ? 'bg-dsi-warning/15 text-dsi-warning' :
-                                     isTierOverride ? 'bg-dsi-negative/10 text-dsi-negative' :
+                                     isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
+                                     isTierOverride ? 'bg-dsi-decline/10 text-dsi-decline' :
                                      'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-warning' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-refer' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
@@ -464,6 +422,7 @@ export default function LossTab() {
                   })}
                 </div>
               </div>
+              </StandardCard>
             </div>
           )}
         </>

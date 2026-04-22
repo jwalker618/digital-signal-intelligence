@@ -4,13 +4,15 @@ import { useEffect, useMemo } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   Target, Activity, BarChart3, Layers, ScatterChart as ScatterIcon,
-  Paperclip, Puzzle, Gauge, AlertTriangle, ShieldAlert
+  Puzzle, Gauge, AlertTriangle, ShieldAlert
 } from "lucide-react";
 import { formatNumber, formatCurrency } from "@/lib/format";
 import {
   KpiTile,
   InfoPanel,
 } from "@/components/base/content/primatives";
+import { StandardCard } from "@/components/base/cards";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import {
   PeerScatterChart,
   BenchmarkBarChart,
@@ -89,64 +91,22 @@ export default function ExposureTab() {
       w-full no-scrollbar
       animate-in fade-in duration-500 pb-12"
       >
-      {/* STICKY WRAPPER */}
-      <div className="
-        sticky top-0 z-20
-        bg-dsi-background
-        pt-3 pb-2"
-        >
-
-        {/* SECTION HEADER */}
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-
-        {/* KEY INFORMATION CARD */}
-        <div className="
-          grid grid-cols-[10%_35%_55%] grid-rows-1
-          border-b-3 border-dsi-contrast-background
-          overflow-x-hidden whitespace-nowrap border-collapse
-          rounded-b-xl
-          bg-dsi-analysis shadow-sm
-          pt-2 pb-2"
-        >
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span className="">
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? new Date(activeQuote.valid_from).toLocaleDateString() : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? new Date(activeQuote.valid_until).toLocaleDateString() : 'N/A'}</span>
-              </span>
-            )}
-            {activeQuote?.status === 'bound' && (
-              <span className="">
-                  <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? new Date(activeQuote.bound_at).toLocaleDateString() : 'N/A'}</span>
-                  <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
-              </span>
-            )}
-          </div>
-
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all exposure fields
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Target className="icon"/><span className="text-sm">Active Submission: Exposure Profile</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Active Submission: Exposure Profile" lucideIcon={Target}>
+        <div className="py-2">
           {/* Row 1: Primary KPIs — expanded */}
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-dsi-pad pr-dsi-pad">
             <KpiTile
@@ -174,6 +134,7 @@ export default function ExposureTab() {
             />
           </div>
         </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
@@ -182,11 +143,8 @@ export default function ExposureTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
 
         {/* BAND POSITION GAUGE */}
-        <div className="flex flex-col">
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-            <Gauge className="icon"/><span className="text-sm">Band Position</span>
-          </div>
-          <div className="dsi-section-analysis overflow-x-hidden border-collapse pt-4 pb-4">
+        <StandardCard title="Band Position" lucideIcon={Gauge}>
+          <div className="py-2">
             {hasBandPosition ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-4">
                 {/* Band bar */}
@@ -198,7 +156,7 @@ export default function ExposureTab() {
                   </div>
                   <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-positive/30 via-dsi-muted/30 to-dsi-warning/30 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-approve/30 via-dsi-muted/30 to-dsi-refer/30 rounded-full"
                       style={{ width: '100%' }}
                     />
                     {/* Position marker */}
@@ -237,14 +195,11 @@ export default function ExposureTab() {
               </div>
             )}
           </div>
-        </div>
+        </StandardCard>
 
         {/* EXPOSURE COMPONENTS BREAKDOWN — structured rendering */}
-        <div className="flex flex-col">
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-            <Puzzle className="icon"/><span className="text-sm">Exposure Components</span>
-          </div>
-          <div className="dsi-section-analysis overflow-y-auto border-collapse pt-4 pb-4">
+        <StandardCard title="Exposure Components" lucideIcon={Puzzle}>
+          <div className="overflow-y-auto">
             {hasComponents ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-3">
                 {/* Size component */}
@@ -307,7 +262,7 @@ export default function ExposureTab() {
               </div>
             )}
           </div>
-        </div>
+        </StandardCard>
 
       </div>
 
@@ -321,23 +276,22 @@ export default function ExposureTab() {
           {/* =======================================================================
               CHART ROW 1: SCATTER MATRIX (decision-colored)
               ======================================================================= */}
-          <div className="flex flex-col pt-2 pb-2">
-            <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-              <ScatterIcon className="icon"/><span className="text-sm">Exposure Magnitude vs. Overall Risk</span>
-            </div>
-            <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-              <PeerScatterChart
-                points={exposureScatterData.map((p: any) => ({ x: p.x_magnitude, y: p.y_composite, decision: p.decision }))}
-                subject={{
-                  x: activeVersion.exposure_size_score || 0,
-                  y: activeVersion.pure_composite_score || 0,
-                }}
-                xLabel="Exposure Magnitude Score (0-100)"
-                yLabel="Pure Composite Score (0-1000)"
-                xName="Magnitude Score"
-                yName="Risk Score"
-              />
-            </div>
+          <div className="pt-2 pb-2">
+            <StandardCard title="Exposure Magnitude vs. Overall Risk" lucideIcon={ScatterIcon}>
+              <div className="py-2">
+                <PeerScatterChart
+                  points={exposureScatterData.map((p: any) => ({ x: p.x_magnitude, y: p.y_composite, decision: p.decision }))}
+                  subject={{
+                    x: activeVersion.exposure_size_score || 0,
+                    y: activeVersion.pure_composite_score || 0,
+                  }}
+                  xLabel="Exposure Magnitude Score (0-100)"
+                  yLabel="Pure Composite Score (0-1000)"
+                  xName="Magnitude Score"
+                  yName="Risk Score"
+                />
+              </div>
+            </StandardCard>
           </div>
 
           {/* =======================================================================
@@ -346,12 +300,9 @@ export default function ExposureTab() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
 
             {/* COMPONENT C: BAND BENCHMARKING */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <BarChart3 className="icon"/><span className="text-sm">Band Benchmarking</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
+            <StandardCard title="Band Benchmarking" lucideIcon={BarChart3}>
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Exposure Modifier across book bands. Subject modifier shown as reference line ({formatNumber(subjectModifier, 3)}x).</p>
                 <BenchmarkBarChart
                   data={exposureBandBenchmarks}
                   categoryKey="band_label"
@@ -363,15 +314,12 @@ export default function ExposureTab() {
                   emptyMessage="No band data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
             {/* COMPONENT D: TIER DISTRIBUTION */}
-            <div className="flex flex-col">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <Layers className="icon"/><span className="text-sm">Exposure by Final Tier</span>
-              </div>
-              <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-                <p className="pl-dsi-pad pr-dsi-pad text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
+            <StandardCard title="Exposure by Final Tier" lucideIcon={Layers}>
+              <div className="py-2">
+                <p className="text-sm mb-4 opacity-70 text-wrap">Average Exposure Magnitude Score within each Final Tier. Subject magnitude shown as reference line ({formatNumber(subjectMagnitude, 1)}).</p>
                 <BenchmarkBarChart
                   data={exposureTierDistribution}
                   categoryKey="tier"
@@ -386,7 +334,7 @@ export default function ExposureTab() {
                   emptyMessage="No tier data available."
                 />
               </div>
-            </div>
+            </StandardCard>
 
           </div>
 
@@ -394,12 +342,13 @@ export default function ExposureTab() {
               EXPOSURE-RELEVANT SIGNAL CONDITIONS
               ======================================================================= */}
           {exposureConditions.length > 0 && (
-            <div className="flex flex-col pt-2 pb-2">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <AlertTriangle className="icon"/>
-                <span className="text-sm">Exposure Signal Conditions ({exposureConditions.length})</span>
-              </div>
-              <div className="dsi-section-analysis overflow-y-auto border-collapse max-h-[280px]">
+            <div className="pt-2 pb-2">
+              <StandardCard
+                title="Exposure Signal Conditions"
+                lucideIcon={AlertTriangle}
+                headerRight={<span className="text-[10px] opacity-40">({exposureConditions.length})</span>}
+              >
+              <div className="overflow-y-auto max-h-[280px]">
                 <div className="space-y-0">
                   {exposureConditions.map((cond: any, idx: number) => {
                     const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
@@ -407,13 +356,13 @@ export default function ExposureTab() {
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
                     const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
-                                     isReferral ? 'bg-dsi-warning/15 text-dsi-warning' :
-                                     isTierOverride ? 'bg-dsi-negative/15 text-dsi-negative' :
+                                     isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
+                                     isTierOverride ? 'bg-dsi-decline/15 text-dsi-decline' :
                                      'bg-dsi-muted/15 text-dsi-muted';
                     return (
                       <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-warning' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-refer' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
@@ -436,6 +385,7 @@ export default function ExposureTab() {
                   })}
                 </div>
               </div>
+              </StandardCard>
             </div>
           )}
         </>

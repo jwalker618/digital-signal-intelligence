@@ -31,7 +31,7 @@ const WaterfallStep = ({
 }) => {
   const toneBg =
     tone === "info"     ? "bg-dsi-info/5 border-dsi-info/20 text-dsi-info"
-    : tone === "positive" ? "bg-dsi-positive/5 border-dsi-positive/20 text-dsi-positive"
+    : tone === "positive" ? "bg-dsi-approve/5 border-dsi-approve/20 text-dsi-approve"
     : tone === "selected" ? "bg-dsi-selected/10 border-2 border-dsi-selected/30 text-dsi-selected"
     : "bg-dsi-background/30 border-dsi-outline/10";
   const valueSize = tone === "selected" ? "text-2xl font-black" : "text-lg font-bold";
@@ -60,9 +60,9 @@ const GroupedList = ({
   totalLabel: string;
   total: React.ReactNode;
 }) => {
-  const border = tone === "negative" ? "border-dsi-negative/20" : "border-dsi-warning/20";
-  const headerBg = tone === "negative" ? "bg-dsi-negative/5 border-dsi-negative/10" : "bg-dsi-warning/5 border-dsi-warning/10";
-  const footerBg = tone === "negative" ? "bg-dsi-negative/5" : "bg-dsi-warning/5";
+  const border = tone === "negative" ? "border-dsi-decline/20" : "border-dsi-refer/20";
+  const headerBg = tone === "negative" ? "bg-dsi-decline/5 border-dsi-decline/10" : "bg-dsi-refer/5 border-dsi-refer/10";
+  const footerBg = tone === "negative" ? "bg-dsi-decline/5" : "bg-dsi-refer/5";
 
   return (
     <div className={`border ${border} rounded-lg overflow-hidden`}>
@@ -143,8 +143,8 @@ export default function PremiumAssemblyTab() {
       : null;
 
   const discretionTone =
-    discretionPct != null && discretionPct > 0 ? "text-dsi-positive"
-    : discretionPct != null && discretionPct < 0 ? "text-dsi-negative"
+    discretionPct != null && discretionPct > 0 ? "text-dsi-approve"
+    : discretionPct != null && discretionPct < 0 ? "text-dsi-decline"
     : "";
 
   return (
@@ -186,7 +186,7 @@ export default function PremiumAssemblyTab() {
                 label: item.label,
                 valueNode: (
                   <div className="text-right">
-                    <span className="font-bold text-dsi-negative">
+                    <span className="font-bold text-dsi-decline">
                       {item.rate != null ? formatPercent(item.rate) : "-"}
                     </span>
                     {item.amount != null && (

@@ -134,8 +134,8 @@ export default function ProposalDetailPage({
       </header>
 
       {error && (
-        <div className="border-2 border-dsi-negative rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-dsi-negative" /> {error}
+        <div className="border-2 border-dsi-decline rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-dsi-decline" /> {error}
         </div>
       )}
 
@@ -197,14 +197,14 @@ export default function ProposalDetailPage({
             <button
               onClick={() => void act("approve", true)}
               disabled={!canEdit || busy !== null}
-              className="flex items-center gap-1 bg-dsi-positive/20 border border-dsi-positive py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-dsi-approve/20 border border-dsi-approve py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" /> Approve
             </button>
             <button
               onClick={() => void act("reject", true)}
               disabled={!canReject || busy !== null}
-              className="flex items-center gap-1 bg-dsi-negative/20 border border-dsi-negative py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-dsi-decline/20 border border-dsi-decline py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <XCircle className="w-4 h-4" /> Reject
             </button>

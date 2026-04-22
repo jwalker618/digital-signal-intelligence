@@ -17,8 +17,8 @@ export default function DistributionTab() {
 
   const renderDirectContent = () => (
     <div className="flex flex-col gap-4 px-dsi-pad py-6">
-      <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-dsi-positive/20 bg-dsi-positive/5">
-        <Building2 className="w-10 h-10 text-dsi-positive" />
+      <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-dsi-approve/20 bg-dsi-approve/5">
+        <Building2 className="w-10 h-10 text-dsi-approve" />
         <div>
           <span className="text-lg font-bold block">Direct Writer</span>
           <span className="text-sm opacity-60">100% written by {ct.entity_name || "entity"}</span>
