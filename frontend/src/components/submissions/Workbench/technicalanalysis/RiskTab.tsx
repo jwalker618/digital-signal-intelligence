@@ -311,11 +311,9 @@ export default function RiskTab() {
       {/* =======================================================================
           GROUP → SIGNAL BREAKDOWN with contribution totals and pillar derivation
           ======================================================================= */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse">
-          <Layers className="icon"/><span className="text-sm">Group & Signal Breakdown</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-auto whitespace-nowrap border-collapse">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Group & Signal Breakdown" lucideIcon={Layers}>
+        <div className="overflow-x-auto">
 
           {isFetchingRiskSignals ? (
             <div className="flex flex-col items-center justify-center py-10 opacity-50 space-y-4">
@@ -484,6 +482,7 @@ export default function RiskTab() {
             </div>
           )}
         </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
