@@ -143,11 +143,8 @@ export default function ExposureTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 pt-2 pb-2">
 
         {/* BAND POSITION GAUGE */}
-        <div className="flex flex-col">
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-            <Gauge className="icon"/><span className="text-sm">Band Position</span>
-          </div>
-          <div className="dsi-section-analysis overflow-x-hidden border-collapse pt-4 pb-4">
+        <StandardCard title="Band Position" lucideIcon={Gauge}>
+          <div className="py-2">
             {hasBandPosition ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-4">
                 {/* Band bar */}
@@ -198,14 +195,11 @@ export default function ExposureTab() {
               </div>
             )}
           </div>
-        </div>
+        </StandardCard>
 
         {/* EXPOSURE COMPONENTS BREAKDOWN — structured rendering */}
-        <div className="flex flex-col">
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-            <Puzzle className="icon"/><span className="text-sm">Exposure Components</span>
-          </div>
-          <div className="dsi-section-analysis overflow-y-auto border-collapse pt-4 pb-4">
+        <StandardCard title="Exposure Components" lucideIcon={Puzzle}>
+          <div className="overflow-y-auto">
             {hasComponents ? (
               <div className="pl-dsi-pad pr-dsi-pad space-y-3">
                 {/* Size component */}
@@ -268,7 +262,7 @@ export default function ExposureTab() {
               </div>
             )}
           </div>
-        </div>
+        </StandardCard>
 
       </div>
 
