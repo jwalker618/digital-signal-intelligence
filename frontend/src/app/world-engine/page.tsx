@@ -261,12 +261,12 @@ export default function WorldEngineView() {
         </StandardCard>
 
         {/* ═══ DISCOVERED RELATIONSHIPS ═══ */}
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <NetworkIcon className="icon"/><span className="text-sm">Discovered Relationships</span>
-            <span className="text-[10px] opacity-40 ml-2">{rels.length} recent</span>
-          </div>
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2 overflow-x-auto">
+        <StandardCard
+          title="Discovered Relationships"
+          lucideIcon={NetworkIcon}
+          headerRight={<span className="text-[10px] opacity-40">{rels.length} recent</span>}
+        >
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs underline opacity-70 text-left">
@@ -303,7 +303,7 @@ export default function WorldEngineView() {
               </tbody>
             </table>
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ PORTFOLIO OVERVIEW ═══ */}
         <div className="flex flex-col">
