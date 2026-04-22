@@ -170,12 +170,9 @@ export default function RiskTab() {
       />
 
       {/* KPIs */}
-      <div className="flex flex-col pt-2 pb-2">
-        <div className="dsi-section-header items-center overflow-x-hidden whitespace-nowrap border-collapse pr-dsi-pad">
-          <Glasses className="icon"/><span className="text-sm">Results</span>
-        </div>
-        <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse pt-4 pb-4">
-          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 pl-dsi-pad pr-dsi-pad">
+      <div className="pt-2 pb-2">
+        <StandardCard title="Results" lucideIcon={Glasses}>
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-6 py-2">
             <KpiTile label="Pure Composite Score" value={formatNumber(activeVersion.pure_composite_score, 1)} />
             <KpiTile label="Confidence"           value={formatPercent(activeVersion.confidence || 0, 0)} />
             <KpiTile label="Signal Coverage"      value={formatPercent(activeVersion.signal_coverage || 0, 0)} />
@@ -183,7 +180,7 @@ export default function RiskTab() {
             <KpiTile label="Final Composite Score" value={formatNumber(activeVersion.final_composite_score, 1)} variant="emphasis" />
             <KpiTile label="Final Tier"            value={`T${activeVersion.final_tier} (${activeVersion.tier_label})`} variant="emphasis" />
           </div>
-        </div>
+        </StandardCard>
       </div>
 
       {/* =======================================================================
