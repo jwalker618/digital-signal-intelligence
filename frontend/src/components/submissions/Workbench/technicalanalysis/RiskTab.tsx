@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import {
-  Target, Activity, Paperclip, AlertTriangle, ShieldAlert, Glasses,
+  Target, Activity, AlertTriangle, ShieldAlert, Glasses,
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
 import { formatNumber, formatPercent, formatDate, formatText, formatCurrency } from "@/lib/format";
 import { KpiTile, StatusPill } from "@/components/base/content/primatives";
+import { StandardCard } from "@/components/base/cards";
+import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
 
 export default function RiskTab() {
@@ -157,37 +159,15 @@ export default function RiskTab() {
   return (
     <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
 
-      {/* STICKY HEADER */}
-      <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-        <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-          <Paperclip className="icon"/><span className="text-sm">Key Details</span>
-        </div>
-        <div className="grid grid-cols-[10%_35%_55%] grid-rows-1 border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap border-collapse rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
-          <div className="text-left pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            <span className="text-sm">Status:</span><span className="pl-2 uppercase font-bold">{activeQuote?.status}</span>
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad border-r-1 border-dsi-outline/50 overflow-x-hidden">
-            {(activeQuote?.status === 'draft' || activeQuote?.status === 'ready') && (
-              <span>
-                <span className="text-sm">Quote Valid From:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_from ? formatDate(activeQuote.valid_from) : 'N/A'};</span>
-                <span className="pl-2 pr-2"> </span>
-                <span className="text-sm">Until:</span><span className="pl-2 uppercase font-bold">{activeQuote?.valid_until ? formatDate(activeQuote.valid_until) : 'N/A'}</span>
-              </span>
-            )}
-            {activeQuote?.status === 'bound' && (
-              <span>
-                <span className="text-sm">Bound Date:</span><span className="pl-2 uppercase font-bold">{activeQuote?.bound_at ? formatDate(activeQuote.bound_at) : 'N/A'}</span>
-                <span className="text-sm">Policy Reference:</span><span className="pl-2 uppercase font-bold">{activeQuote?.policy_number || 'Pending'}</span>
-              </span>
-            )}
-          </div>
-          <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
-            <span className="text-sm">Submission Code: </span><span className="pl-2 uppercase font-bold">{activeSubmission?.submission_code}</span>
-            <span className="pl-6 pr-6">||</span>
-            <span className="text-sm">Quote Code: </span><span className="pl-2 uppercase font-bold">{activeQuote?.quote_code}</span>
-          </div>
-        </div>
-      </div>
+      <KeyDetailsBar
+        status={activeQuote?.status}
+        validFrom={activeQuote?.valid_from}
+        validUntil={activeQuote?.valid_until}
+        boundAt={activeQuote?.bound_at}
+        policyNumber={activeQuote?.policy_number}
+        submissionCode={activeSubmission?.submission_code}
+        quoteCode={activeQuote?.quote_code}
+      />
 
       {/* KPIs */}
       <div className="flex flex-col pt-2 pb-2">
