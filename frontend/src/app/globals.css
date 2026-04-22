@@ -9,14 +9,11 @@
   --color-dsi-analysis: var(--dsi-analysis);
   --color-dsi-contrast-analysis: var(--dsi-contrast-analysis);
 
-  /* Semantic colours — status, decisions, charts */
-  --color-dsi-positive: var(--dsi-positive);
-  --color-dsi-negative: var(--dsi-negative);
-  --color-dsi-warning: var(--dsi-warning);
+  /* Semantic tones */
   --color-dsi-info: var(--dsi-info);
   --color-dsi-muted: var(--dsi-muted);
 
-  /* Decision-specific */
+  /* Decisions — serve as the palette's green / amber / red tokens */
   --color-dsi-approve: var(--dsi-approve);
   --color-dsi-refer: var(--dsi-refer);
   --color-dsi-decline: var(--dsi-decline);
@@ -51,10 +48,7 @@
   --dsi-analysis: #BCB7AF;
   --dsi-contrast-analysis: #DBD6CD;
 
-  /* Semantic — light */
-  --dsi-positive: #059669;
-  --dsi-negative: #dc2626;
-  --dsi-warning: #d97706;
+  /* Semantic tones — light */
   --dsi-info: #2563eb;
   --dsi-muted: #64748b;
 
@@ -80,10 +74,7 @@
   --dsi-analysis: #07738A;
   --dsi-contrast-analysis: #06859B;
 
-  /* Semantic — dark */
-  --dsi-positive: #10b981;
-  --dsi-negative: #f43f5e;
-  --dsi-warning: #f59e0b;
+  /* Semantic tones — dark */
   --dsi-info: #3b82f6;
   --dsi-muted: #94a3b8;
 
