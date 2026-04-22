@@ -306,12 +306,12 @@ export default function WorldEngineView() {
         </StandardCard>
 
         {/* ═══ PORTFOLIO OVERVIEW ═══ */}
-        <div className="flex flex-col">
-          <div className="flex gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
-            <Target className="icon"/><span className="text-sm">Portfolio Overview</span>
-            <span className="text-[10px] opacity-40 ml-2">{portfolio.count} submissions</span>
-          </div>
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+        <StandardCard
+          title="Portfolio Overview"
+          lucideIcon={Target}
+          headerRight={<span className="text-[10px] opacity-40">{portfolio.count} submissions</span>}
+        >
+          <div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Total Submissions</span><span className="text-xl font-black text-dsi-selected">{portfolio.count}</span></div>
               <div className="border border-dsi-outline/20 rounded-lg p-3"><span className="text-xs opacity-60 block mb-1">Aggregate Premium</span><span className="text-xl font-black text-dsi-selected">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span></div>
@@ -352,7 +352,7 @@ export default function WorldEngineView() {
               </div>
             </div>
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ EMERGING SCENARIOS ═══ */}
         <div className="flex flex-col">
