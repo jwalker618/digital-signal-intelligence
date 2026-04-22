@@ -18,14 +18,6 @@
   --color-dsi-refer: var(--dsi-refer);
   --color-dsi-decline: var(--dsi-decline);
 
-  /* Chart surface */
-  --color-dsi-chart-grid: var(--dsi-chart-grid);
-  --color-dsi-chart-axis: var(--dsi-chart-axis);
-  --color-dsi-chart-tooltip-bg: var(--dsi-chart-tooltip-bg);
-  --color-dsi-chart-tooltip-border: var(--dsi-chart-tooltip-border);
-  --color-dsi-chart-subject: var(--dsi-chart-subject);
-  --color-dsi-chart-peer: var(--dsi-chart-peer);
-
   /* PROGRAMMATIC SPACING ENGINE */
   /* This creates native Tailwind classes like p-dsi-pad, left-dsi-pad, px-dsi-main */
   --spacing-dsi-pad: 1rem;          /* '4' (16px) */
@@ -56,14 +48,6 @@
   --dsi-approve: #B0DD7F;
   --dsi-refer: #F8BD5E;
   --dsi-decline: #F99587;
-
-  /* Charts — light */
-  --dsi-chart-grid: #94a3b8;
-  --dsi-chart-axis: #64748b;
-  --dsi-chart-tooltip-bg: #1e293b;
-  --dsi-chart-tooltip-border: #475569;
-  --dsi-chart-subject: #2563eb;
-  --dsi-chart-peer: #475569;
 }
 
 .dark {
@@ -82,14 +66,6 @@
   --dsi-approve: #00B050;
   --dsi-refer: #F59E0B;
   --dsi-decline: #E85656;
-
-  /* Charts — dark */
-  --dsi-chart-grid: #334155;
-  --dsi-chart-axis: #94a3b8;
-  --dsi-chart-tooltip-bg: #0f172a;
-  --dsi-chart-tooltip-border: #334155;
-  --dsi-chart-subject: #3b82f6;
-  --dsi-chart-peer: #475569;
 }
 
 .no-scrollbar {
