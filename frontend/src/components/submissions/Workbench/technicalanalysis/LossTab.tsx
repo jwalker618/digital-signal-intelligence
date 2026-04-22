@@ -379,12 +379,13 @@ export default function LossTab() {
               LOSS-RELEVANT SIGNAL CONDITIONS
               ======================================================================= */}
           {lossConditions.length > 0 && (
-            <div className="flex flex-col pt-2 pb-2">
-              <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse">
-                <AlertTriangle className="icon"/>
-                <span className="text-sm">Loss Signal Conditions ({lossConditions.length})</span>
-              </div>
-              <div className="dsi-section-analysis overflow-y-auto border-collapse max-h-[280px]">
+            <div className="pt-2 pb-2">
+              <StandardCard
+                title="Loss Signal Conditions"
+                lucideIcon={AlertTriangle}
+                headerRight={<span className="text-[10px] opacity-40">({lossConditions.length})</span>}
+              >
+              <div className="overflow-y-auto max-h-[280px]">
                 <div className="space-y-0">
                   {lossConditions.map((cond: any, idx: number) => {
                     const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
@@ -421,6 +422,7 @@ export default function LossTab() {
                   })}
                 </div>
               </div>
+              </StandardCard>
             </div>
           )}
         </>
