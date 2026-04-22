@@ -391,23 +391,25 @@ export default function WorldEngineView() {
         </StandardCard>
 
         {/* ═══ SHOCK SIMULATOR — multi-shock ═══ */}
-        <div className="flex flex-col">
-          <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
+        <StandardCard
+          title="Shock Simulator"
+          lucideIcon={Zap}
+          headerRight={
             <div className="flex items-center gap-dsi-pad">
-              <Zap className="icon"/><span className="text-sm">Shock Simulator</span>
               {activeShocks.length > 0 && (
                 <span className="text-[10px] bg-dsi-negative/15 text-dsi-negative px-2 py-0.5 rounded font-bold">
                   {activeShocks.length} active
                 </span>
               )}
+              {activeShocks.length > 0 && (
+                <button onClick={() => setActiveShocks([])} className="flex items-center gap-1 text-xs text-dsi-selected hover:opacity-70">
+                  <RotateCcw className="w-3 h-3" /> Clear All
+                </button>
+              )}
             </div>
-            {activeShocks.length > 0 && (
-              <button onClick={() => setActiveShocks([])} className="flex items-center gap-1 text-xs text-dsi-selected hover:opacity-70">
-                <RotateCcw className="w-3 h-3" /> Clear All
-              </button>
-            )}
-          </div>
-          <div className="border-b-3 border-dsi-contrast-background rounded-b-xl bg-dsi-analysis shadow-sm pt-4 pb-4 px-dsi-pad">
+          }
+        >
+          <div>
             {/* Add shock controls */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
               <div>
@@ -451,7 +453,7 @@ export default function WorldEngineView() {
               </div>
             )}
           </div>
-        </div>
+        </StandardCard>
 
         {/* ═══ IMPACT DASHBOARD ═══ */}
         {shockResult && (
