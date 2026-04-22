@@ -8,6 +8,7 @@ import {
   formatText,
 } from "@/lib/format";
 import { ExpandableGroupTable } from "@/components/base/content/primatives";
+import { StandardCard } from "@/components/base/cards";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import {
   Calculator, HandCoins, ArrowRightToLine,
@@ -131,25 +132,12 @@ export default function PricingTab() {
         pt-2 pb-2
         ">
 
-        <div className="lg:col-span-2 flex flex-col">
-          {/* SECTION HEADER */}
-          <div className="dsi-section-header overflow-x-hidden whitespace-nowrap border-collapse"
-          >
-            <Calculator className="icon"/><span className="text-sm">Pricing Anatomy</span>
-          </div>
-
-          {/* =======================================================================
-              COMPONENT B: PRICING ANATOMY
-              ======================================================================= */}
-          <div className="dsi-section-analysis overflow-x-hidden whitespace-nowrap border-collapse"
-            >
-            <div className="
-              flex-1
-              overflow-x-auto
-              pl-dsi-pad pr-dsi-pad
-              pt-2 pb-2
-              "
-              >
+        <StandardCard
+          title="Pricing Anatomy"
+          lucideIcon={Calculator}
+          spanClass="lg:col-span-2"
+        >
+          <div className="flex-1 overflow-x-auto">
 
               {/* BASE PREMIUM */}
               <div className="
@@ -404,8 +392,7 @@ export default function PricingTab() {
               </div>
 
           </div>
-        </div>
-      </div>
+        </StandardCard>
 
 
         {/* RIGHT COLUMN: Recommended Quote Details + Limit Options (Merged) */}
