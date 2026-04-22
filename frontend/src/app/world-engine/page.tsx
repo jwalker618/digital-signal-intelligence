@@ -325,12 +325,12 @@ export default function WorldEngineView() {
                 <div className="h-[200px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={tierChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.3} />
-                      <XAxis dataKey="tier" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
-                      <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
+                      <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
+                      <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
                       <RechartsTooltip contentStyle={tooltipStyle} />
                       <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                        {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-chart-peer)'} />)}
+                        {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
                       </Bar>
                     </BarChart>
                   </ResponsiveContainer>
@@ -483,12 +483,12 @@ export default function WorldEngineView() {
                   <div className="h-[180px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={tierChartData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.3} />
-                        <XAxis dataKey="tier" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
+                        <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
+                        <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
                         <RechartsTooltip contentStyle={tooltipStyle} />
                         <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-chart-peer)'} />)}
+                          {tierChartData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>
@@ -499,12 +499,12 @@ export default function WorldEngineView() {
                   <div className="h-[180px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={afterTierData} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-chart-grid)" opacity={0.3} />
-                        <XAxis dataKey="tier" stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
-                        <YAxis stroke="var(--dsi-chart-axis)" tick={{ fill: 'var(--dsi-chart-axis)', fontSize: 11 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="var(--dsi-outline)" opacity={0.3} />
+                        <XAxis dataKey="tier" stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
+                        <YAxis stroke="var(--dsi-contrast-background)" tick={{ fill: 'var(--dsi-contrast-background)', fontSize: 11 }} />
                         <RechartsTooltip contentStyle={tooltipStyle} />
                         <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                          {afterTierData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-chart-peer)'} />)}
+                          {afterTierData.map((e, i) => <Cell key={i} fill={TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'} />)}
                         </Bar>
                       </BarChart>
                     </ResponsiveContainer>

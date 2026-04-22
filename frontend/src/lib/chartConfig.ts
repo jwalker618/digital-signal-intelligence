@@ -14,13 +14,13 @@ const DECISION_COLORS: Record<string, string> = {
 };
 
 export const getDecisionColor = (decision: string | undefined): string => {
-  if (!decision) return "var(--dsi-chart-peer)";
-  return DECISION_COLORS[decision.toLowerCase()] || "var(--dsi-chart-peer)";
+  if (!decision) return "var(--dsi-analysis)";
+  return DECISION_COLORS[decision.toLowerCase()] || "var(--dsi-analysis)";
 };
 
 export const tooltipStyle = {
-  backgroundColor: "var(--dsi-chart-tooltip-bg)",
-  borderColor: "var(--dsi-chart-tooltip-border)",
+  backgroundColor: "var(--dsi-selected)",
+  borderColor: "var(--dsi-outline)",
   color: "#f8fafc",
   borderRadius: "8px",
   fontSize: "12px",
