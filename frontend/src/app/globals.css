@@ -123,6 +123,14 @@
   @apply shadow-sm;
 }
 
+@utility dsi-changepill {
+  @apply p-1;
+  @apply bg-white/80;
+  @apply text-dsi-contrast-background; 
+  @apply text-xs;
+  @apply rounded-md;
+}
+
 @utility dsi-actiontext {
   @apply flex;
   @apply gap-dsi-pad; 

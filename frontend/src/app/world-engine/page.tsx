@@ -3,9 +3,15 @@
 import { useState, useMemo, useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
 import ViewCanvas from "@/components/ViewCanvas";
+import "@/app/globals.css";
 import { 
   CardGrid, 
   StandardCard } from "@/components/base/cards";
+
+  import {
+  DistributionBarChart,
+  HorizontalBarList,
+} from "@/components/base/charts/primatives";
 
 import {
   Orbit, Zap, AlertTriangle,
@@ -17,10 +23,6 @@ import { formatNumber, formatCurrency, formatPercent, formatText, formatTimeRela
 
 import { api, } from "@/lib/api";
 import { StatusBadge } from "@/components/shared/StatusBadge";
-import {
-  DistributionBarChart,
-  HorizontalBarList,
-} from "@/components/base/charts/primatives";
 
 import type {
   DiscoveredRelationship,
@@ -159,7 +161,7 @@ export default function WorldEngineView() {
 
         {/* ═══ WORLD MODEL ═══ */}
         <StandardCard
-          title="World Engine"
+          title="World Engine Status"
           lucideIcon={Orbit}
           headerRight={
             <span className="text-xs content-center">
@@ -196,7 +198,7 @@ export default function WorldEngineView() {
             <div className="dsi-contentbox flex flex-col">
 
               <span className="dsi-analysis-description text-center">Open Drift Alerts</span>
-              <span className={`dsi-analysis-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-decline" : "text-dsi-contrast-background"}`}>
+              <span className="dsi-analysis-item text-center text-xl">
                 {weStats?.drift_alerts_unacknowledged ?? "—"}
               </span>
             </div>
@@ -236,7 +238,7 @@ export default function WorldEngineView() {
                 {alerts.map((a) => (
                   <tr key={a.id} className="cursor-pointer text-dsi-contrast-background hover:text-dsi-selected">
                     <td className="p-1.5 text-left">{formatText(a.source_signal ?? "—","capitalize")}</td>
-                    <td className="p-1.5 text-left"><StatusBadge status={formatText(a.severity,"capitalize")} /></td>
+                    <td className="p-1.5 text-left "><StatusBadge status={formatText(a.severity,"capitalize")} /></td>
                     <td className="p-1.5 text-left">{formatText(a.alert_type,"capitalize")}</td>
                     <td className="p-1.5 text-center">{formatTimeRelative(a.detected_at)}</td>
                     <td className="p-1.5 text-left">{formatText(a.description,"capitalize")}</td>
@@ -245,8 +247,9 @@ export default function WorldEngineView() {
                       <button
                         onClick={() => void acknowledgeAlert(a.id)}
                         disabled={ackBusy === a.id}
-                        className="dsi-actionbutton content-end"
+                        className="dsi-actionbutton inline"
                       >
+
                         Acknowledge
                       </button>
 
@@ -343,7 +346,7 @@ export default function WorldEngineView() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               
               <div>
-                <span className="text-xs opacity-60 block mb-2">Tier Distribution</span>
+                <span className="text-xs block mb-2">Tier Distribution</span>
                 <DistributionBarChart
                   data={tierChartData}
                   categoryKey="tier"
@@ -355,7 +358,7 @@ export default function WorldEngineView() {
               </div>
               <div>
 
-                <span className="text-xs opacity-60 block mb-2">Sector Concentration</span>
+                <span className="text-xs block mb-2">Sector Concentration</span>
                 <HorizontalBarList
                   limit={6}
                   rows={covChartData.map((e) => ({
@@ -383,7 +386,7 @@ export default function WorldEngineView() {
                   <div className="flex items-center gap-2 mb-0.5">
                     
                     <span className="text-sm font-bold">{formatText(es.name,"upper")}</span>
-                    <span className={`dsi-notificationpill p-1 border-none shadow-none ${LIKELIHOOD_COLOR[es.likelihood_label] || ''}`}>
+                    <span className={` dsi-changepill ${LIKELIHOOD_COLOR[es.likelihood_label] || ''}`}>
                       {formatPercent(es.likelihood)} {es.likelihood_label}
                     </span>
 
@@ -427,24 +430,12 @@ export default function WorldEngineView() {
           <div>
             {/* Add shock controls */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
-              <div>
-                
-                <span className="dsi-analysis-description text-center">Scenario</span>
-                
-                <select 
-                  value={pendingScenario} 
-                  onChange={(e) => setPendingScenario(e.target.value)} 
-                  className="
-                    w-full 
-                    bg-dsi-background mt-2
-                    rounded-md p-1.5 text-sm">
-                  {SHOCK_SCENARIOS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
 
-              </div>
               <div>
                 
-                <span className="dsi-analysis-description text-center">Scope</span>
+                <span className="dsi-analysis-description"
+                >Coverage
+                </span>
 
                 <select 
                   value={pendingScope} 
@@ -453,47 +444,96 @@ export default function WorldEngineView() {
                     w-full 
                     bg-dsi-background mt-2
                     rounded-md p-1.5 text-sm">
-                  <option value="all">All Submissions</option>
-                  {coverages.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="all">ALL</option>
+                  {coverages.map(c => 
+                    <option 
+                      key={c} value={c}
+                      >{formatText(c,"upper")}
+                    </option>)}
+                </select>
+
+              </div>
+
+              <div>
+                
+                <span className="dsi-analysis-description"
+                >Scenario
+                </span>
+                
+                <select 
+                  value={pendingScenario} 
+                  onChange={(e) => setPendingScenario(e.target.value)} 
+                  className="
+                    w-full 
+                    bg-dsi-background mt-2
+                    rounded-md p-1.5 text-sm">
+                    {SHOCK_SCENARIOS.map(s => 
+                      <option 
+                        key={s.id} value={s.id}
+                        >{formatText(s.name,"upper")}
+                      </option>)}
                 </select>
 
               </div>
               
               <div>
-                <span className="dsi-analysis-description text-center">Magnitude: {pendingMagnitude} pts</span>
+                
+                <span className="dsi-analysis-description flex"
+                >Scenario Narrative
+                </span>
+                
+                <span className="text-left mt-2 pt-1.5 text-sm"
+                >{SHOCK_SCENARIOS.find(s => s.id === pendingScenario)?.description}
+                </span>
+
+              </div>
+
+              <div>
+                <span className="dsi-analysis-description flex flex-col"
+                >Magnitude
+                </span>
+                
                 <input 
                   type="range" min="5" max="50" step="1" 
                   value={pendingMagnitude} 
                   onChange={(e) => setPendingMagnitude(Number(e.target.value))} 
-                  className="w-full mt-1 justify-center content-center items-center" />
+                  className="
+                    w-full 
+                    bg-dsi-background mt-2
+                    rounded-md p-1.5 text-sm"/>
+
+                <span className="w-full text-sm font-bold">{pendingMagnitude} pts
+                </span>
+              
               </div>
 
-              <div className="flex items-end">
-                <button onClick={addShock} className="w-full dsi-actionbutton">
-                  <Plus className="icon" /> Add Shock
+              <div>
+                <span className="dsi-analysis-description flex flex-col"
+                >Model
+                </span>
+                
+                <button onClick={addShock} className="w-full dsi-actionbutton flex mt-2 gap-2">
+                  <Plus className="icon"/> Add Shock
                 </button>
-              </div>
 
-              <div className="flex items-end">
-                <span className="text-xs text-wrap">{SHOCK_SCENARIOS.find(s => s.id === pendingScenario)?.description}</span>
               </div>
+          </div>
 
-            </div>
 
             {/* Active shocks list */}
             {activeShocks.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {activeShocks.map((shock, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-dsi-decline/10 border border-dsi-decline/20 rounded px-3 py-1.5 text-sm">
-                    <Zap className="w-3 h-3 text-dsi-decline" />
+                  <div key={idx} className="flex items-center gap-2 rounded-md p-1.5 text-sm">
                     <span className="font-semibold">{shock.scenario.name}</span>
-                    <span className="opacity-50 text-xs">({shock.scope}, -{shock.magnitude}pts)</span>
-                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-dsi-decline"><X className="w-3 h-3" /></button>
+                    <span className="text-xs">({shock.scope}, -{shock.magnitude}pts)</span>
+                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-dsi-selected"><X className="icon" /></button>
                   </div>
                 ))}
               </div>
             )}
           </div>
+
         </StandardCard>
 
         {/* ═══ IMPACT DASHBOARD ═══ */}

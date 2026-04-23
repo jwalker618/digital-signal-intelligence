@@ -969,9 +969,9 @@ export const StatusPill = ({
 
   return (
     <span
-      className={`inline-flex items-center rounded font-bold uppercase tracking-wide whitespace-nowrap ${entry.bg} ${entry.text} ${sizeClass}`}
+      className={`inline-flex dsi-changepill ${entry.bg} ${entry.text} ${sizeClass}`}
     >
-      {Icon && <Icon className="w-3 h-3" />}
+      {Icon && <Icon className="icon" />}
       {children}
     </span>
   );
