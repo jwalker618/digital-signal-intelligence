@@ -11,8 +11,6 @@ import {
   PanelBottomOpen,
 } from "lucide-react";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { MFAVerify } from "@/components/auth/MFAVerify";

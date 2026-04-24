@@ -13,8 +13,6 @@ import {
   formatNumber 
 } from "@/lib/format";
 
-import "@/app/globals.css";
-
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   const {
     setPageQuickAction,

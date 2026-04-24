@@ -17,8 +17,6 @@ import {
   ShieldCheck 
 } from "lucide-react";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 import { mfaBackupCodes, mfaSetup, mfaVerify } from "@/lib/authApi";
 

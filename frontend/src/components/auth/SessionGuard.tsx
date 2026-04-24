@@ -16,8 +16,6 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];

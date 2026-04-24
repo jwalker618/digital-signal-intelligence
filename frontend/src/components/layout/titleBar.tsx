@@ -11,8 +11,6 @@ import { MoreVertical } from "lucide-react";
 import { useDsiStore } from "@/store/dsiStore";
 import { useAuthStore } from "@/store/authStore";
 
-import "@/app/globals.css";
-
 export default function TitleBar() {
   const activeSubmission = useDsiStore((s) => s.activeSubmission);
   const activeMenu = useDsiStore((s) => s.activeMenu);

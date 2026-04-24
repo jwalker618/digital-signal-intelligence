@@ -11,8 +11,6 @@ import {
   StandardCard 
 } from "@/components/base/cards";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 import { MFASetup } from "@/components/auth/MFASetup";
 import { NotificationPreferences } from "@/components/profile/NotificationPreferences";

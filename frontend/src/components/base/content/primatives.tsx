@@ -1,6 +1,5 @@
 "use client";
 
-import "@/app/globals.css";
 import { Fragment, useState } from "react";
 import {
   formatNumber,
@@ -652,7 +651,6 @@ export const KpiTile = ({
 }
 
 /** SCORE BAR---------------------------------------------------------------------------------------------- */
-
 
 /** GUIDANCE
  * at: Inclusive upper bound. First matching entry wins.

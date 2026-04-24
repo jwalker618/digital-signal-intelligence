@@ -1,6 +1,5 @@
 "use client";
 
-import "@/app/globals.css";
 import { useState } from "react";
 
 import { ArrowUpRight, LucideIcon } from "lucide-react";
@@ -73,7 +72,6 @@ export const StandardCard = ({
     </div>
   );
 };
-
 
 /** POPUP CARD---------------------------------------------------------------------------------------------- */
 
