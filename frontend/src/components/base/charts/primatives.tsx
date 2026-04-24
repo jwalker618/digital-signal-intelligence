@@ -15,7 +15,7 @@ import {
   ReferenceLine,
 } from "recharts";
 
-import { formatNumber } from "@/lib/format";
+import { formatNumber, formatText } from "@/lib/format";
 import { getDecisionColor, tooltipStyle } from "@/lib/chartConfig";
 
 /** DISTRIBUTION BAR CHART---------------------------------------------------------------------------------------------- */
@@ -153,10 +153,9 @@ export const HorizontalBarList = ({
       {shown.map((r) => (
         <div key={r.label} className="flex items-center gap-3">
           <span
-            className={`text-xs truncate opacity-70 ${labelWidth}`}
+            className={`text-xs truncate ${labelWidth}`}
             title={r.label}
-          >
-            {r.label}
+          >{formatText(r.label,"capitalize")}
           </span>
           <div className="flex-1 h-4 bg-generate-background rounded-full overflow-hidden">
             <div
@@ -164,6 +163,7 @@ export const HorizontalBarList = ({
               style={{ width: `${Math.max(0, Math.min(100, r.percent))}%` }}
             />
           </div>
+
           {r.valueLabel !== undefined && (
             <span className={`text-xs font-bold text-right ${valueWidth}`}>
               {r.valueLabel}
