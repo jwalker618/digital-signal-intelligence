@@ -1,6 +1,5 @@
 "use client";
 
-import "@/app/globals.css";
 import { useState } from "react";
 
 import { ArrowUpRight, LucideIcon } from "lucide-react";
@@ -34,7 +33,7 @@ export const CardGrid = ({
   className = "",
 }: CardGridProps) => {
   return (
-    <div className={`grid ${cols} gap-dsi-pad ${className}`}>
+    <div className={`grid ${cols} gap-generate-pad ${className}`}>
       {children}
     </div>
   );
@@ -64,16 +63,15 @@ export const StandardCard = ({
 }: BaseCardProps) => {
   return (
     <div className={`flex flex-col h-full ${spanClass}`}>
-      <div className="dsi-section-header">
+      <div className="generate-section-header">
         {Icon && <Icon className="icon"/>}
         <span className={`text-sm ${headerRight ? "flex-1" : ""}`}>{title}</span>
         {headerRight}
       </div>
-      <div className="dsi-section-analysis">{children}</div>
+      <div className="generate-section-analysis">{children}</div>
     </div>
   );
 };
-
 
 /** POPUP CARD---------------------------------------------------------------------------------------------- */
 
@@ -113,11 +111,11 @@ export const PopupCard = ({
           }
         }}
       >
-        <div className="dsi-popup-header">
+        <div className="generate-popup-header">
           <span className="text-xs content-center">Expand</span>
           <ArrowUpRight className="icon" />
         </div>
-        <div className="dsi-section-analysis font-bold">
+        <div className="generate-section-analysis font-bold">
           {teaser ?? title}
         </div>
       </div>
@@ -168,8 +166,8 @@ export const SubmissionHeaderCard = ({
   return (
     <div className={`
       sticky top-0 z-999
-      pt-dsi-pad pb-0.5
-      bg-dsi-background
+      pt-generate-pad pb-0.5
+      bg-generate-background
       ${spanClass}
     `}
     >
@@ -177,18 +175,18 @@ export const SubmissionHeaderCard = ({
     <div
       className={`
         rounded-xl
-        pt-dsi-pad pb-dsi-pad
-        border-b-3 border-dsi-contrast-background
+        pt-generate-pad pb-generate-pad
+        border-b-3 border-generate-contrast-background
         ${SUBMISSION_DECISION[decision].bg}
         shadow-sm
       `}
     >
       {/* Top row — decision label + caller-supplied status info */}
-      <div className="flex items-center justify-between pb-dsi-pad border-b border-dsi-outline/50">
-        <div className="flex gap-4 pl-dsi-pad">
+      <div className="flex items-center justify-between pb-generate-pad border-b border-generate-outline/50">
+        <div className="flex gap-4 pl-generate-pad">
           <Icon className="largeicon" />
           <div>
-            <span className="text-2xl font-bold uppercase tracking-wider text-dsi-selected">
+            <span className="text-2xl font-bold uppercase tracking-wider text-generate-selected">
               {title}
             </span>
             {subtitle && <span className="block text-xs">{subtitle}</span>}
@@ -196,10 +194,10 @@ export const SubmissionHeaderCard = ({
         </div>
 
         {headerRight && (
-          <div className="flex items-center justify-between gap-4 pr-dsi-pad">{headerRight}</div>
+          <div className="flex items-center justify-between gap-4 pr-generate-pad">{headerRight}</div>
         )}
       </div>
-      <div className="pl-dsi-pad">
+      <div className="pl-generate-pad">
         {/* Bottom row — caller-supplied metrics grid */}
         {children}
       </div>

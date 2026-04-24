@@ -8,19 +8,19 @@
  */
 
 const DECISION_COLORS: Record<string, string> = {
-  approve: "var(--dsi-approve)",
-  refer:   "var(--dsi-refer)",
-  decline: "var(--dsi-decline)",
+  approve: "var(--generate-approve)",
+  refer:   "var(--generate-refer)",
+  decline: "var(--generate-decline)",
 };
 
 export const getDecisionColor = (decision: string | undefined): string => {
-  if (!decision) return "var(--dsi-analysis)";
-  return DECISION_COLORS[decision.toLowerCase()] || "var(--dsi-analysis)";
+  if (!decision) return "var(--generate-analysis)";
+  return DECISION_COLORS[decision.toLowerCase()] || "var(--generate-analysis)";
 };
 
 export const tooltipStyle = {
-  backgroundColor: "var(--dsi-selected)",
-  borderColor: "var(--dsi-outline)",
+  backgroundColor: "var(--generate-selected)",
+  borderColor: "var(--generate-outline)",
   color: "#f8fafc",
   borderRadius: "8px",
   fontSize: "12px",

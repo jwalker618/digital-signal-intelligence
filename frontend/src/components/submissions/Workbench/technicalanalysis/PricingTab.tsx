@@ -20,7 +20,7 @@ export default function PricingTab() {
 
   if (!activeSubmission || !activeVersion) {
     return (
-      <div className="flex items-center justify-center h-full text-dsi-selected/50 animate-pulse">
+      <div className="flex items-center justify-center h-full text-generate-selected/50 animate-pulse">
         Loading pricing details...
       </div>
     );
@@ -141,8 +141,8 @@ export default function PricingTab() {
 
               {/* BASE PREMIUM */}
               <div className="
-                border-b-1 border-dsi-outline/50
-                pb-dsi-pad
+                border-b-1 border-generate-outline/50
+                pb-generate-pad
               "
               >
                 <div className="grid grid-cols-[50%_10%_20%_20%]">
@@ -150,23 +150,23 @@ export default function PricingTab() {
                   {/* row 1 */}
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    flex gap-dsi-pad text-sm"
+                    flex gap-generate-pad text-sm"
                     >
                       <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion?.base_premium_derivation?.method || 'N/A'} methodology
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Basis
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-sm text-right uppercase bg-dsi-selected/10 text-dsi-selected"
+                    text-sm text-right uppercase bg-generate-selected/10 text-generate-selected"
                     >{activeVersion?.base_premium_derivation?.basis_field || 'N/A'} @
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
                     >{formatCurrency(activeVersion?.base_premium_derivation?.basis_value || 0)}
                   </div>
 
@@ -174,17 +174,17 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Rate
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    bg-dsi-selected/10 text-dsi-selected"
+                    bg-generate-selected/10 text-generate-selected"
                     >
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
                     >{activeVersion?.base_premium_derivation?.rate || 'N/A'}x
                   </div>
 
@@ -192,17 +192,17 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Result
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    bg-dsi-selected/10 text-dsi-selected"
+                    bg-generate-selected/10 text-generate-selected"
                     >
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right font-bold bg-generate-selected/10 text-generate-selected"
                     >{formatCurrency(activeVersion?.base_premium_derivation?.result || 0)}
                   </div>
                 </div>
@@ -278,8 +278,8 @@ export default function PricingTab() {
 
               {/* FINAL PREMIUM CALCULATION */}
               <div className="
-                border-t-1 border-dsi-outline/50
-                pt-dsi-pad pb-dsi-pad
+                border-t-1 border-generate-outline/50
+                pt-generate-pad pb-generate-pad
               "
               >
                 <div className="grid grid-cols-[50%_10%_20%_20%]">
@@ -287,19 +287,19 @@ export default function PricingTab() {
                   {/* row 1 */}
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    flex gap-dsi-pad text-sm"
+                    flex gap-generate-pad text-sm"
                     >
                       <WeightTilde className="icon"/> Final Premium Calculation
                   </div>
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Loaded Premium
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
                     >{formatCurrency(activeVersion?.final_premium_detail?.premium_before_scaling || 0)}
                   </div>
 
@@ -308,12 +308,12 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >ILF Factor
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
                     >{formatNumber(activeVersion?.final_premium_detail?.ilf_factor || 0, 3)}x
                   </div>
 
@@ -322,12 +322,12 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Deductible Factor
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
                     >{formatNumber(activeVersion?.final_premium_detail?.deductible_factor || 0, 3)}x
                   </div>
 
@@ -339,13 +339,13 @@ export default function PricingTab() {
                       <div className="pt-2"></div>
                       <div className="pt-2"></div>
                       
-                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-dsi-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
+                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
 
                       <div className="
-                        flex gap-dsi-pad text-sm
+                        flex gap-generate-pad text-sm
                         overflow-x-hidden whitespace-nowrap border-collapse"
                         >
                           <ShieldEllipsis className="icon"/> Guardrails Applied
@@ -353,19 +353,19 @@ export default function PricingTab() {
                       <div></div>
                       <div className="
                         overflow-x-hidden whitespace-nowrap border-collapse
-                        text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50
+                        text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50
                         "
                         >Uncapped Premium *
                       </div>
                       <div className="
                         overflow-x-hidden whitespace-nowrap border-collapse
-                        pl-dsi-pad pr-dsi-pad text-right text-sm bg-dsi-selected/10 text-dsi-selected line-through
+                        pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected line-through
                         "
                         >{formatCurrency(activeVersion.uncapped_premium)}
                       </div>
                       
                       {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
-                        <div key={i} className="col-span-4 text-xs pl-dsi-indent text-wrap italic text-dsi-selected pt-1">
+                        <div key={i} className="col-span-4 text-xs pl-generate-indent text-wrap italic text-generate-selected pt-1">
                           * {warning.note}
                         </div>
                       ))}
@@ -378,12 +378,12 @@ export default function PricingTab() {
                   <div></div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-dsi-pad border-r-1 border-dsi-outline/50"
+                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
                     >Final Premium
                   </div>
                   <div className="
                     overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-dsi-pad pr-dsi-pad text-right font-bold bg-dsi-selected/10 text-dsi-selected"
+                    pl-generate-pad pr-generate-pad text-right font-bold bg-generate-selected/10 text-generate-selected"
                     >{formatCurrency(activeVersion?.final_premium_detail?.premium_after_scaling || 0)}
                   </div>
                   
@@ -402,20 +402,20 @@ export default function PricingTab() {
             title="Recommended Quote Details"
             lucideIcon={HandCoins}
           >
-            <div className="grid grid-cols-2 grid-rows-1 pl-dsi-pad pt-2 pb-4">
-              <div className="bg-dsi-selected/10 border-r-1 border-dsi-outline/50 pb-2 pt-1 text-dsi-selected">
-                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+            <div className="grid grid-cols-2 grid-rows-1 pl-generate-pad pt-2 pb-4">
+              <div className="bg-generate-selected/10 border-r-1 border-generate-outline/50 pb-2 pt-1 text-generate-selected">
+                <div className="mt-1 pl-generate-pad pr-generate-pad text-sm text-center underline pb-2">
                   Final Premium
                 </div>
-                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                <div className="pl-generate-pad pr-generate-pad font-bold text-xl text-right">
                   {formatCurrency(recommendedPremium)}
                 </div>
               </div>
-              <div className="bg-dsi-selected/10 text-dsi-selected mr-3">
-                <div className="mt-1 pl-dsi-pad pr-dsi-pad text-sm text-center underline pb-2">
+              <div className="bg-generate-selected/10 text-generate-selected mr-3">
+                <div className="mt-1 pl-generate-pad pr-generate-pad text-sm text-center underline pb-2">
                   Final Limit
                 </div>
-                <div className="pl-dsi-pad pr-dsi-pad font-bold text-xl text-right">
+                <div className="pl-generate-pad pr-generate-pad font-bold text-xl text-right">
                   {formatCurrency(recommendedLimit)}
                 </div>
               </div>
@@ -431,7 +431,7 @@ export default function PricingTab() {
             {/* =======================================================================
                 COMPONENT C: LIMIT OPTIONS
                 ======================================================================= */}
-            <div className="pl-dsi-pad pr-dsi-pad w-full space-y-2">
+            <div className="pl-generate-pad pr-generate-pad w-full space-y-2">
               {limitOptions.length > 0 ? (
                 limitOptions.map((option) => {
                   const isCurrentRecommended = recommendedLimit === option.limit;
@@ -439,10 +439,10 @@ export default function PricingTab() {
                   return (
                     <div
                       key={option.limit}
-                      className={`p-dsi-pad rounded-lg border ${
+                      className={`p-generate-pad rounded-lg border ${
                         isCurrentRecommended
-                          ? 'border-dsi-selected text-dsi-selected'
-                          : 'border-dsi-outline/10 hover:border-dsi-selected hover:text-dsi-selected'
+                          ? 'border-generate-selected text-generate-selected'
+                          : 'border-generate-outline/10 hover:border-generate-selected hover:text-generate-selected'
                       }`}
                     >
                       <div className="flex justify-between items-center">
@@ -481,9 +481,9 @@ export default function PricingTab() {
                             className="
                               flex items-center gap-1
                               text-xs uppercase font-bold tracking-wider 
-                              border border-dsi-outline/30 rounded
+                              border border-generate-outline/30 rounded
                               px-2 py-1
-                              hover:bg-dsi-selected/10 hover:text-dsi-selected hover:border-dsi-selected
+                              hover:bg-generate-selected/10 hover:text-generate-selected hover:border-generate-selected
                               disabled:opacity-50 disabled:cursor-not-allowed
                             "
                           >
@@ -496,7 +496,7 @@ export default function PricingTab() {
                   );
                 })
               ) : (
-                <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-dsi-outline/20 rounded-lg">
+                <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-generate-outline/20 rounded-lg">
                   No limit options available.
                 </div>
               )}

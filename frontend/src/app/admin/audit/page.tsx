@@ -92,7 +92,7 @@ export default function AuditPage() {
 
   useEffect(() => {
     setPageQuickAction(
-      <button onClick={exportCsv} className="dsi-actiontext">
+      <button onClick={exportCsv} className="generate-actiontext">
         <Download className="icon" /> Export CSV
       </button>,
     );
@@ -102,10 +102,10 @@ export default function AuditPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
+      <div className="flex flex-col h-full bg-generate-background text-generate-contrast-analysis p-generate-pad animate-in fade-in duration-500">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm">
+        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm">
           <div className="flex items-center gap-3 pb-2">
             <h1>Showing {events.length} events.</h1>
           </div>
@@ -117,7 +117,7 @@ export default function AuditPage() {
                 value={query.action_type}
                 onChange={(e) => setQuery({ ...query, action_type: e.target.value })}
                 placeholder="CONFIG_DEPLOY"
-                className="dsi-inputbox w-40 font-mono"
+                className="generate-inputbox w-40 font-mono"
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -126,7 +126,7 @@ export default function AuditPage() {
                 value={query.resource_type}
                 onChange={(e) => setQuery({ ...query, resource_type: e.target.value })}
                 placeholder="config_version"
-                className="dsi-inputbox w-40 font-mono"
+                className="generate-inputbox w-40 font-mono"
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -135,7 +135,7 @@ export default function AuditPage() {
                 type="date"
                 value={query.date_from}
                 onChange={(e) => setQuery({ ...query, date_from: e.target.value })}
-                className="dsi-inputbox"
+                className="generate-inputbox"
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -144,19 +144,19 @@ export default function AuditPage() {
                 type="date"
                 value={query.date_to}
                 onChange={(e) => setQuery({ ...query, date_to: e.target.value })}
-                className="dsi-inputbox"
+                className="generate-inputbox"
               />
             </label>
             <button
               onClick={applyFilters}
               disabled={loading}
-              className="dsi-actionbutton"
+              className="generate-actionbutton"
             >
               Apply
             </button>
             <button
               onClick={() => { setQuery(EMPTY); setCursor(null); }}
-              className="dsi-actiontext"
+              className="generate-actiontext"
             >
               Reset
             </button>
@@ -164,7 +164,7 @@ export default function AuditPage() {
         </div>
 
         {error && (
-          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+          <div className="generate-notificationpill shrink-0 mb-generate-pad flex items-center gap-2">
             <AlertTriangle className="icon" /> {error}
           </div>
         )}
@@ -172,8 +172,8 @@ export default function AuditPage() {
         {/* SCROLLABLE TABLE */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="sticky top-0 z-20 bg-dsi-background">
-              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-background">
+              <tr className="generate-grid-table-header text-generate-contrast-background">
                 <th className="p-1.5">When</th>
                 <th className="p-1.5">Action</th>
                 <th className="p-1.5">Resource</th>
@@ -188,7 +188,7 @@ export default function AuditPage() {
                   <Fragment key={e.id}>
                     <tr
                       onClick={() => setExpanded(open ? null : e.id)}
-                      className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
+                      className="cursor-pointer even:bg-generate-contrast-analysis text-generate-contrast-background hover:text-generate-selected"
                     >
                       <td className="p-1.5 text-xs whitespace-nowrap">
                         {fmtDate(e.created_at)}
@@ -208,7 +208,7 @@ export default function AuditPage() {
                       </td>
                     </tr>
                     {open && (
-                      <tr className="bg-dsi-analysis/40">
+                      <tr className="bg-generate-analysis/40">
                         <td colSpan={5} className="p-3">
                           <StateDiffViewer
                             before={e.before_state}
@@ -224,15 +224,15 @@ export default function AuditPage() {
           </table>
 
           {events.length === 0 && !loading && (
-            <div className="dsi-user-message">No events match these filters.</div>
+            <div className="generate-user-message">No events match these filters.</div>
           )}
 
           {nextCursor && (
-            <div className="pt-dsi-pad text-center">
+            <div className="pt-generate-pad text-center">
               <button
                 onClick={loadMore}
                 disabled={loading}
-                className="dsi-actionbutton inline-block disabled:opacity-50"
+                className="generate-actionbutton inline-block disabled:opacity-50"
               >
                 Load more
               </button>

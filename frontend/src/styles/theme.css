@@ -1,0 +1,78 @@
+/*
+ * Design-system tokens for the Generate UI kit.
+ *
+ * Structure:
+ *   • @theme inline — registers Tailwind tokens (colors, spacing, fonts)
+ *     that map to CSS custom properties. Produces classes like
+ *     `bg-generate-analysis`, `p-generate-pad`, `font-ibm`.
+ *   • :root / .dark — default light + dark values. Consumer apps can
+ *     override any subset by redeclaring the same variables in their
+ *     own :root / .dark after importing this file.
+ */
+
+@theme inline {
+  /* Colors - Removed rgb() wrapper so Hex codes map natively */
+  --color-generate-outline: var(--generate-outline);
+  --color-generate-contrast-background: var(--generate-contrast-background);
+  --color-generate-background: var(--generate-background);
+  --color-generate-selected: var(--generate-selected);
+  --color-generate-analysis: var(--generate-analysis);
+  --color-generate-contrast-analysis: var(--generate-contrast-analysis);
+
+  /* Semantic tones */
+  --color-generate-info: var(--generate-info);
+  --color-generate-muted: var(--generate-muted);
+
+  /* Decisions — serve as the palette's green / amber / red tokens */
+  --color-generate-approve: var(--generate-approve);
+  --color-generate-refer: var(--generate-refer);
+  --color-generate-decline: var(--generate-decline);
+
+  /* PROGRAMMATIC SPACING ENGINE */
+  /* This creates native Tailwind classes like p-generate-pad, left-generate-pad, px-generate-main */
+  --spacing-generate-pad: 1rem;          /* '4' (16px) */
+  --spacing-generate-main: 1.5rem;       /* '6' (24px) */
+  --spacing-generate-gap: 2rem;          /* '8' (32px) */
+  --spacing-generate-padicon: 2.25rem;   /* '9' (36px) */
+  --spacing-generate-indent: 3rem;       /* '12'(48px) */
+
+  /* FONTS */
+  --font-ibm: var(--font-ibm), ui-sans-serif, system-ui, sans-serif;
+  --font-inter: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --generate-outline: #ffffff;
+  --generate-contrast-background: #7A766F;
+  --generate-background: #E8E3DA;
+  --generate-selected: #0A1A2F;
+  --generate-analysis: #BCB7AF;
+  --generate-contrast-analysis: #DBD6CD;
+
+  /* Semantic tones — light */
+  --generate-info: #2563eb;
+  --generate-muted: #64748b;
+
+  /* Decisions — light */
+  --generate-approve: #B0DD7F;
+  --generate-refer: #F8BD5E;
+  --generate-decline: #F99587;
+}
+
+.dark {
+  --generate-outline: #39d3ba;
+  --generate-contrast-background: #0B3954;
+  --generate-background: #0599AD;
+  --generate-selected: #FFFFFF;
+  --generate-analysis: #07738A;
+  --generate-contrast-analysis: #06859B;
+
+  /* Semantic tones — dark */
+  --generate-info: #3b82f6;
+  --generate-muted: #94a3b8;
+
+  /* Decisions — dark */
+  --generate-approve: #00B050;
+  --generate-refer: #F59E0B;
+  --generate-decline: #E85656;
+}

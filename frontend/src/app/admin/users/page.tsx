@@ -63,7 +63,7 @@ export default function UsersPage() {
       <button
         onClick={() => void load()}
         disabled={loading}
-        className="dsi-actiontext disabled:opacity-50"
+        className="generate-actiontext disabled:opacity-50"
       >
         <RefreshCw className={`icon ${loading ? "animate-spin" : ""}`} />
         Refresh
@@ -110,10 +110,10 @@ export default function UsersPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full h-full overflow-y-auto no-scrollbar bg-dsi-background text-dsi-contrast-background p-dsi-pad animate-in fade-in duration-500 pb-12">
+      <div className="w-full h-full overflow-y-auto no-scrollbar bg-generate-background text-generate-contrast-background p-generate-pad animate-in fade-in duration-500 pb-12">
 
         {error && (
-          <div className="dsi-notificationpill mb-dsi-pad flex items-center gap-2">
+          <div className="generate-notificationpill mb-generate-pad flex items-center gap-2">
             <AlertTriangle className="icon" /> {error}
           </div>
         )}
@@ -129,7 +129,7 @@ export default function UsersPage() {
                   required
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
-                  className="dsi-inputbox"
+                  className="generate-inputbox"
                 />
               </label>
               <label className="flex flex-col gap-1">
@@ -137,7 +137,7 @@ export default function UsersPage() {
                 <select
                   value={inviteRoleId}
                   onChange={(e) => setInviteRoleId(e.target.value)}
-                  className="dsi-inputbox"
+                  className="generate-inputbox"
                 >
                   {roles.map((r) => (
                     <option key={r.id} value={r.id}>{r.name}</option>
@@ -147,7 +147,7 @@ export default function UsersPage() {
               <button
                 type="submit"
                 disabled={busy === "invite"}
-                className="dsi-actionbutton flex items-center gap-1"
+                className="generate-actionbutton flex items-center gap-1"
               >
                 <Mail className="icon" />
                 Send invite
@@ -161,7 +161,7 @@ export default function UsersPage() {
           <StandardCard title="Users" lucideIcon={UsersIcon}>
             <table className="w-full text-left whitespace-nowrap border-collapse">
               <thead>
-                <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <tr className="generate-grid-table-header text-generate-contrast-background">
                   <th className="p-1.5">Email</th>
                   <th className="p-1.5">Name</th>
                   <th className="p-1.5">Role</th>
@@ -173,7 +173,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                  <tr key={u.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
                     <td className="p-1.5 font-mono text-xs">{u.email}</td>
                     <td className="p-1.5">{u.full_name ?? "—"}</td>
                     <td className="p-1.5">{u.role_name ?? "—"}</td>
@@ -189,7 +189,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => void deactivate(u.id)}
                           disabled={busy === `deact:${u.id}`}
-                          className="text-xs text-dsi-decline hover:underline flex items-center gap-1 disabled:opacity-50"
+                          className="text-xs text-generate-decline hover:underline flex items-center gap-1 disabled:opacity-50"
                         >
                           <UserX className="w-3 h-3" /> Deactivate
                         </button>
@@ -200,14 +200,14 @@ export default function UsersPage() {
               </tbody>
             </table>
             {users.length === 0 && !loading && (
-              <div className="dsi-user-message">No users.</div>
+              <div className="generate-user-message">No users.</div>
             )}
           </StandardCard>
 
           <StandardCard title="Roles" lucideIcon={ShieldCheck}>
             <table className="w-full text-left whitespace-nowrap border-collapse">
               <thead>
-                <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <tr className="generate-grid-table-header text-generate-contrast-background">
                   <th className="p-1.5">Name</th>
                   <th className="p-1.5">Description</th>
                   <th className="p-1.5 text-right">Users</th>
@@ -216,7 +216,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {roles.map((r) => (
-                  <tr key={r.id} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                  <tr key={r.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
                     <td className="p-1.5 font-semibold">{r.name}</td>
                     <td className="p-1.5 opacity-80">{r.description ?? "—"}</td>
                     <td className="p-1.5 text-right tabular-nums">{r.user_count}</td>
@@ -225,7 +225,7 @@ export default function UsersPage() {
                         {r.permissions.map((p) => (
                           <span
                             key={p}
-                            className="text-[10px] font-mono border border-dsi-outline/30 rounded px-1"
+                            className="text-[10px] font-mono border border-generate-outline/30 rounded px-1"
                           >
                             {p}
                           </span>
@@ -237,7 +237,7 @@ export default function UsersPage() {
               </tbody>
             </table>
             {roles.length === 0 && !loading && (
-              <div className="dsi-user-message">No roles.</div>
+              <div className="generate-user-message">No roles.</div>
             )}
           </StandardCard>
 

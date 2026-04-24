@@ -8,8 +8,6 @@
  * as a SubmissionHeaderCard.
  */
 
-import "@/app/globals.css";
-
 import { useDsiStore } from "@/store/dsiStore";
 
 import {

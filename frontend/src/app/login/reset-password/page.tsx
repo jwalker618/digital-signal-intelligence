@@ -54,11 +54,11 @@ function RequestResetForm() {
 
   return (
     
-    <main className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
+    <main className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
 
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         
-        <h1 className="text-left text-2xl font-bold text-dsi-background mb-5">
+        <h1 className="text-left text-2xl font-bold text-generate-background mb-5">
           Reset password
         </h1>
         {submitted ? (
@@ -74,7 +74,7 @@ function RequestResetForm() {
               
               <span className="
                 block mb-1
-                text-xs text-dsi-background"
+                text-xs text-generate-background"
                 >Email
               </span>
               
@@ -84,7 +84,7 @@ function RequestResetForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 
-                className="w-full dsi-inputbox"
+                className="w-full generate-inputbox"
               />
 
             </label>
@@ -92,7 +92,7 @@ function RequestResetForm() {
             <button
               type="submit"
               disabled={busy}
-              className="w-full flex flex-col dsi-actionbutton"
+              className="w-full flex flex-col generate-actionbutton"
             >
               {busy && <Loader2 className="icon animate-spin" />}
               Send Reset Link
@@ -104,7 +104,7 @@ function RequestResetForm() {
             href="/login" 
             className="
               font-bold
-              text-dsi-outline hover:text-dsi-selected">
+              text-generate-outline hover:text-generate-selected">
             Back To Sign In
           </Link>
         </div>
@@ -150,11 +150,11 @@ function SetNewPasswordForm({
 
   return (
     
-    <main className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
+    <main className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
       
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
 
-        <h1 className="text-left text-2xl font-bold text-dsi-background mb-5">
+        <h1 className="text-left text-2xl font-bold text-generate-background mb-5">
           Choose a new password
         </h1>
         
@@ -163,7 +163,7 @@ function SetNewPasswordForm({
           <label className="flex flex-col gap-1">
             <span className="
               block mb-1
-              text-xs text-dsi-background"
+              text-xs text-generate-background"
               >New password
             </span>
             
@@ -173,14 +173,14 @@ function SetNewPasswordForm({
               value={pw}
               onChange={(e) => setPw(e.target.value)}
               
-              className="w-full dsi-inputbox"
+              className="w-full generate-inputbox"
             />
           </label>
 
           <div className="flex items-center gap-2 text-xs opacity-80">
-            <div className="flex-1 h-1 bg-dsi-outline/30 rounded overflow-hidden">
+            <div className="flex-1 h-1 bg-generate-outline/30 rounded overflow-hidden">
               <div
-                className="h-full bg-dsi-selected transition-all"
+                className="h-full bg-generate-selected transition-all"
                 style={{ width: `${(strength.score / 5) * 100}%` }}
               />
             </div>
@@ -190,7 +190,7 @@ function SetNewPasswordForm({
           <label className="flex flex-col gap-1">
             <span className="
               block mb-1
-              text-xs text-dsi-background"
+              text-xs text-generate-background"
             >Confirm
             </span>
             
@@ -200,17 +200,17 @@ function SetNewPasswordForm({
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
               
-              className="w-full dsi-inputbox"
+              className="w-full generate-inputbox"
             />
           </label>
 
-          {error && <div className="text-sm text-dsi-decline">{error}</div>}
+          {error && <div className="text-sm text-generate-decline">{error}</div>}
           
           <button
             type="submit"
             disabled={busy}
             
-            className="w-full flex flex-col dsi-actionbutton"
+            className="w-full flex flex-col generate-actionbutton"
           >
             {busy && <Loader2 className="icon animate-spin" />}
             Set new password

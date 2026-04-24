@@ -30,10 +30,10 @@ const WaterfallStep = ({
   sublabel?: React.ReactNode;
 }) => {
   const toneBg =
-    tone === "info"     ? "bg-dsi-info/5 border-dsi-info/20 text-dsi-info"
-    : tone === "positive" ? "bg-dsi-approve/5 border-dsi-approve/20 text-dsi-approve"
-    : tone === "selected" ? "bg-dsi-selected/10 border-2 border-dsi-selected/30 text-dsi-selected"
-    : "bg-dsi-background/30 border-dsi-outline/10";
+    tone === "info"     ? "bg-generate-info/5 border-generate-info/20 text-generate-info"
+    : tone === "positive" ? "bg-generate-approve/5 border-generate-approve/20 text-generate-approve"
+    : tone === "selected" ? "bg-generate-selected/10 border-2 border-generate-selected/30 text-generate-selected"
+    : "bg-generate-background/30 border-generate-outline/10";
   const valueSize = tone === "selected" ? "text-2xl font-black" : "text-lg font-bold";
 
   return (
@@ -60,9 +60,9 @@ const GroupedList = ({
   totalLabel: string;
   total: React.ReactNode;
 }) => {
-  const border = tone === "negative" ? "border-dsi-decline/20" : "border-dsi-refer/20";
-  const headerBg = tone === "negative" ? "bg-dsi-decline/5 border-dsi-decline/10" : "bg-dsi-refer/5 border-dsi-refer/10";
-  const footerBg = tone === "negative" ? "bg-dsi-decline/5" : "bg-dsi-refer/5";
+  const border = tone === "negative" ? "border-generate-decline/20" : "border-generate-refer/20";
+  const headerBg = tone === "negative" ? "bg-generate-decline/5 border-generate-decline/10" : "bg-generate-refer/5 border-generate-refer/10";
+  const footerBg = tone === "negative" ? "bg-generate-decline/5" : "bg-generate-refer/5";
 
   return (
     <div className={`border ${border} rounded-lg overflow-hidden`}>
@@ -72,7 +72,7 @@ const GroupedList = ({
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex justify-between items-center py-2 px-4 text-sm border-b border-dsi-outline/5 last:border-0"
+          className="flex justify-between items-center py-2 px-4 text-sm border-b border-generate-outline/5 last:border-0"
         >
           <span className="opacity-70">{item.label}</span>
           {item.valueNode}
@@ -143,8 +143,8 @@ export default function PremiumAssemblyTab() {
       : null;
 
   const discretionTone =
-    discretionPct != null && discretionPct > 0 ? "text-dsi-approve"
-    : discretionPct != null && discretionPct < 0 ? "text-dsi-decline"
+    discretionPct != null && discretionPct > 0 ? "text-generate-approve"
+    : discretionPct != null && discretionPct < 0 ? "text-generate-decline"
     : "";
 
   return (
@@ -160,7 +160,7 @@ export default function PremiumAssemblyTab() {
       />
 
       <SectionCard icon={Calculator} title="Premium Assembly Waterfall">
-        <div className="flex flex-col gap-1 px-dsi-pad py-4">
+        <div className="flex flex-col gap-1 px-generate-pad py-4">
           <WaterfallStep
             label="Technical Premium (USD)"
             value={formatCurrency(ct.technical_premium_usd)}
@@ -186,7 +186,7 @@ export default function PremiumAssemblyTab() {
                 label: item.label,
                 valueNode: (
                   <div className="text-right">
-                    <span className="font-bold text-dsi-decline">
+                    <span className="font-bold text-generate-decline">
                       {item.rate != null ? formatPercent(item.rate) : "-"}
                     </span>
                     {item.amount != null && (
@@ -241,7 +241,7 @@ export default function PremiumAssemblyTab() {
       </SectionCard>
 
       <SectionCard icon={AlertTriangle} title="Minimum Premium Check">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-generate-pad py-4">
           <MetricCard label="Minimum Gross Premium" value={formatCurrency(ct.minimum_gross_premium)} />
           <MetricCard
             tone={ct.at_minimum_premium ? "warning" : "positive"}
@@ -260,11 +260,11 @@ export default function PremiumAssemblyTab() {
       </SectionCard>
 
       <SectionCard icon={DollarSign} title="Discretion Analysis">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
           <KpiTile label="Gross Premium" value={formatCurrency(ct.gross_premium)} />
           <div>
             <span className="flex items-center gap-1 text-sm mb-1">Offered Premium</span>
-            <span className="block font-bold text-lg text-dsi-selected">
+            <span className="block font-bold text-lg text-generate-selected">
               {formatCurrency(ct.offered_premium)}
             </span>
           </div>

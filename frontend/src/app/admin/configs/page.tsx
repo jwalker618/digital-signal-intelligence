@@ -84,7 +84,7 @@ export default function ConfigsPage() {
       <button
         onClick={() => void loadSummaries()}
         disabled={loading}
-        className="dsi-actiontext disabled:opacity-50"
+        className="generate-actiontext disabled:opacity-50"
       >
         <RefreshCw className={`icon ${loading ? "animate-spin" : ""}`} />
         Refresh
@@ -95,15 +95,15 @@ export default function ConfigsPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-generate-pad">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm flex items-center gap-3">
+        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm flex items-center gap-3">
           <h1>Showing {summaries.length} configs.</h1>
         </div>
 
         {error && (
-          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+          <div className="generate-notificationpill shrink-0 mb-generate-pad flex items-center gap-2">
             <AlertTriangle className="icon" /> {error}
           </div>
         )}
@@ -113,8 +113,8 @@ export default function ConfigsPage() {
 
           <table className="w-full text-left whitespace-nowrap border-collapse">
 
-            <thead className="sticky top-0 z-20 bg-dsi-background">
-              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-background">
+              <tr className="generate-grid-table-header text-generate-contrast-background">
                 <th className="p-1.5 text-left">Coverage</th>
                 <th className="p-1.5 text-left ">Config</th>
                 <th className="p-1.5 text-left">Active</th>
@@ -128,7 +128,7 @@ export default function ConfigsPage() {
                 <tr
                   key={`${s.coverage}/${s.config_name}`}
                   onClick={() => void loadHistory(s.coverage, s.config_name)}
-                  className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
+                  className="cursor-pointer even:bg-generate-contrast-analysis text-generate-contrast-background hover:text-generate-selected"
                 >
                   <td className="p-1.5">{formatText(s.coverage,"upper")}</td>
                   <td className="p-1.5">{formatText(s.config_name,"capitalize")}</td>
@@ -141,12 +141,12 @@ export default function ConfigsPage() {
           </table>
 
           {summaries.length === 0 && !loading && (
-            <div className="dsi-user-message">No configs yet.</div>
+            <div className="generate-user-message">No configs yet.</div>
           )}
 
           {selected && (
             <>
-              <div className="mt-dsi-gap text-dsi-contrast-background text-sm pb-2">
+              <div className="mt-generate-gap text-generate-contrast-background text-sm pb-2">
                 <span className="font-bold">{selected.coverage}</span>
                 <span className="opacity-50"> / </span>
                 <span className="font-bold">{selected.config_name}</span>
@@ -155,7 +155,7 @@ export default function ConfigsPage() {
 
               <table className="w-full text-left whitespace-nowrap border-collapse">
                 <thead>
-                  <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                  <tr className="generate-grid-table-header text-generate-contrast-background">
                     <th className="p-1.5">v</th>
                     <th className="p-1.5">Status</th>
                     <th className="p-1.5">Author</th>
@@ -166,7 +166,7 @@ export default function ConfigsPage() {
                 </thead>
                 <tbody>
                   {history.map((v) => (
-                    <tr key={v.id} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                    <tr key={v.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
                       <td className="p-1.5 font-mono tabular-nums">{v.version}</td>
                       <td className="p-1.5"><StatusBadge status={v.status} /></td>
                       <td className="p-1.5 font-mono text-[10px] opacity-70">
@@ -178,14 +178,14 @@ export default function ConfigsPage() {
                         <button
                           onClick={() => void action(v.id, "validate")}
                           disabled={busy !== null}
-                          className="text-xs border border-dsi-outline/40 rounded px-2 py-0.5 hover:bg-dsi-outline/10 disabled:opacity-50"
+                          className="text-xs border border-generate-outline/40 rounded px-2 py-0.5 hover:bg-generate-outline/10 disabled:opacity-50"
                         >
                           Validate
                         </button>
                         <button
                           onClick={() => void action(v.id, "calibrate")}
                           disabled={busy !== null}
-                          className="text-xs border border-dsi-outline/40 rounded px-2 py-0.5 hover:bg-dsi-outline/10 disabled:opacity-50"
+                          className="text-xs border border-generate-outline/40 rounded px-2 py-0.5 hover:bg-generate-outline/10 disabled:opacity-50"
                         >
                           Calibrate
                         </button>
@@ -193,7 +193,7 @@ export default function ConfigsPage() {
                           <button
                             onClick={() => void action(v.id, "deploy")}
                             disabled={busy !== null}
-                            className="text-xs bg-dsi-selected/20 border border-dsi-selected/40 rounded px-2 py-0.5 disabled:opacity-50"
+                            className="text-xs bg-generate-selected/20 border border-generate-selected/40 rounded px-2 py-0.5 disabled:opacity-50"
                           >
                             <ShieldCheck className="inline w-3 h-3 mr-1" />
                             Deploy
@@ -206,7 +206,7 @@ export default function ConfigsPage() {
               </table>
 
               {history.length === 0 && (
-                <div className="dsi-user-message">No versions.</div>
+                <div className="generate-user-message">No versions.</div>
               )}
             </>
           )}

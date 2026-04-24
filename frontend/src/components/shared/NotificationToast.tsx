@@ -104,10 +104,10 @@ export function NotificationToastHost() {
         <div
           key={n.id}
           role="status"
-          className={`border-2 rounded p-3 shadow text-sm bg-dsi-background
-            ${n.tone === "error" ? "border-dsi-decline" : ""}
-            ${n.tone === "warn" ? "border-dsi-refer" : ""}
-            ${n.tone === "info" ? "border-dsi-outline" : ""}`}
+          className={`border-2 rounded p-3 shadow text-sm bg-generate-background
+            ${n.tone === "error" ? "border-generate-decline" : ""}
+            ${n.tone === "warn" ? "border-generate-refer" : ""}
+            ${n.tone === "info" ? "border-generate-outline" : ""}`}
         >
           <div className="flex items-start justify-between gap-2">
             <div>

@@ -35,8 +35,8 @@ export const NavItem = ({
     onClick={onClick}
     className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
       isActive
-        ? "text-dsi-contrast-background bg-dsi-background font-semibold"
-        : "text-dsi-background hover:text-dsi-selected"
+        ? "text-generate-contrast-background bg-generate-background font-semibold"
+        : "text-generate-background hover:text-generate-selected"
     } ${className}`}
   >
     <Icon className="icon shrink-0" />
@@ -68,7 +68,7 @@ export const NavGroup = ({
     <button
       onClick={onToggle}
       className={`flex items-center justify-between gap-3 w-full text-left py-2 px-2 rounded text-sm mt-1 ${
-        isActive ? "text-dsi-selected" : "text-dsi-background hover:text-dsi-selected"
+        isActive ? "text-generate-selected" : "text-generate-background hover:text-generate-selected"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -85,7 +85,7 @@ export const NavGroup = ({
     </button>
 
     {isExpanded && (
-      <ul className="ml-3 pl-2 border-l border-dsi-outline/20 flex flex-col gap-0.5 mt-0.5">
+      <ul className="ml-3 pl-2 border-l border-generate-outline/20 flex flex-col gap-0.5 mt-0.5">
         {children}
       </ul>
     )}
@@ -112,7 +112,7 @@ export const SidebarIconBtn = ({
   <button
     onClick={onClick}
     title={title}
-    className={`text-dsi-background hover:text-dsi-selected transition-colors ${className}`}
+    className={`text-generate-background hover:text-generate-selected transition-colors ${className}`}
     style={style}
   >
     <Icon className="icon" />

@@ -27,7 +27,7 @@ export default function SIRWaitingPeriodsTab() {
       />
 
       <SectionCard icon={Shield} title="Self-Insured Retention (SIR)">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-generate-pad py-4">
           <MetricCard
             tone={rt.sir_applies ? "warning" : undefined}
             label="SIR Applies"
@@ -42,7 +42,7 @@ export default function SIRWaitingPeriodsTab() {
       </SectionCard>
 
       <SectionCard icon={Clock} title="Waiting Periods">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-generate-pad py-4">
           <MetricCard
             tone={rt.waiting_period_hours ? "info" : undefined}
             label="Waiting Period"
@@ -62,7 +62,7 @@ export default function SIRWaitingPeriodsTab() {
 
       <SectionCard icon={DollarSign} title="Context">
         <LabelValueList
-          className="px-dsi-pad py-4"
+          className="px-generate-pad py-4"
           rows={[
             { label: "Deductible Type", value: formatText(rt.deductible_type, "capitalize", "N/A") },
             { label: "Deductible Amount", value: formatCurrency(rt.deductible_amount) },

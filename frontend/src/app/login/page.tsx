@@ -11,8 +11,6 @@ import {
   PanelBottomOpen,
 } from "lucide-react";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { MFAVerify } from "@/components/auth/MFAVerify";
@@ -75,7 +73,7 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="flex min-h-full flex-col justify-center bg-dsi-contrast-background">
+      <div className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
 
         <div>
           <img
@@ -83,12 +81,12 @@ export default function LoginPage() {
               src={isDark ? 
                 "/Standard_Generate_Logo_and_DSI.svg" : "/BlackWhite_Generate_Logo_and_DSI.svg"
                 }
-              className="w-25 h-25 mx-auto w-auto absolute left-dsi-gap top-dsi-gap" 
+              className="w-25 h-25 mx-auto w-auto absolute left-generate-gap top-generate-gap" 
             />
           <SidebarIconBtn
               icon={isDark ? LightbulbOff : Lightbulb}
               onClick={toggleDark}
-              className="text-dsi-background hover:text-dsi-selected absolute right-dsi-gap top-dsi-gap"
+              className="text-generate-background hover:text-generate-selected absolute right-generate-gap top-generate-gap"
             />
 
         </div>
@@ -98,7 +96,7 @@ export default function LoginPage() {
             
             <h2 className="
               flex mt-10 mb-5
-              text-center text-2xl font-bold text-dsi-background"
+              text-center text-2xl font-bold text-generate-background"
               >Sign in to your account
             </h2>
 
@@ -107,7 +105,7 @@ export default function LoginPage() {
               className="
                 flex 
                 gap-2 mb-4 items-center
-                text-dsi-background hover:text-dsi-selected"
+                text-generate-background hover:text-generate-selected"
             >
               {isSSO ? (
                 <PanelBottomOpen className="icon"/> 
@@ -132,7 +130,7 @@ export default function LoginPage() {
                       value={tenantSlug}
                       onChange={(e) => setTenantSlug(e.target.value)}
                       placeholder="e.g. your company domain"
-                      className="w-full dsi-inputbox"
+                      className="w-full generate-inputbox"
                     />
                   </label>
                   
@@ -140,7 +138,7 @@ export default function LoginPage() {
                     type="button"
                     onClick={onSSO}
                     disabled={submitting} 
-                    className="mt-3 dsi-actionbutton"
+                    className="mt-3 generate-actionbutton"
                     > Continue with SSO
                   </button>
 
@@ -162,7 +160,7 @@ export default function LoginPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="email address"
-                        className="w-full dsi-inputbox"
+                        className="w-full generate-inputbox"
                       />
                     </div>
                     
@@ -177,7 +175,7 @@ export default function LoginPage() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="password"
-                        className="w-full dsi-inputbox"
+                        className="w-full generate-inputbox"
                       />
                     </div>
 
@@ -185,10 +183,10 @@ export default function LoginPage() {
 
                   <div>
 
-                    {error && <div className="text-sm text-dsi-decline">{error}</div>}
+                    {error && <div className="text-sm text-generate-decline">{error}</div>}
                     <button
                       id="submit" name="submit" type="submit" disabled={submitting}                      
-                      className="w-full flex flex-col dsi-actionbutton"
+                      className="w-full flex flex-col generate-actionbutton"
                     >
                       {submitting && <Loader2 className="icon animate-spin" />}
                       Sign in
@@ -198,7 +196,7 @@ export default function LoginPage() {
                       <a href="/login/reset-password" 
                         className="
                           font-bold
-                          text-dsi-outline hover:text-dsi-selected">
+                          text-generate-outline hover:text-generate-selected">
                         Forgot Password?
                       </a>
                     </div>

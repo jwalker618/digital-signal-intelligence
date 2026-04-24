@@ -108,7 +108,7 @@ export default function ExposureTab() {
         <StandardCard title="Active Submission: Exposure Profile" lucideIcon={Target}>
         <div className="py-2">
           {/* Row 1: Primary KPIs — expanded */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-dsi-pad pr-dsi-pad">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 pl-generate-pad pr-generate-pad">
             <KpiTile
               label="Exposure Value (TIV/Rev)"
               value={formatCurrency(activeVersion.exposure_value || 0)}
@@ -146,7 +146,7 @@ export default function ExposureTab() {
         <StandardCard title="Band Position" lucideIcon={Gauge}>
           <div className="py-2">
             {hasBandPosition ? (
-              <div className="pl-dsi-pad pr-dsi-pad space-y-4">
+              <div className="pl-generate-pad pr-generate-pad space-y-4">
                 {/* Band bar */}
                 <div>
                   <div className="flex justify-between text-xs opacity-60 mb-1">
@@ -154,17 +154,17 @@ export default function ExposureTab() {
                     <span className="font-bold uppercase">{activeVersion.exposure_band_label}</span>
                     <span>Band ceiling</span>
                   </div>
-                  <div className="relative h-6 bg-dsi-background rounded-full overflow-hidden border border-dsi-outline/20">
+                  <div className="relative h-6 bg-generate-background rounded-full overflow-hidden border border-generate-outline/20">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-dsi-approve/30 via-dsi-muted/30 to-dsi-refer/30 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-generate-approve/30 via-generate-muted/30 to-generate-refer/30 rounded-full"
                       style={{ width: '100%' }}
                     />
                     {/* Position marker */}
                     <div
-                      className="absolute top-0 bottom-0 w-0.5 bg-dsi-selected z-10"
+                      className="absolute top-0 bottom-0 w-0.5 bg-generate-selected z-10"
                       style={{ left: `${Math.max(2, Math.min(98, (bandPct || 0) * 100))}%` }}
                     >
-                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-dsi-selected whitespace-nowrap">
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-generate-selected whitespace-nowrap">
                         {formatCurrency(exposureValue)}
                       </div>
                     </div>
@@ -201,7 +201,7 @@ export default function ExposureTab() {
         <StandardCard title="Exposure Components" lucideIcon={Puzzle}>
           <div className="overflow-y-auto">
             {hasComponents ? (
-              <div className="pl-dsi-pad pr-dsi-pad space-y-3">
+              <div className="pl-generate-pad pr-generate-pad space-y-3">
                 {/* Size component */}
                 {sizeComp && (
                   <InfoPanel
@@ -250,7 +250,7 @@ export default function ExposureTab() {
 
                 {/* Combined modifier */}
                 {combinedModifier != null && (
-                  <div className="border-t border-dsi-outline/20 pt-3 flex items-center justify-between">
+                  <div className="border-t border-generate-outline/20 pt-3 flex items-center justify-between">
                     <span className="text-xs opacity-60">Combined Modifier</span>
                     <span className="font-bold text-lg">{formatNumber(combinedModifier, 3)}x</span>
                   </div>
@@ -355,14 +355,14 @@ export default function ExposureTab() {
                     const isModifier = actionKey === 'modifier';
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
-                    const tagColor = isModifier ? 'bg-dsi-info/15 text-dsi-info' :
-                                     isReferral ? 'bg-dsi-refer/15 text-dsi-refer' :
-                                     isTierOverride ? 'bg-dsi-decline/15 text-dsi-decline' :
-                                     'bg-dsi-muted/15 text-dsi-muted';
+                    const tagColor = isModifier ? 'bg-generate-info/15 text-generate-info' :
+                                     isReferral ? 'bg-generate-refer/15 text-generate-refer' :
+                                     isTierOverride ? 'bg-generate-decline/15 text-generate-decline' :
+                                     'bg-generate-muted/15 text-generate-muted';
                     return (
-                      <div key={idx} className="flex items-center justify-between px-dsi-pad py-2 border-b border-dsi-outline/10 hover:bg-dsi-background/20 transition-colors">
+                      <div key={idx} className="flex items-center justify-between px-generate-pad py-2 border-b border-generate-outline/10 hover:bg-generate-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-dsi-refer' : isModifier ? 'text-dsi-info' : 'text-dsi-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-generate-refer' : isModifier ? 'text-generate-info' : 'text-generate-muted'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>

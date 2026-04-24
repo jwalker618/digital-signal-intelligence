@@ -38,9 +38,9 @@ export default function UserMenu() {
           absolute bottom-[5vw] left-0 z-40
           flex flex-col 
           min-w-[10rem] 
-          bg-dsi-background 
-          text-dsi-contrast-background 
-          border-1 border-dsi-outline 
+          bg-generate-background 
+          text-generate-contrast-background 
+          border-1 border-generate-outline 
           rounded-md shadow-sm"
           >
 
@@ -50,7 +50,7 @@ export default function UserMenu() {
               setActiveMenu("Your Profile");
               router.push("/profile");
             })}
-            className="dsi-actiontext"
+            className="generate-actiontext"
           >
             <CircleUserRound className="icon" /> Profile
           </button>
@@ -60,7 +60,7 @@ export default function UserMenu() {
               await logout();
               router.replace("/login");
             })}
-            className="dsi-actiontext"
+            className="generate-actiontext"
           >
             <LogOut className="icon" /> Sign out
           </button>

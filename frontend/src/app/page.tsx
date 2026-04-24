@@ -30,7 +30,7 @@ export default function Home() {
     case "Full Pipeline":
       return <PipelineTable type="full" />;
     case "Performance Metrics":
-      return <div className="p-8 text-dsi-selected">Analytics Dashboard Under Construction</div>;
+      return <div className="p-8 text-generate-selected">Analytics Dashboard Under Construction</div>;
     default:
       return <PipelineTable type="referral" />;
   }

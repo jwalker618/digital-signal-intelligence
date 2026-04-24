@@ -19,7 +19,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!anyAccess) {
     return (
       <main className="p-6">
-        <div className="border-2 border-dsi-outline rounded p-4 text-sm opacity-80">
+        <div className="border-2 border-generate-outline rounded p-4 text-sm opacity-80">
           <ShieldCheck className="icon inline mr-2" />
           You do not have access to any admin section.
         </div>

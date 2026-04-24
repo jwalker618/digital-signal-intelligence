@@ -17,9 +17,9 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div 
         className="
           absolute top-0 
-          left-dsi-gap right-dsi-gap 
+          left-generate-gap right-generate-gap 
           overflow-auto
-          text-dsi-contrast-background"
+          text-generate-contrast-background"
           style={{ 
             height: topContext ? ('var(--cw)') : (0) ,
           }}
@@ -31,7 +31,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div
         className="
           absolute 
-          left-dsi-gap right-dsi-gap 
+          left-generate-gap right-generate-gap 
           overflow-auto
           no-scrollbar"
           style={{
@@ -45,8 +45,8 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
         ) : (
           <div className="
             min-h-full  
-            text-dsi-contrast-analysis  
-            p-dsi-pad">
+            text-generate-contrast-analysis  
+            p-generate-pad">
             {children}
           </div>
         )}
@@ -56,9 +56,9 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       <div
         className="
           absolute bottom-0 
-          left-dsi-gap right-dsi-gap 
+          left-generate-gap right-generate-gap 
           overflow-auto 
-          text-dsi-contrast-background"
+          text-generate-contrast-background"
           style={{ 
             height: bottomContext ? ('var(--cw)') : (0) 
           }}

@@ -40,17 +40,17 @@ export default function KeyDetailsBar({
   const isBound = status === "bound";
 
   return (
-    <div className="sticky top-0 z-20 bg-dsi-background pt-3 pb-2">
-      <div className="flex gap-dsi-pad rounded-t-xl border-b border-dsi-outline/50 overflow-x-hidden whitespace-nowrap bg-dsi-analysis/60 pl-dsi-pad pt-2 pb-2">
+    <div className="sticky top-0 z-20 bg-generate-background pt-3 pb-2">
+      <div className="flex gap-generate-pad rounded-t-xl border-b border-generate-outline/50 overflow-x-hidden whitespace-nowrap bg-generate-analysis/60 pl-generate-pad pt-2 pb-2">
         <Paperclip className="icon" />
         <span className="text-sm">Key Details</span>
       </div>
-      <div className="grid grid-cols-[10%_35%_55%] border-b-3 border-dsi-contrast-background overflow-x-hidden whitespace-nowrap rounded-b-xl bg-dsi-analysis shadow-sm pt-2 pb-2">
-        <div className="text-left pl-dsi-pad pr-dsi-pad border-r border-dsi-outline/50 overflow-x-hidden">
+      <div className="grid grid-cols-[10%_35%_55%] border-b-3 border-generate-contrast-background overflow-x-hidden whitespace-nowrap rounded-b-xl bg-generate-analysis shadow-sm pt-2 pb-2">
+        <div className="text-left pl-generate-pad pr-generate-pad border-r border-generate-outline/50 overflow-x-hidden">
           <span className="text-sm">Status:</span>
           <span className="pl-2 font-bold">{formatText(status, "upper", "N/A")}</span>
         </div>
-        <div className="text-center pl-dsi-pad pr-dsi-pad border-r border-dsi-outline/50 overflow-x-hidden">
+        <div className="text-center pl-generate-pad pr-generate-pad border-r border-generate-outline/50 overflow-x-hidden">
           {isQuote && (
             <>
               <span className="text-sm">Quote Valid From:</span>
@@ -69,7 +69,7 @@ export default function KeyDetailsBar({
             </>
           )}
         </div>
-        <div className="text-center pl-dsi-pad pr-dsi-pad overflow-x-hidden">
+        <div className="text-center pl-generate-pad pr-generate-pad overflow-x-hidden">
           <span className="text-sm">Submission Code:</span>
           <span className="pl-2 uppercase font-bold">{submissionCode || ""}</span>
           <span className="px-6">||</span>

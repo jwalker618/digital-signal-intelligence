@@ -33,7 +33,7 @@ export default function AggregateReinstatementTab() {
       />
 
       <SectionCard icon={Layers} title="Aggregate Limits">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-generate-pad py-4">
           <MetricCard tone="selected" label="Aggregate Limit" value={formatCurrency(rt.aggregate_limit)} />
           <MetricCard label="Aggregate Deductible" value={formatCurrency(rt.aggregate_deductible)} />
           <MetricCard
@@ -44,7 +44,7 @@ export default function AggregateReinstatementTab() {
       </SectionCard>
 
       <SectionCard icon={RefreshCw} title="Reinstatement Provisions">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-generate-pad py-4">
           <MetricCard
             tone={rt.reinstatements ? "info" : undefined}
             label="Reinstatements"
@@ -62,7 +62,7 @@ export default function AggregateReinstatementTab() {
       {(rt.attachment_point != null || rt.layer_limit != null) && (
         <SectionCard icon={DollarSign} title="Layer Details">
           <LabelValueList
-            className="px-dsi-pad py-4"
+            className="px-generate-pad py-4"
             rows={[
               { label: "Attachment Point", value: formatCurrency(rt.attachment_point) },
               { label: "Layer Limit", value: formatCurrency(rt.layer_limit) },

@@ -16,8 +16,6 @@ import { useEffect, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
-import "@/app/globals.css";
-
 import { useAuthStore } from "@/store/authStore";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
@@ -82,7 +80,7 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
 
   if (isBooting && !isPublic) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-dsi-background">
+      <div className="min-h-screen flex items-center justify-center bg-generate-background">
         <Loader2 className="icon animate-spin" />
       </div>
     );

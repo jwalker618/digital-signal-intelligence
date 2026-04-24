@@ -14,14 +14,14 @@ interface SectionCardProps {
 export default function SectionCard({ icon: Icon, title, headerRight, children, iconClassName }: SectionCardProps) {
   return (
     <div className="flex flex-col pt-2 pb-2">
-      <div className="flex justify-between items-center gap-dsi-pad rounded-t-xl border-b-1 border-dsi-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-dsi-analysis/60 pl-dsi-pad pr-dsi-pad pt-2 pb-2">
-        <div className="flex items-center gap-dsi-pad">
+      <div className="flex justify-between items-center gap-generate-pad rounded-t-xl border-b-1 border-generate-outline/50 overflow-x-hidden whitespace-nowrap border-collapse bg-generate-analysis/60 pl-generate-pad pr-generate-pad pt-2 pb-2">
+        <div className="flex items-center gap-generate-pad">
           <Icon className={`icon ${iconClassName || ''}`} />
           <span className="text-sm">{title}</span>
         </div>
         {headerRight}
       </div>
-      <div className="flex flex-col flex-1 border-b-3 border-dsi-contrast-background overflow-x-hidden border-collapse rounded-b-xl bg-dsi-analysis shadow-sm">
+      <div className="flex flex-col flex-1 border-b-3 border-generate-contrast-background overflow-x-hidden border-collapse rounded-b-xl bg-generate-analysis shadow-sm">
         {children}
       </div>
     </div>

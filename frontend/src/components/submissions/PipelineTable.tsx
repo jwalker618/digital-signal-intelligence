@@ -13,8 +13,6 @@ import {
   formatNumber 
 } from "@/lib/format";
 
-import "@/app/globals.css";
-
 export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   const {
     setPageQuickAction,
@@ -37,7 +35,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
       <select
         value={daysFilter}
         onChange={(e) => setDaysFilter(Number(e.target.value))}
-        className="outline-none bg-dsi-background text-dsi-contrast-background hover:text-dsi-selected"
+        className="outline-none bg-generate-background text-generate-contrast-background hover:text-generate-selected"
       >
         <option value={7}>Last 7 Days</option>
         <option value={30}>Last 30 Days</option>
@@ -79,7 +77,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
     return (
       <ViewCanvas unstyledMain={false}>
         <div className="flex h-full items-center justify-center">
-          <Loader2 className="animate-spin text-dsi-selected w-8 h-8" />
+          <Loader2 className="animate-spin text-generate-selected w-8 h-8" />
         </div>
       </ViewCanvas>
     );
@@ -88,17 +86,17 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
   return (
     <ViewCanvas unstyledMain={true}>
       
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-generate-pad">
 
         {/* FIXED TOP SECTION */}
-        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm flex items-center justify-between">
+        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm flex items-center justify-between">
           <h1>
             Showing {displayData.length} of {baseData.length} submissions updated within the last{" "}
             <span className="font-bold">{daysFilter} days</span>
             {type !== "full" && " (or status = DRAFT)."}
           </h1>
           {hasAnyFilter && (
-            <button onClick={clearAllFilters} className="flex dsi-actiontext gap-1">
+            <button onClick={clearAllFilters} className="flex generate-actiontext gap-1">
               Clear filters <X className="icon" /> 
             </button>
           )}
@@ -109,10 +107,10 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
           <table className="w-full text-left whitespace-nowrap border-collapse">
 
             {/* STICKY HEADER WITH FILTER CONTROLS */}
-            <thead className="sticky top-0 z-20 bg-dsi-background">
+            <thead className="sticky top-0 z-20 bg-generate-background">
               {/* Column titles */}
               
-              <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+              <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
                 
                 <th className="p-1.5">
                   <ColumnFilterHeader
@@ -152,7 +150,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
 
               {/* Filter input row — shown when a filter is active */}
               {activeFilter && (
-                <tr className="bg-dsi-analysis border-b-2 border-dsi-outline">
+                <tr className="bg-generate-analysis border-b-2 border-generate-outline">
                   
                   <td className="p-1.5">
                     {activeFilter === 'client' && (
@@ -162,7 +160,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                         value={clientFilter}
                         onChange={(e) => setClientFilter(e.target.value)}
                         placeholder="Search clients..."
-                        className="w-full text-xs dsi-inputbox"
+                        className="w-full text-xs generate-inputbox"
                       />
                     )}
                   </td>
@@ -175,7 +173,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                         value={coverageFilter}
                         onChange={(e) => setCoverageFilter(e.target.value)}
                         placeholder="Search coverage..."
-                        className="w-full text-xs dsi-inputbox"
+                        className="w-full text-xs generate-inputbox"
                       />
                     )}
                   </td>
@@ -188,7 +186,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                         autoFocus
                         value={decisionFilter}
                         onChange={(e) => setDecisionFilter(e.target.value)}
-                        className="w-full text-xs dsi-inputbox"
+                        className="w-full text-xs generate-inputbox"
                       >
                         <option value="">All</option>
                         {uniqueDecisions.map(d => (
@@ -208,7 +206,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                   <tr
                     key={sub.submission_code || index}
                     onClick={() => handleRowClick(sub)}
-                    className="cursor-pointer even:bg-dsi-contrast-analysis text-dsi-contrast-background hover:text-dsi-selected"
+                    className="cursor-pointer even:bg-generate-contrast-analysis text-generate-contrast-background hover:text-generate-selected"
                   >
                     <td className="p-1.5">{formatText(sub.entity_name,"capitalize")}</td>
                     <td className="p-1.5">{formatText(sub.coverage_configuration)}</td>
@@ -233,7 +231,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                           >
                             <CircleCheck className="icon" />
                           </button>
-                          <span className="opacity-50 text-dsi-contrast-background font-light">/</span>
+                          <span className="opacity-50 text-generate-contrast-background font-light">/</span>
                           <button
                             className="hover:scale-150 transition-transform"
                             onClick={(e) => {
@@ -253,7 +251,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
           </table>
 
           {displayData.length === 0 && (
-            <div className="dsi-user-message">
+            <div className="generate-user-message">
               {hasAnyFilter ? 'No submissions match the current filters.' : 'No submissions found.'}
             </div>
           )}
@@ -282,7 +280,7 @@ function ColumnFilterHeader({ label, filterKey, activeFilter, setActiveFilter, h
           e.stopPropagation();
           setActiveFilter(isActive ? null : filterKey);
         }}
-        className={`p-0.5 rounded transition-colors ${isActive || hasValue ? 'text-dsi-selected' : 'opacity-30 hover:opacity-70'}`}
+        className={`p-0.5 rounded transition-colors ${isActive || hasValue ? 'text-generate-selected' : 'opacity-30 hover:opacity-70'}`}
         title={`Filter by ${label}`}
       >
         <Filter className="icon" />

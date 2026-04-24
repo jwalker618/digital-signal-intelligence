@@ -28,7 +28,7 @@ export interface DistributionBarChartProps<T extends Record<string, unknown>> {
   valueKey: keyof T & string;
   /**
    * Per-bar colour resolver. Called once per row.
-   * Default: every bar painted `dsi-selected`.
+   * Default: every bar painted `generate-selected`.
    */
   colorFor?: (entry: T, index: number) => string;
   /** Human-readable name for the bar value in the tooltip. */
@@ -54,7 +54,7 @@ export const DistributionBarChart = <T extends Record<string, unknown>>({
   data,
   categoryKey,
   valueKey,
-  colorFor = () => "var(--dsi-selected)",
+  colorFor = () => "var(--generate-selected)",
   valueName,
   formatValue = (v) => formatNumber(v, 0),
   yDomain = ["auto", "auto"],
@@ -78,22 +78,22 @@ export const DistributionBarChart = <T extends Record<string, unknown>>({
         <BarChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--dsi-outline)"
+            stroke="var(--generate-outline)"
             opacity={0.3}
           />
           <XAxis
             dataKey={categoryKey}
-            stroke="var(--dsi-contrast-background)"
-            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-contrast-background)"
+            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
           />
           <YAxis
-            stroke="var(--dsi-contrast-background)"
-            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-contrast-background)"
+            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
             domain={yDomain}
           />
           <RechartsTooltip
             contentStyle={tooltipStyle}
-            cursor={{ fill: "var(--dsi-selected)", opacity: 0.2 }}
+            cursor={{ fill: "var(--generate-selected)", opacity: 0.2 }}
             formatter={(value: unknown, name: string) => [
               formatValue(Number(value)),
               valueName ?? name,
@@ -146,7 +146,7 @@ export const HorizontalBarList = ({
 }: HorizontalBarListProps) => {
   const shown = limit ? rows.slice(0, limit) : rows;
   if (shown.length === 0) {
-    return <p className="dsi-user-message">{emptyMessage}</p>;
+    return <p className="generate-user-message">{emptyMessage}</p>;
   }
   return (
     <div className="space-y-2">
@@ -157,10 +157,9 @@ export const HorizontalBarList = ({
             title={r.label}
           >{formatText(r.label,"capitalize")}
           </span>
-          
-          <div className="flex-1 h-4 bg-dsi-background rounded-full overflow-hidden">
+          <div className="flex-1 h-4 bg-generate-background rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full bg-dsi-contrast-background"
+              className="h-full rounded-full bg-generate-selected/40"
               style={{ width: `${Math.max(0, Math.min(100, r.percent))}%` }}
             />
           </div>
@@ -247,19 +246,19 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
   }
 
   return (
-    <div className="pl-dsi-pad pr-dsi-pad w-full" style={{ height }}>
+    <div className="pl-generate-pad pr-generate-pad w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={data} margin={{ top: 0, right: 0, bottom: 20, left: -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="var(--dsi-outline)"
+            stroke="var(--generate-outline)"
             opacity={0.5}
           />
           <XAxis
             dataKey={categoryKey}
-            stroke="var(--dsi-contrast-background)"
-            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-contrast-background)"
+            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
             interval={0}
             tickFormatter={(val: string) =>
               typeof val === "string" && val.length > maxCategoryLength
@@ -268,13 +267,13 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
             }
           />
           <YAxis
-            stroke="var(--dsi-contrast-background)"
-            tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
+            stroke="var(--generate-contrast-background)"
+            tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
             domain={yDomain}
           />
           <RechartsTooltip
             contentStyle={tooltipStyle}
-            cursor={{ fill: "var(--dsi-selected)", opacity: 0.4 }}
+            cursor={{ fill: "var(--generate-selected)", opacity: 0.4 }}
             formatter={(value: unknown, name: string) => [
               formatValue(Number(value)),
               valueName ?? name,
@@ -290,14 +289,14 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
           {subjectValue !== undefined && (
             <ReferenceLine
               y={subjectValue}
-              stroke="var(--dsi-selected)"
+              stroke="var(--generate-selected)"
               strokeDasharray="6 3"
               strokeWidth={2}
             >
               <Label
                 value={`Subject ${formatNumber(subjectValue, subjectValueDecimals)}`}
                 position="right"
-                fill="var(--dsi-selected)"
+                fill="var(--generate-selected)"
                 fontSize={11}
               />
             </ReferenceLine>
@@ -318,7 +317,7 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                         x={x + width / 2}
                         y={y - 6}
                         textAnchor="middle"
-                        fill="var(--dsi-contrast-background)"
+                        fill="var(--generate-contrast-background)"
                         fontSize={10}
                       >
                         n={n}
@@ -333,8 +332,8 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                 key={`cell-${index}`}
                 fill={
                   entry[categoryKey] === subjectCategory
-                    ? "var(--dsi-selected)"
-                    : "var(--dsi-analysis)"
+                    ? "var(--generate-selected)"
+                    : "var(--generate-analysis)"
                 }
               />
             ))}
@@ -372,10 +371,10 @@ interface PeerScatterChartProps {
 }
 
 const LEGEND = [
-  { label: "Approve", dotClass: "bg-dsi-approve" },
-  { label: "Refer", dotClass: "bg-dsi-refer" },
-  { label: "Decline", dotClass: "bg-dsi-decline" },
-  { label: "Unknown", dotClass: "bg-dsi-muted" },
+  { label: "Approve", dotClass: "bg-generate-approve" },
+  { label: "Refer", dotClass: "bg-generate-refer" },
+  { label: "Decline", dotClass: "bg-generate-decline" },
+  { label: "Unknown", dotClass: "bg-generate-muted" },
 ];
 
 
@@ -406,7 +405,7 @@ export const PeerScatterChart = ({
   return (
     <>
       {showDecisionLegend && (
-        <div className="flex items-center gap-4 text-xs pl-dsi-pad pr-dsi-pad pb-2 opacity-70">
+        <div className="flex items-center gap-4 text-xs pl-generate-pad pr-generate-pad pb-2 opacity-70">
           {LEGEND.map((l) => (
             <span key={l.label} className="flex items-center gap-1">
               <span className={`inline-block w-2 h-2 rounded-full ${l.dotClass}`} />
@@ -416,25 +415,25 @@ export const PeerScatterChart = ({
         </div>
       )}
 
-      <div className="pl-dsi-pad pr-dsi-pad w-full relative" style={{ height }}>
+      <div className="pl-generate-pad pr-generate-pad w-full relative" style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="var(--dsi-outline)"
+              stroke="var(--generate-outline)"
               opacity={0.5}
             />
             <XAxis
               type="number"
               dataKey="x"
               name={xName}
-              stroke="var(--dsi-contrast-background)"
-              tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
+              stroke="var(--generate-contrast-background)"
+              tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -15,
-                fill: "var(--dsi-contrast-background)",
+                fill: "var(--generate-contrast-background)",
                 fontSize: 12,
               }}
             />
@@ -442,13 +441,13 @@ export const PeerScatterChart = ({
               type="number"
               dataKey="y"
               name={yName}
-              stroke="var(--dsi-contrast-background)"
-              tick={{ fill: "var(--dsi-contrast-background)", fontSize: 12 }}
+              stroke="var(--generate-contrast-background)"
+              tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
               label={{
                 value: yLabel,
                 angle: -90,
                 position: "insideLeft",
-                fill: "var(--dsi-contrast-background)",
+                fill: "var(--generate-contrast-background)",
                 fontSize: 12,
               }}
             />
@@ -464,13 +463,13 @@ export const PeerScatterChart = ({
             {/* Subject crosshair */}
             <ReferenceLine
               x={subject.x}
-              stroke="var(--dsi-selected)"
+              stroke="var(--generate-selected)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
             <ReferenceLine
               y={subject.y}
-              stroke="var(--dsi-selected)"
+              stroke="var(--generate-selected)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
@@ -490,7 +489,7 @@ export const PeerScatterChart = ({
             <Scatter
               name="Active Submission"
               data={[subject]}
-              fill="var(--dsi-selected)"
+              fill="var(--generate-selected)"
               shape="star"
             />
           </ScatterChart>

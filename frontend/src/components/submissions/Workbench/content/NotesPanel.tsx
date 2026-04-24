@@ -41,12 +41,12 @@ export default function NotesPanel() {
           placeholder="Add a note..."
           className="
             flex-1
-            bg-dsi-contrast-analysis
-            border-1 border-dsi-contrast-analysis/30
-            pr-dsi-pad pl-dsi-pad ml-2 py-2
+            bg-generate-contrast-analysis
+            border-1 border-generate-contrast-analysis/30
+            pr-generate-pad pl-generate-pad ml-2 py-2
             text-sm
-            hover:text-dsi-selected
-            hover:border-dsi-outline"
+            hover:text-generate-selected
+            hover:border-generate-outline"
           onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
           disabled={isAddingNote}
         />
@@ -54,11 +54,11 @@ export default function NotesPanel() {
           onClick={handleAddNote}
           disabled={!newNoteText.trim() || isAddingNote}
           className="
-            text-dsi-analysis text-sm
+            text-generate-analysis text-sm
             gap-1
-            bg-dsi-contrast-background
-            hover:bg-dsi-selected
-            pr-dsi-pad pl-dsi-pad mr-2
+            bg-generate-contrast-background
+            hover:bg-generate-selected
+            pr-generate-pad pl-generate-pad mr-2
             flex items-center"
         >
           {isAddingNote ? "Saving..." : "Add"} <Plus className="icon" />
@@ -66,7 +66,7 @@ export default function NotesPanel() {
       </div>
 
       {notes.length === 0 ? (
-        <p className="dsi-user-message">No notes recorded yet. Add one above.</p>
+        <p className="generate-user-message">No notes recorded yet. Add one above.</p>
       ) : (
         <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
           {[...notes].reverse().map((note, i) => {
@@ -75,7 +75,7 @@ export default function NotesPanel() {
             return (
               <div
                 key={i}
-                className="bg-dsi-background/30 rounded-lg p-3 border border-dsi-outline/10 text-wrap"
+                className="bg-generate-background/30 rounded-lg p-3 border border-generate-outline/10 text-wrap"
               >
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] opacity-50 flex items-center gap-1">

@@ -53,18 +53,18 @@ function Pillar({
 }: PillarProps) {
   return (
     <div>
-      <div className="flex gap-2 ml-dsi-pad pt-1">
+      <div className="flex gap-2 ml-generate-pad pt-1">
         <Icon className="icon" />
         <span className={`text-sm ${titleUnderline ? "underline" : ""}`}>{title}</span>
       </div>
 
       {/* Top metrics — simple two-row list */}
-      <div className="pt-dsi-pad">
+      <div className="pt-generate-pad">
         {metrics.map((m, i) => (
           <div key={i} className="flex justify-between">
-            <span className="dsi-analysis-description">{m.label}</span>
+            <span className="generate-analysis-description">{m.label}</span>
             <span
-              className={`dsi-analysis-item ${
+              className={`generate-analysis-item ${
                 m.align === "left" ? "text-left" : "text-right"
               }`}
             >
@@ -75,7 +75,7 @@ function Pillar({
       </div>
 
       {/* Calculation section label */}
-      <div className="dsi-analysis-description text-xs pt-dsi-pad">
+      <div className="generate-analysis-description text-xs pt-generate-pad">
         {calculationLabel}
       </div>
 
@@ -118,7 +118,7 @@ export default function ThreePillarAssessment() {
   ])[0];
 
   return (
-    <div className="grid grid-cols-3 gap-dsi-gap">
+    <div className="grid grid-cols-3 gap-generate-gap">
       <Pillar
         title="Risk Analysis"
         icon={ChartNoAxesGantt}
