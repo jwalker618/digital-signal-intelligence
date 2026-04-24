@@ -118,7 +118,7 @@ export default function LossesPage() {
       <button
         onClick={() => void linkAll()}
         disabled={busy !== null}
-        className="dsi-actiontext disabled:opacity-50"
+        className="generate-actiontext disabled:opacity-50"
       >
         <Link2 className="icon" /> Link all
       </button>,
@@ -128,10 +128,10 @@ export default function LossesPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="flex flex-col h-full bg-dsi-background text-dsi-contrast-analysis p-dsi-pad animate-in fade-in duration-500">
+      <div className="flex flex-col h-full bg-generate-background text-generate-contrast-analysis p-generate-pad animate-in fade-in duration-500">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-dsi-contrast-background pb-4 text-sm">
+        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm">
           <div className="flex items-center gap-3 pb-2">
             <h1>Showing {items.length} loss events.</h1>
             {importResult && (
@@ -155,7 +155,7 @@ export default function LossesPage() {
             <button
               type="submit"
               disabled={busy === "import"}
-              className="dsi-actionbutton disabled:opacity-50"
+              className="generate-actionbutton disabled:opacity-50"
             >
               {busy === "import" ? "Importing…" : "Import CSV"}
             </button>
@@ -167,7 +167,7 @@ export default function LossesPage() {
               <input
                 value={filters.coverage}
                 onChange={(e) => setFilters({ ...filters, coverage: e.target.value })}
-                className="dsi-inputbox w-24 font-mono"
+                className="generate-inputbox w-24 font-mono"
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -175,7 +175,7 @@ export default function LossesPage() {
               <input
                 value={filters.status}
                 onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                className="dsi-inputbox w-32"
+                className="generate-inputbox w-32"
               />
             </label>
             <label className="flex flex-col gap-0.5">
@@ -185,7 +185,7 @@ export default function LossesPage() {
                 onChange={(e) =>
                   setFilters({ ...filters, linked: e.target.value as Filters["linked"] })
                 }
-                className="dsi-inputbox"
+                className="generate-inputbox"
               >
                 <option value="">Any</option>
                 <option value="true">Linked</option>
@@ -195,7 +195,7 @@ export default function LossesPage() {
             <button
               onClick={() => void load()}
               disabled={loading}
-              className="dsi-actionbutton"
+              className="generate-actionbutton"
             >
               Apply
             </button>
@@ -203,7 +203,7 @@ export default function LossesPage() {
         </div>
 
         {error && (
-          <div className="dsi-notificationpill shrink-0 mb-dsi-pad flex items-center gap-2">
+          <div className="generate-notificationpill shrink-0 mb-generate-pad flex items-center gap-2">
             <AlertTriangle className="icon" /> {error}
           </div>
         )}
@@ -211,8 +211,8 @@ export default function LossesPage() {
         {/* SCROLLABLE TABLE */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="sticky top-0 z-20 bg-dsi-background">
-              <tr className="dsi-grid-table-header text-dsi-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-background">
+              <tr className="generate-grid-table-header text-generate-contrast-background">
                 <th className="p-1.5">Entity</th>
                 <th className="p-1.5">Coverage</th>
                 <th className="p-1.5">Event date</th>
@@ -224,7 +224,7 @@ export default function LossesPage() {
             </thead>
             <tbody>
               {items.map((l) => (
-                <tr key={l.id} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                <tr key={l.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
                   <td className="p-1.5">{l.entity_name}</td>
                   <td className="p-1.5 font-mono text-xs">{l.coverage}</td>
                   <td className="p-1.5 text-xs">{fmtDate(l.event_date)}</td>
@@ -240,7 +240,7 @@ export default function LossesPage() {
           </table>
 
           {items.length === 0 && !loading && (
-            <div className="dsi-user-message">No loss events.</div>
+            <div className="generate-user-message">No loss events.</div>
           )}
         </div>
       </div>

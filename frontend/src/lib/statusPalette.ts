@@ -21,10 +21,10 @@ export interface StatusPaletteEntry {
 
 /** Decision outcomes — big coloured banner / pill. */
 export const DECISION_PALETTE: Record<string, StatusPaletteEntry> = {
-  approve: { text: "text-dsi-approve", bg: "bg-dsi-approve",  },
-  refer:   { text: "text-dsi-refer", bg: "bg-dsi-refer",     },
-  decline: { text: "text-dsi-decline", bg: "bg-dsi-decline",  },
-  pending: { text: "text-dsi-muted", bg: "bg-dsi-muted",       },
+  approve: { text: "text-generate-approve", bg: "bg-generate-approve",  },
+  refer:   { text: "text-generate-refer", bg: "bg-generate-refer",     },
+  decline: { text: "text-generate-decline", bg: "bg-generate-decline",  },
+  pending: { text: "text-generate-muted", bg: "bg-generate-muted",       },
 };
 
 /**
@@ -42,61 +42,61 @@ export interface DecisionVisual {
 }
 
 export const SUBMISSION_DECISION: Record<Decision, DecisionVisual> = {
-  approve: { bg: "bg-dsi-approve", icon: ShieldCheck },
-  refer:   { bg: "bg-dsi-refer",   icon: ShieldQuestionMark },
-  decline: { bg: "bg-dsi-decline", icon: ShieldX },
-  pending: { bg: "bg-dsi-muted",   icon: ShieldQuestionMark },
+  approve: { bg: "bg-generate-approve", icon: ShieldCheck },
+  refer:   { bg: "bg-generate-refer",   icon: ShieldQuestionMark },
+  decline: { bg: "bg-generate-decline", icon: ShieldX },
+  pending: { bg: "bg-generate-muted",   icon: ShieldQuestionMark },
 };
 
 /** Signal/condition actions — used in badges and row tags. */
 export const ACTION_PALETTE: Record<string, StatusPaletteEntry> = {
-  modifier:      { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
-  referral:      { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  refer:         { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  tier_override: { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  flag:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  note:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  modifier:      { bg: "bg-generate-info/15",     text: "text-generate-info"     },
+  referral:      { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  refer:         { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  tier_override: { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  flag:          { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  note:          { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
 };
 
 /** Health / lifecycle statuses — used by admin + world-engine dashboards. */
 export const HEALTH_PALETTE: Record<string, StatusPaletteEntry> = {
-  green:          { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  healthy:        { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  ok:             { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  deployed:       { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  approved:       { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  active:         { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
+  green:          { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  healthy:        { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  ok:             { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  deployed:       { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  approved:       { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  active:         { bg: "bg-generate-approve/15", text: "text-generate-approve" },
 
-  amber:          { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  warning:        { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  pending_review: { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  validating:     { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  calibrating:    { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  provisional:    { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
+  amber:          { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  warning:        { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  pending_review: { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  validating:     { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  calibrating:    { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  provisional:    { bg: "bg-generate-info/15",     text: "text-generate-info"     },
 
-  red:            { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  critical:       { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  rejected:       { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  locked:         { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  error:          { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
+  red:            { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  critical:       { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  rejected:       { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  locked:         { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  error:          { bg: "bg-generate-decline/15", text: "text-generate-decline" },
 
-  info:           { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
+  info:           { bg: "bg-generate-info/15",     text: "text-generate-info"     },
 
-  draft:          { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  archived:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  superseded:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  inactive:       { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  candidate:      { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
-  deprecated:     { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  draft:          { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  archived:       { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  superseded:     { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  inactive:       { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  candidate:      { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
+  deprecated:     { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
 };
 
 /** Generic tone — for ad-hoc pills not tied to a domain enum. */
 export const TONE_PALETTE: Record<string, StatusPaletteEntry> = {
-  positive: { bg: "bg-dsi-approve/15", text: "text-dsi-approve" },
-  negative: { bg: "bg-dsi-decline/15", text: "text-dsi-decline" },
-  warning:  { bg: "bg-dsi-refer/15",  text: "text-dsi-refer"  },
-  info:     { bg: "bg-dsi-info/15",     text: "text-dsi-info"     },
-  muted:    { bg: "bg-dsi-muted/15",    text: "text-dsi-muted"    },
+  positive: { bg: "bg-generate-approve/15", text: "text-generate-approve" },
+  negative: { bg: "bg-generate-decline/15", text: "text-generate-decline" },
+  warning:  { bg: "bg-generate-refer/15",  text: "text-generate-refer"  },
+  info:     { bg: "bg-generate-info/15",     text: "text-generate-info"     },
+  muted:    { bg: "bg-generate-muted/15",    text: "text-generate-muted"    },
 };
 
 /**

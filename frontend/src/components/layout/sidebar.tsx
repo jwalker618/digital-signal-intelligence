@@ -87,9 +87,9 @@ export default function Sidebar({
       ref={sidebarRef}
       className={`
         absolute top-0 left-0 h-full z-1000 shrink-0 transition-all duration-300
-        bg-dsi-contrast-background
-        text-dsi-background
-        border-r-3 border-dsi-outline
+        bg-generate-contrast-background
+        text-generate-background
+        border-r-3 border-generate-outline
         ${isOpen ? "w-[50%]" : "w-[5%]"}
       `}
     >
@@ -100,14 +100,14 @@ export default function Sidebar({
               ? "/Standard_Generate_Logo_and_DSI.svg"
               : "/BlackWhite_Generate_Logo_and_DSI.svg"
           }
-          className="absolute top-dsi-pad left-dsi-pad h-12 w-auto object-contain"
+          className="absolute top-generate-pad left-generate-pad h-12 w-auto object-contain"
           alt="DSI Logo"
         />
       )}
 
       <button
         onClick={onToggleOpen}
-        className="absolute top-dsi-pad right-dsi-pad p-dsi-pad text-dsi-background hover:text-dsi-selected"
+        className="absolute top-generate-pad right-generate-pad p-generate-pad text-generate-background hover:text-generate-selected"
       >
         {isOpen ? (
           <PanelRightOpen className="icon" />
@@ -119,19 +119,19 @@ export default function Sidebar({
       {/* NAVIGATION */}
       {isOpen && (
         <nav
-          className="absolute left-dsi-indent right-0 py-dsi-pad overflow-y-auto overflow-x-hidden no-scrollbar"
+          className="absolute left-generate-indent right-0 py-generate-pad overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             top: collapsedWidthPx ?? 64,
             bottom: collapsedWidthPx ?? 64,
           }}
         >
-          <div className="px-dsi-pad">
+          <div className="px-generate-pad">
             {activeSubmission ? (
               /* ═══ DRILL-DOWN MODE ═══ */
               <>
                 <button
                   onClick={navigateBack}
-                  className="w-full flex items-center gap-3 py-2 text-dsi-background hover:text-dsi-selected mb-2"
+                  className="w-full flex items-center gap-3 py-2 text-generate-background hover:text-generate-selected mb-2"
                 >
                   <ArrowLeftToLine className="icon shrink-0" />
                   <span className="text-sm tracking-wider truncate">
@@ -139,7 +139,7 @@ export default function Sidebar({
                   </span>
                 </button>
 
-                <ul className="ml-3 pl-dsi-pad flex flex-col gap-1">
+                <ul className="ml-3 pl-generate-pad flex flex-col gap-1">
                   <li>
                     <NavItem
                       icon={BookKey}
@@ -187,7 +187,7 @@ export default function Sidebar({
                       onClick={() =>
                         setIsSubmissionsExpanded(!isSubmissionsExpanded)
                       }
-                      className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
+                      className="w-full flex items-center justify-between py-2 text-generate-background hover:text-generate-selected"
                     >
                       <div className="flex items-center gap-3">
                         <Inbox className="icon shrink-0" />
@@ -198,7 +198,7 @@ export default function Sidebar({
                     </button>
 
                     {isSubmissionsExpanded && (
-                      <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
+                      <ul className="ml-3 pl-generate-pad border-l-3 border-generate-outline/20 mt-2 flex flex-col gap-1">
                         {SUBMISSIONS_CHILDREN.map((item) => (
                           <li key={item.name}>
                             <NavItem
@@ -239,7 +239,7 @@ export default function Sidebar({
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAdminExpanded(!isAdminExpanded)}
-                      className="w-full flex items-center justify-between py-2 text-dsi-background hover:text-dsi-selected"
+                      className="w-full flex items-center justify-between py-2 text-generate-background hover:text-generate-selected"
                     >
                       <div className="flex items-center gap-3">
                         <Wrench className="icon shrink-0" />
@@ -248,7 +248,7 @@ export default function Sidebar({
                     </button>
 
                     {isAdminExpanded && (
-                      <ul className="ml-3 pl-dsi-pad border-l-3 border-dsi-outline/20 mt-2 flex flex-col gap-1">
+                      <ul className="ml-3 pl-generate-pad border-l-3 border-generate-outline/20 mt-2 flex flex-col gap-1">
                         {ADMIN_CHILDREN.filter((item) =>
                           hasPermission(item.permission),
                         ).map((item) => (
@@ -283,7 +283,7 @@ export default function Sidebar({
       {/* BOTTOM ICONS */}
       {isOpen && (
         <div
-          className="absolute left-dsi-pad right-dsi-pad border-t-3 border-dsi-outline flex items-center justify-between"
+          className="absolute left-generate-pad right-generate-pad border-t-3 border-generate-outline flex items-center justify-between"
           style={{ bottom: 0, height: collapsedWidthPx ?? 64 }}
         >
           <UserMenu />

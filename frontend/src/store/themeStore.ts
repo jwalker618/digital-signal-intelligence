@@ -24,7 +24,7 @@ export const useThemeStore = create<ThemeState>()(
       setDark: (v) => set({ isDark: v }),
     }),
     {
-      name: "dsi-theme",
+      name: "generate-theme",
       storage: createJSONStorage(() => {
         if (typeof window === "undefined") {
           // SSR safe stub

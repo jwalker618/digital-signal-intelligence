@@ -31,9 +31,9 @@ const TEXTALIGN_CLASS: Record<Align, string> = {
 };
 
 const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
-  { at: 40, color: "var(--dsi-approve)" },
-  { at: 70, color: "var(--dsi-refer)" },
-  { at: Infinity, color: "var(--dsi-decline)" },
+  { at: 40, color: "var(--generate-approve)" },
+  { at: 70, color: "var(--generate-refer)" },
+  { at: Infinity, color: "var(--generate-decline)" },
 ];
 
 export type Padding = "sm" | "md" | "lg";
@@ -193,7 +193,7 @@ export const ContributionTable = ({
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`dsi-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-dsi-outline/50 pb-1`}
+          className={`generate-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-outline/50 pb-1`}
         >
           {c.label}
         </div>
@@ -211,8 +211,8 @@ export const ContributionTable = ({
                 key={`v-${idx}-${i}`}
                 className={
                   isName
-                    ? `dsi-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-dsi-outline/50 pt-1 pb-1`
-                    : `dsi-analysis-item ${TEXTALIGN_CLASS[cellAlign(c)]} pt-1 pb-1`
+                    ? `generate-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-generate-outline/50 pt-1 pb-1`
+                    : `generate-analysis-item ${TEXTALIGN_CLASS[cellAlign(c)]} pt-1 pb-1`
                 }
               >
                 {content}
@@ -345,7 +345,7 @@ export const ExpandableGroupTable = <T,>({
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`dsi-analysis-description flex gap-dsi-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-dsi-outline/50 pb-1`}
+            className={`generate-analysis-description flex gap-generate-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-outline/50 pb-1`}
           >
             {c.label}
           </div>
@@ -360,7 +360,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Group header row — chevron + title cell */}
             <div
               onClick={() => toggle(g.key)}
-              className="dsi-analysis-description border-t border-dsi-outline/20 hover:text-dsi-selected cursor-pointer flex gap-dsi-pad pt-dsi-pad pb-dsi-pad"
+              className="generate-analysis-description border-t border-generate-outline/20 hover:text-generate-selected cursor-pointer flex gap-generate-pad pt-generate-pad pb-generate-pad"
             >
               {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
               {g.title}
@@ -374,8 +374,8 @@ export const ExpandableGroupTable = <T,>({
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`border-t border-dsi-outline/10 cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                    isLast ? "pl-dsi-pad pr-dsi-pad text-sm" : "text-xs"
+                  className={`border-t border-generate-outline/10 cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
+                    isLast ? "pl-generate-pad pr-generate-pad text-sm" : "text-xs"
                   }`}
                 >
                   {cell}
@@ -405,9 +405,9 @@ export const ExpandableGroupTable = <T,>({
                       return (
                         <div
                           key={colIdx}
-                          className={`bg-dsi-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                            colIdx === 0 ? "pl-dsi-padicon" : ""
-                          } ${colIdx === lastIdx ? "pr-dsi-pad" : ""}`}
+                          className={`bg-generate-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
+                            colIdx === 0 ? "pl-generate-padicon" : ""
+                          } ${colIdx === lastIdx ? "pr-generate-pad" : ""}`}
                         >
                           {cell}
                         </div>
@@ -420,7 +420,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className="text-xs opacity-50 italic pl-dsi-padicon pt-1 pb-1 bg-dsi-background/30"
+                className="text-xs opacity-50 italic pl-generate-padicon pt-1 pb-1 bg-generate-background/30"
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}
@@ -461,7 +461,7 @@ export const InfoPanel = ({
 
   return (
     <div
-      className={`border border-dsi-outline/20 rounded-lg ${PADDING_CLASS[padding]} ${className}`}
+      className={`border border-generate-outline/20 rounded-lg ${PADDING_CLASS[padding]} ${className}`}
     >
       {showHeader && (
         <div className="flex items-center justify-between mb-2">
@@ -482,7 +482,7 @@ export const InfoPanel = ({
 
 /** GUIDANCE
  * key: Override the React key. Defaults to the label stringified + index.
- * valueClassName: Extra classes on the value `<span>` (e.g. `text-dsi-selected`).
+ * valueClassName: Extra classes on the value `<span>` (e.g. `text-generate-selected`).
  */
 export interface LabelValueRow {
   label: React.ReactNode;
@@ -508,12 +508,12 @@ const ROW_STYLES: Record<
   card: {
     wrapper: "",
     row: "flex justify-between",
-    label: "dsi-analysis-description",
-    value: "dsi-analysis-item",
+    label: "generate-analysis-description",
+    value: "generate-analysis-item",
   },
   modal: {
     wrapper: "space-y-3 font-mono text-sm",
-    row: "flex justify-between items-center py-2 border-b border-dsi-outline/5 last:border-0",
+    row: "flex justify-between items-center py-2 border-b border-generate-outline/5 last:border-0",
     label: "opacity-60",
     value: "font-bold text-right",
   },
@@ -522,7 +522,7 @@ const ROW_STYLES: Record<
 /**
  * Renders an ordered list of `{ label, value }` rows. Two visual variants:
  *   • "card"  — in-card summary rows (flex justify-between, uses
- *               dsi-analysis-description / dsi-analysis-item utilities).
+ *               generate-analysis-description / generate-analysis-item utilities).
  *   • "modal" — divided key/value rows inside a modal body (font-mono,
  *               bottom border per row, opacity-60 label).
  *
@@ -537,7 +537,7 @@ export const LabelValueList = ({
   className = "",
 }: LabelValueListProps) => {
   if (rows.length === 0) {
-    return <p className="dsi-user-message">{emptyMessage}</p>;
+    return <p className="generate-user-message">{emptyMessage}</p>;
   }
 
   const s = ROW_STYLES[variant];
@@ -621,7 +621,7 @@ export interface KpiTileProps {
  *
  * Variants:
  *   • "default"  — base colour, lg value.
- *   • "emphasis" — text-dsi-selected + xl value. For the "final" number in
+ *   • "emphasis" — text-generate-selected + xl value. For the "final" number in
  *                  a row.
  *
  * Compose a row manually (`<div className="grid grid-cols-N gap-4">`) — a
@@ -636,7 +636,7 @@ export const KpiTile = ({
 }: KpiTileProps) => {
   const valueClass =
     variant === "emphasis"
-      ? "font-bold text-xl text-dsi-selected"
+      ? "font-bold text-xl text-generate-selected"
       : "font-bold text-lg";
 
   return (
@@ -656,7 +656,7 @@ export const KpiTile = ({
 
 /** GUIDANCE
  * at: Inclusive upper bound. First matching entry wins.
- * colour: CSS value for `backgroundColor`, e.g. `"var(--dsi-decline)"`
+ * colour: CSS value for `backgroundColor`, e.g. `"var(--generate-decline)"`
  */
 export interface ScoreBarThreshold {
   at: number;
@@ -688,7 +688,7 @@ function pickColor(value: number, thresholds: ScoreBarThreshold[]): string {
   for (const t of thresholds) {
     if (value <= t.at) return t.color;
   }
-  return thresholds[thresholds.length - 1]?.color ?? "var(--dsi-muted)";
+  return thresholds[thresholds.length - 1]?.color ?? "var(--generate-muted)";
 }
 
 /**
@@ -716,7 +716,7 @@ export const ScoreBar = ({
       {label !== undefined && (
         <span className={`text-[10px] opacity-50 shrink-0 ${labelWidth}`}>{label}</span>
       )}
-      <div className="flex-1 h-1.5 bg-dsi-background rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-generate-background rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -750,7 +750,7 @@ interface StatsGridProps {
 /**
  * Canonical primitive for the dashboard "hero metrics" style layout where
  * each column has a small header label on top and a large prominent value
- * underneath (uses `dsi-grid-table-header` / `dsi-grid-table-item`).
+ * underneath (uses `generate-grid-table-header` / `generate-grid-table-item`).
  *
  * Column widths are passed via inline grid-template-columns so arbitrary
  * percentages don't need to be known at build time. Per-column `align`
@@ -765,7 +765,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`dsi-grid-table-header ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`generate-grid-table-header ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.label}
         </div>
@@ -773,7 +773,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`v-${i}`}
-          className={`dsi-grid-table-item ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`generate-grid-table-item ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.value}
         </div>
@@ -789,8 +789,8 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
  * sublabel: Optional secondary line under the label.
  * original: Original-state value (left comparand).
  * scenario: Scenario-state value (right comparand).
- * changed:  When true, highlights the row with `bg-dsi-selected/5` and
- *           renders the scenario value in `text-dsi-selected font-bold`.
+ * changed:  When true, highlights the row with `bg-generate-selected/5` and
+ *           renders the scenario value in `text-generate-selected font-bold`.
  * showArrow: Show the → between original and scenario. Default true.
  * gridTemplate: Override the grid-template-columns. Default
  *               `"1fr 80px 30px 80px"`.
@@ -825,8 +825,8 @@ export const CompareRow = ({
 }: CompareRowProps) => {
   return (
     <div
-      className={`grid gap-0 py-1.5 border-b border-dsi-outline/5 ${
-        changed ? "bg-dsi-selected/5" : ""
+      className={`grid gap-0 py-1.5 border-b border-generate-outline/5 ${
+        changed ? "bg-generate-selected/5" : ""
       } ${className}`}
       style={{ gridTemplateColumns: gridTemplate }}
     >
@@ -840,7 +840,7 @@ export const CompareRow = ({
       ) : (
         <span />
       )}
-      <span className={`text-right text-xs font-bold ${changed ? "text-dsi-selected" : ""}`}>
+      <span className={`text-right text-xs font-bold ${changed ? "text-generate-selected" : ""}`}>
         {scenario}
       </span>
     </div>
@@ -861,21 +861,21 @@ const METRIC_CARD_TONE: Record<
   MetricCardTone,
   { border: string; bg: string; text: string }
 > = {
-  selected: { border: "border-dsi-selected/30", bg: "bg-dsi-selected/5", text: "text-dsi-selected" },
-  positive: { border: "border-dsi-approve/30", bg: "bg-dsi-approve/5", text: "text-dsi-approve" },
-  negative: { border: "border-dsi-decline/30", bg: "bg-dsi-decline/5", text: "text-dsi-decline" },
-  warning:  { border: "border-dsi-refer/30",  bg: "bg-dsi-refer/5",  text: "text-dsi-refer"  },
-  info:     { border: "border-dsi-info/30",     bg: "bg-dsi-info/5",     text: "text-dsi-info"     },
-  muted:    { border: "border-dsi-muted/30",    bg: "bg-dsi-muted/5",    text: "text-dsi-muted"    },
+  selected: { border: "border-generate-selected/30", bg: "bg-generate-selected/5", text: "text-generate-selected" },
+  positive: { border: "border-generate-approve/30", bg: "bg-generate-approve/5", text: "text-generate-approve" },
+  negative: { border: "border-generate-decline/30", bg: "bg-generate-decline/5", text: "text-generate-decline" },
+  warning:  { border: "border-generate-refer/30",  bg: "bg-generate-refer/5",  text: "text-generate-refer"  },
+  info:     { border: "border-generate-info/30",     bg: "bg-generate-info/5",     text: "text-generate-info"     },
+  muted:    { border: "border-generate-muted/30",    bg: "bg-generate-muted/5",    text: "text-generate-muted"    },
 };
 
 /** GUIDANCE
  * label:     Small uppercase caption above the hero value.
  * value:     Hero value — rendered xl + bold.
  * subtext:   Optional small caption beneath the value.
- * tone:      When provided, applies `border-2 border-dsi-<tone>/30
- *            bg-dsi-<tone>/5` and colours the value `text-dsi-<tone>`.
- *            When omitted, renders a plain `border border-dsi-outline/20` card.
+ * tone:      When provided, applies `border-2 border-generate-<tone>/30
+ *            bg-generate-<tone>/5` and colours the value `text-generate-<tone>`.
+ *            When omitted, renders a plain `border border-generate-outline/20` card.
  * lucideIcon: Optional leading icon rendered before the label.
  */
 export interface MetricCardProps {
@@ -904,7 +904,7 @@ export const MetricCard = ({
   const toneStyles = tone ? METRIC_CARD_TONE[tone] : null;
   const frame = toneStyles
     ? `border-2 ${toneStyles.border} ${toneStyles.bg}`
-    : "border border-dsi-outline/20";
+    : "border border-generate-outline/20";
   const valueColor = toneStyles?.text ?? "";
 
   return (
@@ -944,7 +944,7 @@ export interface StatusPillProps {
 }
 
 /**
- * Wraps the `bg-dsi-<tone>/15 text-dsi-<tone>` pattern used 15+ times
+ * Wraps the `bg-generate-<tone>/15 text-generate-<tone>` pattern used 15+ times
  * across the workbench. Pass either a `palette` + `status` pair (to look
  * the entry up by key) or a raw `tone` for ad-hoc use.
  */

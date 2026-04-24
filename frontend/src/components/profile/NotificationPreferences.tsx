@@ -138,7 +138,7 @@ export function NotificationPreferences() {
             <button
               onClick={onDisable}
               disabled={busy === "disable"}
-              className="dsi-actionbutton"
+              className="generate-actionbutton"
             >Disable
             </button>
           </>
@@ -151,7 +151,7 @@ export function NotificationPreferences() {
             <button
               onClick={onEnable}
               disabled={busy === "enable" || permission === "denied"}
-              className="dsi-actionbutton"
+              className="generate-actionbutton"
             >{busy === "enable" && <Loader2 className="icon animate-spin" />}Enable
             </button>
           </>
@@ -164,7 +164,7 @@ export function NotificationPreferences() {
           <button
             onClick={onTest}
             disabled={busy === "test"}
-            className="dsi-actionbutton flex"
+            className="generate-actionbutton flex"
           >Send Test Notification
           </button>
           {testResult && <span className="text-xs">{testResult}</span>}
@@ -182,7 +182,7 @@ export function NotificationPreferences() {
           </thead>
           <tbody>
             {Object.entries(prefs).map(([cat, p]) => (
-              <tr key={cat} className="border-t border-dsi-outline/20">
+              <tr key={cat} className="border-t border-generate-outline/20">
                 <td className="py-2 pr-2">{CATEGORY_LABELS[cat] ?? cat}</td>
                 <td className="text-center">
                   <input
@@ -206,7 +206,7 @@ export function NotificationPreferences() {
         </table>
       )}
 
-      {error && <div className="dsi-user-message text-left">{error}</div>}
+      {error && <div className="generate-user-message text-left">{error}</div>}
     </div>
   );
 }

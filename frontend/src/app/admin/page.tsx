@@ -67,7 +67,7 @@ export default function AdminSystemHealthPage() {
       <button
         onClick={() => void load()}
         disabled={loading}
-        className="dsi-actiontext disabled:opacity-50"
+        className="generate-actiontext disabled:opacity-50"
       >
         <RefreshCw className={`icon ${loading ? "animate-spin" : ""}`} />
         Refresh
@@ -79,10 +79,10 @@ export default function AdminSystemHealthPage() {
   return (
     
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-generate-pad">
 
         {error && (
-          <div className="dsi-notificationpill mb-dsi-pad flex items-center gap-2">
+          <div className="generate-notificationpill mb-generate-pad flex items-center gap-2">
             <AlertTriangle className="icon" /> {error}
           </div>
         )}
@@ -92,14 +92,14 @@ export default function AdminSystemHealthPage() {
           <StandardCard title="Overall" lucideIcon={Activity}>
             {health ? (
               <>
-                <div className="flex items-center gap-2 mb-dsi-pad">
+                <div className="flex items-center gap-2 mb-generate-pad">
                   <StatusBadge status={health.status} />
                   <span className="text-xs">
                     as of {fmtDate(health.checked_at)}
                   </span>
                 </div>
 
-                <ul className="divide-y divide-dsi-outline/20">
+                <ul className="divide-y divide-generate-outline/20">
                   {Object.entries(health.components ?? {}).map(([name, c]) => (
                     
                     <li key={name} className="flex items-center gap-3 py-1 text-sm">
@@ -113,7 +113,7 @@ export default function AdminSystemHealthPage() {
 
               </>
             ) : (
-              <div className="dsi-user-message">No health data.</div>
+              <div className="generate-user-message">No health data.</div>
             )}
           </StandardCard>
 
@@ -130,7 +130,7 @@ export default function AdminSystemHealthPage() {
                 <Kpi label="Failure rate" value={formatPercent(pipeline.failure_rate, 2)} />
               </div>
             ) : (
-              <div className="dsi-user-message">No pipeline data.</div>
+              <div className="generate-user-message">No pipeline data.</div>
             )}
           </StandardCard>
 
@@ -138,7 +138,7 @@ export default function AdminSystemHealthPage() {
             <table className="w-full text-left whitespace-nowrap border-collapse">
               
               <thead>
-                <tr className="dsi-grid-table-header text-dsi-contrast-background">
+                <tr className="generate-grid-table-header text-generate-contrast-background">
                   <th className="p-1.5">Extractor</th>
                   <th className="p-1.5">Mode</th>
                   <th className="p-1.5 text-right">Success</th>
@@ -150,7 +150,7 @@ export default function AdminSystemHealthPage() {
               
               <tbody>
                 {extractors.map((e) => (
-                  <tr key={e.name} className="even:bg-dsi-contrast-analysis text-dsi-contrast-background">
+                  <tr key={e.name} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
                     <td className="p-1.5 text-xs">{e.name}</td>
                     <td className="p-1.5">{e.mode}</td>
                     <td className="p-1.5 text-right tabular-nums">{e.success_count}</td>
@@ -166,7 +166,7 @@ export default function AdminSystemHealthPage() {
             </table>
             
             {extractors.length === 0 && (
-              <div className="dsi-user-message">No extractor activity yet.</div>
+              <div className="generate-user-message">No extractor activity yet.</div>
             )}
 
           </StandardCard>
@@ -174,7 +174,7 @@ export default function AdminSystemHealthPage() {
         </CardGrid>
 
         {!loading && health?.status === "green" && (
-          <p className="text-xs flex items-center gap-2 mt-dsi-pad">
+          <p className="text-xs flex items-center gap-2 mt-generate-pad">
             <CheckCircle2 className="icon" />
             All systems nominal. Auto-refresh every 30s.
           </p>
@@ -187,9 +187,9 @@ export default function AdminSystemHealthPage() {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-dsi-outline/20 rounded-lg p-3">
+    <div className="border border-generate-outline/20 rounded-lg p-3">
       <span className="text-xs block mb-1">{label}</span>
-      <span className="text-xl font-black text-dsi-selected">{value}</span>
+      <span className="text-xl font-black text-generate-selected">{value}</span>
     </div>
   );
 }

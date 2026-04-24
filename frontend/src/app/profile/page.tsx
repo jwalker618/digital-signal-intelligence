@@ -24,7 +24,7 @@ export default function ProfilePage() {
   const [busy, setBusy] = useState(false);
 
   if (!user) {
-    return <main className="dsi-user-message">Loading profile…</main>;
+    return <main className="generate-user-message">Loading profile…</main>;
   }
 
   async function requestReset(e: FormEvent) {
@@ -41,7 +41,7 @@ export default function ProfilePage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-dsi-pad"></div>
+      <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-generate-pad"></div>
       
       <CardGrid cols="grid-cols-[4fr_1fr]">
 
@@ -53,21 +53,21 @@ export default function ProfilePage() {
 
           <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
             
-            <dt className="dsi-analysis-description">Email</dt>
-            <dd className="dsi-analysis-item">{user.email ?? "—"}</dd>
+            <dt className="generate-analysis-description">Email</dt>
+            <dd className="generate-analysis-item">{user.email ?? "—"}</dd>
             
-            <dt className="dsi-analysis-description">User ID</dt>
-            <dd className="dsi-analysis-item">{user.user_id}</dd>
+            <dt className="generate-analysis-description">User ID</dt>
+            <dd className="generate-analysis-item">{user.user_id}</dd>
             
-            <dt className="dsi-analysis-description">Tenant</dt>
-            <dd className="dsi-analysis-item">{user.tenant_id}</dd>
+            <dt className="generate-analysis-description">Tenant</dt>
+            <dd className="generate-analysis-item">{user.tenant_id}</dd>
             
-            <dt className="dsi-analysis-description">Role</dt>
-            <dd className="dsi-analysis-item">{user.role ?? "—"}</dd>
+            <dt className="generate-analysis-description">Role</dt>
+            <dd className="generate-analysis-item">{user.role ?? "—"}</dd>
             
             <dt className="
               flex
-              dsi-analysis-description 
+              generate-analysis-description 
               items-start 
               ">Permissions</dt>
             <dd className="flex flex-wrap gap-1">
@@ -75,9 +75,9 @@ export default function ProfilePage() {
                 <span
                   key={p}
                   className="
-                    dsi-analysis-item 
+                    generate-analysis-item 
                     font-normal text-xs p-1.5
-                    border-r border-b border-dsi-outline 
+                    border-r border-b border-generate-outline 
                     rounded-sm"
                 >
                   {p}
@@ -121,7 +121,7 @@ export default function ProfilePage() {
                 <button
                   type="submit"
                   disabled={busy}
-                  className="dsi-actionbutton"
+                  className="generate-actionbutton"
                   >{busy ? "Sending…" : "Send Reset Link"}
                 </button>
 

@@ -83,7 +83,7 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
         fixed inset-0 
         items-center 
         justify-center 
-        bg-dsi-background/20 
+        bg-generate-background/20 
         backdrop-blur-sm
         animate-in fade-in duration-200"
     >
@@ -91,7 +91,7 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="dsi-modal-title"
+        aria-labelledby="generate-modal-title"
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}
         
@@ -99,20 +99,20 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
       >
 
         {/* Modal Header */}
-        <div className="dsi-section-header items-center justify-between">
+        <div className="generate-section-header items-center justify-between">
           {Icon && <Icon className="icon"/>}
-          <span id="dsi-modal-title" className="font-bold">{title}</span>
+          <span id="generate-modal-title" className="font-bold">{title}</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="hover:text-dsi-selected"
+            className="hover:text-generate-selected"
           >
             <ArrowDownLeft className="icon" />
           </button>
         </div>
  
         {/* Modal Body */}
-        <div className="dsi-section-analysis">{children}</div>
+        <div className="generate-section-analysis">{children}</div>
       </div>
     </div>
   );

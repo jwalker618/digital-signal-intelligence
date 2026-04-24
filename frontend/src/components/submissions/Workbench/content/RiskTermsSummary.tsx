@@ -13,7 +13,7 @@ export default function RiskTermsSummary() {
   const { activeRisk } = useDsiStore() as any;
 
   if (!activeRisk) {
-    return <p className="dsi-user-message">No risk terms available</p>;
+    return <p className="generate-user-message">No risk terms available</p>;
   }
 
   const coverageCount = activeRisk.coverage_terms

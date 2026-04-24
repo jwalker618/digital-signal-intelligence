@@ -48,8 +48,8 @@ const CoverageItemList = ({
     return <p className="text-xs opacity-50 italic text-center py-4">{emptyMessage}</p>;
   }
 
-  const bgClass = tone === "positive" ? "bg-dsi-approve/5 border-dsi-approve/10" : "bg-dsi-decline/5 border-dsi-decline/10";
-  const iconClass = tone === "positive" ? "text-dsi-approve" : "text-dsi-decline";
+  const bgClass = tone === "positive" ? "bg-generate-approve/5 border-generate-approve/10" : "bg-generate-decline/5 border-generate-decline/10";
+  const iconClass = tone === "positive" ? "text-generate-approve" : "text-generate-decline";
 
   return (
     <div className="flex flex-col gap-2">
@@ -98,7 +98,7 @@ export default function CoverageTermsTab() {
       />
 
       <SectionCard icon={FileCheck} title="Coverage Overview">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-dsi-pad py-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
           <KpiTile label="Coverage Territory" value={formatText(territory, "capitalize", "N/A")} />
           <KpiTile label="Coverage Trigger" value={formatText(trigger, "capitalize", "N/A")} />
           <KpiTile label="Extensions Count" value={extensions.length} />
@@ -107,7 +107,7 @@ export default function CoverageTermsTab() {
       </SectionCard>
 
       <SectionCard icon={ShieldCheck} title={`Extensions (${extensions.length})`}>
-        <div className="px-dsi-pad py-4">
+        <div className="px-generate-pad py-4">
           <CoverageItemList
             items={extensions}
             emptyMessage="No extensions defined"
@@ -118,7 +118,7 @@ export default function CoverageTermsTab() {
       </SectionCard>
 
       <SectionCard icon={ShieldAlert} title={`Exclusions (${exclusions.length})`}>
-        <div className="px-dsi-pad py-4">
+        <div className="px-generate-pad py-4">
           <CoverageItemList
             items={exclusions}
             emptyMessage="No exclusions defined"
@@ -131,7 +131,7 @@ export default function CoverageTermsTab() {
       {additional.length > 0 && (
         <SectionCard icon={FileCheck} title="Additional Terms">
           <LabelValueList
-            className="px-dsi-pad py-4"
+            className="px-generate-pad py-4"
             rows={additional.map(([key, value]) => ({
               key,
               label: formatText(key, "capitalize"),

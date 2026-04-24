@@ -29,14 +29,14 @@ import type {
   WorldEngineStats,
 } from "@/types/worldEngine";
 
-const TIER_COLORS = ['var(--dsi-approve)', 'var(--dsi-info)', 'var(--dsi-refer)', 'var(--dsi-decline)', 'var(--dsi-decline)'];
+const TIER_COLORS = ['var(--generate-approve)', 'var(--generate-info)', 'var(--generate-refer)', 'var(--generate-decline)', 'var(--generate-decline)'];
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
-  'High': 'text-dsi-decline',
-  'Elevated': 'text-dsi-refer',
-  'Moderate': 'text-dsi-refer',
-  'Low-Moderate': 'text-dsi-muted',
-  'Low': 'text-dsi-muted',
+  'High': 'text-generate-decline',
+  'Elevated': 'text-generate-refer',
+  'Moderate': 'text-generate-refer',
+  'Low-Moderate': 'text-generate-muted',
+  'Low': 'text-generate-muted',
 };
 
 export default function WorldEngineView() {
@@ -155,7 +155,7 @@ export default function WorldEngineView() {
   return (
     
     <ViewCanvas unstyledMain={true}>
-      <CardGrid cols="grid-cols-1" className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-dsi-pad">
+      <CardGrid cols="grid-cols-1" className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-generate-pad">
 
         {/* ═══ WORLD MODEL ═══ */}
         <StandardCard
@@ -169,44 +169,44 @@ export default function WorldEngineView() {
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             
-            <div className="dsi-contentbox flex flex-col">
+            <div className="generate-contentbox flex flex-col">
 
-              <span className="dsi-analysis-description text-center">Maturity Stage</span>
-              <span className="dsi-analysis-item text-center text-xl">{maturity?.stage ?? "—"}</span>
+              <span className="generate-analysis-description text-center">Maturity Stage</span>
+              <span className="generate-analysis-item text-center text-xl">{maturity?.stage ?? "—"}</span>
               
               {maturity && (
-                <span className="dsi-analysis-item text-xs font-normal text-center">
+                <span className="generate-analysis-item text-xs font-normal text-center">
                   {formatNumber(maturity.time_depth_months, 1)} months of data
                 </span>
               )}
             </div>
 
-            <div className="dsi-contentbox flex flex-col">
+            <div className="generate-contentbox flex flex-col">
 
-              <span className="dsi-analysis-description text-center">Active Relationships</span>
-              <span className="dsi-analysis-item text-center text-xl">{weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
+              <span className="generate-analysis-description text-center">Active Relationships</span>
+              <span className="generate-analysis-item text-center text-xl">{weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
               </span>
               {maturity && (
-                <span className="dsi-analysis-item text-xs font-normal text-center">
+                <span className="generate-analysis-item text-xs font-normal text-center">
                   {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
                 </span>
               )}
             </div>
             
-            <div className="dsi-contentbox flex flex-col">
+            <div className="generate-contentbox flex flex-col">
 
-              <span className="dsi-analysis-description text-center">Open Drift Alerts</span>
-              <span className={`dsi-analysis-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-dsi-decline" : "text-dsi-contrast-background"}`}>
+              <span className="generate-analysis-description text-center">Open Drift Alerts</span>
+              <span className={`generate-analysis-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-generate-decline" : "text-generate-contrast-background"}`}>
                 {weStats?.drift_alerts_unacknowledged ?? "—"}
               </span>
             </div>
             
-            <div className="dsi-contentbox flex flex-col">
+            <div className="generate-contentbox flex flex-col">
 
-              <span className="dsi-analysis-description text-center">Assessed Entities</span>
-              <span className="dsi-analysis-item text-center text-xl">{maturity?.assessed_entity_count ?? "—"}</span>
+              <span className="generate-analysis-description text-center">Assessed Entities</span>
+              <span className="generate-analysis-item text-center text-xl">{maturity?.assessed_entity_count ?? "—"}</span>
               {maturity && (
-                <span className="dsi-analysis-item text-xs font-normal text-center">
+                <span className="generate-analysis-item text-xs font-normal text-center">
                   {maturity.entities_with_temporal_data} with history
                 </span>
               )}
@@ -223,7 +223,7 @@ export default function WorldEngineView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
                   <th className="p-1.5 text-left">Signal</th>
                   <th className="p-1.5 text-left">Severity</th>
                   <th className="p-1.5 text-left">Type</th>
@@ -234,7 +234,7 @@ export default function WorldEngineView() {
               </thead>
               <tbody>
                 {alerts.map((a) => (
-                  <tr key={a.id} className="cursor-pointer text-dsi-contrast-background hover:text-dsi-selected">
+                  <tr key={a.id} className="cursor-pointer text-generate-contrast-background hover:text-generate-selected">
                     <td className="p-1.5 text-left">{formatText(a.source_signal ?? "—","capitalize")}</td>
                     <td className="p-1.5 text-left"><StatusBadge status={formatText(a.severity,"capitalize")} /></td>
                     <td className="p-1.5 text-left">{formatText(a.alert_type,"capitalize")}</td>
@@ -245,7 +245,7 @@ export default function WorldEngineView() {
                       <button
                         onClick={() => void acknowledgeAlert(a.id)}
                         disabled={ackBusy === a.id}
-                        className="dsi-actionbutton content-end"
+                        className="generate-actionbutton content-end"
                       >
                         Acknowledge
                       </button>
@@ -255,7 +255,7 @@ export default function WorldEngineView() {
                 ))}
                 {alerts.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="dsi-user-message">
+                    <td colSpan={6} className="generate-user-message">
                       No open alerts.
                     </td>
                   </tr>
@@ -274,7 +274,7 @@ export default function WorldEngineView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
                   <th className="p-1.5 text-left">Source signal</th>
                   <th className="p-1.5 text-left">Target signal</th>
                   <th className="p-1.5 text-left">Direction</th>
@@ -287,7 +287,7 @@ export default function WorldEngineView() {
               </thead>
               <tbody>
                 {rels.map((r) => (
-                  <tr key={r.id} className="cursor-pointer text-dsi-contrast-background hover:text-dsi-selected">
+                  <tr key={r.id} className="cursor-pointer text-generate-contrast-background hover:text-generate-selected">
                     <td className="p-1.5 text-left">{formatText(r.source_signal,"capitalize")}</td>
                     <td className="p-1.5 text-left">{formatText(r.target_signal,"capitalize")}</td>
                     <td className="p-1.5 text-left">{formatText(r.direction.replaceAll("_", " "),"capitalize")}</td>
@@ -300,7 +300,7 @@ export default function WorldEngineView() {
                 ))}
                 {rels.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="dsi-user-message">
+                    <td colSpan={8} className="generate-user-message">
                       No relationships discovered yet.
                     </td>
                   </tr>
@@ -318,25 +318,25 @@ export default function WorldEngineView() {
         >
           <div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-              <div className="dsi-contentbox flex flex-col">
-                <span className="dsi-analysis-description text-center">Total Submissions</span>
-                <span className="dsi-analysis-item text-center text-xl">{formatNumber(portfolio.count)}</span>
+              <div className="generate-contentbox flex flex-col">
+                <span className="generate-analysis-description text-center">Total Submissions</span>
+                <span className="generate-analysis-item text-center text-xl">{formatNumber(portfolio.count)}</span>
                 </div>
-              <div className="dsi-contentbox flex flex-col">
-                <span className="dsi-analysis-description text-center">Aggregate Premium</span>
-                <span className="dsi-analysis-item text-center text-xl">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span>
+              <div className="generate-contentbox flex flex-col">
+                <span className="generate-analysis-description text-center">Aggregate Premium</span>
+                <span className="generate-analysis-item text-center text-xl">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span>
                 </div>
-              <div className="dsi-contentbox flex flex-col">
-                <span className="dsi-analysis-description text-center">Average Score</span>
-                <span className="dsi-analysis-item text-center text-xl">{formatNumber(portfolio.avgScore)}</span>
+              <div className="generate-contentbox flex flex-col">
+                <span className="generate-analysis-description text-center">Average Score</span>
+                <span className="generate-analysis-item text-center text-xl">{formatNumber(portfolio.avgScore)}</span>
                 </div>
-              <div className="dsi-contentbox flex flex-col">
-                <span className="dsi-analysis-description text-center">Approval Rate</span>
-                <span className="dsi-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span>
+              <div className="generate-contentbox flex flex-col">
+                <span className="generate-analysis-description text-center">Approval Rate</span>
+                <span className="generate-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span>
                 </div>
-              <div className="dsi-contentbox flex flex-col">
-                <span className="dsi-analysis-description text-center">Referral Rate</span>
-                <span className="dsi-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span>
+              <div className="generate-contentbox flex flex-col">
+                <span className="generate-analysis-description text-center">Referral Rate</span>
+                <span className="generate-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span>
                 </div>
             </div>
             
@@ -348,7 +348,7 @@ export default function WorldEngineView() {
                   data={tierChartData}
                   categoryKey="tier"
                   valueKey="count"
-                  colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                  colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
                   valueName="Count"
                   height={200}
                 />
@@ -378,12 +378,12 @@ export default function WorldEngineView() {
           <div>
             {emergingScenarios.map((es) => (
               
-              <div key={es.id} className="flex items-center justify-between py-2.5 border-b border-dsi-outline/10 hover:text-dsi-selected">
+              <div key={es.id} className="flex items-center justify-between py-2.5 border-b border-generate-outline/10 hover:text-generate-selected">
                 <div className="flex-1 min-w-0 text-wrap">
                   <div className="flex items-center gap-2 mb-0.5">
                     
                     <span className="text-sm font-bold">{formatText(es.name,"upper")}</span>
-                    <span className={`dsi-notificationpill p-1 border-none shadow-none ${LIKELIHOOD_COLOR[es.likelihood_label] || ''}`}>
+                    <span className={`generate-notificationpill p-1 border-none shadow-none ${LIKELIHOOD_COLOR[es.likelihood_label] || ''}`}>
                       {formatPercent(es.likelihood)} {es.likelihood_label}
                     </span>
 
@@ -400,7 +400,7 @@ export default function WorldEngineView() {
                 
                 <button
                   onClick={() => applyEmerging(es)}
-                  className="dsi-actionbutton flex gap-2"
+                  className="generate-actionbutton flex gap-2"
                   title="Simulate this scenario"
                 ><Zap className="icon" /> Simulate
                 </button>
@@ -415,7 +415,7 @@ export default function WorldEngineView() {
           title="Shock Simulator"
           lucideIcon={Zap}
           headerRight={
-            <div className="flex items-center gap-dsi-pad">
+            <div className="flex items-center gap-generate-pad">
               {activeShocks.length > 0 && (
                 <span className="text-xs content-center">
                   {activeShocks.length} active
@@ -429,14 +429,14 @@ export default function WorldEngineView() {
             <div className="grid grid-cols-1 md:grid-cols-5 gap-3 mb-4">
               <div>
                 
-                <span className="dsi-analysis-description text-center">Scenario</span>
+                <span className="generate-analysis-description text-center">Scenario</span>
                 
                 <select 
                   value={pendingScenario} 
                   onChange={(e) => setPendingScenario(e.target.value)} 
                   className="
                     w-full 
-                    bg-dsi-background mt-2
+                    bg-generate-background mt-2
                     rounded-md p-1.5 text-sm">
                   {SHOCK_SCENARIOS.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
@@ -444,14 +444,14 @@ export default function WorldEngineView() {
               </div>
               <div>
                 
-                <span className="dsi-analysis-description text-center">Scope</span>
+                <span className="generate-analysis-description text-center">Scope</span>
 
                 <select 
                   value={pendingScope} 
                   onChange={(e) => setPendingScope(e.target.value)} 
                   className="
                     w-full 
-                    bg-dsi-background mt-2
+                    bg-generate-background mt-2
                     rounded-md p-1.5 text-sm">
                   <option value="all">All Submissions</option>
                   {coverages.map(c => <option key={c} value={c}>{c}</option>)}
@@ -460,7 +460,7 @@ export default function WorldEngineView() {
               </div>
               
               <div>
-                <span className="dsi-analysis-description text-center">Magnitude: {pendingMagnitude} pts</span>
+                <span className="generate-analysis-description text-center">Magnitude: {pendingMagnitude} pts</span>
                 <input 
                   type="range" min="5" max="50" step="1" 
                   value={pendingMagnitude} 
@@ -469,7 +469,7 @@ export default function WorldEngineView() {
               </div>
 
               <div className="flex items-end">
-                <button onClick={addShock} className="w-full dsi-actionbutton">
+                <button onClick={addShock} className="w-full generate-actionbutton">
                   <Plus className="icon" /> Add Shock
                 </button>
               </div>
@@ -484,11 +484,11 @@ export default function WorldEngineView() {
             {activeShocks.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {activeShocks.map((shock, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-dsi-decline/10 border border-dsi-decline/20 rounded px-3 py-1.5 text-sm">
-                    <Zap className="w-3 h-3 text-dsi-decline" />
+                  <div key={idx} className="flex items-center gap-2 bg-generate-decline/10 border border-generate-decline/20 rounded px-3 py-1.5 text-sm">
+                    <Zap className="w-3 h-3 text-generate-decline" />
                     <span className="font-semibold">{shock.scenario.name}</span>
                     <span className="opacity-50 text-xs">({shock.scope}, -{shock.magnitude}pts)</span>
-                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-dsi-decline"><X className="w-3 h-3" /></button>
+                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-generate-decline"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
               </div>
@@ -511,26 +511,26 @@ export default function WorldEngineView() {
               {/* Impact KPIs */}
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 
-                <div className="dsi-contentbox flex flex-col">
-                  <span className="dsi-analysis-description text-center">Risks Affected</span>
-                  <span className="dsi-analysis-item text-center text-xl">{shockResult.total_affected}</span></div>
+                <div className="generate-contentbox flex flex-col">
+                  <span className="generate-analysis-description text-center">Risks Affected</span>
+                  <span className="generate-analysis-item text-center text-xl">{shockResult.total_affected}</span></div>
                 
-                <div className="dsi-contentbox flex flex-col">
-                  <span className="dsi-analysis-description text-center">Tier Migrations</span>
-                  <span className="dsi-analysis-item text-center text-xl">{shockResult.tier_migrations}</span></div>
+                <div className="generate-contentbox flex flex-col">
+                  <span className="generate-analysis-description text-center">Tier Migrations</span>
+                  <span className="generate-analysis-item text-center text-xl">{shockResult.tier_migrations}</span></div>
                 
-                <div className="dsi-contentbox flex flex-col">
-                  <span className="dsi-analysis-description text-center">Decision Changes</span>
-                  <span className="dsi-analysis-item text-center text-xl">{shockResult.decision_changes}</span></div>
+                <div className="generate-contentbox flex flex-col">
+                  <span className="generate-analysis-description text-center">Decision Changes</span>
+                  <span className="generate-analysis-item text-center text-xl">{shockResult.decision_changes}</span></div>
                 
-                <div className="dsi-contentbox flex flex-col">
-                  <span className="dsi-analysis-description text-center">Premium Impact</span>
-                  <span className="dsi-analysis-item text-center text-xl"> {shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K</span>
+                <div className="generate-contentbox flex flex-col">
+                  <span className="generate-analysis-description text-center">Premium Impact</span>
+                  <span className="generate-analysis-item text-center text-xl"> {shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K</span>
                 </div>
                 
-                <div className="dsi-contentbox flex flex-col">
-                  <span className="dsi-analysis-description text-center">Premium Change</span>
-                  <span className="dsi-analysis-item text-center text-xl"> {shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span>
+                <div className="generate-contentbox flex flex-col">
+                  <span className="generate-analysis-description text-center">Premium Change</span>
+                  <span className="generate-analysis-item text-center text-xl"> {shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span>
                 </div>
               </div>
 
@@ -542,7 +542,7 @@ export default function WorldEngineView() {
                     data={tierChartData}
                     categoryKey="tier"
                     valueKey="count"
-                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
                     valueName="Count"
                     height={180}
                   />
@@ -553,7 +553,7 @@ export default function WorldEngineView() {
                     data={afterTierData}
                     categoryKey="tier"
                     valueKey="count"
-                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--dsi-analysis)'}
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
                     valueName="Count"
                     height={180}
                   />
@@ -566,7 +566,7 @@ export default function WorldEngineView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
                   <thead>
-                    <tr className="dsi-grid-table-header text-dsi-contrast-background text-wrap">
+                    <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
                       <th className="p-1.5 text-left">Entity</th>
                       <th className="p-1.5 text-center">Before</th>
                       <th className="p-1.5 text-center">After</th>
@@ -580,7 +580,7 @@ export default function WorldEngineView() {
                   <tbody>
                     {shockResult.affected.slice(0, 15).map((item, idx) => (
                       
-                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`cursor-pointer text-dsi-contrast-background hover:text-dsi-selected ${item.tier_changed ? 'bg-dsi-decline/5' : ''}`}>
+                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`cursor-pointer text-generate-contrast-background hover:text-generate-selected ${item.tier_changed ? 'bg-generate-decline/5' : ''}`}>
                         <td className="p-1.5 text-left">{formatText(item.original.entity_name,"upper")}</td>
                         <td className="p-1.5 text-center">{formatNumber(item.original_score, 0)}</td>
                         <td className="p-1.5 text-center">{formatNumber(item.shocked_score, 0)}</td>
@@ -595,7 +595,7 @@ export default function WorldEngineView() {
                             ? <span className="font-bold">{formatText(item.original_decision,"upper")}→{formatText(item.shocked_decision,"upper")}</span>
                             : <span>{formatText(item.original_decision,"upper")}</span>}
                         </td>
-                        <td className="p-1.5 text-right pr-dsi-pad">
+                        <td className="p-1.5 text-right pr-generate-pad">
                           {item.premium_delta !== 0
                             ? <span className="font-bold">{item.premium_delta > 0 ? '+' : ''}{formatCurrency(item.premium_delta)}</span>
                             : <span>—</span>}
@@ -608,7 +608,7 @@ export default function WorldEngineView() {
                   </tbody>
                 </table>
                 {shockResult.affected.length > 15 && (
-                  <p className="text-xs mt-dsi-pad">Showing top 15 of {shockResult.affected.length} affected.</p>
+                  <p className="text-xs mt-generate-pad">Showing top 15 of {shockResult.affected.length} affected.</p>
                 )}
               </div>
             </div>

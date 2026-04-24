@@ -86,7 +86,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "dsi-backup-codes.txt";
+    a.download = "generate-backup-codes.txt";
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -114,7 +114,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
           <button
             onClick={beginSetup}
             disabled={busy}
-            className="dsi-actionbutton"
+            className="generate-actionbutton"
           >
             {busy ? "Starting…" : "Set up MFA"}
           </button>
@@ -129,7 +129,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
             manually. Then enter the 6-digit code to confirm.
           </p>
           
-          <div className="dsi-notificationpill wrap-anywhere border-none">
+          <div className="generate-notificationpill wrap-anywhere border-none">
             {otpauthUri}
           </div>
 
@@ -137,7 +137,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
             Secret:{" "}
           </p>          
 
-          <div className="dsi-notificationpill wrap-anywhere border-none">
+          <div className="generate-notificationpill wrap-anywhere border-none">
             {secret}
           </div>
 
@@ -150,14 +150,14 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
               }
               inputMode="numeric"
               maxLength={6}
-              className="dsi-inputbox text-right"
+              className="generate-inputbox text-right"
               placeholder="000000"
             />
             
             <button
               type="submit"
               disabled={busy || code.length !== 6}
-              className="dsi-actionbutton"
+              className="generate-actionbutton"
             >
               {busy ? <Loader2 className="icon animate-spin" /> : "Verify"}
             </button>
@@ -169,7 +169,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
       {stage === "backup-codes" && (
         <>
           
-          <div className="flex items-center gap-2 text-dsi-selected">
+          <div className="flex items-center gap-2 text-generate-selected">
             <KeyRound className="icon" />
             <span className="font-semibold">Save your backup codes</span>
           </div>
@@ -184,9 +184,9 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
               <li
                 key={c}
                 className="
-                  dsi-analysis-item 
+                  generate-analysis-item 
                   font-normal text-xs p-1.5
-                  border-r border-b border-dsi-outline 
+                  border-r border-b border-generate-outline 
                   rounded-sm"
               >
                 {c}
@@ -196,7 +196,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
           
           <button
             onClick={downloadCodes}
-            className="dsi-actionbutton"
+            className="generate-actionbutton"
           >
             <Download className="icon" /> Download as .txt
           </button>
@@ -213,19 +213,19 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
           <button
             disabled={!acknowledged}
             onClick={finish}
-            className="dsi-actionbutton"
+            className="generate-actionbutton"
           >Done
           </button>
         </>
       )}
 
       {stage === "done" && (
-        <p className="text-sm text-dsi-selected">
+        <p className="text-sm text-generate-selected">
           MFA is now enabled on your account.
         </p>
       )}
 
-      {error && <div className="dsi-user-message text-left">{error}</div>}
+      {error && <div className="generate-user-message text-left">{error}</div>}
     </div>
   );
 }

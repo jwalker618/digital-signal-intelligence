@@ -25,9 +25,9 @@ export default function TitleBar() {
     <div
       className="
         flex
-        border-b-3 border-dsi-outline 
+        border-b-3 border-generate-outline 
         items-center justify-between 
-        px-dsi-main"
+        px-generate-main"
         style={{ 
           height: "var(--cw)" 
         }}
@@ -50,13 +50,13 @@ export default function TitleBar() {
         )}
       </h1>
 
-      <div className="flex items-center gap-2 px-dsi-main">
+      <div className="flex items-center gap-2 px-generate-main">
         {/* Session expiry warning (driven by SessionGuard → authStore) */}
         {sessionWarning && (
           <div
             className="
               absolute left-[75%]
-              dsi-notificationpill"
+              generate-notificationpill"
           >
             {sessionWarning}
           </div>
@@ -69,7 +69,7 @@ export default function TitleBar() {
         {hasPageActions && (
           <button
             onClick={() => useDsiStore.getState().setPageActionsOpen(true)}
-            className="p-1.5 rounded text-dsi-contrast-background hover:bg-dsi-outline/10 hover:text-dsi-selected transition-colors"
+            className="p-1.5 rounded text-generate-contrast-background hover:bg-generate-outline/10 hover:text-generate-selected transition-colors"
             title="Page Actions"
           >
             <MoreVertical className="icon" />

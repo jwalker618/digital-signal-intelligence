@@ -13,7 +13,7 @@ export default function CommercialSummary() {
   const { activeCommercial } = useDsiStore() as any;
 
   if (!activeCommercial) {
-    return <p className="dsi-user-message">No commercial terms available</p>;
+    return <p className="generate-user-message">No commercial terms available</p>;
   }
 
   return (

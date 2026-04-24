@@ -90,7 +90,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               />
 
               <main
-                className="absolute top-0 right-0 h-full bg-dsi-background text-dsi-contrast-background overflow-hidden flex flex-col transition-none"
+                className="absolute top-0 right-0 h-full bg-generate-background text-generate-contrast-background overflow-hidden flex flex-col transition-none"
                 style={
                   {
                     left: collapsedWidthPx ? `${collapsedWidthPx}px` : "5%",

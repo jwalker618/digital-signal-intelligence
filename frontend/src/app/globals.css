@@ -2,29 +2,29 @@
 
 @theme inline {
   /* Colors - Removed rgb() wrapper so Hex codes map natively */
-  --color-dsi-outline: var(--dsi-outline);
-  --color-dsi-contrast-background: var(--dsi-contrast-background);
-  --color-dsi-background: var(--dsi-background);
-  --color-dsi-selected: var(--dsi-selected);
-  --color-dsi-analysis: var(--dsi-analysis);
-  --color-dsi-contrast-analysis: var(--dsi-contrast-analysis);
+  --color-generate-outline: var(--generate-outline);
+  --color-generate-contrast-background: var(--generate-contrast-background);
+  --color-generate-background: var(--generate-background);
+  --color-generate-selected: var(--generate-selected);
+  --color-generate-analysis: var(--generate-analysis);
+  --color-generate-contrast-analysis: var(--generate-contrast-analysis);
 
   /* Semantic tones */
-  --color-dsi-info: var(--dsi-info);
-  --color-dsi-muted: var(--dsi-muted);
+  --color-generate-info: var(--generate-info);
+  --color-generate-muted: var(--generate-muted);
 
   /* Decisions — serve as the palette's green / amber / red tokens */
-  --color-dsi-approve: var(--dsi-approve);
-  --color-dsi-refer: var(--dsi-refer);
-  --color-dsi-decline: var(--dsi-decline);
+  --color-generate-approve: var(--generate-approve);
+  --color-generate-refer: var(--generate-refer);
+  --color-generate-decline: var(--generate-decline);
 
   /* PROGRAMMATIC SPACING ENGINE */
-  /* This creates native Tailwind classes like p-dsi-pad, left-dsi-pad, px-dsi-main */
-  --spacing-dsi-pad: 1rem;          /* '4' (16px) */
-  --spacing-dsi-main: 1.5rem;       /* '6' (24px) */
-  --spacing-dsi-gap: 2rem;          /* '8' (32px) */
-  --spacing-dsi-padicon: 2.25rem;   /* '9' (36px) */
-  --spacing-dsi-indent: 3rem;       /* '12'(48px) */
+  /* This creates native Tailwind classes like p-generate-pad, left-generate-pad, px-generate-main */
+  --spacing-generate-pad: 1rem;          /* '4' (16px) */
+  --spacing-generate-main: 1.5rem;       /* '6' (24px) */
+  --spacing-generate-gap: 2rem;          /* '8' (32px) */
+  --spacing-generate-padicon: 2.25rem;   /* '9' (36px) */
+  --spacing-generate-indent: 3rem;       /* '12'(48px) */
 
   /* FONTS */
   --font-ibm: var(--font-ibm), ui-sans-serif, system-ui, sans-serif;
@@ -33,39 +33,39 @@
 
 :root {
 
-  --dsi-outline: #ffffff;
-  --dsi-contrast-background: #7A766F;
-  --dsi-background: #E8E3DA;
-  --dsi-selected: #0A1A2F;
-  --dsi-analysis: #BCB7AF;
-  --dsi-contrast-analysis: #DBD6CD;
+  --generate-outline: #ffffff;
+  --generate-contrast-background: #7A766F;
+  --generate-background: #E8E3DA;
+  --generate-selected: #0A1A2F;
+  --generate-analysis: #BCB7AF;
+  --generate-contrast-analysis: #DBD6CD;
 
   /* Semantic tones — light */
-  --dsi-info: #2563eb;
-  --dsi-muted: #64748b;
+  --generate-info: #2563eb;
+  --generate-muted: #64748b;
 
   /* Decisions — light */
-  --dsi-approve: #B0DD7F;
-  --dsi-refer: #F8BD5E;
-  --dsi-decline: #F99587;
+  --generate-approve: #B0DD7F;
+  --generate-refer: #F8BD5E;
+  --generate-decline: #F99587;
 }
 
 .dark {
-  --dsi-outline: #39d3ba;
-  --dsi-contrast-background: #0B3954;
-  --dsi-background: #0599AD;
-  --dsi-selected: #FFFFFF;
-  --dsi-analysis: #07738A;
-  --dsi-contrast-analysis: #06859B;
+  --generate-outline: #39d3ba;
+  --generate-contrast-background: #0B3954;
+  --generate-background: #0599AD;
+  --generate-selected: #FFFFFF;
+  --generate-analysis: #07738A;
+  --generate-contrast-analysis: #06859B;
 
   /* Semantic tones — dark */
-  --dsi-info: #3b82f6;
-  --dsi-muted: #94a3b8;
+  --generate-info: #3b82f6;
+  --generate-muted: #94a3b8;
 
   /* Decisions — dark */
-  --dsi-approve: #00B050;
-  --dsi-refer: #F59E0B;
-  --dsi-decline: #E85656;
+  --generate-approve: #00B050;
+  --generate-refer: #F59E0B;
+  --generate-decline: #E85656;
 }
 
 .no-scrollbar {
@@ -84,125 +84,125 @@
 @utility largeicon {
   width: 40px;
   height: 40px;
-  @apply text-dsi-selected;
+  @apply text-generate-selected;
 }
 
-@utility dsi-inputbox {
+@utility generate-inputbox {
   @apply block; 
   @apply rounded-md;
   @apply p-1.5;
-  @apply border-1 border-dsi-outline;
+  @apply border-1 border-generate-outline;
   @apply bg-white;
-  @apply placeholder:text-dsi-contrast-background/50;
-  @apply text-dsi-contrast-background;
+  @apply placeholder:text-generate-contrast-background/50;
+  @apply text-generate-contrast-background;
   @apply text-sm;
 }
 
-@utility dsi-actionbutton {
+@utility generate-actionbutton {
   @apply block; 
   @apply rounded-md;
   @apply p-1.5;
-  @apply border-1 border-dsi-outline;
-  @apply bg-dsi-contrast-analysis;
+  @apply border-1 border-generate-outline;
+  @apply bg-generate-contrast-analysis;
   @apply items-center;
   @apply justify-center;
-  @apply text-dsi-contrast-background;
+  @apply text-generate-contrast-background;
   @apply font-bold;
   @apply hover:border-2;
-  @apply hover:border-dsi-selected;
-  @apply hover:text-dsi-selected;
+  @apply hover:border-generate-selected;
+  @apply hover:text-generate-selected;
 }
 
-@utility dsi-notificationpill {
+@utility generate-notificationpill {
   @apply p-1.5;
-  @apply bg-dsi-outline;
-  @apply border-b-1 border-dsi-selected;
-  @apply text-dsi-contrast-background; 
+  @apply bg-generate-outline;
+  @apply border-b-1 border-generate-selected;
+  @apply text-generate-contrast-background; 
   @apply text-xs;
   @apply rounded-md;
   @apply shadow-sm;
 }
 
-@utility dsi-actiontext {
+@utility generate-actiontext {
   @apply flex;
-  @apply gap-dsi-pad; 
+  @apply gap-generate-pad; 
   @apply p-1.5;
   @apply text-left; 
   @apply items-center;
-  @apply hover:text-dsi-selected ;
+  @apply hover:text-generate-selected ;
   @apply text-sm;
 }
 
-@utility dsi-popup-header {
+@utility generate-popup-header {
   @apply flex;
-  @apply gap-dsi-pad;
+  @apply gap-generate-pad;
   @apply rounded-t-xl rounded-tr-none;
-  @apply border-b-1 border-dsi-outline/70;
-  @apply bg-dsi-contrast-background;
-  @apply hover:bg-dsi-selected;
-  @apply pl-dsi-pad pr-dsi-pad;
+  @apply border-b-1 border-generate-outline/70;
+  @apply bg-generate-contrast-background;
+  @apply hover:bg-generate-selected;
+  @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
   @apply items-center;
   @apply justify-between;
-  @apply text-dsi-analysis;
+  @apply text-generate-analysis;
 }
 
-@utility dsi-section-header {
+@utility generate-section-header {
   @apply flex;
-  @apply gap-dsi-pad;
+  @apply gap-generate-pad;
   @apply rounded-t-xl;
-  @apply border-b-1 border-dsi-outline/50;
-  @apply bg-dsi-analysis/60;
-  @apply pl-dsi-pad pr-dsi-pad;
+  @apply border-b-1 border-generate-outline/50;
+  @apply bg-generate-analysis/60;
+  @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
 }
 
-@utility dsi-section-analysis {
+@utility generate-section-analysis {
   @apply flex flex-col flex-1;
-  @apply border-b-3 border-dsi-contrast-background;
+  @apply border-b-3 border-generate-contrast-background;
   @apply rounded-b-xl;
-  @apply bg-dsi-analysis ;
+  @apply bg-generate-analysis ;
   @apply shadow-sm;
-  @apply pl-dsi-pad pr-dsi-pad;
+  @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
 }
 
-@utility dsi-contentbox {
-  @apply border border-dsi-outline/80; 
+@utility generate-contentbox {
+  @apply border border-generate-outline/80; 
   @apply rounded-md;
   @apply p-2;
 }
 
-@utility dsi-grid-table-header {
+@utility generate-grid-table-header {
   @apply pt-2;
   @apply text-sm text-wrap;
   @apply text-center;
-  @apply border-r border-dsi-outline/50;
+  @apply border-r border-generate-outline/50;
 }
 
-@utility dsi-grid-table-item {
+@utility generate-grid-table-item {
   @apply text-2xl text-wrap;
   @apply text-center;
   @apply font-bold;
-  @apply text-dsi-selected;
-  @apply border-r border-dsi-outline/50;
+  @apply text-generate-selected;
+  @apply border-r border-generate-outline/50;
 }
 
-@utility dsi-analysis-description {
+@utility generate-analysis-description {
   @apply pt-1;
   @apply content-center;
   @apply text-sm;
   @apply text-left;
 }
 
-@utility dsi-analysis-item {
+@utility generate-analysis-item {
   @apply pt-1;
   @apply content-center;
   @apply font-bold;
   @apply text-left;
 }
 
-@utility dsi-user-message {
+@utility generate-user-message {
   @apply opacity-50;
   @apply italic; 
   @apply py-4;

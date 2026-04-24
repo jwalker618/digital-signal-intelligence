@@ -15,7 +15,7 @@ export default function DiscoveryOutputList() {
     <KeyValueList
       data={activeVersion?.discovery_output}
       renderLabel={(k) => formatText(k, "upper")}
-      valueClassName="text-dsi-selected"
+      valueClassName="text-generate-selected"
       emptyMessage="No discovery output available."
     />
   );

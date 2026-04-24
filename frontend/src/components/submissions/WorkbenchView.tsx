@@ -107,15 +107,15 @@ return (
         icon={Settings2}
       >
         <div className="space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider opacity-50 border-b border-dsi-outline/10 pb-2">
+          <h4 className="text-xs font-bold uppercase tracking-wider opacity-50 border-b border-generate-outline/10 pb-2">
             Export & Report
           </h4>
           <div className="grid grid-cols-2 gap-3">
-            <button className="flex flex-col items-center justify-center gap-2 p-6 bg-dsi-background/30 border border-dsi-outline/10 hover:border-dsi-selected hover:text-dsi-selected rounded-lg transition-all group">
+            <button className="flex flex-col items-center justify-center gap-2 p-6 bg-generate-background/30 border border-generate-outline/10 hover:border-generate-selected hover:text-generate-selected rounded-lg transition-all group">
               <FileText className="w-6 h-6 opacity-70 group-hover:opacity-100" />
               <span className="text-sm font-medium">Export to PDF</span>
             </button>
-            <button className="flex flex-col items-center justify-center gap-2 p-6 bg-dsi-background/30 border border-dsi-outline/10 hover:border-dsi-selected hover:text-dsi-selected rounded-lg transition-all group">
+            <button className="flex flex-col items-center justify-center gap-2 p-6 bg-generate-background/30 border border-generate-outline/10 hover:border-generate-selected hover:text-generate-selected rounded-lg transition-all group">
               <Printer className="w-6 h-6 opacity-70 group-hover:opacity-100" />
               <span className="text-sm font-medium">Print Analysis</span>
             </button>

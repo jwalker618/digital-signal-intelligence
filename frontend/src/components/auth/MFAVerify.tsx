@@ -43,7 +43,7 @@ export function MFAVerify() {
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-4">
-      <div className="flex items-center gap-3 text-dsi-selected">
+      <div className="flex items-center gap-3 text-generate-selected">
         <ShieldCheck className="icon" />
         <span className="font-semibold tracking-wider">
           Two-Factor Authentication
@@ -58,16 +58,16 @@ export function MFAVerify() {
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
-          className="border-2 border-dsi-outline bg-dsi-background px-3 py-2 font-mono text-2xl tracking-[0.5em] text-center rounded"
+          className="border-2 border-generate-outline bg-generate-background px-3 py-2 font-mono text-2xl tracking-[0.5em] text-center rounded"
           placeholder="000000"
           aria-label="TOTP code"
         />
       </label>
-      {error && <div className="text-sm text-dsi-decline">{error}</div>}
+      {error && <div className="text-sm text-generate-decline">{error}</div>}
       <button
         type="submit"
         disabled={submitting || code.length !== 6}
-        className="flex items-center justify-center gap-2 bg-dsi-contrast-background text-dsi-background py-2 rounded font-semibold disabled:opacity-50"
+        className="flex items-center justify-center gap-2 bg-generate-contrast-background text-generate-background py-2 rounded font-semibold disabled:opacity-50"
       >
         {submitting && <Loader2 className="icon animate-spin" />}
         Verify

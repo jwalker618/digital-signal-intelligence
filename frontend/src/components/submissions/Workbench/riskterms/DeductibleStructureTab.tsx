@@ -34,7 +34,7 @@ export default function DeductibleStructureTab() {
       />
 
       <SectionCard icon={Layers} title="Deductible Overview">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-dsi-pad py-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 px-generate-pad py-4">
           <MetricCard
             tone="selected"
             label="Deductible Type"
@@ -49,7 +49,7 @@ export default function DeductibleStructureTab() {
       {(rt.attachment_point != null || rt.layer_limit != null) && (
         <SectionCard icon={Shield} title="Attachment & Layer">
           <LabelValueList
-            className="px-dsi-pad py-4"
+            className="px-generate-pad py-4"
             rows={[
               { label: "Attachment Point", value: formatCurrency(rt.attachment_point) },
               { label: "Layer Limit", value: formatCurrency(rt.layer_limit) },
@@ -61,7 +61,7 @@ export default function DeductibleStructureTab() {
       {Object.keys(subLimits).length > 0 && (
         <SectionCard icon={DollarSign} title="Sub-Limits">
           <LabelValueList
-            className="px-dsi-pad py-4"
+            className="px-generate-pad py-4"
             rows={Object.entries(subLimits).map(([key, value]) => ({
               key,
               label: formatText(key, "capitalize"),
