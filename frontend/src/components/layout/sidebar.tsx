@@ -188,41 +188,32 @@ export default function Sidebar({
               /* ═══ TOP-LEVEL MODE ═══ */
               <>
                 {canViewSubmissions && (
-                  <>
-                    <button
-                      onClick={() =>
+                  <ul>
+                    <NavGroup
+                      icon={Inbox}
+                      label="Submissions"
+                      isExpanded={isSubmissionsExpanded}
+                      onToggle={() =>
                         setIsSubmissionsExpanded(!isSubmissionsExpanded)
                       }
-                      className="w-full flex items-center justify-between py-2 text-generate-text-placeholder hover:text-generate-text-input"
                     >
-                      <div className="flex items-center gap-3">
-                        <Inbox className="generate-app-icon" />
-                        <span className="text-sm tracking-wider">
-                          Submissions
-                        </span>
-                      </div>
-                    </button>
-
-                    {isSubmissionsExpanded && (
-                      <ul className="ml-2 pl-generate-pad border-l-3 border-generate-text-outline flex flex-col">
-                        {SUBMISSIONS_CHILDREN.map((item) => (
-                          <li key={item.name}>
-                            <NavItem
-                              icon={item.icon}
-                              label={item.name}
-                              isActive={activeMenu === item.name}
-                              onClick={() => {
-                                clearSubmissionContext();
-                                setActiveMenu(item.name);
-                                onToggleOpen();
-                                router.push("/");
-                              }}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </>
+                      {SUBMISSIONS_CHILDREN.map((item) => (
+                        <li key={item.name}>
+                          <NavItem
+                            icon={item.icon}
+                            label={item.name}
+                            isActive={activeMenu === item.name}
+                            onClick={() => {
+                              clearSubmissionContext();
+                              setActiveMenu(item.name);
+                              onToggleOpen();
+                              router.push("/");
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </NavGroup>
+                  </ul>
                 )}
 
                 {canViewWorldEngine && (
@@ -242,43 +233,36 @@ export default function Sidebar({
                 )}
 
                 {canViewAnyAdmin && (
-                  <div className="mt-4">
-                    <button
-                      onClick={() => setIsAdminExpanded(!isAdminExpanded)}
-                      className="w-full flex items-center justify-between py-2 text-generate-text-placeholder hover:text-generate-text-input"
+                  <ul className="mt-4">
+                    <NavGroup
+                      icon={Wrench}
+                      label="Admin"
+                      isExpanded={isAdminExpanded}
+                      onToggle={() => setIsAdminExpanded(!isAdminExpanded)}
                     >
-                      <div className="flex items-center gap-3">
-                        <Wrench className="generate-app-icon" />
-                        <span className="text-sm tracking-wider">Admin</span>
-                      </div>
-                    </button>
-
-                    {isAdminExpanded && (
-                      <ul className="ml-2 pl-generate-pad border-l-3 border-generate-text-outline flex flex-col">
-                        {ADMIN_CHILDREN.filter((item) =>
-                          hasPermission(item.permission),
-                        ).map((item) => (
-                          <li key={item.name}>
-                            <NavItem
-                              icon={item.icon}
-                              label={item.name}
-                              isActive={
-                                pathname === item.href ||
-                                (item.href !== "/admin" &&
-                                  !!pathname?.startsWith(item.href + "/"))
-                              }
-                              onClick={() => {
-                                clearSubmissionContext();
-                                setActiveMenu(item.name);
-                                onToggleOpen();
-                                router.push(item.href);
-                              }}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                      {ADMIN_CHILDREN.filter((item) =>
+                        hasPermission(item.permission),
+                      ).map((item) => (
+                        <li key={item.name}>
+                          <NavItem
+                            icon={item.icon}
+                            label={item.name}
+                            isActive={
+                              pathname === item.href ||
+                              (item.href !== "/admin" &&
+                                !!pathname?.startsWith(item.href + "/"))
+                            }
+                            onClick={() => {
+                              clearSubmissionContext();
+                              setActiveMenu(item.name);
+                              onToggleOpen();
+                              router.push(item.href);
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </NavGroup>
+                  </ul>
                 )}
               </>
             )}
