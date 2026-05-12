@@ -87,39 +87,43 @@ export default function Sidebar({
       ref={sidebarRef}
       className={`
         absolute top-0 left-0 h-full z-1000 shrink-0 transition-all duration-300
-        bg-generate-contrast-background
-        text-generate-background
-        border-r-3 border-generate-outline
+        bg-generate-dark-background
+        text-generate-text-placeholder
+        border-r-3 border-generate-text-outline
         ${isOpen ? "w-[50%]" : "w-[5%]"}
       `}
     >
       {isOpen && (
         <img
-          src={
+        alt="DSI Logo"  
+        src={
             isDark
-              ? "/Standard_Generate_Logo_and_DSI.svg"
-              : "/BlackWhite_Generate_Logo_and_DSI.svg"
+              ? "/Standard_Generate_Logo_and_Product.svg"
+              : "/BlackWhite_Generate_Logo_and_Product.svg"
           }
           className="absolute top-generate-pad left-generate-pad h-12 w-auto object-contain"
-          alt="DSI Logo"
         />
       )}
 
       <button
         onClick={onToggleOpen}
-        className="absolute top-generate-pad right-generate-pad p-generate-pad text-generate-background hover:text-generate-selected"
+        className="
+          absolute top-generate-pad right-generate-pad 
+          p-generate-pad"
       >
         {isOpen ? (
-          <PanelRightOpen className="icon" />
+          <PanelRightOpen className="generate-app-icon" />
         ) : (
-          <PanelRightClose className="icon" />
+          <PanelRightClose className="generate-app-icon" />
         )}
       </button>
 
       {/* NAVIGATION */}
       {isOpen && (
         <nav
-          className="absolute left-generate-indent right-0 py-generate-pad overflow-y-auto overflow-x-hidden no-scrollbar"
+          className="
+            absolute left-generate-indent right-0 py-generate-pad 
+            overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             top: collapsedWidthPx ?? 64,
             bottom: collapsedWidthPx ?? 64,
@@ -131,9 +135,11 @@ export default function Sidebar({
               <>
                 <button
                   onClick={navigateBack}
-                  className="w-full flex items-center gap-3 py-2 text-generate-background hover:text-generate-selected mb-2"
+                  className="
+                    w-full flex items-center gap-3 py-2 
+                    text-generate-text-placeholder hover:text-generate-text-input mb-2"
                 >
-                  <ArrowLeftToLine className="icon shrink-0" />
+                  <ArrowLeftToLine className="generate-app-icon" />
                   <span className="text-sm tracking-wider truncate">
                     Back to {previousMenu}
                   </span>
@@ -187,10 +193,10 @@ export default function Sidebar({
                       onClick={() =>
                         setIsSubmissionsExpanded(!isSubmissionsExpanded)
                       }
-                      className="w-full flex items-center justify-between py-2 text-generate-background hover:text-generate-selected"
+                      className="w-full flex items-center justify-between py-2 text-generate-text-placeholder hover:text-generate-text-input"
                     >
                       <div className="flex items-center gap-3">
-                        <Inbox className="icon shrink-0" />
+                        <Inbox className="generate-app-icon" />
                         <span className="text-sm tracking-wider">
                           Submissions
                         </span>
@@ -198,7 +204,7 @@ export default function Sidebar({
                     </button>
 
                     {isSubmissionsExpanded && (
-                      <ul className="ml-3 pl-generate-pad border-l-3 border-generate-outline/20 mt-2 flex flex-col gap-1">
+                      <ul className="ml-2 pl-generate-pad border-l-3 border-generate-text-outline flex flex-col">
                         {SUBMISSIONS_CHILDREN.map((item) => (
                           <li key={item.name}>
                             <NavItem
@@ -239,16 +245,16 @@ export default function Sidebar({
                   <div className="mt-4">
                     <button
                       onClick={() => setIsAdminExpanded(!isAdminExpanded)}
-                      className="w-full flex items-center justify-between py-2 text-generate-background hover:text-generate-selected"
+                      className="w-full flex items-center justify-between py-2 text-generate-text-placeholder hover:text-generate-text-input"
                     >
                       <div className="flex items-center gap-3">
-                        <Wrench className="icon shrink-0" />
+                        <Wrench className="generate-app-icon" />
                         <span className="text-sm tracking-wider">Admin</span>
                       </div>
                     </button>
 
                     {isAdminExpanded && (
-                      <ul className="ml-3 pl-generate-pad border-l-3 border-generate-outline/20 mt-2 flex flex-col gap-1">
+                      <ul className="ml-2 pl-generate-pad border-l-3 border-generate-text-outline flex flex-col">
                         {ADMIN_CHILDREN.filter((item) =>
                           hasPermission(item.permission),
                         ).map((item) => (
@@ -283,7 +289,10 @@ export default function Sidebar({
       {/* BOTTOM ICONS */}
       {isOpen && (
         <div
-          className="absolute left-generate-pad right-generate-pad border-t-3 border-generate-outline flex items-center justify-between"
+          className="
+            absolute left-generate-pad right-generate-pad 
+            border-t-3 border-generate-text-outline p-1.5
+            flex items-center justify-between"
           style={{ bottom: 0, height: collapsedWidthPx ?? 64 }}
         >
           <UserMenu />

@@ -4,11 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { 
-  Loader2, 
-  Lightbulb, 
-  LightbulbOff,
-  PanelBottomClose,
-  PanelBottomOpen,
+  Loader2, Lightbulb, LightbulbOff, PanelBottomClose, PanelBottomOpen,
 } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
@@ -73,144 +69,127 @@ export default function LoginPage() {
 
   return (
     <>
-      <div className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
+      <div className="generate-app-page">
 
         <div>
           <img
-              alt="DSI Logo"
+              alt="Generate Logo"
               src={isDark ? 
-                "/Standard_Generate_Logo_and_DSI.svg" : "/BlackWhite_Generate_Logo_and_DSI.svg"
+                "/Standard_Generate_Logo_and_Product.svg" : "/BlackWhite_Generate_Logo_and_Product.svg"
                 }
-              className="w-25 h-25 mx-auto w-auto absolute left-generate-gap top-generate-gap" 
+              className="generate-login-icon absolute top-generate-gap left-generate-gap " 
             />
           <SidebarIconBtn
               icon={isDark ? LightbulbOff : Lightbulb}
               onClick={toggleDark}
-              className="text-generate-background hover:text-generate-selected absolute right-generate-gap top-generate-gap"
+              className="generate-app-icon absolute top-generate-gap right-generate-gap "
             />
 
         </div>
 
-        <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <div>
-            
-            <h2 className="
-              flex mt-10 mb-5
-              text-center text-2xl font-bold text-generate-background"
-              >Sign in to your account
+        <div className="absolute top-1/3 left-1/3 w-1/4">
+    
+            <h2 className="text-2xl font-bold mb-4">
+              Sign in to your account
             </h2>
 
             <button
               onClick={() => onToggleSSO(prev => !prev)}
-              className="
-                flex 
-                gap-2 mb-4 items-center
-                text-generate-background hover:text-generate-selected"
-            >
+              className="flex gap-2 mb-2 items-center text-sm">
               {isSSO ? (
-                <PanelBottomOpen className="icon"/> 
+                <PanelBottomOpen className="generate-app-icon"/> 
               ) : (
-                <PanelBottomClose className="icon"/>
+                <PanelBottomClose className="generate-app-icon"/>
               )}{isSSO ? "Tenant (for SSO)" : "Email Address / Password"}
             </button>
-          
-          </div>
-        </div>
 
-        {mfaChallengePending ? ( <MFAVerify/> ) 
-        : (
-          <>
-            
-            {isSSO ? (
-
-              <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-                <div className="flex flex-col">  
-                  <label className="flex flex-col">                     
+            {mfaChallengePending ? ( <MFAVerify/> ) 
+            : (
+              <>             
+                {isSSO ? (               
+                  <div>                     
+                    
                     <input
                       value={tenantSlug}
                       onChange={(e) => setTenantSlug(e.target.value)}
                       placeholder="e.g. your company domain"
-                      className="w-full generate-inputbox"
+                      className="generate-dark-inputbox w-full mb-2"
                     />
-                  </label>
-                  
-                  <button
-                    type="button"
-                    onClick={onSSO}
-                    disabled={submitting} 
-                    className="mt-3 generate-actionbutton"
-                    > Continue with SSO
-                  </button>
+                    <input
+                      value={password}
+                      className="generate-dark-inputbox w-full mb-2 opacity-5 cursor-not-allowed"
+                      disabled 
+                    />
 
-                </div>
-              </div>
-
-            ) : (
-
-              <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-
-                <form onSubmit={onSubmit} className="space-y-3">
-
-                  <div>
-                                       
-                    <div> 
-                      <input
-                        id="email" name="email" type="email" autoComplete="email"
-                        required
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="email address"
-                        className="w-full generate-inputbox"
-                      />
-                    </div>
-                    
-                  </div>
-
-                  <div>
-                    
-                    <div>  
-                      <input
-                        id="password" name="password" type="password" autoComplete="current-password"
-                        required
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="password"
-                        className="w-full generate-inputbox"
-                      />
-                    </div>
-
-                  </div>
-
-                  <div>
-
-                    {error && <div className="text-sm text-generate-decline">{error}</div>}
                     <button
-                      id="submit" name="submit" type="submit" disabled={submitting}                      
-                      className="w-full flex flex-col generate-actionbutton"
-                    >
-                      {submitting && <Loader2 className="icon animate-spin" />}
-                      Sign in
+                        type="button"
+                        onClick={onSSO}
+                        disabled={submitting} 
+                        className="generate-dark-actionbutton w-full mb-2"
+                        > Continue with SSO
                     </button>
 
-                    <div className="text-sm mt-2">
-                      <a href="/login/reset-password" 
-                        className="
-                          font-bold
-                          text-generate-outline hover:text-generate-selected">
-                        Forgot Password?
-                      </a>
-                    </div>
-
                   </div>
+                 
+                ) : (
                   
-                </form>
-              </div>
-           
-           )}
+                  <div> 
+                    <input
+                      id="email" name="email" type="email" autoComplete="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="email address"
+                      className="generate-dark-inputbox w-full mb-2"
+                    />      
+                    <input
+                      id="password" name="password" type="password" autoComplete="current-password"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="password"
+                      className="generate-dark-inputbox w-full mb-2"
+                    />
                   
-          </>
-        )}
+                    <form onSubmit={onSubmit}>                            
+                      <div>
+                        
+                        {error && <div className="generate-error-message mb-2">{error}</div>}
+                        
+                        <button
+                          id="submit" name="submit" type="submit" 
+                          disabled={submitting}                      
+                          className="generate-dark-actionbutton w-full mb-2 flex gap-4"
+                        >
+                          Sign in
+                          {submitting && <Loader2 className="generate-dark-icon animate-spin" />}
+                        </button>
+
+                        <div>
+                          <a href="/login/reset-password" 
+                            className="
+                              text-sm font-bold
+                              text-generate-text-outline 
+                              hover:text-generate-text-input">
+                            Forgot Password?
+                          </a>
+                        </div>
+
+                      </div>
+                      
+                    </form>
+   
+                  </div>
+                              
+              )}              
+              </>
+            )}
+
+        </div>
+
       </div>
     </>
   )
 }
+
+

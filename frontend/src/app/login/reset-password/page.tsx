@@ -1,14 +1,7 @@
-// A-3d: Password reset page.
-//
-// Two modes:
-//   - No ?token=... in the URL: show the email-request form.
-//   - ?token=... present: show the set-new-password form.
-
 "use client";
 
 import { FormEvent, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import { Loader2 } from "lucide-react";
 
 import {
@@ -32,8 +25,12 @@ export default function ResetPasswordPage() {
   const router = useRouter();
   const token = params.get("token");
 
-  if (token) return <SetNewPasswordForm token={token} onDone={() => router.replace("/login")} />;
-  return <RequestResetForm />;
+  if (token) 
+    return <SetNewPasswordForm 
+      token={token} 
+      onDone={() => router.replace("/login")} 
+    />;
+    return <RequestResetForm />; 
 }
 
 function RequestResetForm() {
@@ -54,60 +51,54 @@ function RequestResetForm() {
 
   return (
     
-    <main className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
+    <main className="generate-app-page">
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="absolute top-1/3 left-1/3 w-1/4">
+
+         <h1 className="text-2xl font-bold mb-4">Reset password</h1>
         
-        <h1 className="text-left text-2xl font-bold text-generate-background mb-5">
-          Reset password
-        </h1>
-        {submitted ? (
-          <p className="text-sm">
-            If an account exists for <strong>{email}</strong>, a reset link
+        {submitted ? 
+        (
+          <p className="text-sm mb-2">
+            If an account exists for <strong className="hover:text-generate-selected">{email}</strong>, a reset link
             has been sent. Check your inbox.
           </p>
-        ) : (
+        ) : 
+        (
           
-          <form onSubmit={onSubmit} className="space-y-3">
-            
-            <label className="flex flex-col gap-1">
-              
-              <span className="
-                block mb-1
-                text-xs text-generate-background"
-                >Email
-              </span>
-              
+          <form onSubmit={onSubmit}>           
+            <label>
               <input
                 id="email" name="email" type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                
-                className="w-full generate-inputbox"
+                placeholder="email address"
+                className="generate-inputbox w-full mb-2"
               />
-
             </label>
             
             <button
               type="submit"
               disabled={busy}
-              className="w-full flex flex-col generate-actionbutton"
+              className="generate-actionbutton w-full mb-2 flex gap-4"
             >
-              {busy && <Loader2 className="icon animate-spin" />}
               Send Reset Link
+              {busy && <Loader2 className="generate-app-icon animate-spin" />}
             </button>
           </form>
         )}
-        <div className="mt-3">
-          <Link 
-            href="/login" 
+        
+        <div>
+          <a href="/login" 
             className="
-              font-bold
-              text-generate-outline hover:text-generate-selected">
+              text-sm font-bold
+              text-generate-outline 
+              hover:text-generate-selected">
             Back To Sign In
-          </Link>
+          </a>
         </div>
+
       </div>
     </main>
   );
@@ -149,71 +140,55 @@ function SetNewPasswordForm({
   }
 
   return (
-    
-    <main className="flex min-h-full flex-col justify-center bg-generate-contrast-background">
+    <main className="generate-app-page">
       
-      <div className="sm:mx-auto sm:w-full sm:max-w-sm">
+      <div className="absolute top-1/3 left-1/3 w-1/4">
 
-        <h1 className="text-left text-2xl font-bold text-generate-background mb-5">
-          Choose a new password
-        </h1>
+        <h1 className="text-2xl font-bold mb-4">Choose a new password</h1>
         
-        <form onSubmit={onSubmit} className="space-y-3">
-          
-          <label className="flex flex-col gap-1">
-            <span className="
-              block mb-1
-              text-xs text-generate-background"
-              >New password
-            </span>
-            
+        <form onSubmit={onSubmit}>
+          <div>
             <input
               id="password" name="password" type="password"
               required
               value={pw}
               onChange={(e) => setPw(e.target.value)}
-              
-              className="w-full generate-inputbox"
+              placeholder="new password"
+              className="generate-inputbox w-full mb-4"
             />
-          </label>
-
-          <div className="flex items-center gap-2 text-xs opacity-80">
-            <div className="flex-1 h-1 bg-generate-outline/30 rounded overflow-hidden">
-              <div
-                className="h-full bg-generate-selected transition-all"
-                style={{ width: `${(strength.score / 5) * 100}%` }}
-              />
-            </div>
-            <span>{strength.label}</span>
-          </div>
           
-          <label className="flex flex-col gap-1">
-            <span className="
-              block mb-1
-              text-xs text-generate-background"
-            >Confirm
-            </span>
-            
+            <div className="flex items-center gap-2 text-xs opacity-80 mb-4">
+              
+              <div className="flex-1 h-1 bg-generate-sidebar-text-selected rounded overflow-hidden">
+                <div
+                  className="h-full bg-generate-main-outline transition-all"
+                  style={{ width: `${(strength.score / 5) * 100}%` }}
+                />
+              </div>
+
+              <span className="font-bold">{strength.label}</span>
+            </div>
+
             <input
               id="password" name="password" type="password"
               required
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
-              
-              className="w-full generate-inputbox"
+              placeholder="confirm new password"
+              className="generate-inputbox w-full mb-2"
             />
-          </label>
+
+          </div>
 
           {error && <div className="text-sm text-generate-decline">{error}</div>}
           
           <button
             type="submit"
             disabled={busy}
-            
-            className="w-full flex flex-col generate-actionbutton"
+            className="generate-actionbutton w-full mb-2 flex gap-4"
           >
-            {busy && <Loader2 className="icon animate-spin" />}
             Set new password
+            {busy && <Loader2 className="generate-app-icon animate-spin" />}
           </button>
 
         </form>
@@ -221,3 +196,5 @@ function SetNewPasswordForm({
     </main>
   );
 }
+
+

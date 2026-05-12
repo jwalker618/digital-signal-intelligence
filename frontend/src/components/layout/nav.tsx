@@ -33,13 +33,13 @@ export const NavItem = ({
 }: NavItemProps) => (
   <button
     onClick={onClick}
-    className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded text-sm ${
+    className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded-md text-sm ${
       isActive
-        ? "text-generate-contrast-background bg-generate-background font-semibold"
-        : "text-generate-background hover:text-generate-selected"
+        ? "text-generate-text-input bg-generate-dark-input font-bold"
+        : "text-generate-text-placeholder hover:text-generate-text-input"
     } ${className}`}
   >
-    <Icon className="icon shrink-0" />
+    <Icon className="generate-app-icon" />
     <span className="truncate">{label}</span>
   </button>
 );
@@ -65,27 +65,29 @@ export const NavGroup = ({
   children,
 }: NavGroupProps) => (
   <li>
+    
     <button
       onClick={onToggle}
-      className={`flex items-center justify-between gap-3 w-full text-left py-2 px-2 rounded text-sm mt-1 ${
-        isActive ? "text-generate-selected" : "text-generate-background hover:text-generate-selected"
-      }`}
+      className={`flex items-center justify-between gap-3 w-full text-left py-2 px-2 rounded-md text-sm mt-1 bg-red-100
+        ${isActive ? 
+          "text-generate-text-placeholder" : 
+          "text-generate-text-placeholder hover:text-generate-text-input"
+        }`}
     >
       <div className="flex items-center gap-3">
-        <Icon className="icon shrink-0" />
-        <span className="truncate font-semibold tracking-wider normal-case">
-          {label}
-        </span>
+        <Icon className="generate-app-icon" />
+        <span className="truncate font-bold tracking-wider normal-case">{label}</span>
       </div>
       {isExpanded ? (
-        <ChevronDown className="w-3 h-3 shrink-0 opacity-50" />
+        <ChevronDown className="generate-app-icon" />
       ) : (
-        <ChevronRight className="w-3 h-3 shrink-0 opacity-50" />
+        <ChevronRight className="generate-app-icon" />
       )}
     </button>
+    
 
     {isExpanded && (
-      <ul className="ml-3 pl-2 border-l border-generate-outline/20 flex flex-col gap-0.5 mt-0.5">
+      <ul className="ml-3 pl-2 border-1 border-generate-text-outline flex flex-col gap-0.5 mt-0.5">
         {children}
       </ul>
     )}
@@ -112,9 +114,9 @@ export const SidebarIconBtn = ({
   <button
     onClick={onClick}
     title={title}
-    className={`text-generate-background hover:text-generate-selected transition-colors ${className}`}
+    className={`generate-app-icon ${className}`}
     style={style}
   >
-    <Icon className="icon" />
+    <Icon className="generate-app-icon" />
   </button>
 );

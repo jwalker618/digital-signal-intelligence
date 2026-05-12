@@ -35,7 +35,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
       <select
         value={daysFilter}
         onChange={(e) => setDaysFilter(Number(e.target.value))}
-        className="outline-none bg-generate-background text-generate-contrast-background hover:text-generate-selected"
+        className="outline-none text-generate-contrast-background hover:text-generate-selected"
       >
         <option value={7}>Last 7 Days</option>
         <option value={30}>Last 30 Days</option>
@@ -107,7 +107,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
           <table className="w-full text-left whitespace-nowrap border-collapse">
 
             {/* STICKY HEADER WITH FILTER CONTROLS */}
-            <thead className="sticky top-0 z-20 bg-generate-background">
+            <thead className="sticky top-0 z-20">
               {/* Column titles */}
               
               <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">

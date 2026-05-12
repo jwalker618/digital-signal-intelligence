@@ -27,7 +27,7 @@ export default function UserMenu() {
   };
 
   return (
-    <div className="flex items-center gap-6 relative">
+    <div className="flex items-center gap-6">
       <SidebarIconBtn
         icon={CircleUserRound}
         onClick={() => setIsOpen((v) => !v)}
@@ -38,32 +38,37 @@ export default function UserMenu() {
           absolute bottom-[5vw] left-0 z-40
           flex flex-col 
           min-w-[10rem] 
-          bg-generate-background 
-          text-generate-contrast-background 
-          border-1 border-generate-outline 
-          rounded-md shadow-sm"
+          p-1.5 gap-1.5 mb-generate-pad
+          bg-generate-dark-input 
+          text-generate-text-placeholder text-sm
+          border-t-1 border-b-1 border-generate-text-outline 
+          rounded-md"
           >
-
-          <button
-            onClick={closeAnd(() => {
-              clearSubmissionContext();
-              setActiveMenu("Your Profile");
-              router.push("/profile");
-            })}
-            className="generate-actiontext"
-          >
-            <CircleUserRound className="icon" /> Profile
-          </button>
-
-          <button
-            onClick={closeAnd(async () => {
-              await logout();
-              router.replace("/login");
-            })}
-            className="generate-actiontext"
-          >
-            <LogOut className="icon" /> Sign out
-          </button>
+          <div className="group">
+            <button
+              onClick={closeAnd(() => {
+                clearSubmissionContext();
+                setActiveMenu("Your Profile");
+                router.push("/profile");
+              })}
+              className="flex gap-generate-pad items-center  group-hover:text-generate-text-input"
+            >
+              <CircleUserRound className="generate-app-icon group-hover:text-generate-text-input" /> Profile
+            </button>
+          </div>
+            
+            <div className="group">
+              <button
+                onClick={closeAnd(async () => {
+                  await logout();
+                  router.replace("/login");
+                })}
+                className="flex gap-generate-pad items-center group-hover:text-generate-text-input"
+              >
+                <LogOut className="generate-app-icon group-hover:text-generate-text-input" /> 
+                <span>Sign out</span>
+              </button>
+            </div>
         </div>
       )}
     </div>

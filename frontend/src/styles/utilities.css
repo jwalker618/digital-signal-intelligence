@@ -1,12 +1,3 @@
-/*
- * Reusable Tailwind @utility classes for the Generate UI kit.
- *
- * These compose the design tokens registered in theme.css into
- * higher-level building blocks (buttons, input boxes, section
- * headers, grid cells, etc.). Kept separate so the token file
- * stays focused on values.
- */
-
 .no-scrollbar {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
@@ -14,6 +5,138 @@
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari and Opera */
 }
+
+
+@utility generate-login-icon {
+  @apply w-25 h-25;
+  @apply mx-auto; 
+  @apply w-auto;
+}
+
+@utility generate-app-page {
+  @apply flex flex-col;
+  @apply min-h-full;
+  @apply justify-center;
+  @apply bg-generate-dark-background;  
+  @apply text-generate-text-input;
+}
+
+@utility generate-app-icon {
+  width: 20px;
+  height: 20px;
+  @apply text-generate-text-placeholder;
+  @apply hover:text-generate-text-input;
+}
+
+@utility generate-dark-inputbox {
+  @apply flex;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply text-sm;
+  @apply text-wrap;
+  @apply border-1 border-generate-text-outline;
+  @apply placeholder:text-generate-text-placeholder;
+  @apply bg-generate-dark-input;
+}.generate-dark-inputbox:not(:placeholder-shown) {
+  @apply text-generate-text-input;
+}
+
+@utility generate-dark-actionbutton {
+  @apply block;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply items-center;
+  @apply justify-center;
+  @apply border-1 border-generate-text-outline;
+  @apply bg-generate-dark-input;
+  @apply text-generate-text-input;
+  @apply hover:cursor-pointer;
+  @apply font-bold;
+  @apply hover:bg-generate-light-input;
+  @apply hover:border-l-6;
+  @apply hover:border-r-6;
+}
+
+@utility generate-error-message {
+  @apply text-generate-text-bad;
+  @apply text-sm;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@utility generate-app-inputbox {
+  @apply flex;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply text-sm;
+  @apply text-wrap;
+  @apply border-1 border-generate-text-outline;
+  @apply placeholder:text-generate-text-placeholder;
+  @apply bg-generate-text-input;
+}.generate-app-inputbox:not(:placeholder-shown) {
+  @apply text-generate-text-input;
+}
+
+@utility generate-app-actionbutton {
+  @apply block;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply items-center;
+  @apply justify-center;
+  @apply border-1 border-generate-text-outline;
+  @apply bg-generate-text-input;
+  @apply text-generate-text-input;
+  @apply hover:cursor-pointer;
+  @apply font-bold;
+  @apply hover:bg-generate-text-input/60;
+  @apply hover:border-generate-main-text-selected;
+  @apply hover:text-generate-main-text-selected;
+}
+
+@utility generate-inputbox {
+  @apply block;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply border-1 border-generate-main-outline;
+  @apply bg-white;
+  @apply placeholder:text-generate-contrast-background/50;
+  @apply text-generate-sidebar-text;
+  @apply text-sm;
+  @apply text-wrap;
+}
+
+@utility generate-actionbutton {
+  @apply block;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply border-1 border-generate-main-outline;
+  @apply bg-generate-contrast-analysis;
+  @apply items-center;
+  @apply justify-center;
+  @apply text-generate-sidebar-text;
+  @apply font-bold;
+  @apply hover:border-2;
+  @apply hover:border-generate-sidebar-text-selected;
+  @apply hover:text-generate-sidebar-text-selected;
+}
+
+
+
 
 @utility icon {
   width: 20px;
@@ -26,31 +149,7 @@
   @apply text-generate-selected;
 }
 
-@utility generate-inputbox {
-  @apply block;
-  @apply rounded-md;
-  @apply p-1.5;
-  @apply border-1 border-generate-outline;
-  @apply bg-white;
-  @apply placeholder:text-generate-contrast-background/50;
-  @apply text-generate-contrast-background;
-  @apply text-sm;
-}
 
-@utility generate-actionbutton {
-  @apply block;
-  @apply rounded-md;
-  @apply p-1.5;
-  @apply border-1 border-generate-outline;
-  @apply bg-generate-contrast-analysis;
-  @apply items-center;
-  @apply justify-center;
-  @apply text-generate-contrast-background;
-  @apply font-bold;
-  @apply hover:border-2;
-  @apply hover:border-generate-selected;
-  @apply hover:text-generate-selected;
-}
 
 @utility generate-notificationpill {
   @apply p-1.5;
@@ -75,33 +174,38 @@
 @utility generate-popup-header {
   @apply flex;
   @apply gap-generate-pad;
-  @apply rounded-t-xl rounded-tr-none;
-  @apply border-b-1 border-generate-outline/70;
+  @apply rounded-t-xl;
+  @apply border-b-1 border-generate-analysis-shadow;
   @apply bg-generate-contrast-background;
-  @apply hover:bg-generate-selected;
-  @apply pl-generate-pad pr-generate-pad;
-  @apply pt-2 pb-2;
-  @apply items-center;
-  @apply justify-between;
   @apply text-generate-analysis;
+  @apply pl-generate-pad pr-generate-pad;
+  @apply pt-2 pb-2;  
+
+  @apply rounded-tr-none;
+  @apply hover:bg-generate-selected;
+  @apply items-center;
+  @apply justify-between;  
 }
 
 @utility generate-section-header {
   @apply flex;
   @apply gap-generate-pad;
   @apply rounded-t-xl;
-  @apply border-b-1 border-generate-outline/50;
-  @apply bg-generate-analysis/60;
+  @apply border-b-1 border-generate-analysis-shadow;
+  @apply bg-generate-analysis-header;
+  @apply text-generate-analysis-text-selected;
   @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
 }
 
 @utility generate-section-analysis {
   @apply flex flex-col flex-1;
-  @apply border-b-3 border-generate-contrast-background;
+  @apply border-b-3 border-generate-analysis-shadow;
+  @apply border-r border-l border-generate-analysis-outline;
   @apply rounded-b-xl;
-  @apply bg-generate-analysis ;
-  @apply shadow-sm;
+  @apply bg-generate-analysis-background;
+  @apply text-generate-analysis-text;
+  @apply hover:text-generate-analysis-text-selected;
   @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
 }
@@ -141,9 +245,3 @@
   @apply text-left;
 }
 
-@utility generate-user-message {
-  @apply opacity-50;
-  @apply italic;
-  @apply py-4;
-  @apply text-xs text-center text-wrap;
-}

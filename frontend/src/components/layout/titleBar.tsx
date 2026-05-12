@@ -23,7 +23,7 @@ export default function TitleBar() {
     <div
       className="
         flex
-        border-b-3 border-generate-outline 
+        border-b-3 border-generate-text-outline 
         items-center justify-between 
         px-generate-main"
         style={{ 
@@ -32,17 +32,17 @@ export default function TitleBar() {
     >
       <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
         <span className="flex items-center gap-4">
-          <span className="opacity-50 font-light">/</span>
+          <span className="font-light">/</span>
           {activeSubmission ? previousMenu : activeMenu}
         </span>
 
         {activeSubmission && (
           <span className="flex items-center gap-4">
-            <span className="opacity-50 font-light">/</span>
+            <span className="font-light">/</span>
             <span className="font-bold">
               {(activeSubmission as any).entity_name}
             </span>
-            <span className="opacity-50 font-light">/</span>
+            <span className="font-light">/</span>
             <span>{activeMenu}</span>
           </span>
         )}
@@ -67,10 +67,10 @@ export default function TitleBar() {
         {hasPageActions && (
           <button
             onClick={() => useDsiStore.getState().setPageActionsOpen(true)}
-            className="p-1.5 rounded text-generate-contrast-background hover:bg-generate-outline/10 hover:text-generate-selected transition-colors"
+            className="p-1.5 rounded-md text-generate-text-placeholder hover:bg-generate-light-input hover:text-generate-text-input"
             title="Page Actions"
           >
-            <MoreVertical className="icon" />
+            <MoreVertical className="generate-app-icon" />
           </button>
         )}
       </div>

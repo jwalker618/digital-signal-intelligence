@@ -167,7 +167,7 @@ export const SubmissionHeaderCard = ({
     <div className={`
       sticky top-0 z-999
       pt-generate-pad pb-0.5
-      bg-generate-background
+      bg-generate-main-background
       ${spanClass}
     `}
     >
