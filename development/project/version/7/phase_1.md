@@ -1,427 +1,527 @@
-# Version 6 Phase 1: Evidence-Grade Ladder
+# V7 Phase 1: Evidence Ladder Foundation
 
-## Overview
+> **Doc audience**: implementation LLM. Self-contained. Paths confirmed against the current tree on `claude/review-dsi-upgrade-phase-1-IXI2f`.
 
-Augment DSI with an explicit **evidence-grade taxonomy** alongside the existing confidence score. Every `SignalResult` will carry an `evidence_grade` (5-level hardcoded enum) and an `evidence_basis` (free-text justification). Grade propagates upward to group-level and composite-level aggregates. Low grades on high-weight signals can trigger referral via YAML-configured rules.
+## Depends on
+- V6 complete (migration 022 applied, calibration green across 24 configs).
+- `signal_provenance` table present (migration 021).
 
-This is **not** a replacement for confidence. Confidence answers "how sure are we of this value?" (availability × source reliability × temporal decay). Evidence grade answers "what *kind* of evidence supports this value?" — a categorical, ordered taxonomy of corroboration strength. The two are orthogonal: a signal can be high-confidence/low-grade (e.g. a single inferred guess we're sure of) or low-confidence/high-grade (e.g. a regulatory filing we couldn't fully parse).
+## Blocks
+- Phases 2–14. Nothing else can start until the foundation types compile and tests pass.
 
-Inspired by Clearwing's evidence-level ladder (`suspicion → static_corroboration → crash_reproduced → root_cause_explained → exploit_demonstrated → patch_validated`). DSI's adaptation reframes this for risk-signal evidence, not vulnerability evidence.
+## V7 Sequence (for context only; each phase is its own doc)
 
-## Rationale
+| # | Title | What it lands |
+|---|-------|---------------|
+| 1 | **Foundation** | EvidenceGrade taxonomy, `bump_evidence`, role-binding, new SignalResult fields, transition helper |
+| 2 | Extractor migration | Apply transition to every extractor; enforce role binding |
+| 3 | Aggregation | Promotion-merge in aggregators; `(min, distribution)` rollup; absence sub-typing |
+| 4 | YAML policy + referral | `evidence_grade_policy` block; three condition types; scripted rollout to 24 configs |
+| 5 | Persistence | DB columns, history table, SHA3-224 commitments, dual audit log |
+| 6 | Adversarial validator | 4-axis blind validator; pro/counter/tie-breaker stored fields |
+| 7 | Calibration store | Triple-source calibration with human-in-loop sampling |
+| 8 | Reproducibility class | `reproducibility` field; multi-pull verification |
+| 9 | Risk primitives | Orthogonal primitive_type taxonomy |
+| 10 | Root-cause dedup audit | Refactor `sanctions_aggregator` / `corporate_aggregator` to root-cause clustering |
+| 11 | Variant loop | Within-cycle sibling-signal amplification |
+| 12 | Mechanism memory | Cross-cycle abstract pattern store |
+| 13 | Delta-aware re-extraction | Entity-event triggered signal-subset recompute |
+| 14 | API + frontend + disclosure packets | Pydantic exposure, Workbench UI, templated underwriter packets |
 
-Three drivers:
+## Scope (this phase)
 
-1. **Audit trail strengthening.** Today every signal traces back to a score and a confidence number. Adding evidence grade gives carriers/reinsurers a categorical answer to "what *kind* of evidence is this built on?" without forcing them to parse confidence semantics.
-2. **Differentiation against SOV-based pricing.** Aligns with the "Precision Illusion" intellectual position: DSI's signals carry explicit evidentiary integrity, where SOV granularity has none.
-3. **Foundational Principle alignment.** Reinforces Principle 4 (Behavioural Inference Over Self-Reporting) and Principle 6 (Structured Data Utilisation) by making the *provenance class* of each signal a first-class scoring attribute.
+Add an ordered evidence-strength taxonomy to `SignalResult` and the propagation machinery to support cycle-time **promotion** (monotonic climb up the ladder). Lock the taxonomy as a string `Literal` with a rank dict so domain-specific rungs can be inserted later without schema migration. Bind rungs to producer roles so an HTTP-scrape extractor cannot assert `STRUCTURED_ATTESTED`. Add transition helpers so Phase 2 can migrate 60+ call sites without a big-bang break.
 
 ## Decisions (locked, do not relitigate)
 
-| Decision | Choice | Implication |
-|-|-|-|
-| Location in data model | `SignalResult` + group + composite (full propagation) | All three levels need new fields and aggregation logic |
-| Scoring impact | Audit + can trigger referral at low grades | No multiplicative effect on scores; uses existing referral mechanism |
-| Taxonomy definition | Hardcoded enum + YAML mapping rules per signal | Enum lives in `types.py`; per-signal `expected_grade` lives in YAML |
+| # | Decision | Choice | Rationale |
+|---|----------|--------|-----------|
+| D1 | Taxonomy storage | `Literal[...]` string + `_EVIDENCE_RANK: dict[str, int]` | Decouples persisted value from position. Inserting a rung between two existing ones is a two-line edit, not a migration. |
+| D2 | Initial rungs | 5: `inferred`, `observed`, `corroborated`, `structured_attested`, `behaviourally_validated` | Five-rung baseline. Domain rungs interleave in later phases. |
+| D3 | Promotion semantics | `bump_evidence(new)` monotonic — only climbs | Findings accumulate evidence; never demote. Lifted directly from Clearwing `findings/types.py:341-349`. |
+| D4 | Role binding | Each extractor class declares `MAX_EVIDENCE_GRADE`; runtime guard rejects higher | Web-scrape cannot return STRUCTURED_ATTESTED. Enforced in base class. |
+| D5 | New fields on `SignalResult` | `evidence_grade`, `evidence_basis`, `evidence_sources: list[EvidenceSource]`, `evidence_pro`, `evidence_counter`, `evidence_tie_breaker` | All `Optional[]` initially with deprecation warning; Phase 2 batched migration; Phase 6 tightens `evidence_grade`/`evidence_basis` to required. |
+| D6 | Sources typing | `EvidenceSource` dataclass, not `list[str]` | URLs go in structured records; free text only in `evidence_basis`. |
+| D7 | Scalar weighted mean | Computed for display only; never a referral threshold | Cardinal arithmetic on an ordinal taxonomy is suspect. Referrals key on min+distribution (Phase 4). |
+| D8 | Pro/counter/tie-breaker | Stored fields on every `SignalResult`, populated when adversarial validator runs in Phase 6 | Optional until Phase 6 lands. |
+| D9 | Confidence orthogonality | Unchanged; grade is independent of confidence | The two metrics never compute from each other. |
+| D10 | Absence handling | Absence carries no grade in Phase 1; Phase 3 introduces `absence_sub_type` | Don't conflate failed-to-fetch with authoritatively-empty in foundation. |
 
-## Taxonomy
+## Files
 
-Five-level ordered enum (ascending evidentiary strength):
+### Create
+- `signal_architecture/signals/evidence.py` — taxonomy, rank dict, `EvidenceSource`, `bump_evidence`, role-binding helpers
+- `tests/unit/test_evidence.py` — taxonomy tests
+- `tests/unit/test_evidence_role_binding.py` — role-binding guard tests
 
-| Grade | Name | Definition | Examples |
-|-|-|-|-|
-| 1 | `INFERRED` | Single weak observation; reasoned guess from indirect cues | Tech stack guessed from one HTTP header; jurisdiction guessed from TLD |
-| 2 | `OBSERVED` | Direct extraction from an authoritative source, single source | Security headers fetched from `https://entity.com`; subdomain enumeration |
-| 3 | `CORROBORATED` | Multiple independent sources agree on the same value | Office locations confirmed by both Companies House and regulatory filing |
-| 4 | `STRUCTURED_ATTESTED` | From a designated authoritative structured feed | S&P credit rating; classification society register entry; SEC filing |
-| 5 | `BEHAVIOURALLY_VALIDATED` | Signal confirmed by observed action over time (≥2 observations across a defined window) | Patch cadence observed over 90 days; certificate rotation pattern over 12 months |
+### Modify
+- `signal_architecture/signals/types.py` — extend `SignalResult` with evidence fields (all `Optional[]`)
+- `signal_architecture/signals/base.py` — add `MAX_EVIDENCE_GRADE` class attr to `BaseExtractor`; expose `evidence_for()` helper on `BaseAggregator`
+- `signal_architecture/signals/__init__.py` — re-export `EvidenceGrade`, `EvidenceSource`, `bump_evidence`
 
-**Ordering invariant**: `INFERRED < OBSERVED < CORROBORATED < STRUCTURED_ATTESTED < BEHAVIOURALLY_VALIDATED`. The enum must be `IntEnum` so comparisons work natively.
+### Do not modify (yet)
+- Any file under `inference/functions/` — Phase 2
+- Any file under `aggregators/implementations/` — Phase 3
+- `layers/risk/scorer.py` — Phase 3 for composite-level rollup
+- Any YAML — Phase 4
+- Any ORM or alembic file — Phase 5
 
-**Grade vs. confidence (must hold at code review):**
-- Grade is categorical (about evidence *kind*).
-- Confidence is continuous (about value *certainty*).
-- Neither implies the other. Do not compute one from the other.
-- Both must be set independently by every extractor.
+## Types (exact code to land)
 
-## Current State
-
-### Files that currently touch confidence (reference points)
-
-- `signal_architecture/signals/types.py` — `SignalResult` dataclass with `confidence: float`
-- `signal_architecture/signals/inference/` — extractors that build `SignalResult` instances
-- `signal_architecture/signals/aggregators/` — aggregates signals into groups (confidence currently weighted-averaged)
-- `layers/risk/scorer.py` (or wherever `ModelScorer` lives) — composite confidence calculation
-- `coverages/<cov>/config.yaml` — `signal_registry` entries
-- `coverages/master_config_layout.yaml` — VERSION 2.3, current schema reference
-- `infrastructure/models/` — ORM models for persisted model versions
-- `infrastructure/db/migrations/` — current latest migration
-- `infrastructure/api/routes/` — API surfaces that return signal/score data
-
-**Confirm exact paths during Phase 9a discovery** before writing code; do not assume.
-
-## Target State
-
-### Data model additions
+`signal_architecture/signals/evidence.py`:
 
 ```python
-# signal_architecture/signals/types.py
+"""V7/Phase 1 — Evidence-grade taxonomy and promotion mechanics.
 
-from enum import IntEnum
+Imported by `signal_architecture.signals.types` (SignalResult fields),
+`signal_architecture.signals.base` (role-binding), and downstream by
+the aggregator/scorer/validator/calibration layers in later phases.
+
+Design references:
+    - V7 phase_1.md decision table.
+    - Clearwing `findings/types.py:38-67, 341-349` for the
+      string-Literal + rank-dict + monotonic-bump pattern.
+"""
+from __future__ import annotations
+
+import warnings
 from dataclasses import dataclass, field
-from typing import Optional
+from datetime import datetime, timezone
+from typing import Any, Literal, Optional, Sequence
 
-class EvidenceGrade(IntEnum):
-    """Ordered evidentiary strength. Higher = stronger evidence."""
-    INFERRED = 1
-    OBSERVED = 2
-    CORROBORATED = 3
-    STRUCTURED_ATTESTED = 4
-    BEHAVIOURALLY_VALIDATED = 5
+EvidenceGrade = Literal[
+    "inferred",
+    "observed",
+    "corroborated",
+    "structured_attested",
+    "behaviourally_validated",
+]
 
+EVIDENCE_GRADES: tuple[EvidenceGrade, ...] = (
+    "inferred",
+    "observed",
+    "corroborated",
+    "structured_attested",
+    "behaviourally_validated",
+)
+
+_EVIDENCE_RANK: dict[str, int] = {g: i for i, g in enumerate(EVIDENCE_GRADES)}
+
+
+def evidence_rank(grade: EvidenceGrade) -> int:
+    """Return 0-indexed rank. Raises KeyError on unknown grade."""
+    return _EVIDENCE_RANK[grade]
+
+
+def evidence_compare(a: EvidenceGrade, b: EvidenceGrade) -> int:
+    """-1 / 0 / 1 like Python 2 cmp."""
+    ra, rb = _EVIDENCE_RANK[a], _EVIDENCE_RANK[b]
+    return (ra > rb) - (ra < rb)
+
+
+def evidence_at_or_above(grade: EvidenceGrade, floor: EvidenceGrade) -> bool:
+    return _EVIDENCE_RANK[grade] >= _EVIDENCE_RANK[floor]
+
+
+def bump_evidence(current: Optional[EvidenceGrade], new: EvidenceGrade) -> EvidenceGrade:
+    """Monotonic promotion. Returns the stronger of current/new.
+
+    `current` may be None (no grade yet) — `new` always wins in that case.
+    Never demotes. This is the canonical operation; every place that
+    'updates' an evidence_grade goes through this function.
+    """
+    if new not in _EVIDENCE_RANK:
+        raise ValueError(f"unknown evidence grade: {new!r}")
+    if current is None:
+        return new
+    if current not in _EVIDENCE_RANK:
+        # Tolerate legacy/garbage strings by promoting unconditionally.
+        return new
+    if _EVIDENCE_RANK[new] > _EVIDENCE_RANK[current]:
+        return new
+    return current
+
+
+@dataclass(frozen=True)
+class EvidenceSource:
+    """One structured source record. Machine-readable; never free text.
+
+    `kind` is one of:
+        api        — direct API call (REST/GRPC)
+        scrape     — HTML scrape from entity-owned domain
+        register   — authoritative register pull (SEC EDGAR, Companies House, S&P, IACS class society)
+        feed       — subscription feed (Refinitiv, Moody's, etc.)
+        observation — multi-time observation (cert rotation, patch cadence)
+        derived    — computed from other signals; `ref` is the derivation function name
+        absence    — authoritative empty (Phase 3 will lean on this)
+    """
+    source_id: str           # short stable ID, e.g. "sec_edgar"
+    kind: Literal["api", "scrape", "register", "feed", "observation", "derived", "absence"]
+    ref: str                 # URL, dataset name, function name — opaque to evidence module
+    fetched_at: datetime
+    response_hash: Optional[str] = None  # ties to signal_provenance.response_hash when applicable
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "source_id": self.source_id,
+            "kind": self.kind,
+            "ref": self.ref,
+            "fetched_at": self.fetched_at.isoformat(),
+            "response_hash": self.response_hash,
+            "notes": self.notes,
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict[str, Any]) -> "EvidenceSource":
+        return cls(
+            source_id=d["source_id"],
+            kind=d["kind"],
+            ref=d["ref"],
+            fetched_at=datetime.fromisoformat(d["fetched_at"]),
+            response_hash=d.get("response_hash"),
+            notes=d.get("notes", ""),
+        )
+
+
+# ---------------------------------------------------------------------------
+# Role binding
+# ---------------------------------------------------------------------------
+
+class EvidenceRoleViolation(ValueError):
+    """Raised when an extractor tries to claim a grade above its declared max.
+
+    Caught nowhere by default — fail loud in dev. Phase 2 swaps to warn-mode
+    during migration; Phase 6 makes it hard-error in production.
+    """
+
+
+def assert_within_role(
+    producer_class_name: str,
+    max_grade: EvidenceGrade,
+    claimed: EvidenceGrade,
+    *,
+    mode: Literal["raise", "warn"] = "raise",
+) -> None:
+    """Reject grades above what the producer's role permits."""
+    if _EVIDENCE_RANK[claimed] > _EVIDENCE_RANK[max_grade]:
+        msg = (
+            f"{producer_class_name} declares MAX_EVIDENCE_GRADE={max_grade!r} "
+            f"but constructed a SignalResult with evidence_grade={claimed!r}. "
+            f"Either lower the grade or change the extractor base class."
+        )
+        if mode == "raise":
+            raise EvidenceRoleViolation(msg)
+        warnings.warn(msg, stacklevel=3)
+
+
+# ---------------------------------------------------------------------------
+# Default role caps for the standard extractor patterns
+# ---------------------------------------------------------------------------
+
+DEFAULT_ROLE_CAPS: dict[str, EvidenceGrade] = {
+    # Class name → highest grade it may assert. Tighter caps allowed; looser
+    # caps disallowed. Subclasses override via MAX_EVIDENCE_GRADE.
+    "StubExtractor": "inferred",
+    "BaseExtractor": "behaviourally_validated",  # generic; subclasses tighten
+    "WebScrapeExtractor": "observed",
+    "MultiSourceExtractor": "corroborated",
+    "RegisterExtractor": "structured_attested",
+    "FeedExtractor": "structured_attested",
+    "TimeSeriesExtractor": "behaviourally_validated",
+}
+
+
+def default_cap_for(class_name: str) -> EvidenceGrade:
+    """Look up default cap; falls back to BaseExtractor's cap."""
+    return DEFAULT_ROLE_CAPS.get(class_name, DEFAULT_ROLE_CAPS["BaseExtractor"])
+```
+
+`signal_architecture/signals/types.py` — additions to `SignalResult` (do **not** remove or reorder existing fields):
+
+```python
+# At the top, alongside existing imports:
+from .evidence import EvidenceGrade, EvidenceSource
+
+# Append new fields to the SignalResult dataclass, ALL Optional with defaults:
 @dataclass
 class SignalResult:
-    # ... existing fields (value, confidence, etc.) ...
-    evidence_grade: EvidenceGrade
-    evidence_basis: str  # free-text, required, max 500 chars
-    evidence_sources: list[str] = field(default_factory=list)  # source identifiers used
+    # ... existing fields unchanged ...
+
+    # --- V7 Phase 1: evidence fields. Optional during migration. ---
+    # Phase 2 populates them in every extractor.
+    # Phase 6 tightens `evidence_grade` and `evidence_basis` to required.
+    evidence_grade: Optional[EvidenceGrade] = None
+    evidence_basis: Optional[str] = None
+    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+
+    # Adversarial validation (populated by Phase 6).
+    evidence_pro: Optional[str] = None
+    evidence_counter: Optional[str] = None
+    evidence_tie_breaker: Optional[str] = None
+
+    def __post_init__(self):
+        # ... existing __post_init__ body unchanged ...
+
+        # V7 Phase 1: validate evidence_basis length only if present.
+        if self.evidence_basis is not None and len(self.evidence_basis) > 500:
+            raise ValueError(
+                f"evidence_basis must be <=500 chars, got {len(self.evidence_basis)}"
+            )
+        if self.evidence_basis is not None and len(self.evidence_basis) == 0:
+            raise ValueError("evidence_basis must be non-empty if present")
 ```
 
-`evidence_basis` is **required** (not Optional). An extractor that cannot articulate the basis must not return a result — it should return absence (which is itself a signal per Foundational Principle 5).
-
-### Group-level aggregation
-
-Add to whatever object represents a group aggregation (likely `GroupResult` or similar in `aggregators/`):
+`signal_architecture/signals/base.py` — additions to `BaseExtractor`:
 
 ```python
-@dataclass
-class GroupResult:
-    # ... existing fields ...
-    min_evidence_grade: EvidenceGrade       # weakest grade in group
-    weighted_evidence_grade: float          # signal-weight-weighted mean grade (1.0-5.0)
-    grade_distribution: dict[EvidenceGrade, float]  # weight share at each grade
+# At the top:
+from .evidence import EvidenceGrade, assert_within_role, default_cap_for
+
+class BaseExtractor(ABC):
+    # ... existing class body unchanged ...
+
+    # V7 Phase 1: per-class evidence cap. Subclasses override.
+    MAX_EVIDENCE_GRADE: EvidenceGrade = "behaviourally_validated"
+
+    # Phase 2 flips this to "raise". Stays "warn" during migration so existing
+    # call sites that haven't been updated yet don't crash CI.
+    _EVIDENCE_ENFORCEMENT_MODE: str = "warn"
+
+    def _check_evidence_role(self, claimed: EvidenceGrade) -> None:
+        """Call from any extractor that asserts a grade on a SignalResult."""
+        assert_within_role(
+            type(self).__name__,
+            self.MAX_EVIDENCE_GRADE,
+            claimed,
+            mode=self._EVIDENCE_ENFORCEMENT_MODE,  # type: ignore[arg-type]
+        )
 ```
 
-**Aggregation rules:**
-- `min_evidence_grade` = `min(signal.evidence_grade for signal in group if signal has value)`. Absence signals are excluded from `min` (they cannot have a grade — their *absence* is the signal). Track absences separately via existing absence-signal handling.
-- `weighted_evidence_grade` = `sum(grade.value × signal.weight) / sum(signal.weight)` over signals with values.
-- `grade_distribution` = `{grade: sum(weight for signal at this grade) / total_weight}`.
-
-### Composite-level aggregation
-
-The composite score object (likely `CompositeScore` or model version output) gets:
+`signal_architecture/signals/base.py` — additions to `BaseAggregator`:
 
 ```python
-composite_min_grade: EvidenceGrade
-composite_weighted_grade: float
-composite_grade_distribution: dict[EvidenceGrade, float]
-referral_triggered_by_grade: bool
-grade_referral_reasons: list[str]
+def aggregate_evidence(
+    self,
+    contributing: Sequence[SignalResult],
+) -> tuple[Optional[EvidenceGrade], list[EvidenceSource]]:
+    """Stub for Phase 1. Returns (None, []).
+
+    Phase 3 supplies the real implementation: promotion-merge over the
+    contributing signals, with role-bound producer roles respected.
+    Kept here so aggregator subclasses can call it from Phase 1 without
+    knowing whether Phase 3 has landed.
+    """
+    return None, []
 ```
 
-Same aggregation logic applied across all groups, weighted by group weight in the three_layer_assessment.
+`signal_architecture/signals/__init__.py` — re-exports:
 
-### Referral integration
-
-Reuse the existing `score_conditions` REFER mechanism. Add a new condition class: `evidence_grade_floor`.
-
-**YAML shape (config-level, in three_layer_assessment or signal_registry entry):**
-
-```yaml
-evidence_grade_policy:
-  # Per-signal expected minimum grade
-  expected_grades:
-    sanctions_screening_result: STRUCTURED_ATTESTED
-    director_litigation_history: CORROBORATED
-    security_headers: OBSERVED
-    # signals not listed default to INFERRED (no floor)
-
-  # Composite-level referral trigger
-  composite_referral:
-    enabled: true
-    rules:
-      - condition: weighted_evidence_grade_below
-        threshold: 2.5
-        note: "Composite evidence basis is predominantly inferred"
-      - condition: high_weight_signal_below_expected
-        weight_threshold: 0.10  # signals contributing >10% weight
-        note: "High-weight signal {signal_id} has grade {actual} below expected {expected}"
+```python
+from .evidence import (
+    EvidenceGrade,
+    EvidenceSource,
+    EvidenceRoleViolation,
+    EVIDENCE_GRADES,
+    bump_evidence,
+    evidence_compare,
+    evidence_at_or_above,
+    evidence_rank,
+    default_cap_for,
+)
 ```
 
-**Resolution order** when grade triggers a referral:
-1. Per-signal violations (signal below its `expected_grade`) are collected.
-2. Composite-level rules are evaluated.
-3. If any fire, a referral is added via existing `REFER` machinery. **No tier override** — grade does not override tier. Grade-driven referrals are *informational referrals* that surface in the underwriter UI.
-4. Referral reasons populate `grade_referral_reasons` and feed into the standard referral output.
+## Steps
 
-**Critical:** Grade does **not** modify scores, tier bands, or pricing modifiers. Audit + referral only.
+### 1.1 — Create `evidence.py`
+**Files**: `signal_architecture/signals/evidence.py` (create).
+**Action**: Drop in the code from the "Types" block above verbatim.
+**Test**: `pytest tests/unit/test_evidence.py -v` — see test gates below.
 
-### Persistence
+### 1.2 — Extend `SignalResult`
+**Files**: `signal_architecture/signals/types.py` (modify).
+**Action**: Add the import + the six new `Optional` fields + the `__post_init__` extension shown above. Do **not** alter existing field order or types.
+**Test**: Construct a `SignalResult(signal_id="x")` with no evidence args; assert all six new fields are `None` / `[]`.
 
-New columns on the model version / signal result tables (exact table names TBC during Phase 9a discovery):
+### 1.3 — Wire `BaseExtractor` role binding
+**Files**: `signal_architecture/signals/base.py` (modify).
+**Action**: Add `MAX_EVIDENCE_GRADE`, `_EVIDENCE_ENFORCEMENT_MODE`, `_check_evidence_role()` to `BaseExtractor`. Add `aggregate_evidence()` stub to `BaseAggregator`.
+**Test**: `tests/unit/test_evidence_role_binding.py`.
 
-- `signal_results.evidence_grade` — SMALLINT NOT NULL
-- `signal_results.evidence_basis` — VARCHAR(500) NOT NULL
-- `signal_results.evidence_sources` — JSONB DEFAULT '[]'
-- `model_versions.composite_min_grade` — SMALLINT
-- `model_versions.composite_weighted_grade` — NUMERIC(3,2)
-- `model_versions.composite_grade_distribution` — JSONB
-- `model_versions.grade_referral_reasons` — JSONB DEFAULT '[]'
+### 1.4 — Re-export from package init
+**Files**: `signal_architecture/signals/__init__.py` (modify).
+**Action**: Add re-exports.
+**Test**: `python -c "from signal_architecture.signals import EvidenceGrade, bump_evidence, EvidenceSource"` — exits 0.
 
-New migration: increment from current latest. Backfill strategy in Phase 9f.
+### 1.5 — Author tests
+**Files**: `tests/unit/test_evidence.py`, `tests/unit/test_evidence_role_binding.py` (create).
+**Action**: Land the test code from "Test gates" below.
+**Test**: `pytest tests/unit/test_evidence.py tests/unit/test_evidence_role_binding.py -v` green.
 
-### API surface
+### 1.6 — Smoke-test integration
+**Files**: none modified.
+**Action**: Run the existing full pytest suite. Nothing should break — every change is additive and all new fields are `Optional` with defaults.
+**Test**: `pytest tests/ -x -q` — green.
 
-Existing signal/model-version endpoints must include the new fields in their response schemas. No new endpoints required for V1. Update Pydantic schemas in `infrastructure/api/schemas/` (or equivalent) to expose `evidence_grade`, `evidence_basis`, `composite_min_grade`, `composite_weighted_grade`, `grade_referral_reasons`.
+## Test gates (exact code)
 
-## Implementation Plan
+`tests/unit/test_evidence.py`:
 
-### Phase 9a: Discovery and Path Confirmation
+```python
+"""V7 Phase 1 — evidence taxonomy tests."""
+import pytest
+from datetime import datetime, timezone
 
-**Scope**: Before any code changes, confirm exact file paths in the current codebase.
+from signal_architecture.signals.evidence import (
+    EVIDENCE_GRADES,
+    EvidenceSource,
+    bump_evidence,
+    evidence_at_or_above,
+    evidence_compare,
+    evidence_rank,
+)
 
-**Actions:**
-1. Locate `SignalResult` dataclass — confirm path in `signal_architecture/signals/types.py`.
-2. Locate group aggregation object — find file in `signal_architecture/signals/aggregators/`.
-3. Locate composite score construction — likely `layers/risk/scorer.py` or `ModelScorer`.
-4. Locate existing referral wiring — `score_conditions` evaluator (likely in `layers/risk/` or `signal_architecture/signals/`).
-5. Locate latest DB migration number in `infrastructure/db/migrations/`.
-6. Locate API response schemas for signal results and model versions.
-7. Locate `seed_dsi_bench.py` signal-profile data structure.
 
-**Output**: A short discovery note at the top of the implementation PR confirming every path used in subsequent phases. **Do not skip this step.** Paths in this doc are illustrative — the codebase is authoritative.
+class TestRanking:
+    def test_grades_are_ordered(self):
+        ranks = [evidence_rank(g) for g in EVIDENCE_GRADES]
+        assert ranks == sorted(ranks)
+        assert len(set(ranks)) == len(ranks)
 
-### Phase 9b: Core Types and Enum
+    def test_compare(self):
+        assert evidence_compare("inferred", "observed") == -1
+        assert evidence_compare("structured_attested", "structured_attested") == 0
+        assert evidence_compare("behaviourally_validated", "corroborated") == 1
 
-**Scope**: Add `EvidenceGrade` enum and extend `SignalResult`.
+    def test_at_or_above(self):
+        assert evidence_at_or_above("structured_attested", "observed") is True
+        assert evidence_at_or_above("observed", "structured_attested") is False
+        assert evidence_at_or_above("observed", "observed") is True
 
-**Files to modify:**
-- `signal_architecture/signals/types.py`
 
-**Changes:**
-1. Add `EvidenceGrade(IntEnum)` with five values.
-2. Add `evidence_grade`, `evidence_basis`, `evidence_sources` fields to `SignalResult`.
-3. `evidence_grade` and `evidence_basis` are required (no defaults). `evidence_sources` defaults to empty list.
-4. Update `__post_init__` (or equivalent validation) to enforce `len(evidence_basis) <= 500` and `len(evidence_basis) > 0`.
+class TestBump:
+    def test_none_promotes_to_anything(self):
+        assert bump_evidence(None, "inferred") == "inferred"
+        assert bump_evidence(None, "structured_attested") == "structured_attested"
 
-**Tests:**
-- `tests/signal_architecture/test_types.py`: enum ordering, `SignalResult` validation (basis required, basis length cap, grade is IntEnum), grade comparison semantics.
+    def test_monotonic(self):
+        assert bump_evidence("inferred", "observed") == "observed"
+        assert bump_evidence("observed", "inferred") == "observed"  # never demotes
+        assert bump_evidence("corroborated", "corroborated") == "corroborated"
 
-**Backward compatibility**: This is a breaking change for `SignalResult` construction. Phase 9c handles every call site.
+    def test_rejects_unknown(self):
+        with pytest.raises(ValueError):
+            bump_evidence("inferred", "made_up")  # type: ignore[arg-type]
 
-### Phase 9c: Extractor Updates
+    def test_tolerates_garbage_current(self):
+        # Forward-compat: an unknown current value gets overwritten cleanly.
+        assert bump_evidence("legacy_value", "observed") == "observed"  # type: ignore[arg-type]
 
-**Scope**: Update every extractor (production and stub) to set `evidence_grade` and `evidence_basis`.
 
-**Files to modify:**
-- All files under `signal_architecture/signals/inference/` (or wherever extractors live)
-- All files under `signal_architecture/signals/extractors/`
-
-**Grade assignment rules (the default grade for each common extractor pattern):**
-
-| Pattern | Default grade |
-|-|-|
-| Stub extractor (returns canned value) | `INFERRED` |
-| Single HTTP fetch from entity-owned domain | `OBSERVED` |
-| Multi-source agreement (≥2 independent sources verified) | `CORROBORATED` |
-| Pull from credit rating agency / classification society / SEC EDGAR / Companies House / etc. | `STRUCTURED_ATTESTED` |
-| Time-series observation across ≥2 captures with ≥30 day separation | `BEHAVIOURALLY_VALIDATED` |
-
-**`evidence_basis` requirements:**
-- Must name the source(s) used (e.g. "S&P RatingsDirect", "https://example.com/security.txt fetched 2026-03-04").
-- Must state why this grade applies (e.g. "single authoritative structured source").
-- Max 500 chars. Be terse, not narrative.
-
-**Per-extractor work:**
-1. Read each extractor.
-2. Determine which grade pattern fits.
-3. Add `evidence_grade=` and `evidence_basis=` to the `SignalResult` construction.
-4. Populate `evidence_sources` with source identifiers (URLs, dataset names, API endpoints).
-5. If the extractor cannot articulate a basis, the signal is absence — handle via existing absence machinery, do not return a graded result.
-
-**Stub extractors specifically:** must use `INFERRED` and `evidence_basis="Stub extractor: deterministic synthetic value"`. This is intentional — it makes it trivial to see which signals are still on stubs in the audit trail. Aligns with `development/extractor_implementation_plan.md`.
-
-**Tests:**
-- For each extractor, add a unit test asserting it produces a valid grade and non-empty basis.
-- Add a single integration test that builds a full model cycle and asserts every produced `SignalResult` has a grade and basis.
-
-### Phase 9d: Group and Composite Aggregation
-
-**Scope**: Propagate grade to group and composite levels.
-
-**Files to modify:**
-- `signal_architecture/signals/aggregators/` — group aggregator
-- `layers/risk/scorer.py` (or wherever composite is built) — composite aggregation
-- Output dataclasses for both levels
-
-**Changes:**
-1. Add `min_evidence_grade`, `weighted_evidence_grade`, `grade_distribution` to group result object.
-2. Add `composite_min_grade`, `composite_weighted_grade`, `composite_grade_distribution` to composite/model-version object.
-3. Implement aggregation per the rules in the **Target State** section.
-4. Absence signals: excluded from `min` and weighted mean. The fact that absence exists is already a signal via existing absence handling — do not double-count.
-5. Empty group (all absence): `min_evidence_grade = None`, `weighted_evidence_grade = None`, `grade_distribution = {}`.
-
-**Tests:**
-- `tests/signal_architecture/test_aggregators.py`: grade aggregation with mixed grades, all-same grades, all-absence, weighted mean with non-uniform weights.
-- `tests/layers/risk/test_scorer.py`: composite grade aggregation across multiple groups with non-uniform group weights.
-
-### Phase 9e: YAML Schema and Referral Wiring
-
-**Scope**: Add `evidence_grade_policy` block to coverage configs and wire to existing referral machinery.
-
-**Files to modify:**
-- `coverages/master_config_layout.yaml` — bump to VERSION 2.4, add `evidence_grade_policy` schema
-- `infrastructure/builder/` — validation logic for the new schema block
-- Score conditions evaluator (whichever file handles `REFER` today) — add `evidence_grade_floor` and `weighted_evidence_grade_below` and `high_weight_signal_below_expected` conditions
-- All 76 existing configs under `coverages/<cov>/config.yaml` — add `evidence_grade_policy` block
-
-**YAML schema (to add to master_config_layout.yaml):**
-
-```yaml
-evidence_grade_policy:
-  expected_grades:           # map[signal_id -> grade_name]
-    type: dict
-    optional: true
-    description: "Per-signal expected minimum evidence grade. Signals not listed default to no floor."
-  composite_referral:
-    enabled: bool
-    rules:
-      - condition: enum[weighted_evidence_grade_below, high_weight_signal_below_expected, min_grade_below]
-        threshold: number  # context-dependent
-        weight_threshold: number  # only for high_weight_signal_below_expected
-        note: string
+class TestEvidenceSource:
+    def test_roundtrip(self):
+        s = EvidenceSource(
+            source_id="sec_edgar",
+            kind="register",
+            ref="https://www.sec.gov/cgi-bin/browse-edgar?...",
+            fetched_at=datetime.now(timezone.utc),
+            response_hash="abc123",
+            notes="10-K filing",
+        )
+        d = s.to_dict()
+        assert EvidenceSource.from_dict(d) == s
 ```
 
-**Config rollout to existing 76 configs:**
-1. Add a permissive default `evidence_grade_policy` block: `enabled: true`, `weighted_evidence_grade_below: 2.0` (very forgiving — referral only if average is essentially all inferred), no per-signal `expected_grades` set initially.
-2. This means **no calibration disruption in Phase 9e**. Per-signal expected grades and tighter thresholds are tuned per-coverage in Phase 9g.
+`tests/unit/test_evidence_role_binding.py`:
 
-**Referral evaluator changes:**
-- Implement three new condition types.
-- They emit referrals via the existing `REFER` path with `override=None` (no tier override).
-- Notes use `.format()` interpolation with `{signal_id}`, `{actual}`, `{expected}`.
+```python
+"""V7 Phase 1 — role-binding guard tests."""
+import pytest
+import warnings
 
-**Tests:**
-- `tests/coverages/test_master_config_layout.py`: schema validation
-- `tests/builder/`: validation of `evidence_grade_policy` block accepts/rejects correct/incorrect shapes
-- Referral evaluator tests covering each of the three condition types
+from signal_architecture.signals.base import BaseExtractor
+from signal_architecture.signals.evidence import EvidenceRoleViolation, assert_within_role
 
-### Phase 9f: Database Migration and Persistence
 
-**Scope**: Persist evidence-grade data.
+class _StubScraper(BaseExtractor):
+    MAX_EVIDENCE_GRADE = "observed"
+    _EVIDENCE_ENFORCEMENT_MODE = "raise"
+    SOURCE_NAME = "stub"
 
-**Files to add/modify:**
-- New migration file under `infrastructure/db/migrations/` (next sequential number)
-- ORM models for signal results and model versions in `infrastructure/models/`
+    def extract(self, entity_id, context=None, **kwargs):
+        raise NotImplementedError
 
-**Migration:**
-1. Add the columns listed in **Persistence** section to the relevant tables.
-2. New columns are NOT NULL for new rows. **Backfill strategy:** set existing rows to `evidence_grade=1 (INFERRED)` and `evidence_basis='Legacy: pre-Phase-9 record, grade unknown'`. This is honest — old records genuinely don't carry the new evidence basis.
-3. Make the backfill part of the migration `up()`.
 
-**ORM updates:**
-- Add fields to the relevant ORM model classes.
-- Update any serialisation methods.
+class _StubRegister(BaseExtractor):
+    MAX_EVIDENCE_GRADE = "structured_attested"
+    _EVIDENCE_ENFORCEMENT_MODE = "raise"
+    SOURCE_NAME = "stub"
 
-**Tests:**
-- Migration up/down test.
-- ORM round-trip test (write SignalResult with grade, read back, assert preservation).
+    def extract(self, entity_id, context=None, **kwargs):
+        raise NotImplementedError
 
-### Phase 9g: API and Frontend Exposure
 
-**Scope**: Make grade visible in API responses and the workbench UI.
+def test_assert_within_role_passes_at_or_below_cap():
+    assert_within_role("Foo", "structured_attested", "observed")  # no raise
+    assert_within_role("Foo", "structured_attested", "structured_attested")
 
-**Backend:**
-- Update Pydantic response schemas for signal results, group results, model versions.
-- Include all new fields in JSON output.
 
-**Frontend (Next.js workbench):**
-- Add an "Evidence Grade" column to the Signal Ledger view.
-- Add a "Composite Evidence" panel to the Summary tab showing `composite_weighted_grade` and `composite_min_grade` with the grade-distribution bar.
-- Surface `grade_referral_reasons` in the Referral Actions tab alongside existing referral reasons.
+def test_assert_within_role_raises_above_cap():
+    with pytest.raises(EvidenceRoleViolation):
+        assert_within_role("Foo", "observed", "corroborated")
 
-**Frontend files (illustrative; confirm in 9a):**
-- `frontend/src/components/submissions/Workbench/RiskTab.tsx` or signal ledger component
-- `frontend/src/components/submissions/Workbench/SummaryTab.tsx`
-- `frontend/src/components/submissions/Workbench/ReferralTab.tsx`
-- TypeScript types in `frontend/src/types/`
 
-**Tests:**
-- API contract tests asserting new fields appear
-- Frontend component tests for the new UI elements
+def test_extractor_check_in_raise_mode():
+    s = _StubScraper()
+    with pytest.raises(EvidenceRoleViolation):
+        s._check_evidence_role("corroborated")
+    s._check_evidence_role("observed")  # passes
 
-### Phase 9h: Seed Data and Calibration
 
-**Scope**: Ensure seed and calibration work end-to-end with the new field.
+def test_extractor_check_in_warn_mode():
+    class _Warner(BaseExtractor):
+        MAX_EVIDENCE_GRADE = "observed"
+        _EVIDENCE_ENFORCEMENT_MODE = "warn"
+        SOURCE_NAME = "stub"
 
-**Files to modify:**
-- `seed_dsi_bench.py` — every signal profile now needs a grade and basis. Use realistic grades per the patterns above. Make the seed data demonstrate every grade level across the dataset.
-- Run calibration harness for every coverage: `python -m layers.risk.calibration_harness <coverage>`. All 10 coverages, 76 configs must still pass <15% guardrail hit rate. Because Phase 9e default thresholds are permissive, this should pass without retuning — if it doesn't, investigate before tightening.
+        def extract(self, entity_id, context=None, **kwargs):
+            raise NotImplementedError
 
-**Validation steps (run in order):**
-1. `python coverages/doc_generator.py` — regenerate all logic.md files.
-2. `python development/project/assessments/scripts/assess_project.py` — full assessment must pass.
-3. `python -m layers.risk.calibration_harness <each coverage>` — all must pass.
-4. `python seed_dsi_bench.py` — seeds without error.
-5. `pytest tests/ -v` — full suite green.
+    w = _Warner()
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        w._check_evidence_role("corroborated")
+    assert any("MAX_EVIDENCE_GRADE" in str(x.message) for x in caught)
 
-### Phase 9i: Per-Coverage Grade Tuning (Deferred)
 
-**Scope**: Tune `expected_grades` and `composite_referral` thresholds per coverage and per configuration.
+def test_register_extractor_can_assert_structured_attested():
+    r = _StubRegister()
+    r._check_evidence_role("structured_attested")  # passes
+    with pytest.raises(EvidenceRoleViolation):
+        r._check_evidence_role("behaviourally_validated")
+```
 
-**Out of scope for the V1 phase implementation.** Phase 9 ships with permissive defaults that produce no calibration disruption. Per-coverage tuning is a separate piece of work owned by the coverage subject-matter pass — track as Phase 10 or as part of next coverage refresh.
+## Done when
 
-**Document this clearly in the PR description** so it isn't mistaken for incomplete work.
+- [ ] `signal_architecture/signals/evidence.py` exists; mypy `--follow-imports=silent` clean against it.
+- [ ] `SignalResult` carries six new `Optional` fields; all existing constructions still work without args.
+- [ ] `BaseExtractor.MAX_EVIDENCE_GRADE` and `_check_evidence_role()` present; defaults to `"behaviourally_validated"` for backward compat.
+- [ ] `pytest tests/unit/test_evidence.py tests/unit/test_evidence_role_binding.py -v` green.
+- [ ] `pytest tests/ -x -q` green — no existing test breaks.
+- [ ] `python -c "from signal_architecture.signals import EvidenceGrade, bump_evidence, EvidenceSource, EvidenceRoleViolation"` exits 0.
 
-## Constraints & Principles
+## Out of scope
 
-1. **No subjective adjustments**: Grade does not modify prices. It informs audit and triggers referrals via existing mechanisms only. (Foundational Principle alignment, Referral Methodology Section 2.)
-2. **YAML is truth**: Per-signal `expected_grades` and referral thresholds live in YAML. Never hardcode them in Python.
-3. **Confidence stays orthogonal**: Do not let grade leak into confidence calculations or vice versa. They are independent metrics.
-4. **Absence stays absence**: Absence signals do not have grades. The existing absence-as-signal mechanism handles them. Do not retrofit grade onto absence.
-5. **Auditability**: Every signal must trace value → grade → basis → sources. Every referral triggered by grade must trace back to the specific rule that fired.
-6. **Backward read compatibility**: API consumers that don't know about grade fields must still receive valid responses. Add fields, don't reshape existing ones.
-7. **Calibration must not break**: Phase 9e ships permissive thresholds. If any config's calibration hit rate moves materially, the threshold defaults are too tight — do not adjust calibration to compensate.
-8. **No new tier overrides**: Grade-driven referrals never override tier. They are informational referrals only.
-9. **Stub honesty**: Stub extractors must declare themselves stubs via `INFERRED` + explicit basis text. This is a feature, not a bug — it surfaces stub debt in audit output.
+- Modifying any extractor or inference function. → Phase 2.
+- Aggregation, group-level rollup. → Phase 3.
+- YAML, builder validation, referral wiring. → Phase 4.
+- DB columns, migrations, ORM. → Phase 5.
+- Pro/counter/tie-breaker *population* (fields exist, but nothing writes to them). → Phase 6.
+- Frontend, API schema exposure. → Phase 14.
 
-## Risks & Mitigations
+## Invariants that must hold at end of Phase 1
 
-| Risk | Mitigation |
-|-|-|
-| Extractor updates miss a signal, runtime error on construction | Pytest collection step that imports every inference module and asserts the test for grade/basis exists; CI gate |
-| Permissive defaults still cause referral spam on some coverage | Pilot with `composite_referral.enabled: false` initially; flip on per-coverage after observing distribution |
-| Confidence and grade get conflated by frontend or downstream consumers | Documentation in API schemas explicitly contrasts the two; UI labels them distinctly |
-| Backfill grade=INFERRED makes legacy records look uniformly weak | Acceptable and honest — they genuinely lack the new evidence basis. Underwriters can re-run cycle to get fresh grades |
-| Per-coverage tuning never gets done (Phase 9i stays deferred forever) | Track as concrete next-phase work; permissive defaults don't break anything if it slips |
-| Grade aggregation interacts badly with re-cycling after signal override (Referral Path A) | New model version recalculates grade alongside score — verify in Phase 9d tests |
-| Frontend changes risk regression of existing tabs | Frontend changes are additive (new column, new panel); existing tabs untouched |
-
-## Dependencies
-
-- Version 5 Phases 1-8 complete (all coverage expansions done, calibration passing).
-- Current latest DB migration committed and applied.
-- `seed_dsi_bench.py` currently passing end-to-end.
-- Calibration harness currently green across all 10 coverages / 76 configs.
-
-## Success Criteria
-
-1. `EvidenceGrade` enum present in `signal_architecture/signals/types.py` with five values, IntEnum ordering, all comparisons work.
-2. `SignalResult` requires `evidence_grade` and `evidence_basis` at construction. Construction without them raises.
-3. Every extractor in `signal_architecture/signals/inference/` and `signal_architecture/signals/extractors/` populates both fields.
-4. Group and composite aggregators produce `min_evidence_grade`, `weighted_evidence_grade`, `grade_distribution`.
-5. `evidence_grade_policy` block parseable in every config under `coverages/`, validated by builder.
-6. Three new score-condition types (`weighted_evidence_grade_below`, `high_weight_signal_below_expected`, `min_grade_below`) evaluate correctly and emit referrals via existing `REFER` machinery.
-7. Grade-driven referrals never modify tier or premium.
-8. New migration applies cleanly. Backfill sets legacy rows to `INFERRED` + standard basis text.
-9. API responses include all new fields. Frontend Signal Ledger shows grade column; Summary shows composite grade panel; Referral Actions surfaces grade-driven referrals.
-10. `seed_dsi_bench.py` runs successfully and demonstrates all five grade levels across the dataset.
-11. `python coverages/doc_generator.py` regenerates all logic.md without error.
-12. `python -m layers.risk.calibration_harness <coverage>` passes for every coverage; no config exceeds the 15% guardrail hit rate.
-13. Full `pytest tests/ -v` green.
-14. `python development/project/assessments/scripts/assess_project.py` passes.
-15. Phase 9i (per-coverage tuning) is explicitly tracked as follow-on work.
-
-## Reference: Where the Inspiration Came From
-
-Clearwing (`https://github.com/Lazarus-AI/clearwing`) uses an ordered evidence-level ladder in its source-hunter pipeline: `suspicion → static_corroboration → crash_reproduced → root_cause_explained → exploit_demonstrated → patch_validated`. Each rung requires stricter corroboration than the last. The structural idea — explicit, ordered, categorical evidence taxonomy distinct from confidence — transplants cleanly to DSI signal extraction. The Clearwing taxonomy itself is vulnerability-specific and is **not** what DSI adopts; DSI defines its own five-level taxonomy fit for risk-signal evidence. No Clearwing code is imported or vendored.
+1. Every `SignalResult` in the codebase can still be constructed without supplying evidence fields.
+2. `bump_evidence` never demotes.
+3. `EvidenceRoleViolation` is raise-mode for explicit subclasses and warn-mode for `BaseExtractor` itself. Phase 2 flips the default.
+4. No YAML, ORM, migration, or frontend file changes in this phase.
