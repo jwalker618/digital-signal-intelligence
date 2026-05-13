@@ -12,6 +12,8 @@ from datetime import datetime, timezone, timedelta
 from typing import Any, Dict, List, Optional
 from enum import Enum
 
+from .evidence import EvidenceGrade, EvidenceSource
+
 
 def utcnow() -> datetime:
     """Get current UTC time as timezone-aware datetime."""
@@ -217,14 +219,34 @@ class SignalResult:
     error: Optional[str] = None
     execution_time_ms: Optional[float] = None
     skipped: bool = False
-    
+
+    # --- V7 Phase 1: evidence fields. Optional during migration. ---
+    # Phase 2 populates them in every extractor.
+    # Phase 6 tightens `evidence_grade` and `evidence_basis` to required.
+    evidence_grade: Optional[EvidenceGrade] = None
+    evidence_basis: Optional[str] = None
+    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+
+    # Adversarial validation (populated by Phase 6).
+    evidence_pro: Optional[str] = None
+    evidence_counter: Optional[str] = None
+    evidence_tie_breaker: Optional[str] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
-        
+
         # Validate score range if present
         if self.score is not None and not (0 <= self.score <= 100):
             raise ValueError(f"Score must be between 0 and 100, got {self.score}")
+
+        # V7 Phase 1: validate evidence_basis length only if present.
+        if self.evidence_basis is not None and len(self.evidence_basis) > 500:
+            raise ValueError(
+                f"evidence_basis must be <=500 chars, got {len(self.evidence_basis)}"
+            )
+        if self.evidence_basis is not None and len(self.evidence_basis) == 0:
+            raise ValueError("evidence_basis must be non-empty if present")
     
     @property
     def is_valid(self) -> bool:

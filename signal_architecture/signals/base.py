@@ -10,7 +10,7 @@ consistent interfaces throughout the system.
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .types import (
     ExtractorResult,
@@ -18,6 +18,7 @@ from .types import (
     CategorizerResult,
     InferenceContext,
 )
+from .evidence import EvidenceGrade, EvidenceSource, assert_within_role
 
 
 def utcnow() -> datetime:
@@ -77,7 +78,7 @@ class BaseExtractor(ABC):
     SOURCE_NAME: str = "unknown"
     SOURCE_VERSION: str = "1.0"
     DEFAULT_TTL_SECONDS: int = 3600  # 1 hour default
-    
+
     # Common TTL presets (seconds)
     TTL_REALTIME = 60           # 1 minute - for live data
     TTL_FREQUENT = 300          # 5 minutes
@@ -85,7 +86,24 @@ class BaseExtractor(ABC):
     TTL_DAILY = 86400           # 24 hours
     TTL_WEEKLY = 604800         # 7 days
     TTL_MONTHLY = 2592000       # 30 days
-    
+
+    # V7 Phase 1: per-class evidence cap. Subclasses tighten as needed.
+    MAX_EVIDENCE_GRADE: "EvidenceGrade" = "behaviourally_validated"
+
+    # Phase 2 flips this to "raise" once every extractor has been migrated.
+    # Stays "warn" during migration so existing call sites that haven't been
+    # updated yet don't crash CI.
+    _EVIDENCE_ENFORCEMENT_MODE: str = "warn"
+
+    def _check_evidence_role(self, claimed: "EvidenceGrade") -> None:
+        """Call from any extractor that asserts a grade on a SignalResult."""
+        assert_within_role(
+            type(self).__name__,
+            self.MAX_EVIDENCE_GRADE,
+            claimed,
+            mode=self._EVIDENCE_ENFORCEMENT_MODE,  # type: ignore[arg-type]
+        )
+
     @abstractmethod
     def extract(
         self, 
@@ -259,16 +277,29 @@ class BaseAggregator(ABC):
     ) -> AggregatorResult:
         """
         Aggregate and normalize extractor results.
-        
+
         Args:
             extractor_results: List of ExtractorResult from one or more extractors
             **kwargs: Additional parameters for aggregation logic
-        
+
         Returns:
             AggregatorResult containing normalized data or error information
         """
         pass
-    
+
+    def aggregate_evidence(
+        self,
+        contributing: "Sequence[SignalResult]",
+    ) -> "Tuple[Optional[EvidenceGrade], List[EvidenceSource]]":
+        """V7 Phase 1 stub. Returns (None, []).
+
+        Phase 3 supplies the real implementation: promotion-merge over the
+        contributing signals, with role-bound producer roles respected.
+        Kept here so aggregator subclasses can call it from Phase 1 without
+        knowing whether Phase 3 has landed.
+        """
+        return None, []
+
     def _create_success_result(
         self,
         data: Dict[str, Any],
