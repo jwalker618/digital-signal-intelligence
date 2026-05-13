@@ -184,6 +184,22 @@ class ModelScorer:
             group_scores=group_scores,
         )
 
+        # V7 Phase 4: evaluate evidence_grade_policy. Appends grade-driven
+        # REFER conditions and their notes into the existing pipelines so
+        # downstream pricing/decision steps see them uniformly. Conditions
+        # are tagged condition_class="evidence_grade".
+        grade_conditions = self._evaluate_evidence_grade_policy(
+            signal_outputs=signal_outputs,
+            composite_min_grade=composite.min_grade,
+            composite_grade_distribution=dict(composite.distribution),
+            config=config,
+        )
+        if grade_conditions:
+            conditions = list(conditions) + grade_conditions
+            referrals = list(referrals) + [
+                f"[evidence_grade] {tc.note}" for tc in grade_conditions
+            ]
+
         return ScoringResult(
             signal_outputs=signal_outputs,
             categorical_outputs=categorical_outputs,
@@ -260,6 +276,150 @@ class ModelScorer:
 
         composite = composite_rollup(composite_inputs)
         return group_rollups, composite
+
+    def _evaluate_evidence_grade_policy(
+        self,
+        *,
+        signal_outputs: List[SignalOutput],
+        composite_min_grade: Optional[str],
+        composite_grade_distribution: Dict[str, float],
+        config: CoverageConfig,
+    ) -> List[TriggeredCondition]:
+        """V7 Phase 4 — evaluate evidence_grade_policy rules.
+
+        Returns a list of REFER conditions (condition_class='evidence_grade').
+        Never produces tier overrides or DECLINE — Decision D4. Quiet when
+        the policy is disabled or carries no rules.
+        """
+        policy = getattr(config, "evidence_grade_policy", None)
+        if policy is None or not policy.enabled:
+            return []
+        if not policy.composite_referral.enabled:
+            # Per-signal `expected_grades` violations still fire even if the
+            # composite-rules block is disabled.
+            pass
+
+        from signal_architecture.signals.evidence import evidence_rank
+
+        triggered: List[TriggeredCondition] = []
+
+        # ---- 1. Per-signal expected_grade violations -----------------------
+        expected = (policy.expected_grades.grades or {}) if policy.expected_grades else {}
+        by_signal_id = {o.signal_id: o for o in signal_outputs}
+        for signal_id, expected_grade in expected.items():
+            so = by_signal_id.get(signal_id)
+            if so is None or so.evidence_grade is None:
+                continue
+            try:
+                actual_rank = evidence_rank(so.evidence_grade)
+                expected_rank = evidence_rank(expected_grade)
+            except KeyError:
+                continue
+            if actual_rank < expected_rank:
+                triggered.append(TriggeredCondition(
+                    source_type="signal",
+                    source_id=signal_id,
+                    source_name=signal_id,
+                    score=None,
+                    response=None,
+                    action=ConditionAction.REFER,
+                    action_value=None,
+                    note=(
+                        f"Signal {signal_id} grade {so.evidence_grade} "
+                        f"below expected {expected_grade}"
+                    ),
+                    condition_class="evidence_grade",
+                ))
+
+        # ---- 2. Composite-level rules --------------------------------------
+        if policy.composite_referral.enabled:
+            for rule in policy.composite_referral.rules:
+                if rule.condition == "min_grade_below":
+                    if composite_min_grade is None:
+                        continue
+                    try:
+                        if evidence_rank(composite_min_grade) < evidence_rank(rule.threshold):
+                            triggered.append(TriggeredCondition(
+                                source_type="composite",
+                                source_id="composite",
+                                source_name="composite",
+                                score=None,
+                                response=None,
+                                action=ConditionAction.REFER,
+                                action_value=None,
+                                note=rule.note.format(
+                                    actual=composite_min_grade,
+                                    threshold=rule.threshold,
+                                ),
+                                condition_class="evidence_grade",
+                            ))
+                    except KeyError:
+                        continue
+
+                elif rule.condition == "distribution_share_below_grade":
+                    # Empty distribution = absence of graded signals.
+                    # Treat as "nothing to evaluate" rather than "0% at floor".
+                    if not composite_grade_distribution:
+                        continue
+                    try:
+                        floor_rank = evidence_rank(rule.floor)
+                    except KeyError:
+                        continue
+                    share = sum(
+                        w for g, w in composite_grade_distribution.items()
+                        if g in {"inferred", "observed", "corroborated",
+                                 "structured_attested", "behaviourally_validated"}
+                        and evidence_rank(g) >= floor_rank
+                    )
+                    if share < rule.share:
+                        triggered.append(TriggeredCondition(
+                            source_type="composite",
+                            source_id="composite",
+                            source_name="composite",
+                            score=None,
+                            response=None,
+                            action=ConditionAction.REFER,
+                            action_value=None,
+                            note=rule.note.format(
+                                actual_share=share,
+                                share=rule.share,
+                                floor=rule.floor,
+                            ),
+                            condition_class="evidence_grade",
+                        ))
+
+                elif rule.condition == "high_weight_signal_below_expected":
+                    # Total composite weight = sum of all signal weights.
+                    total_weight = sum(o.weight for o in signal_outputs) or 1.0
+                    for so in signal_outputs:
+                        composite_share = so.weight / total_weight
+                        if composite_share < rule.weight_threshold:
+                            continue
+                        expected_grade = expected.get(so.signal_id)
+                        if expected_grade is None or so.evidence_grade is None:
+                            continue
+                        try:
+                            if evidence_rank(so.evidence_grade) < evidence_rank(expected_grade):
+                                triggered.append(TriggeredCondition(
+                                    source_type="signal",
+                                    source_id=so.signal_id,
+                                    source_name=so.signal_id,
+                                    score=None,
+                                    response=None,
+                                    action=ConditionAction.REFER,
+                                    action_value=None,
+                                    note=rule.note.format(
+                                        signal_id=so.signal_id,
+                                        weight=composite_share,
+                                        actual=so.evidence_grade,
+                                        expected=expected_grade,
+                                    ),
+                                    condition_class="evidence_grade",
+                                ))
+                        except KeyError:
+                            continue
+
+        return triggered
 
     def _apply_audited_values(
         self,

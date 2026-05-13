@@ -11,7 +11,7 @@ These types connect the signal architecture to the pricing workflow.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from enum import Enum
 
 
@@ -809,6 +809,10 @@ class TriggeredCondition:
     action: ConditionAction
     action_value: Any
     note: str
+    # V7 Phase 4: classifies the condition family so downstream consumers
+    # (UI, audit, persistence) can distinguish grade-driven referrals from
+    # score-driven ones. "score" is the default for backward compat.
+    condition_class: Literal["score", "evidence_grade"] = "score"
 
 
 @dataclass
