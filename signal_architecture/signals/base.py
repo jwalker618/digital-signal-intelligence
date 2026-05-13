@@ -293,14 +293,56 @@ class BaseAggregator(ABC):
         self,
         contributing: "Sequence[SignalResult]",
     ) -> "Tuple[Optional[EvidenceGrade], List[EvidenceSource]]":
-        """V7 Phase 1 stub. Returns (None, []).
+        """V7 Phase 3 — return (max_grade, union_of_sources) across `contributing`.
 
-        Phase 3 supplies the real implementation: promotion-merge over the
-        contributing signals, with role-bound producer roles respected.
-        Kept here so aggregator subclasses can call it from Phase 1 without
-        knowing whether Phase 3 has landed.
+        Skips ungraded contributors (errors, failed_fetch absences). Use this
+        when an aggregator wants a quick (grade, sources) tuple without doing
+        a full promotion-merge — see `merge_contributing_signals` for the
+        value-aware promotion semantics.
         """
-        return None, []
+        from .evidence import bump_evidence as _bump  # local import: avoid cycles
+        max_grade: Optional[EvidenceGrade] = None
+        sources: List[EvidenceSource] = []
+        for sig in contributing:
+            if sig.evidence_grade is None:
+                continue
+            if getattr(sig, "absence_sub_type", None) == "absence_failed_fetch":
+                continue
+            if sig.error is not None or sig.skipped:
+                continue
+            max_grade = _bump(max_grade, sig.evidence_grade)
+            if sig.evidence_sources:
+                sources.extend(sig.evidence_sources)
+        return max_grade, sources
+
+    def merge_contributing_signals(
+        self,
+        signal_id: str,
+        contributors: "Sequence[SignalResult]",
+    ) -> "SignalResult":
+        """V7 Phase 3 — value-aware promotion-merge over multiple
+        SignalResults that share a signal_id.
+
+        Delegates to `signals.aggregators.grade_rollup.merge_contributors`.
+        Aggregator implementations call this whenever they receive >1 result
+        for the same signal_id.
+        """
+        from .aggregators.grade_rollup import merge_contributors  # local import
+        if not contributors:
+            raise ValueError(
+                f"merge_contributing_signals({signal_id!r}) called with 0 contributors"
+            )
+        merged = merge_contributors(contributors)
+        # Caller expects the signal_id we asked for. The merge helper preserves
+        # the contributor's signal_id, but if the caller batches contributors
+        # of varying signal_id (caller bug), we hard-fail here.
+        if merged.result.signal_id != signal_id:
+            raise ValueError(
+                f"merge_contributing_signals: contributor signal_id="
+                f"{merged.result.signal_id!r} does not match expected "
+                f"{signal_id!r}"
+            )
+        return merged.result
 
     def _create_success_result(
         self,

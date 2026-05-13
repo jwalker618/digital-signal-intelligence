@@ -78,6 +78,17 @@ def sanctions_check_routed(
         # Determine confidence based on sources
         confidence = data.get('confidence', 0.8)
 
+        # V7 Phase 3: zero-match across the queried sanctions registers is an
+        # authoritative-empty result, not absence-of-data. The signal is clean
+        # AND the source has authoritatively confirmed there's nothing to find.
+        total_matches = data.get('total_matches', 0)
+        sources_checked = data.get('sources_checked', []) or []
+        absence_sub_type = (
+            "absence_authoritative_empty"
+            if total_matches == 0 and not data.get('error') and len(sources_checked) > 0
+            else None
+        )
+
         return SignalResult(
             signal_id='sanctions_check_routed',
             score=data.get('score', 50),
@@ -101,6 +112,7 @@ def sanctions_check_routed(
             evidence_grade="structured_attested",
             evidence_basis="Multi-source routed signal across authoritative registers",
             evidence_sources=[],
+            absence_sub_type=absence_sub_type,
         )
 
     except Exception as e:
@@ -1016,6 +1028,11 @@ def breach_history_routed(
             else:
                 score = 80
 
+        # V7 Phase 3: HHS confirmed zero breaches is an authoritative-empty
+        # result — the source has affirmatively said "nothing here", not just
+        # "no data".
+        absence_sub_type = "absence_authoritative_empty" if not breaches else None
+
         return SignalResult(
             signal_id='breach_history_routed',
             score=score,
@@ -1034,6 +1051,7 @@ def breach_history_routed(
             evidence_grade="structured_attested",
             evidence_basis="Multi-source routed signal across authoritative registers",
             evidence_sources=[],
+            absence_sub_type=absence_sub_type,
         )
 
     except Exception as e:

@@ -725,6 +725,16 @@ class SignalOutput:
     execution_time_ms: float = 0.0
     error: Optional[str] = None
 
+    # V7 Phase 1/2/3: evidence-grade payload propagated from SignalResult.
+    # Optional throughout V7 — Phase 6 may eventually tighten via separate
+    # gate. The scorer's group/composite rollups consume these fields.
+    evidence_grade: Optional[str] = None       # EvidenceGrade literal
+    evidence_basis: Optional[str] = None
+    evidence_pro: Optional[str] = None
+    evidence_counter: Optional[str] = None
+    evidence_tie_breaker: Optional[str] = None
+    absence_sub_type: Optional[str] = None     # absence_failed_fetch | absence_authoritative_empty
+
 
 @dataclass
 class CategoricalOutput:
@@ -1000,6 +1010,25 @@ class ScoringResult:
     referrals: List[str] = field(default_factory=list)
     notes: List[str] = field(default_factory=list)
     modifiers: List[Dict[str, Any]] = field(default_factory=list)
+
+    # V7 Phase 3: composite + per-group evidence-grade rollups.
+    # `composite_min_grade` is the bottom rung among contributing signals;
+    # `composite_grade_distribution` is the weight share at each rung
+    # (these two are the primary fields used by Phase 4 referral rules).
+    # `composite_weighted_mean_grade` is display-only — never thresholded.
+    composite_min_grade: Optional[str] = None              # EvidenceGrade literal
+    composite_weighted_mean_grade: Optional[float] = None  # display only
+    composite_grade_distribution: Dict[str, float] = field(default_factory=dict)
+    group_grade_rollups: Dict[str, "GroupGradeRollup"] = field(default_factory=dict)
+
+
+@dataclass
+class GroupGradeRollup:
+    """V7 Phase 3 — per-group grade summary attached to ScoringResult."""
+    group_id: str
+    min_grade: Optional[str] = None              # EvidenceGrade literal
+    weighted_mean_grade: Optional[float] = None  # display only
+    distribution: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

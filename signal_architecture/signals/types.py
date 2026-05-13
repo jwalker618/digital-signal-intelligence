@@ -9,7 +9,7 @@ All components use these standardized types to ensure consistent data flow.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from enum import Enum
 
 from .evidence import EvidenceGrade, EvidenceSource
@@ -232,6 +232,14 @@ class SignalResult:
     evidence_counter: Optional[str] = None
     evidence_tie_breaker: Optional[str] = None
 
+    # V7 Phase 3: absence sub-typing.
+    #   - "absence_failed_fetch" — extractor could not retrieve a value;
+    #     excluded from rollups; carries no grade.
+    #   - "absence_authoritative_empty" — source authoritatively returned
+    #     "no record" (e.g. OFAC clean screen); INCLUDED in rollups; carries
+    #     the source's grade (typically structured_attested).
+    absence_sub_type: Optional[Literal["absence_failed_fetch", "absence_authoritative_empty"]] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
@@ -257,6 +265,36 @@ class SignalResult:
     def is_error(self) -> bool:
         """Check if result represents an error state."""
         return self.error is not None
+
+
+# ---------------------------------------------------------------------------
+# V7 Phase 3: group- and composite-level grade summaries.
+# ---------------------------------------------------------------------------
+
+@dataclass
+class GroupResult:
+    """Per-group rollup, including grade summary.
+
+    `min_grade` and `grade_distribution` are the primary fields used by
+    Phase 4 referral conditions. `weighted_mean_grade` is a display-only
+    scalar (cardinal arithmetic on an ordinal taxonomy is suspect — never
+    use this field for thresholding).
+    """
+    group_id: str
+    weighted_score: float
+    confidence: float
+    signal_results: Dict[str, SignalResult]
+    min_grade: Optional[str] = None              # EvidenceGrade literal
+    weighted_mean_grade: Optional[float] = None  # display only
+    grade_distribution: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class CompositeGradeRollup:
+    """Coverage-level grade summary."""
+    min_grade: Optional[str] = None
+    weighted_mean_grade: Optional[float] = None
+    grade_distribution: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

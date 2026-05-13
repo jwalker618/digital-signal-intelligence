@@ -38,6 +38,7 @@ from infrastructure.models.config_schema import (
 from .types import (
     SignalOutput,
     CategoricalOutput,
+    GroupGradeRollup,
     ScoringResult,
     TriggeredCondition,
     ConditionAction,
@@ -46,6 +47,11 @@ from .types import (
 
 # Import from signal architecture (root level)
 from signal_architecture.signals.types import InferenceContext, SignalResult
+from signal_architecture.signals.aggregators.grade_rollup import (
+    GradeRollup,
+    composite_rollup,
+    rollup,
+)
 from signal_architecture.signals.inference.registry import (
     get_inference_function,
     InferenceFunctionNotFoundError,
@@ -172,6 +178,12 @@ class ModelScorer:
             f"overrides={len(audited_values) if audited_values else 0}"
         )
 
+        # V7 Phase 3: per-group + composite evidence-grade rollups.
+        group_grade_rollups, composite = self._build_grade_rollups(
+            signal_outputs=signal_outputs,
+            group_scores=group_scores,
+        )
+
         return ScoringResult(
             signal_outputs=signal_outputs,
             categorical_outputs=categorical_outputs,
@@ -184,7 +196,70 @@ class ModelScorer:
             referrals=referrals,
             notes=notes,
             modifiers=signal_modifiers,
+            composite_min_grade=composite.min_grade,
+            composite_weighted_mean_grade=composite.weighted_mean_grade,
+            composite_grade_distribution=dict(composite.distribution),
+            group_grade_rollups=group_grade_rollups,
         )
+
+    def _build_grade_rollups(
+        self,
+        signal_outputs: List[SignalOutput],
+        group_scores: Dict[str, Any],
+    ) -> Tuple[Dict[str, GroupGradeRollup], GradeRollup]:
+        """V7 Phase 3 — per-group rollup + composite rollup.
+
+        Each `signal_outputs` item has its own `weight` (signal weight inside
+        the group). Group weight comes from `group_scores[group_id].risk_weight`
+        (or .get('risk_weight') if it's a dict). Signals without a grade are
+        excluded (handled by the rollup helper).
+        """
+        # Convert SignalOutput back to a SignalResult-shaped object the rollup
+        # helper can consume. We only need the fields the helper inspects.
+        # Lightweight shim: local function that yields (sig_like, weight).
+        from signal_architecture.signals.types import SignalResult as _SR
+
+        def _to_sig(o: SignalOutput) -> _SR:
+            return _SR(
+                signal_id=o.signal_id,
+                score=o.raw_score,
+                confidence=o.confidence,
+                evidence_grade=o.evidence_grade,
+                evidence_basis=o.evidence_basis,
+                evidence_pro=o.evidence_pro,
+                evidence_counter=o.evidence_counter,
+                evidence_tie_breaker=o.evidence_tie_breaker,
+                absence_sub_type=o.absence_sub_type,
+                error=o.error,
+            )
+
+        # Bucket signals by group
+        by_group: Dict[str, List[SignalOutput]] = {}
+        for o in signal_outputs:
+            by_group.setdefault(o.group_id, []).append(o)
+
+        group_rollups: Dict[str, GroupGradeRollup] = {}
+        composite_inputs: List[Tuple[GradeRollup, float]] = []
+
+        for group_id, items in by_group.items():
+            contributions = [(_to_sig(o), o.weight) for o in items]
+            r = rollup(contributions)
+            group_rollups[group_id] = GroupGradeRollup(
+                group_id=group_id,
+                min_grade=r.min_grade,
+                weighted_mean_grade=r.weighted_mean_grade,
+                distribution=dict(r.distribution),
+            )
+            # Composite weight: read group's risk_weight from group_scores
+            gs = group_scores.get(group_id) if group_scores else None
+            if isinstance(gs, dict):
+                gw = float(gs.get("risk_weight", 1.0))
+            else:
+                gw = float(getattr(gs, "risk_weight", 1.0)) if gs is not None else 1.0
+            composite_inputs.append((r, gw))
+
+        composite = composite_rollup(composite_inputs)
+        return group_rollups, composite
 
     def _apply_audited_values(
         self,
@@ -392,7 +467,9 @@ class ModelScorer:
 
             elapsed_ms = (time.time() - start_time) * 1000
 
-            # Convert SignalResult to SignalOutput
+            # Convert SignalResult to SignalOutput.
+            # V7 Phase 3: propagate evidence-grade fields so the scorer's
+            # group/composite rollups can read them downstream.
             return SignalOutput(
                 signal_id=signal.id,
                 signal_name=signal.id.replace("_", " ").title(),
@@ -406,6 +483,12 @@ class ModelScorer:
                 from_cache=result.metadata.get("from_cache", False) if result.metadata else False,
                 execution_time_ms=result.execution_time_ms or elapsed_ms,
                 error=result.error,
+                evidence_grade=result.evidence_grade,
+                evidence_basis=result.evidence_basis,
+                evidence_pro=result.evidence_pro,
+                evidence_counter=result.evidence_counter,
+                evidence_tie_breaker=result.evidence_tie_breaker,
+                absence_sub_type=result.absence_sub_type,
             )
 
         except Exception as e:
