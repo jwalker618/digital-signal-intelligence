@@ -1516,3 +1516,37 @@ class ComplianceAuditLog(Base):
         Index("ix_comp_audit_event_type", "event_type"),
         Index("ix_comp_audit_submission", "submission_id"),
     )
+
+
+class ValidatorVerdictRecord(Base):
+    """V7 Phase 6 — persisted output of the adversarial 4-axis validator.
+
+    One row per (model_version_id, signal_id). The associated
+    ValidatorVerdict dataclass lives in
+    signal_architecture/validation/types.py and is the public payload type.
+    """
+    __tablename__ = "validator_verdicts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    signal_id = Column(String(128), nullable=False)
+    mode = Column(String(16), nullable=False)   # quick_pass | full_pass
+    advance = Column(Boolean, nullable=False)
+    grade_before = Column(String(32), nullable=True)
+    grade_after = Column(String(32), nullable=True)
+    axes = Column(JSONB, default=dict)
+    pro_argument = Column(Text, nullable=False, default="")
+    counter_argument = Column(Text, nullable=False, default="")
+    tie_breaker = Column(Text, nullable=False, default="")
+    raw_response = Column(Text, nullable=True)
+    elapsed_seconds = Column(Float, nullable=True)
+    decided_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_validator_verdicts_advance", "advance"),
+        Index("ix_validator_verdicts_signal", "signal_id"),
+    )

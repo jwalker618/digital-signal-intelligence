@@ -936,6 +936,25 @@ class CompositeReferral(StrictModel):
     rules: List[CompositeGradeRule] = Field(default_factory=list)
 
 
+class ValidatorPolicy(StrictModel):
+    """V7 Phase 6 — adversarial-validator runtime knobs.
+
+    `full_pass_floor`        — grade at or above which full_pass (4 axes)
+                                runs; below this grade the quick_pass
+                                (2 axes) is used unless the signal_id is
+                                in expected_grades.
+    `advance_bump_cap`       — validator may bump up to this grade. The
+                                rule lifts a single rung at most, never
+                                above the cap.
+    `max_concurrent`         — concurrency budget for parallel validator
+                                calls per cycle.
+    """
+    enabled: bool = True
+    max_concurrent: int = Field(default=5, ge=1, le=50)
+    full_pass_floor: EvidenceGradeName = "corroborated"
+    advance_bump_cap: EvidenceGradeName = "structured_attested"
+
+
 class EvidenceGradePolicy(StrictModel):
     """V7 Phase 4 policy block governing grade-driven referrals.
 
@@ -947,6 +966,10 @@ class EvidenceGradePolicy(StrictModel):
     enabled: bool = True
     expected_grades: ExpectedGradeMap = Field(default_factory=ExpectedGradeMap)
     composite_referral: CompositeReferral = Field(default_factory=CompositeReferral)
+    # V7 Phase 6 — validator sub-policy. Default factory keeps every
+    # existing config valid: configs without a `validator:` sub-block
+    # parse correctly with the documented defaults.
+    validator: ValidatorPolicy = Field(default_factory=ValidatorPolicy)
 
 
 class CoverageConfig(StrictModel):

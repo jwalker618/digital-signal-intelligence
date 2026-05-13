@@ -69,12 +69,17 @@ class TestKnownTablesAndColumns:
         assert "composite_grade_distribution" in text
 
 
-class TestAlembicHeadIs023:
-    def test_head_revision_is_023(self):
+class TestAlembic023InChain:
+    """023 must exist in the revision chain. Later phases (024+) may
+    advance the head — what matters is that 023 is reachable and
+    parents 022."""
+
+    def test_023_present_with_correct_parent(self):
         from alembic.config import Config
         from alembic.script import ScriptDirectory
 
         cfg = Config("alembic.ini")
         sd = ScriptDirectory.from_config(cfg)
-        head = sd.get_current_head()
-        assert head == "023"
+        rev = sd.get_revision("023")
+        assert rev is not None
+        assert rev.down_revision == "022"
