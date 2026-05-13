@@ -442,6 +442,13 @@ class ModelVersionRecord(Base):
     signal_conditions = Column(JSONB, default=list)
     query_conditions = Column(JSONB, default=list)
 
+    # V7 Phase 5: composite evidence-grade rollup. min_grade + distribution
+    # are the primary fields used by Phase 4 referral rules; weighted_mean
+    # is display-only (never thresholded by production code).
+    composite_min_grade = Column(String(32), nullable=True)
+    composite_weighted_mean_grade = Column(Float, nullable=True)
+    composite_grade_distribution = Column(JSONB, default=dict)
+
     # Tier
     tier_overrides = Column(JSONB, default=list)
     score_based_tier = Column(Integer)
@@ -652,6 +659,17 @@ class ModelVersionSignal(Base):
     proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
     expectation_level = Column(String(50))         # UNIVERSAL / ENTERPRISE / etc.
     was_absent = Column(Boolean, default=False)    # Signal expected but not found
+
+    # V7 Phase 5 evidence-grade columns.
+    # Phase 6 alembic 024 will tighten evidence_grade to NOT NULL once the
+    # validator guarantees every committed row has a grade.
+    evidence_grade = Column(String(32), nullable=True)
+    evidence_basis = Column(String(500), nullable=True)
+    evidence_sources = Column(JSONB, default=list)
+    evidence_pro = Column(Text(), nullable=True)
+    evidence_counter = Column(Text(), nullable=True)
+    evidence_tie_breaker = Column(Text(), nullable=True)
+    absence_sub_type = Column(String(32), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -1384,3 +1402,117 @@ class WeConstraintHistory(Base):
         Index("ix_we_constraint_history_effective", "effective_from"),
     )
 
+
+
+# =============================================================================
+# V7 PHASE 5 — EVIDENCE-GRADE PERSISTENCE
+# =============================================================================
+
+class SignalHistory(Base):
+    """V7 Phase 5 — append-only longitudinal grade trail.
+
+    One row per (model_version_id, signal_id, recorded_at). Insert on every
+    cycle commit; never update or delete (the unique key enforces idempotency
+    within the same recorded_at instant).
+    """
+    __tablename__ = "signal_history"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    submission_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    signal_id = Column(String(128), nullable=False)
+    recorded_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    score = Column(Float, nullable=True)
+    category = Column(String(128), nullable=True)
+    confidence = Column(Float, nullable=True)
+    evidence_grade = Column(String(32), nullable=True)
+    evidence_basis = Column(String(500), nullable=True)
+    evidence_sources = Column(JSONB, default=list)
+    evidence_pro = Column(Text, nullable=True)
+    evidence_counter = Column(Text, nullable=True)
+    evidence_tie_breaker = Column(Text, nullable=True)
+    absence_sub_type = Column(String(32), nullable=True)
+    history_metadata = Column(JSONB, default=dict)
+
+    __table_args__ = (
+        Index("ix_signal_history_submission_signal", "submission_id", "signal_id"),
+        Index("ix_signal_history_recorded_at", "recorded_at"),
+    )
+
+
+class SignalCommitment(Base):
+    """V7 Phase 5 — SHA3-224 commitment over a canonical-JSON signal payload.
+
+    Recorded at four scopes:
+      full_payload     — entire SignalResult dict (auditor-grade)
+      value_and_grade  — minimum tuple to defend a quote later
+      pro_counter      — pro/counter/tie-breaker text only (Phase 6 writes)
+      composite        — composite_min_grade + distribution + referrals
+    """
+    __tablename__ = "signal_commitments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    # null for composite-scoped commitments
+    signal_id = Column(String(128), nullable=True)
+    scope = Column(String(32), nullable=False)
+    algorithm = Column(String(16), nullable=False, default="sha3_224")
+    digest = Column(String(64), nullable=False)
+    committed_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    canonical_keys = Column(JSONB, default=list)
+
+    __table_args__ = (
+        Index("ix_commitments_mv", "model_version_id"),
+    )
+
+
+class ComplianceAuditLog(Base):
+    """V7 Phase 5 — compliance-grade audit lane.
+
+    Distinct from operational `audit_logs`. Carries:
+      evidence_grade_referral_fired   (Phase 4)
+      evidence_grade_policy_evaluated (Phase 4)
+      validator_verdict               (Phase 6 — separate table for full payload)
+      calibration_sample_logged       (Phase 7)
+      commitment_committed            (Phase 5)
+      mechanism_stored                (Phase 12)
+    """
+    __tablename__ = "compliance_audit_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type = Column(String(64), nullable=False)
+    event_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    model_version_id = Column(UUID(as_uuid=True), nullable=True)
+    submission_id = Column(UUID(as_uuid=True), nullable=True)
+    signal_id = Column(String(128), nullable=True)
+    actor = Column(String(128), nullable=True)
+    payload = Column(JSONB, default=dict)
+
+    __table_args__ = (
+        Index("ix_comp_audit_event_type", "event_type"),
+        Index("ix_comp_audit_submission", "submission_id"),
+    )
