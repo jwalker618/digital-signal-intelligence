@@ -71,6 +71,9 @@ class FBIMostWantedExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "fbi_most_wanted"
     SOURCE_VERSION = "1.0"

@@ -56,6 +56,9 @@ class OFACSanctionsExtractor(ProductionExtractor):
             'list_date': str,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "ofac_sanctions"
     SOURCE_VERSION = "1.0"

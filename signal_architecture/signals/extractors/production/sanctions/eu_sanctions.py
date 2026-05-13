@@ -60,6 +60,9 @@ class EUSanctionsExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "eu_sanctions"
     SOURCE_VERSION = "1.0"

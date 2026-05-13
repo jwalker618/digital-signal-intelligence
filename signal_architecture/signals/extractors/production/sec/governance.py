@@ -73,6 +73,9 @@ class SECGovernanceExtractor(ProductionExtractor):
             'governance_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "sec_governance"
     SOURCE_VERSION = "1.0"

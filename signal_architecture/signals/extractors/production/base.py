@@ -147,6 +147,11 @@ class ProductionExtractor(BaseExtractor):
     RATE_LIMIT: float = 1.0  # Requests per second
     MAX_RETRIES: int = 3
 
+    # V7 Phase 2: production extractors that pull a single live source default
+    # to `observed`. Subclasses that hit authoritative registers (SEC, OFAC,
+    # Companies House, etc.) tighten to `structured_attested`.
+    MAX_EVIDENCE_GRADE = "observed"
+
     # Cost tier for documentation/budgeting
     COST_TIER: str = "free"  # 'free', 'low', 'medium', 'high'
 

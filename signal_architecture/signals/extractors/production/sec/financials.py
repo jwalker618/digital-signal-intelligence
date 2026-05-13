@@ -67,6 +67,9 @@ class SECFinancialsExtractor(ProductionExtractor):
             'latest_period': str,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "sec_edgar_financials"
     SOURCE_VERSION = "1.0"

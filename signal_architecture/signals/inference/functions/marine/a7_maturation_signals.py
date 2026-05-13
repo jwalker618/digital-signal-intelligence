@@ -28,6 +28,9 @@ def _neutral(signal_id: str, proxy_tier: str) -> SignalResult:
         score=50.0,
         confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5),
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis=f"Stub: neutral maturation scaffold (proxy_tier={proxy_tier})",
+        evidence_sources=[],
     )
 
 

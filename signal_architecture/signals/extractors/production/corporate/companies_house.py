@@ -83,6 +83,9 @@ class CompaniesHouseExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "companies_house"
     SOURCE_VERSION = "1.0"

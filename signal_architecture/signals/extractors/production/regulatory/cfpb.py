@@ -74,6 +74,9 @@ class CFPBComplaintsExtractor(ProductionExtractor):
             },
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "cfpb_complaints"
     SOURCE_VERSION = "1.0"

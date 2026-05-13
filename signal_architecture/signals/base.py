@@ -90,10 +90,12 @@ class BaseExtractor(ABC):
     # V7 Phase 1: per-class evidence cap. Subclasses tighten as needed.
     MAX_EVIDENCE_GRADE: "EvidenceGrade" = "behaviourally_validated"
 
-    # Phase 2 flips this to "raise" once every extractor has been migrated.
-    # Stays "warn" during migration so existing call sites that haven't been
-    # updated yet don't crash CI.
-    _EVIDENCE_ENFORCEMENT_MODE: str = "warn"
+    # V7 Phase 2: every extractor has now declared an explicit cap (either
+    # through inheritance from StubExtractor/ProductionExtractor or by
+    # overriding MAX_EVIDENCE_GRADE on the subclass). Enforcement flipped
+    # from "warn" to "raise": any extractor that asserts a grade above its
+    # declared cap fails loudly.
+    _EVIDENCE_ENFORCEMENT_MODE: str = "raise"
 
     def _check_evidence_role(self, claimed: "EvidenceGrade") -> None:
         """Call from any extractor that asserts a grade on a SignalResult."""

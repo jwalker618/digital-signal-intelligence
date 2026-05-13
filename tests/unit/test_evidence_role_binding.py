@@ -67,12 +67,13 @@ def test_register_extractor_can_assert_structured_attested():
         r._check_evidence_role("behaviourally_validated")
 
 
-def test_base_extractor_default_cap_permits_anything():
+def test_base_extractor_default_cap_permits_top_of_ladder():
     """Default cap on BaseExtractor is `behaviourally_validated` — top of ladder.
 
-    Combined with default _EVIDENCE_ENFORCEMENT_MODE='warn', any pre-V7
-    extractor that hasn't been migrated yet won't crash CI during the
-    Phase 2 batched migration.
+    V7 Phase 2 flipped _EVIDENCE_ENFORCEMENT_MODE from 'warn' to 'raise', so
+    any class still relying on the BaseExtractor default cap may assert any
+    grade up to (and including) the top rung. Beyond the top rung is
+    impossible because the type itself doesn't admit a higher value.
     """
     class _UnmigratedExtractor(BaseExtractor):
         SOURCE_NAME = "stub"
@@ -81,9 +82,9 @@ def test_base_extractor_default_cap_permits_anything():
             raise NotImplementedError
 
     e = _UnmigratedExtractor()
-    # In warn mode this just warns when above cap — but cap is the top
-    # rung so no warning fires for any grade.
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        e._check_evidence_role("behaviourally_validated")
-    assert len(caught) == 0
+    e._check_evidence_role("behaviourally_validated")  # no raise
+
+
+def test_phase2_enforcement_mode_is_raise():
+    """Phase 2 invariant — default enforcement is now `raise`."""
+    assert BaseExtractor._EVIDENCE_ENFORCEMENT_MODE == "raise"
