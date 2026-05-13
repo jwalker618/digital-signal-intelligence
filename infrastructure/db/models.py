@@ -1550,3 +1550,76 @@ class ValidatorVerdictRecord(Base):
         Index("ix_validator_verdicts_advance", "advance"),
         Index("ix_validator_verdicts_signal", "signal_id"),
     )
+
+
+class GradeCalibrationSample(Base):
+    """V7 Phase 7 — sampled (model_version_id, signal_id) pair queued for
+    human grade review.
+
+    State machine:  pending -> decided (or pending -> expired after 90d).
+
+    Unique on (model_version_id, signal_id) so the deterministic sampler is
+    idempotent within a single cycle.
+    """
+    __tablename__ = "grade_calibration_samples"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    submission_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    coverage = Column(String(64), nullable=False)
+    signal_id = Column(String(128), nullable=False)
+    signal_weight = Column(Float, nullable=False)
+    extractor_grade = Column(String(32), nullable=False)
+    validator_grade = Column(String(32), nullable=True)
+    sampling_reason = Column(String(64), nullable=False)
+    state = Column(String(16), nullable=False, default="pending")
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_calibration_state", "state"),
+        Index("ix_calibration_coverage_grade", "coverage", "extractor_grade"),
+    )
+
+
+class GradeCalibrationDecision(Base):
+    """V7 Phase 7 — human-grade verdict for a single calibration sample.
+
+    Match flags (exact_match_*, within_one_*) are pre-computed at write
+    time so the stats endpoint is cheap.
+    """
+    __tablename__ = "grade_calibration_decisions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sample_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("grade_calibration_samples.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    human_grade = Column(String(32), nullable=False)
+    note = Column(Text, nullable=True)
+    decided_by = Column(UUID(as_uuid=True), nullable=False)
+    decided_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    exact_match_extractor = Column(Boolean, nullable=False)
+    exact_match_validator = Column(Boolean, nullable=True)
+    within_one_extractor = Column(Boolean, nullable=False)
+
+    __table_args__ = (
+        Index(
+            "ix_calibration_decision_match",
+            "exact_match_extractor", "decided_at",
+        ),
+    )
