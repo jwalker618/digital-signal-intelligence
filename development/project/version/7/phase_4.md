@@ -6,7 +6,7 @@
 ## Blocks
 - Phase 5 (persistence stores referral reasons including grade-driven ones).
 - Phase 7 (calibration store wants per-signal `expected_grade` from policy).
-- Phase 14 (frontend exposes grade referrals).
+- Phase 15 (frontend exposes grade referrals).
 
 ## Scope
 
@@ -408,7 +408,7 @@ python -m layers.risk.calibration_harness aerospace cyber casualty fi fpr energy
 
 - Per-coverage tuning of `expected_grades` or `share` thresholds. → V8 (Phase 1 of next major).
 - Persisting grade referrals into the `referrals` ORM table. → Phase 5.
-- Frontend rendering of grade referrals. → Phase 14.
+- Frontend rendering of grade referrals. → Phase 15.
 - Adversarial validation. → Phase 6.
 
 ## Invariants

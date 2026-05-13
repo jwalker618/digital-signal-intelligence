@@ -7,7 +7,7 @@
 - Phase 10 (cluster + symptoms — mechanism source is a cluster, not a single hit).
 
 ## Blocks
-- Phase 14 (frontend exposes mechanism panels alongside grade).
+- Phase 15 (frontend exposes mechanism panels alongside grade).
 
 ## Scope
 
@@ -662,7 +662,7 @@ python -m layers.risk.calibration_harness fi cyber casualty
 
 - SQL-backed mechanism store. → V8.
 - Mechanism-driven *generation* of new signals (Phase 11 does within-cycle amplification; this phase is cross-cycle priors only).
-- Frontend mechanism inspector. → Phase 14.
+- Frontend mechanism inspector. → Phase 15.
 
 ## Invariants
 

@@ -5,11 +5,11 @@
 - Phase 6 (validator verdicts persisted; pro/counter/tie-breaker populated).
 
 ## Blocks
-- Phase 14 (UI surface for the calibration queue).
+- Phase 15 (UI surface for the calibration queue).
 
 ## Scope
 
-Build a longitudinal calibration store that records **three** grade verdicts per sampled signal — extractor, validator, human — and computes agreement rates over time. Target: 89% exact match (the Clearwing reference benchmark). Sampling strategy: every high-weight signal in a referred submission, plus a stratified random sample across grades. UI for human verdict capture is land via Phase 14; this phase lands the data plane, scheduler, and an API endpoint for the underwriter calibration queue.
+Build a longitudinal calibration store that records **three** grade verdicts per sampled signal — extractor, validator, human — and computes agreement rates over time. Target: 89% exact match (the Clearwing reference benchmark). Sampling strategy: every high-weight signal in a referred submission, plus a stratified random sample across grades. UI for human verdict capture lands via Phase 15; this phase lands the data plane, scheduler, and an API endpoint for the underwriter calibration queue.
 
 This is the trust-with-underwriters layer. Phase 6 measures machine-vs-machine; this phase measures machine-vs-human and drives the back-pressure loop.
 
@@ -22,7 +22,7 @@ This is the trust-with-underwriters layer. Phase 6 measures machine-vs-machine; 
 | D3 | Stratification | By (coverage, evidence_grade) — five quintiles per coverage so no rung is starved |
 | D4 | Metrics | `exact_match_rate` (extractor==human), `validator_match_rate` (validator==human), `within_one_rate` (|rank diff| ≤ 1). Computed over rolling 30-day and lifetime windows |
 | D5 | Storage | New `grade_calibration_samples` table, append-only, plus a `grade_calibration_decisions` table for human verdicts |
-| D6 | Human-verdict capture | API endpoint `POST /api/v1/calibration/decision` accepts `{sample_id, human_grade, note, decided_by}`. Phase 14 builds the UI |
+| D6 | Human-verdict capture | API endpoint `POST /api/v1/calibration/decision` accepts `{sample_id, human_grade, note, decided_by}`. Phase 15 builds the UI |
 | D7 | Idempotency | `(model_version_id, signal_id)` unique on `grade_calibration_samples` — re-sampling the same signal is a no-op |
 | D8 | Latency tolerance | Human verdict may arrive days after sample creation. Sample lifecycle states: `pending`, `decided`, `expired` (>90 days without decision) |
 | D9 | Drift alerts | If 30-day rolling `exact_match_rate` drops below `calibration_floor` (default 0.75), emit a `WeDriftAlert` (existing table from V6) with `category="grade_calibration_drift"` |
@@ -461,7 +461,7 @@ psql -c "SELECT sampling_reason, COUNT(*) FROM grade_calibration_samples GROUP B
 
 ## Out of scope
 
-- The underwriter UI for grade decisions. → Phase 14.
+- The underwriter UI for grade decisions. → Phase 15.
 - Targeted re-extraction of signals where human disagrees with extractor. → Phase 13 (delta-aware re-extraction picks this up as a trigger).
 - Auto-tuning `expected_grades` from calibration data. → V8.
 

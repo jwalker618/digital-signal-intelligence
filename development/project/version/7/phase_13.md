@@ -6,7 +6,7 @@
 - Phase 10 (cluster fact_class for trigger classification).
 
 ## Blocks
-- Phase 14 (workbench surfaces "what changed since last cycle").
+- Phase 15 (workbench surfaces "what changed since last cycle").
 
 ## Scope
 

@@ -7,7 +7,7 @@
 ## Blocks
 - Phase 4 (referral conditions key on group/composite rollup outputs).
 - Phase 5 (persistence stores rollup outputs).
-- Phase 14 (frontend renders rollup outputs).
+- Phase 15 (frontend renders rollup outputs).
 
 ## Scope
 
@@ -461,7 +461,7 @@ python scripts/lint_evidence_completeness.py  # still clean
 - YAML policy block, referral wiring. → Phase 4.
 - DB columns for rollups. → Phase 5.
 - Pro/counter populated by the validator. → Phase 6 (Phase 3 sets `evidence_counter` only on disagreement merges as a side-effect — that's fine).
-- Frontend rendering of distribution bar. → Phase 14.
+- Frontend rendering of distribution bar. → Phase 15.
 
 ## Invariants
 

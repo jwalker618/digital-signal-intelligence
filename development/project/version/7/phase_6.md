@@ -7,7 +7,7 @@
 
 ## Blocks
 - Phase 7 (calibration store reads validator verdicts).
-- Phase 14 (frontend renders pro/counter/tie-breaker).
+- Phase 15 (frontend renders pro/counter/tie-breaker).
 
 ## Scope
 
@@ -534,7 +534,7 @@ python -m layers.risk.calibration_harness aerospace cyber casualty fi fpr energy
 ## Out of scope
 
 - Calibration store (extractor / validator / human triple). → Phase 7.
-- Re-running the validator post-cycle on demand from the workbench. → Phase 14.
+- Re-running the validator post-cycle on demand from the workbench. → Phase 15.
 - Validator-driven promotions to `behaviourally_validated`. → out of V7; requires the reproducibility data from Phase 8 + multi-cycle history.
 
 ## Invariants

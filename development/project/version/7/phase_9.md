@@ -6,7 +6,7 @@
 
 ## Blocks
 - Phase 12 (mechanism memory clusters by primitive_type).
-- Phase 14 (frontend filters/groups by primitive).
+- Phase 15 (frontend filters/groups by primitive).
 
 ## Scope
 
@@ -330,7 +330,7 @@ psql -c "SELECT COUNT(*) FROM model_version_signals WHERE primitive_type IS NULL
 
 - Per-primitive referral rules. → V8 (extend `evidence_grade_policy`).
 - Cross-primitive correlation analysis. → out of V7.
-- Frontend primitive view. → Phase 14.
+- Frontend primitive view. → Phase 15.
 
 ## Invariants
 

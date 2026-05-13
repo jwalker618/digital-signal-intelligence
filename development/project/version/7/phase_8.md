@@ -6,7 +6,7 @@
 
 ## Blocks
 - Phase 12 (mechanism memory wants only `stable` signals as priors).
-- Phase 14 (frontend renders a reproducibility chip alongside grade).
+- Phase 15 (frontend renders a reproducibility chip alongside grade).
 
 ## Scope
 
@@ -33,7 +33,7 @@ This phase is the missing dispute-defence axis: a STRUCTURED_ATTESTED signal fro
 | D4 | Multi-pull triggering | Cycle-end hook. For 10% of high-grade (`structured_attested`+) signals per cycle, do an immediate second pull. For the remainder, schedule a deferred pull next cycle |
 | D5 | Aggregation | `(source_id, signal_id, entity_id)` triple. Rolling 90-day window. Classify by agreement rate |
 | D6 | Storage | New `signal_stability_observations` table. Lifetime: append-only. Aggregated view: `signal_stability_classification` materialised view refreshed daily |
-| D7 | API | None in this phase. Frontend surface comes via Phase 14 |
+| D7 | API | None in this phase. Frontend surface comes via Phase 15 |
 | D8 | Pricing impact | None. Reproducibility is audit-only |
 | D9 | Race-condition extractor flag | An extractor that flags itself as `race_sensitive=True` (e.g. live BGP, sentiment APIs) gets a relaxed 70% agreement threshold for `stable` instead of 90% (lifted from Clearwing `stability.py:43-44`) |
 | D10 | Trust cap by reproducibility | A signal's effective grade for *commitment* purposes (Phase 5) is unchanged, but downstream Phase 12 (mechanism memory) and Phase 14 (disclosure packet) filter out `flaky`/`unstable` from "high-confidence audit material" |

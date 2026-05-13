@@ -26,7 +26,8 @@
 | 11 | Variant loop | Within-cycle sibling-signal amplification |
 | 12 | Mechanism memory | Cross-cycle abstract pattern store |
 | 13 | Delta-aware re-extraction | Entity-event triggered signal-subset recompute |
-| 14 | API + frontend + disclosure packets | Pydantic exposure, Workbench UI, templated underwriter packets |
+| 14 | API + server-side disclosure packets | Pydantic exposure, templated underwriter packets, commitment-verify endpoint (backend only — touches no `frontend/**`) |
+| 15 | Frontend (Workbench + Calibration UI) | All `frontend/**` work, last. Deferred so it merges cleanly after the in-flight styling / generateweb prep |
 
 ## Scope (this phase)
 

@@ -5,7 +5,7 @@
 - Phase 10 (root-cause clusters exist; symptoms preserved).
 
 ## Blocks
-- Phase 14 (frontend surfaces variant-discovered signals distinctly).
+- Phase 15 (frontend surfaces variant-discovered signals distinctly).
 
 ## Scope
 
@@ -392,7 +392,7 @@ python -m layers.risk.calibration_harness fi cyber casualty
 - Variant generation for non-cluster signals. → out of V7.
 - Multi-hop. → forbidden.
 - Variant-specific score weighting. → forbidden by D6.
-- Frontend display of variant-discovered signals. → Phase 14.
+- Frontend display of variant-discovered signals. → Phase 15.
 
 ## Invariants
 
