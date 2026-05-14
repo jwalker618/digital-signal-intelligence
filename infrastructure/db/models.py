@@ -670,6 +670,8 @@ class ModelVersionSignal(Base):
     evidence_counter = Column(Text(), nullable=True)
     evidence_tie_breaker = Column(Text(), nullable=True)
     absence_sub_type = Column(String(32), nullable=True)
+    # V7 Phase 9: risk-primitive class (alembic 027).
+    primitive_type = Column(String(32), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -1444,6 +1446,8 @@ class SignalHistory(Base):
     evidence_counter = Column(Text, nullable=True)
     evidence_tie_breaker = Column(Text, nullable=True)
     absence_sub_type = Column(String(32), nullable=True)
+    # V7 Phase 9: risk-primitive class (alembic 027).
+    primitive_type = Column(String(32), nullable=True)
     history_metadata = Column(JSONB, default=dict)
 
     __table_args__ = (

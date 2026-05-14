@@ -269,12 +269,35 @@ class ThreeLayerAssessment(StrictModel):
 # SIGNAL REGISTRY - COMPLETE SIGNAL
 # =============================================================================
 
+PrimitiveTypeName = Literal[
+    "counterparty",
+    "regulatory",
+    "operational",
+    "financial",
+    "reputational",
+    "cyber",
+    "climate",
+    "governance",
+    "crime",
+    "physical_asset",
+    "behavioural",
+    "human_capital",
+    "unknown",
+]
+
+
 class SignalDefinition(StrictModel):
     """Complete signal definition in signal_registry."""
     id: str
     inference_utility_function: str
     proxy_tier: ProxyTier = ProxyTier.INFERRED_PROXY
     expectation_level: ExpectationLevel = ExpectationLevel.UNIVERSAL
+
+    # V7 Phase 9: optional explicit risk-primitive override. When set, it
+    # is level 1 of the classification cascade (beats the prefix map and
+    # the coverage default). Absent for almost all signals — the cascade
+    # resolves them deterministically.
+    primitive_type: Optional[PrimitiveTypeName] = None
 
     # Either categories OR three_layer_assessment
     categories: Optional[SignalCategories] = None

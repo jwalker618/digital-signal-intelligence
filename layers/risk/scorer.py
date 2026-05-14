@@ -52,6 +52,9 @@ from signal_architecture.signals.aggregators.grade_rollup import (
     composite_rollup,
     rollup,
 )
+from signal_architecture.signals.primitive_classification import (
+    classify as classify_primitive,
+)
 from signal_architecture.signals.inference.registry import (
     get_inference_function,
     InferenceFunctionNotFoundError,
@@ -184,6 +187,9 @@ class ModelScorer:
             group_scores=group_scores,
         )
 
+        # V7 Phase 9: per-risk-primitive grade rollups.
+        primitive_grade_rollups = self._build_primitive_rollups(signal_outputs)
+
         # V7 Phase 4: evaluate evidence_grade_policy. Appends grade-driven
         # REFER conditions and their notes into the existing pipelines so
         # downstream pricing/decision steps see them uniformly. Conditions
@@ -216,6 +222,7 @@ class ModelScorer:
             composite_weighted_mean_grade=composite.weighted_mean_grade,
             composite_grade_distribution=dict(composite.distribution),
             group_grade_rollups=group_grade_rollups,
+            primitive_grade_rollups=primitive_grade_rollups,
         )
 
     def _build_grade_rollups(
@@ -276,6 +283,48 @@ class ModelScorer:
 
         composite = composite_rollup(composite_inputs)
         return group_rollups, composite
+
+    def _build_primitive_rollups(
+        self,
+        signal_outputs: List[SignalOutput],
+    ) -> Dict[str, GroupGradeRollup]:
+        """V7 Phase 9 — per-risk-primitive grade rollups.
+
+        Buckets signals by primitive_type and rolls each bucket up with the
+        same `rollup()` helper used for groups. Keyed by primitive name;
+        each value's `group_id` is "primitive::<name>" so the shape stays
+        compatible with GroupGradeRollup consumers.
+        """
+        from signal_architecture.signals.types import SignalResult as _SR
+
+        def _to_sig(o: SignalOutput) -> _SR:
+            return _SR(
+                signal_id=o.signal_id,
+                score=o.raw_score,
+                confidence=o.confidence,
+                evidence_grade=o.evidence_grade,
+                evidence_basis=o.evidence_basis,
+                absence_sub_type=o.absence_sub_type,
+                error=o.error,
+            )
+
+        by_primitive: Dict[str, List[SignalOutput]] = {}
+        for o in signal_outputs:
+            key = o.primitive_type or "unknown"
+            by_primitive.setdefault(key, []).append(o)
+
+        out: Dict[str, GroupGradeRollup] = {}
+        for primitive, items in by_primitive.items():
+            r = rollup([(_to_sig(o), o.weight) for o in items])
+            if r.is_empty():
+                continue
+            out[primitive] = GroupGradeRollup(
+                group_id=f"primitive::{primitive}",
+                min_grade=r.min_grade,
+                weighted_mean_grade=r.weighted_mean_grade,
+                distribution=dict(r.distribution),
+            )
+        return out
 
     def _evaluate_evidence_grade_policy(
         self,
@@ -627,6 +676,17 @@ class ModelScorer:
 
             elapsed_ms = (time.time() - start_time) * 1000
 
+            # V7 Phase 9: classify the risk primitive via the deterministic
+            # cascade (YAML override -> prefix map -> coverage default).
+            # The LLM fallback (level 4) is intentionally NOT invoked here —
+            # the scorer's hot path stays LLM-free; lazy fallback for
+            # weight>=0.05 'unknown' signals is a route-layer concern.
+            primitive = classify_primitive(
+                signal_id=signal.id,
+                coverage=getattr(context, "coverage", "") or "",
+                yaml_override=getattr(signal, "primitive_type", None),
+            )
+
             # Convert SignalResult to SignalOutput.
             # V7 Phase 3: propagate evidence-grade fields so the scorer's
             # group/composite rollups can read them downstream.
@@ -649,6 +709,8 @@ class ModelScorer:
                 evidence_counter=result.evidence_counter,
                 evidence_tie_breaker=result.evidence_tie_breaker,
                 absence_sub_type=result.absence_sub_type,
+                reproducibility=result.reproducibility,
+                primitive_type=primitive,
             )
 
         except Exception as e:

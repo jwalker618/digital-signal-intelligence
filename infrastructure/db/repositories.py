@@ -543,7 +543,7 @@ class ModelVersionSignalRepository:
         proxy_tier: Optional[str] = None,
         expectation_level: Optional[str] = None,
         was_absent: bool = False,
-        # V7 Phase 5 evidence-grade fields. All optional; existing callers
+        # V7 Phase 5/9 evidence-grade fields. All optional; existing callers
         # remain compatible.
         evidence_grade: Optional[str] = None,
         evidence_basis: Optional[str] = None,
@@ -552,6 +552,7 @@ class ModelVersionSignalRepository:
         evidence_counter: Optional[str] = None,
         evidence_tie_breaker: Optional[str] = None,
         absence_sub_type: Optional[str] = None,
+        primitive_type: Optional[str] = None,
     ) -> ModelVersionSignal:
         """Record that a model version consumed a specific signal."""
         signal_id = await self._resolve_signal_id(signal_code)
@@ -574,6 +575,7 @@ class ModelVersionSignalRepository:
             evidence_counter=evidence_counter,
             evidence_tie_breaker=evidence_tie_breaker,
             absence_sub_type=absence_sub_type,
+            primitive_type=primitive_type,
         )
         self.db.add(record)
         await self.db.flush()
@@ -613,6 +615,7 @@ class ModelVersionSignalRepository:
                 evidence_counter=sig.get("evidence_counter"),
                 evidence_tie_breaker=sig.get("evidence_tie_breaker"),
                 absence_sub_type=sig.get("absence_sub_type"),
+                primitive_type=sig.get("primitive_type"),
             )
             records.append(record)
         self.db.add_all(records)

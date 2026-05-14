@@ -44,6 +44,7 @@ def persist_signal_evidence(
     mvs_row.evidence_counter = sig.evidence_counter
     mvs_row.evidence_tie_breaker = sig.evidence_tie_breaker
     mvs_row.absence_sub_type = sig.absence_sub_type
+    mvs_row.primitive_type = sig.primitive_type
 
     # Append immutable history row. (uq_signal_history_per_mv_signal on
     # (model_version_id, signal_id, recorded_at) prevents accidental
@@ -63,6 +64,7 @@ def persist_signal_evidence(
         evidence_counter=sig.evidence_counter,
         evidence_tie_breaker=sig.evidence_tie_breaker,
         absence_sub_type=sig.absence_sub_type,
+        primitive_type=sig.primitive_type,
         history_metadata=sig.metadata or {},
     ))
 

@@ -251,6 +251,13 @@ class SignalResult:
     # commit; None until then.
     reproducibility: Optional[Literal["stable", "flaky", "unstable", "unknown"]] = None
 
+    # V7 Phase 9: risk-primitive class — orthogonal to source taxonomy,
+    # coverage, and signal_id. Lets the platform group an entity's
+    # evidence-grade distribution by risk primitive. Set by the scorer
+    # at construction via the classification cascade; "unknown" only
+    # when every cascade level fails.
+    primitive_type: Optional[str] = None  # PrimitiveType literal
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}

@@ -734,6 +734,9 @@ class SignalOutput:
     evidence_counter: Optional[str] = None
     evidence_tie_breaker: Optional[str] = None
     absence_sub_type: Optional[str] = None     # absence_failed_fetch | absence_authoritative_empty
+    # V7 Phase 8/9: reproducibility class + risk-primitive class.
+    reproducibility: Optional[str] = None      # stable | flaky | unstable | unknown
+    primitive_type: Optional[str] = None       # PrimitiveType literal
 
 
 @dataclass
@@ -1024,6 +1027,11 @@ class ScoringResult:
     composite_weighted_mean_grade: Optional[float] = None  # display only
     composite_grade_distribution: Dict[str, float] = field(default_factory=dict)
     group_grade_rollups: Dict[str, "GroupGradeRollup"] = field(default_factory=dict)
+
+    # V7 Phase 9: per-risk-primitive grade rollups. Keyed by primitive_type;
+    # each value is a GroupGradeRollup (reusing the shape — group_id holds
+    # "primitive::<name>"). Lets the UI render a primitive heatmap.
+    primitive_grade_rollups: Dict[str, "GroupGradeRollup"] = field(default_factory=dict)
 
 
 @dataclass
