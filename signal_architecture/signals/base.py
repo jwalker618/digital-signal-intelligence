@@ -90,6 +90,12 @@ class BaseExtractor(ABC):
     # V7 Phase 1: per-class evidence cap. Subclasses tighten as needed.
     MAX_EVIDENCE_GRADE: "EvidenceGrade" = "behaviourally_validated"
 
+    # V7 Phase 8: race-sensitive extractors (live BGP, sentiment/social,
+    # anything whose value legitimately varies second-to-second) get a
+    # relaxed reproducibility threshold — 70% agreement counts as `stable`
+    # instead of the default 90%. Default False; subclasses opt in.
+    RACE_SENSITIVE: bool = False
+
     # V7 Phase 2: every extractor has now declared an explicit cap (either
     # through inheritance from StubExtractor/ProductionExtractor or by
     # overriding MAX_EVIDENCE_GRADE on the subclass). Enforcement flipped

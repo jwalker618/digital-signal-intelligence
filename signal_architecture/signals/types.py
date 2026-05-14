@@ -240,6 +240,17 @@ class SignalResult:
     #     the source's grade (typically structured_attested).
     absence_sub_type: Optional[Literal["absence_failed_fetch", "absence_authoritative_empty"]] = None
 
+    # V7 Phase 8: reproducibility class — a separate axis from both
+    # confidence ("we got a value") and grade ("what kind of evidence").
+    # Answers: "would the source agree with itself on a re-pull tomorrow?"
+    #   stable   — multi-pull verified or a known-stable register
+    #   flaky    — 50-90% agreement across pulls
+    #   unstable — <50% agreement, or value differs per replica
+    #   unknown  — single-pull, no reproducibility data yet
+    # Populated by the workflow from signal_stability_classification before
+    # commit; None until then.
+    reproducibility: Optional[Literal["stable", "flaky", "unstable", "unknown"]] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}

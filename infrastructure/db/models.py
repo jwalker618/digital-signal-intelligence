@@ -1623,3 +1623,34 @@ class GradeCalibrationDecision(Base):
             "exact_match_extractor", "decided_at",
         ),
     )
+
+
+class SignalStabilityObservation(Base):
+    """V7 Phase 8 — append-only reproducibility observation.
+
+    One row per pull of a (source_id, signal_id, entity_id) triple. The
+    materialised view `signal_stability_classification` (alembic 026)
+    aggregates the last 90 days of these into a reproducibility class.
+    """
+    __tablename__ = "signal_stability_observations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id = Column(String(64), nullable=False)
+    signal_id = Column(String(128), nullable=False)
+    entity_id = Column(String(128), nullable=False)
+    observed_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    value_score = Column(Float, nullable=True)
+    value_category = Column(String(128), nullable=True)
+    value_hash = Column(String(64), nullable=False)
+    response_hash = Column(String(64), nullable=True)
+    race_sensitive = Column(Boolean, nullable=False, default=False)
+
+    __table_args__ = (
+        Index(
+            "ix_stability_obs_triple",
+            "source_id", "signal_id", "entity_id",
+        ),
+        Index("ix_stability_obs_observed", "observed_at"),
+    )
