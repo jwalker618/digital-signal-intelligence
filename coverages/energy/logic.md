@@ -270,15 +270,37 @@ This configuration contains **49 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.18%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0018 = **$18,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$18,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $75,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.18% |
+| **Base Premium** | `tiv` × Base Rate | **$135,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($50,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band LARGE | 1.50 |
+| **Technical Premium** | Product of all factors | **$267,806** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.18% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $113,400 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $154,912 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $202,500 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $267,806 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $324,000 |
+
 
 ---
 
@@ -495,15 +517,37 @@ This configuration contains **35 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.16%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$1,000,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0016 = **$16,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$16,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $300,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.16% |
+| **Base Premium** | `tiv` × Base Rate | **$480,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($1,000,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$476,100** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.16% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $201,600 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $275,400 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $360,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $476,100 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $576,000 |
+
 
 ---
 
@@ -739,15 +783,37 @@ This configuration contains **49 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.2 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.4 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.16%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$50,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0016 = **$16,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$16,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.16% |
+| **Base Premium** | `tiv` × Base Rate | **$16,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($50,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.12 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.10 |
+| **Loss modifier** | Frequency × Severity, bounded [0.6, 1.5] | **1.23** |
+| Exposure modifier | Size band n/a | 1.00 |
+| **Technical Premium** | Product of all factors | **$19,712** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.16% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.75 | 0.80 | 0.60 | $9,600 |
+| 2 LOW | 0.88 | 0.90 | 0.79 | $12,672 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $16,000 |
+| 4 ELEVATED  *(example)* | 1.12 | 1.10 | 1.23 | $19,712 |
+| 5 HIGH | 1.30 | 1.30 | 1.50 | $24,000 |
+
 
 ---
 
@@ -985,15 +1051,37 @@ This configuration contains **52 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.55 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.22%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.22% |
+| **Base Premium** | `tiv` × Base Rate | **$22,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($100,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.6, 1.55] | **1.32** |
+| Exposure modifier | Size band n/a | 1.00 |
+| **Technical Premium** | Product of all factors | **$29,095** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.22% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.75 | 0.80 | 0.60 | $13,200 |
+| 2 LOW | 0.88 | 0.90 | 0.79 | $17,424 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $22,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $29,095 |
+| 5 HIGH | 1.35 | 1.35 | 1.55 | $34,100 |
+
 
 ---
 
@@ -1231,15 +1319,37 @@ This configuration contains **51 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.2 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.4 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.12%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0012 = **$12,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$12,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.12% |
+| **Base Premium** | `tiv` × Base Rate | **$12,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($100,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.12 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.10 |
+| **Loss modifier** | Frequency × Severity, bounded [0.6, 1.45] | **1.23** |
+| Exposure modifier | Size band n/a | 1.00 |
+| **Technical Premium** | Product of all factors | **$14,784** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.12% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.75 | 0.80 | 0.60 | $7,200 |
+| 2 LOW | 0.88 | 0.90 | 0.79 | $9,504 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $12,000 |
+| 4 ELEVATED  *(example)* | 1.12 | 1.10 | 1.23 | $14,784 |
+| 5 HIGH | 1.25 | 1.25 | 1.45 | $17,400 |
+
 
 ---
 
@@ -1476,15 +1586,37 @@ This configuration contains **49 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.22%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0022 = **$22,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$22,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.22% |
+| **Base Premium** | `tiv` × Base Rate | **$22,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($100,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.20 |
+| **Loss modifier** | Frequency × Severity, bounded [0.5, 1.6] | **1.38** |
+| Exposure modifier | Size band n/a | 1.00 |
+| **Technical Premium** | Product of all factors | **$30,360** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.22% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.75 | 0.52 | $11,550 |
+| 2 LOW | 0.85 | 0.88 | 0.75 | $16,456 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $22,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.20 | 1.38 | $30,360 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $35,200 |
+
 
 ---
 
@@ -1735,15 +1867,37 @@ This configuration contains **46 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.2%` on `tiv` purchases exactly a `$25,000,000` Limit with a `$250,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.002 = **$20,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$20,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.2% |
+| **Base Premium** | `tiv` × Base Rate | **$20,000** |
+| ILF relativity | Limit = anchor ($25,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($250,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$19,837** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.2% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $25,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $8,400 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $11,475 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $15,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $19,837 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $24,000 |
+
 
 ---
 
@@ -1989,15 +2143,37 @@ This configuration contains **45 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.13%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$500,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0013 = **$13,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$13,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.13% |
+| **Base Premium** | `tiv` × Base Rate | **$13,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($500,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$12,894** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.13% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $5,460 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $7,459 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $9,750 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $12,894 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $15,600 |
+
 
 ---
 
@@ -2252,15 +2428,37 @@ This configuration contains **52 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.27999999999999997%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0028 = **$28,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$28,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.28% |
+| **Base Premium** | `tiv` × Base Rate | **$28,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($100,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$27,772** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.28% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $11,760 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $16,065 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $21,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $27,772 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $33,600 |
+
 
 ---
 
@@ -2459,15 +2657,37 @@ This configuration contains **25 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.3 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.2%` on `tiv` purchases exactly a `$0` Limit with a `$0` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.002 = **$20,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$20,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $50,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.2% |
+| **Base Premium** | `tiv` × Base Rate | **$100,000** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($0) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.15 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.6] | **1.32** |
+| Exposure modifier | Size band LARGE | 1.30 |
+| **Technical Premium** | Product of all factors | **$171,925** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.2% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $72,800 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $99,450 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $130,000 |
+| 4 ELEVATED  *(example)* | 1.15 | 1.15 | 1.32 | $171,925 |
+| 5 HIGH | 1.35 | 1.40 | 1.60 | $208,000 |
+
 
 ---
 
@@ -2600,15 +2820,37 @@ This configuration contains **5 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.4 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.75 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.5499999999999999%` on `tiv` purchases exactly a `$10,000,000` Limit with a `$100,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0055 = **$55,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$55,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.55% |
+| **Base Premium** | `tiv` × Base Rate | **$55,000** |
+| ILF relativity | Limit = anchor ($10,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($100,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.25 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.30 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 1.8] | **1.62** |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$67,031** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.55% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $10,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $23,100 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $31,556 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $41,250 |
+| 4 ELEVATED  *(example)* | 1.25 | 1.30 | 1.62 | $67,031 |
+| 5 HIGH | 1.60 | 1.70 | 1.80 | $74,250 |
+
 
 ---
 
@@ -2733,13 +2975,35 @@ This configuration contains **5 signals** distributed as follows:
 | HIGHLY_COMPLEX | 61-80 | 1.5 | n/a |
 | EXTREMELY_COMPLEX | 81-100 | 1.9 | n/a |
 
-### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+### Theoretical Premium Calculation (Worked Example)
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Modifier × Exposure_Modifier*
 
-**1. The Pricing Anchor:** The Base Rate of `0.48%` on `tiv` purchases exactly a `$100,000,000` Limit with a `$500,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `tiv` = $10,000,000
-  - Base Premium = $10,000,000 × 0.0048 = **$48,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$48,000**.
+**Worked example — Risk Tier 3 (STANDARD), Loss Tier 4 (ELEVATED), requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `tiv` (rating basis) | Routing-valid assumption | $10,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.48% |
+| **Base Premium** | `tiv` × Base Rate | **$48,000** |
+| ILF relativity | Limit = anchor ($100,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($500,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 4 (ELEVATED) | 1.30 |
+| Loss severity modifier | Loss Tier 4 (ELEVATED) | 1.40 |
+| **Loss modifier** | Frequency × Severity, bounded [0.55, 2] | **1.82** |
+| Exposure modifier | Size band MICRO | 0.50 |
+| **Technical Premium** | Product of all factors | **$43,680** |
+
+*Basis vs. limit: `tiv` is the total insured value the rate is applied to — a Base Rate of 0.48% on `tiv` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $100,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00.*
+
+**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure modifier constant, the technical premium moves with the Loss tier:
+
+| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |
+|-----------|----------|---------|---------------|-------------------|
+| 1 VERY_LOW | 0.70 | 0.80 | 0.56 | $13,440 |
+| 2 LOW | 0.85 | 0.90 | 0.77 | $18,360 |
+| 3 MODERATE | 1.00 | 1.00 | 1.00 | $24,000 |
+| 4 ELEVATED  *(example)* | 1.30 | 1.40 | 1.82 | $43,680 |
+| 5 HIGH | 1.70 | 1.90 | 2.00 | $48,000 |
+
 
