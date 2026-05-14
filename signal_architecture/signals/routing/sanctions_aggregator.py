@@ -500,3 +500,88 @@ class SanctionsAggregator(MultiSourceAggregator[SanctionsResult]):
             warnings=warnings,
             failed_sources=failed_sources,
         )
+
+    # ------------------------------------------------------------------ #
+    # V7 Phase 10 — root-cause clustering                                #
+    # ------------------------------------------------------------------ #
+
+    def cluster_observations(
+        self,
+        all_matches: List[SanctionsMatch],
+        entity_id: str,
+    ) -> tuple[List[SanctionsMatch], List[dict]]:
+        """Collapse SanctionsMatch observations that report the SAME SDN
+        listing into one representative match per cluster.
+
+        Three sources reporting the same OFAC listing -> one match, not
+        three. Two genuinely distinct enforcement actions -> two matches.
+
+        The representative match is the highest-scoring contributor; its
+        raw_data is tagged with `cluster_id` and `symptoms` (every
+        contributing match's payload) so nothing is lost from the audit
+        trail. Returns (reduced_matches, cluster_summaries).
+        """
+        from .dedup_keys import canonical_entity_name, canonical_identifier
+        from .root_cause_cluster import (
+            ContributingObservation,
+            cluster_deterministic,
+        )
+
+        if not all_matches:
+            return all_matches, []
+
+        observations: list[ContributingObservation] = []
+        for m in all_matches:
+            # Authoritative ID: the source's own listing ID, when present.
+            det_key = (
+                canonical_identifier(m.source_id) if m.source_id else None
+            ) or None
+            observations.append(ContributingObservation(
+                source_id=m.source,
+                canonical_entity_ref=canonical_entity_name(m.matched_name),
+                event_date=(
+                    datetime(m.designation_date.year, m.designation_date.month,
+                             m.designation_date.day)
+                    if m.designation_date else None
+                ),
+                fact_class="sdn_listing",
+                deterministic_key=det_key,
+                payload={
+                    "matched_name": m.matched_name,
+                    "match_type": getattr(m.match_type, "value", str(m.match_type)),
+                    "match_score": m.match_score,
+                    "source": m.source,
+                    "source_list": m.source_list,
+                    "source_id": m.source_id,
+                    "program": getattr(m.program, "value", str(m.program)),
+                },
+                weight=float(m.match_score or 0.0),
+            ))
+
+        clusters = cluster_deterministic(observations)
+
+        # Index matches by identity so we can pick a cluster representative.
+        # Each observation maps back to its source match by position.
+        match_by_obs_id = {id(o): all_matches[i] for i, o in enumerate(observations)}
+
+        reduced: list[SanctionsMatch] = []
+        summaries: list[dict] = []
+        for cluster in clusters:
+            # Representative = highest match_score contributor.
+            rep_obs = max(cluster.contributors, key=lambda o: o.weight)
+            rep_match = match_by_obs_id[id(rep_obs)]
+            # Tag the representative's raw_data with cluster metadata. Keep
+            # the original raw_data under "_original" for full traceability.
+            rep_match.raw_data = {
+                **(rep_match.raw_data or {}),
+                "cluster_id": cluster.cluster_id,
+                "fact_class": cluster.fact_class,
+                "cluster_contributor_count": cluster.contributor_count,
+                "cluster_source_ids": cluster.source_ids,
+                "symptoms": cluster.symptoms,
+                "cluster_deterministic": cluster.deterministic,
+            }
+            reduced.append(rep_match)
+            summaries.append(cluster.to_summary())
+
+        return reduced, summaries

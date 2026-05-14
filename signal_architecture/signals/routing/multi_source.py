@@ -267,6 +267,12 @@ class MultiSourceResult(Generic[T]):
     errors: List[str] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
 
+    # V7 Phase 10: root-cause cluster summaries. One dict per distinct
+    # event the aggregator collapsed observations into. Empty for
+    # aggregators that don't override cluster_observations(). The route
+    # layer writes one EVENT_ROOT_CAUSE_CLUSTER audit row per summary.
+    cluster_summaries: List[dict] = field(default_factory=list)
+
 
 class MultiSourceAggregator(ABC, Generic[T]):
     """
@@ -386,6 +392,28 @@ class MultiSourceAggregator(ABC, Generic[T]):
         if not self.use_cache:
             return None
         return self.cache or get_routing_cache()
+
+    def cluster_observations(
+        self,
+        all_matches: List[Any],
+        entity_id: str,
+    ) -> tuple[List[Any], List[dict]]:
+        """V7 Phase 10 — root-cause clustering hook.
+
+        Default: no-op — returns ``(all_matches, [])`` unchanged. Subclasses
+        that aggregate from multiple sources reporting the SAME underlying
+        event (sanctions, corporate registry) override this to:
+          1. convert matches to ContributingObservation
+          2. cluster_deterministic() / maybe_llm_merge()
+          3. reduce each cluster to one representative match, tagging the
+             rep's raw_data with cluster_id + the full symptom list
+          4. return (reduced_matches, [cluster.to_summary() for ...])
+
+        The cluster summaries are returned so the route layer can write
+        EVENT_ROOT_CAUSE_CLUSTER compliance-audit rows (the aggregator
+        itself has no DB session).
+        """
+        return all_matches, []
 
     def _call_extractor(
         self,
@@ -567,6 +595,12 @@ class MultiSourceAggregator(ABC, Generic[T]):
                 logger.error(f"Failed to normalize {ext_name} result: {e}")
                 warnings.append(f"Normalization failed for {ext_name}: {e}")
 
+        # V7 Phase 10: root-cause clustering. Collapses observations that
+        # report the SAME underlying event (via the subclass override);
+        # default is a no-op. `cluster_summaries` is surfaced for the route
+        # layer to write EVENT_ROOT_CAUSE_CLUSTER audit rows.
+        all_matches, cluster_summaries = self.cluster_observations(all_matches, entity_id)
+
         # Create unified result
         total_time_ms = (time.time() - start_time) * 1000
         unified_result = self.create_unified_result(
@@ -589,6 +623,7 @@ class MultiSourceAggregator(ABC, Generic[T]):
             extractor_results=extractor_results,
             errors=[w for w in warnings if "failed" in w.lower() or "error" in w.lower()],
             warnings=[w for w in warnings if "failed" not in w.lower() and "error" not in w.lower()],
+            cluster_summaries=cluster_summaries,
         )
 
 

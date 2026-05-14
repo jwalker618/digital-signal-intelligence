@@ -537,3 +537,98 @@ class CorporateAggregator(MultiSourceAggregator[CorporateResult]):
             warnings=warnings,
             failed_sources=failed_sources,
         )
+
+    # ------------------------------------------------------------------ #
+    # V7 Phase 10 — root-cause clustering                                #
+    # ------------------------------------------------------------------ #
+
+    def cluster_observations(
+        self,
+        all_matches: List[CorporateRecord],
+        entity_id: str,
+    ) -> tuple[List[CorporateRecord], List[dict]]:
+        """Collapse CorporateRecord observations that describe the SAME
+        registered entity into one representative record per cluster.
+
+        Companies House + OpenCorporates + GLEIF all describing the same
+        company -> one record. Two genuinely distinct registrations (a UK
+        entity and a separate Delaware entity with the same trading name)
+        -> two records.
+
+        Cluster-key precedence:
+          1. LEI                    (globally unique authoritative ID)
+          2. registration_number    (jurisdiction-scoped authoritative ID)
+          3. fact_class + canonical name + incorporation-date bucket
+
+        The representative record is the one with the most populated
+        fields; its raw_data carries cluster_id + symptoms.
+        """
+        from .dedup_keys import canonical_entity_name, canonical_identifier
+        from .root_cause_cluster import (
+            ContributingObservation,
+            cluster_deterministic,
+        )
+
+        if not all_matches:
+            return all_matches, []
+
+        observations: list[ContributingObservation] = []
+        for r in all_matches:
+            det_key = None
+            if r.lei:
+                det_key = f"lei:{canonical_identifier(r.lei)}"
+            elif r.registration_number:
+                det_key = (
+                    f"reg:{r.jurisdiction or ''}:"
+                    f"{canonical_identifier(r.registration_number)}"
+                )
+            observations.append(ContributingObservation(
+                source_id=r.source,
+                canonical_entity_ref=canonical_entity_name(r.name),
+                event_date=(
+                    datetime(r.incorporation_date.year, r.incorporation_date.month,
+                             r.incorporation_date.day)
+                    if r.incorporation_date else None
+                ),
+                fact_class="corporate_record",
+                deterministic_key=det_key,
+                payload={
+                    "name": r.name,
+                    "jurisdiction": r.jurisdiction,
+                    "registration_number": r.registration_number,
+                    "lei": r.lei,
+                    "source": r.source,
+                    "status": r.status,
+                },
+                # Weight by field completeness so the richest record wins
+                # the representative slot.
+                weight=float(
+                    sum(1 for v in (
+                        r.registration_number, r.lei, r.status,
+                        r.incorporation_date, r.company_type,
+                        r.registered_address,
+                    ) if v)
+                ),
+            ))
+
+        clusters = cluster_deterministic(observations)
+        record_by_obs_id = {id(o): all_matches[i] for i, o in enumerate(observations)}
+
+        reduced: list[CorporateRecord] = []
+        summaries: list[dict] = []
+        for cluster in clusters:
+            rep_obs = max(cluster.contributors, key=lambda o: o.weight)
+            rep_record = record_by_obs_id[id(rep_obs)]
+            rep_record.raw_data = {
+                **(rep_record.raw_data or {}),
+                "cluster_id": cluster.cluster_id,
+                "fact_class": cluster.fact_class,
+                "cluster_contributor_count": cluster.contributor_count,
+                "cluster_source_ids": cluster.source_ids,
+                "symptoms": cluster.symptoms,
+                "cluster_deterministic": cluster.deterministic,
+            }
+            reduced.append(rep_record)
+            summaries.append(cluster.to_summary())
+
+        return reduced, summaries
