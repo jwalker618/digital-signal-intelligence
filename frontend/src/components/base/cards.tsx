@@ -13,11 +13,9 @@ import {
 } from "@/components/submissions/Workbench/content/sections";
 
 import {
-  Decision,
-  SUBMISSION_DECISION,
-} from "@/lib/statusPalette";
-
-export type { Decision };
+  getPalette,
+  KEYTERM,
+} from "@/lib/keytermPalette";
 
 /* ────────────────────────────────────────────────────────────────────────── */
 /*  CardGrid — the dashboard responsive grid wrapper.                         */
@@ -145,7 +143,7 @@ export const PopupCard = ({
  * lucideIcon: Override the default shield icon chosen from `decision`.
  */
 export interface SubmissionHeaderCardProps extends BaseCardProps {
-  decision: Decision;
+  decision: string;
   subtitle?: React.ReactNode;
   headerRight?: React.ReactNode;
   children?: React.ReactNode;
@@ -161,7 +159,8 @@ export const SubmissionHeaderCard = ({
   lucideIcon,
   spanClass = "",
 }: SubmissionHeaderCardProps) => {
-  const Icon = lucideIcon ?? SUBMISSION_DECISION[decision].icon;
+  const { color, icon } = getPalette(KEYTERM, decision);
+  const Icon = lucideIcon ?? icon;
 
   return (
     <div className={`
@@ -177,14 +176,14 @@ export const SubmissionHeaderCard = ({
         rounded-xl
         pt-generate-pad pb-generate-pad
         border-b-3 border-generate-contrast-background
-        ${SUBMISSION_DECISION[decision].bg}
+        bg-${color}
         shadow-sm
       `}
     >
       {/* Top row — decision label + caller-supplied status info */}
       <div className="flex items-center justify-between pb-generate-pad border-b border-generate-outline/50">
         <div className="flex gap-4 pl-generate-pad">
-          <Icon className="largeicon" />
+          {Icon && <Icon className="generate-app-icon scale-150" />}
           <div>
             <span className="text-2xl font-bold uppercase tracking-wider text-generate-selected">
               {title}

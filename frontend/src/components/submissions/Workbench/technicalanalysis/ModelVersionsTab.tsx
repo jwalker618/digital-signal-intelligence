@@ -9,8 +9,8 @@ import {
   LucideIcon,
 } from "lucide-react";
 
-import { StatusPill } from "@/components/base/content/primatives";
-import { DECISION_PALETTE } from "@/lib/statusPalette";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
+import { KEYTERM, getPalette } from "@/lib/keytermPalette";
 
 const DECISION_ICON: Record<string, LucideIcon> = {
   approve: ShieldCheck,
@@ -194,16 +194,9 @@ export default function ModelVersionsTab() {
                             )}
                           </div>
                         </div>
-                        {DECISION_PALETTE[decision] && (
+                        {KEYTERM[decision] && (
                           <div>
-                            <StatusPill
-                              palette={DECISION_PALETTE}
-                              status={decision}
-                              lucideIcon={DECISION_ICON[decision]}
-                              size="md"
-                            >
-                              {decision}
-                            </StatusPill>
+                            <SubmissionStatusPill decision={decision}></SubmissionStatusPill>
                           </div>
                         )}
                       </div>

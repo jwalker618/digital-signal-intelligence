@@ -31,17 +31,28 @@ export const NavItem = ({
   onClick,
   className = "",
 }: NavItemProps) => (
-  <button
-    onClick={onClick}
-    className={`flex items-center gap-3 w-full text-left py-2 px-2 rounded-md text-sm ${
-      isActive
-        ? "text-generate-text-input bg-generate-dark-input font-bold"
-        : "text-generate-text-placeholder hover:text-generate-text-input"
-    } ${className}`}
-  >
-    <Icon className="generate-app-icon" />
-    <span className="truncate">{label}</span>
-  </button>
+  <div className="group">
+    
+    <button
+      onClick={onClick}
+      className={`flex items-center w-full text-left rounded-md text-sm gap-generate-pad${
+        isActive
+          ? "text-generate-text-input bg-generate-dark-input font-bold"
+          : "text-generate-text-placeholder group-hover:text-generate-text-input"
+      } ${className}`}
+    >
+      
+      <Icon 
+      className={`generate-app-icon${
+        isActive
+          ? "text-generate-text-input bg-generate-dark-input font-bold"
+          : "text-generate-text-placeholder group-hover:text-generate-text-input"
+      } ${className}`}
+      />
+      
+      <span className="truncate pl-3 pt-1.5 pb-1.5">{label}</span>
+    </button>
+  </div>
 );
 
 /* ── NavGroup ────────────────────────────────────────────────────────── */
@@ -66,28 +77,25 @@ export const NavGroup = ({
 }: NavGroupProps) => (
   <li>
     
-    <button
-      onClick={onToggle}
-      className={`flex items-center justify-between gap-3 w-full text-left py-2 px-2 rounded-md text-sm mt-1 bg-red-100
-        ${isActive ? 
-          "text-generate-text-placeholder" : 
-          "text-generate-text-placeholder hover:text-generate-text-input"
-        }`}
-    >
-      <div className="flex items-center gap-3">
-        <Icon className="generate-app-icon" />
-        <span className="truncate font-bold tracking-wider normal-case">{label}</span>
-      </div>
-      {isExpanded ? (
-        <ChevronDown className="generate-app-icon" />
-      ) : (
-        <ChevronRight className="generate-app-icon" />
-      )}
-    </button>
-    
+    <div className="group"> 
+      <button
+        onClick={onToggle}
+        className="flex items-center w-full text-left rounded-md text-sm gap-generate-pad justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <Icon className="generate-app-icon group-hover:text-generate-text-input" />
+          <span className="truncate tracking-wider normal-case group-hover:text-generate-text-input">{label}</span>
+        </div>
+        {isExpanded ? (
+          <ChevronDown className="generate-app-icon group-hover:text-generate-text-input" />
+        ) : (
+          <ChevronRight className="generate-app-icon group-hover:text-generate-text-input" />
+        )}
+      </button>
+    </div>
 
     {isExpanded && (
-      <ul className="ml-3 pl-2 border-1 border-generate-text-outline flex flex-col gap-0.5 mt-0.5">
+      <ul className="flex flex-col border-l-3 border-generate-text-placeholder ml-2 mt-2 p-generate-pad gap-generate-pad">
         {children}
       </ul>
     )}

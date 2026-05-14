@@ -1,12 +1,12 @@
 "use client";
 
 import { 
-  StatusPill 
+  SubmissionStatusPill,
 } from "@/components/base/content/primatives";
 
 import { 
-  HEALTH_PALETTE 
-} from "@/lib/statusPalette";
+  KEYTERM, getPalette 
+} from "@/lib/keytermPalette";
 
 import { 
   formatText 
@@ -18,8 +18,6 @@ export function StatusBadge(
   if (!status) return <span className="opacity-60">—</span>;
   
   return (
-    <StatusPill palette={HEALTH_PALETTE} status={status}>
-      {formatText(status, "upper")}
-    </StatusPill>
+    <SubmissionStatusPill decision={status}></SubmissionStatusPill>
   );
 }

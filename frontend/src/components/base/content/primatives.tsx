@@ -10,10 +10,9 @@ import {
 } from "@/lib/format";
 
 import {
-  StatusPaletteEntry,
-  TONE_PALETTE,
-  getStatusStyle,
-} from "@/lib/statusPalette";
+  getPalette,
+  KEYTERM,
+} from "@/lib/keytermPalette";
 
 import { 
     LucideIcon, ChevronDown, ChevronRight 
@@ -30,9 +29,9 @@ const TEXTALIGN_CLASS: Record<Align, string> = {
 };
 
 const DEFAULT_THRESHOLDS: ScoreBarThreshold[] = [
-  { at: 40, color: "var(--generate-approve)" },
-  { at: 70, color: "var(--generate-refer)" },
-  { at: Infinity, color: "var(--generate-decline)" },
+  { at: 40, color: "var(--generate-text-good)" },
+  { at: 70, color: "var(--generate-text-maybe)" },
+  { at: Infinity, color: "var(--generate-text-bad)" },
 ];
 
 export type Padding = "sm" | "md" | "lg";
@@ -192,7 +191,7 @@ export const ContributionTable = ({
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`generate-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-outline/50 pb-1`}
+          className={`generate-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pb-1`}
         >
           {c.label}
         </div>
@@ -210,7 +209,7 @@ export const ContributionTable = ({
                 key={`v-${idx}-${i}`}
                 className={
                   isName
-                    ? `generate-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-generate-outline/50 pt-1 pb-1`
+                    ? `generate-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-generate-text-outline pt-1 pb-1`
                     : `generate-analysis-item ${TEXTALIGN_CLASS[cellAlign(c)]} pt-1 pb-1`
                 }
               >
@@ -344,7 +343,7 @@ export const ExpandableGroupTable = <T,>({
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`generate-analysis-description flex gap-generate-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-outline/50 pb-1`}
+            className={`generate-analysis-description flex gap-generate-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pb-1`}
           >
             {c.label}
           </div>
@@ -359,7 +358,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Group header row — chevron + title cell */}
             <div
               onClick={() => toggle(g.key)}
-              className="generate-analysis-description border-t border-generate-outline/20 hover:text-generate-selected cursor-pointer flex gap-generate-pad pt-generate-pad pb-generate-pad"
+              className="generate-analysis-description border-t border-generate-text-outline hover:text-generate-text-input cursor-pointer flex gap-generate-pad pt-generate-pad pb-generate-pad"
             >
               {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
               {g.title}
@@ -373,7 +372,7 @@ export const ExpandableGroupTable = <T,>({
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`border-t border-generate-outline/10 cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
+                  className={`border-t border-generate-text-outline cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
                     isLast ? "pl-generate-pad pr-generate-pad text-sm" : "text-xs"
                   }`}
                 >
@@ -404,7 +403,7 @@ export const ExpandableGroupTable = <T,>({
                       return (
                         <div
                           key={colIdx}
-                          className={`bg-generate-background/30 text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
+                          className={`bg-generate-light-input text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
                             colIdx === 0 ? "pl-generate-padicon" : ""
                           } ${colIdx === lastIdx ? "pr-generate-pad" : ""}`}
                         >
@@ -419,7 +418,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className="text-xs opacity-50 italic pl-generate-padicon pt-1 pb-1 bg-generate-background/30"
+                className="text-xs opacity-50 italic pl-generate-padicon pt-1 pb-1 bg-generate-light-input"
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}
@@ -460,7 +459,7 @@ export const InfoPanel = ({
 
   return (
     <div
-      className={`border border-generate-outline/20 rounded-lg ${PADDING_CLASS[padding]} ${className}`}
+      className={`border border-generate-text-outline rounded-lg ${PADDING_CLASS[padding]} ${className}`}
     >
       {showHeader && (
         <div className="flex items-center justify-between mb-2">
@@ -512,7 +511,7 @@ const ROW_STYLES: Record<
   },
   modal: {
     wrapper: "space-y-3 font-mono text-sm",
-    row: "flex justify-between items-center py-2 border-b border-generate-outline/5 last:border-0",
+    row: "flex justify-between items-center py-2 border-b border-generate-text-outline last:border-0",
     label: "opacity-60",
     value: "font-bold text-right",
   },
@@ -635,7 +634,7 @@ export const KpiTile = ({
 }: KpiTileProps) => {
   const valueClass =
     variant === "emphasis"
-      ? "font-bold text-xl text-generate-selected"
+      ? "font-bold text-xl text-generate-text-input"
       : "font-bold text-lg";
 
   return (
@@ -823,8 +822,8 @@ export const CompareRow = ({
 }: CompareRowProps) => {
   return (
     <div
-      className={`grid gap-0 py-1.5 border-b border-generate-outline/5 ${
-        changed ? "bg-generate-selected/5" : ""
+      className={`grid gap-0 py-1.5 border-b border-generate-text-outline ${
+        changed ? "bg-generate-light-input" : ""
       } ${className}`}
       style={{ gridTemplateColumns: gridTemplate }}
     >
@@ -838,7 +837,7 @@ export const CompareRow = ({
       ) : (
         <span />
       )}
-      <span className={`text-right text-xs font-bold ${changed ? "text-generate-selected" : ""}`}>
+      <span className={`text-right text-xs font-bold ${changed ? "text-generate-text-input" : ""}`}>
         {scenario}
       </span>
     </div>
@@ -917,60 +916,32 @@ export const MetricCard = ({
   );
 }
 
-/** STATUS PILL---------------------------------------------------------------------------------------------- */
+/** SUBMISSION STATUS PILL---------------------------------------------------------------------------------------------- */
 
-/** GUIDANCE
- * children: Pill label — usually the status name, rendered uppercase
- * lucideIcon: Optional leading icon from lucide-react, e.g. `Circle`, `Check`, `AlertTriangle`.
- * palette + status: Either provide a palette + status key to look up, or pass `tone`
- * size: "sm"` (default) = 10px / `"md"` = xs..
- * label: Label on the left. Optional
- * thresholds: Thresholds from lowest `at` to highest. The first whose `at >= value`
- * min: Domain min. Default 0 
- * max: Domain max. Default 100.
- * decimals: Decimal places for the numeric readout. Default 1.
- * hideValue: Don't show the numeric readout on the right. Default false.
- * labelWidth: Tailwind class for the label column width. Default "w-10".
- */
-export interface StatusPillProps {
-  children: React.ReactNode;
+export interface SubmissionStatusPillProps {
+  decision: string;
   lucideIcon?: LucideIcon;
-  palette?: Record<string, StatusPaletteEntry>;
-  status?: string | null;
-  tone?: StatusTone;
-  size?: "sm" | "md";
 }
 
-/**
- * Wraps the `bg-generate-<tone>/15 text-generate-<tone>` pattern used 15+ times
- * across the workbench. Pass either a `palette` + `status` pair (to look
- * the entry up by key) or a raw `tone` for ad-hoc use.
- */
-export const StatusPill = ({
-  children,
-  lucideIcon: Icon,
-  palette,
-  status,
-  tone,
-  size = "sm",
-}: StatusPillProps) => {
-  const entry: StatusPaletteEntry = tone
-    ? TONE_PALETTE[tone]
-    : palette
-      ? getStatusStyle(palette, status)
-      : TONE_PALETTE.muted;
-
-  const sizeClass =
-    size === "md"
-      ? "text-xs px-2 py-1 gap-1.5"
-      : "text-[10px] px-2 py-0.5 gap-1";
+export const SubmissionStatusPill = ({
+  decision,
+  lucideIcon,
+}: SubmissionStatusPillProps) => {
+  const { color, icon } = getPalette(KEYTERM, decision);
+  const Icon = lucideIcon ?? icon;
 
   return (
-    <span
-      className={`inline-flex dsi-changepill ${entry.bg} ${entry.text} ${sizeClass}`}
+    <div
+      className={`
+        inline-flex 
+        justify-center 
+        items-center gap-1
+        bg-${color}
+        text-${color}
+      `}
     >
-      {Icon && <Icon className="icon" />}
-      {children}
-    </span>
+      {Icon && <Icon className="generate-app-icon text-scale-200" />}
+      {decision}
+    </div>
   );
-}
+};

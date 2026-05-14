@@ -8,10 +8,10 @@ import {
   ChevronDown, ChevronRight
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
-import { StatusPill } from "@/components/base/content/primatives";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { StandardCard } from "@/components/base/cards";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
-import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
+import { KEYTERM, getPalette } from "@/lib/keytermPalette";
 
 export default function ReferralTab() {
   const {
@@ -184,15 +184,13 @@ export default function ReferralTab() {
             return (
               <div key={idx} className="flex items-center justify-between px-generate-pad py-2 pl-8 bg-generate-background/10 border-b border-generate-outline/5 hover:bg-generate-background/20 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <ShieldAlert className={`w-3 h-3 shrink-0 ${getStatusStyle(ACTION_PALETTE, actionKey).text}`} />
+                  <ShieldAlert className={`w-3 h-3 shrink-0 ${getPalette(KEYTERM, actionKey).text}`} />
                   <div className="min-w-0">
                     <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                     <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
                   </div>
                 </div>
-                <StatusPill palette={ACTION_PALETTE} status={actionKey}>
-                  {actionKey.replace('_', ' ')}
-                </StatusPill>
+                <SubmissionStatusPill decision={actionKey}></SubmissionStatusPill>
               </div>
             );
           })}

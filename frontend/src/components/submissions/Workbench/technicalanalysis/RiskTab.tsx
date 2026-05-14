@@ -7,10 +7,10 @@ import {
   Gauge, Layers, ChevronDown, ChevronRight, MessageSquare, ArrowUp
 } from "lucide-react";
 import { formatNumber, formatPercent, formatDate, formatText, formatCurrency } from "@/lib/format";
-import { KpiTile, StatusPill } from "@/components/base/content/primatives";
+import { KpiTile, SubmissionStatusPill } from "@/components/base/content/primatives";
 import { StandardCard } from "@/components/base/cards";
 import KeyDetailsBar from "@/components/base/keyDetailsBar";
-import { ACTION_PALETTE, getStatusStyle } from "@/lib/statusPalette";
+import { KEYTERM, getPalette } from "@/lib/keytermPalette";
 
 export default function RiskTab() {
   const { activeSubmission, activeVersion, activeQuote, riskSignals, isFetchingRiskSignals, fetchRiskSignals } = useDsiStore();
@@ -409,11 +409,9 @@ export default function RiskTab() {
                           const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
                           return (
                             <div key={`gc-${cidx}`} className="flex items-center gap-2 py-1 text-xs">
-                              <ShieldAlert className={`w-3 h-3 shrink-0 ${getStatusStyle(ACTION_PALETTE, actionKey).text}`} />
+                              <ShieldAlert className={`w-3 h-3 shrink-0 ${getPalette(KEYTERM, actionKey).text}`} />
                               <span className="opacity-70 truncate">{cond.note || cond.source_name || 'Condition'}</span>
-                              <StatusPill palette={ACTION_PALETTE} status={actionKey}>
-                                {actionKey.replace('_', ' ')}
-                              </StatusPill>
+                              <SubmissionStatusPill decision={actionKey}></SubmissionStatusPill>
                             </div>
                           );
                         })}

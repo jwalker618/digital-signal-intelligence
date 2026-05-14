@@ -28,6 +28,43 @@
   @apply hover:text-generate-text-input;
 }
 
+@utility generate-comment-message {
+  @apply text-generate-text-comment;
+  @apply text-sm;
+}
+
+@utility generate-error-message {
+  @apply text-generate-text-bad;
+  @apply text-sm;
+}
+
+@utility generate-notificationpill {
+  @apply p-1.5;
+  @apply bg-generate-light-input;
+  @apply border-b-1 border-generate-text-outline;
+  @apply text-generate-text-input;
+  @apply text-xs;
+  @apply rounded-md;
+  @apply shadow-sm;
+}
+
+@utility generate-actiontext {
+  @apply flex;
+  @apply gap-generate-pad;
+  @apply p-1.5;
+  @apply text-left;
+  @apply items-center;
+  @apply hover:text-generate-text-input ;
+  @apply text-sm;
+}
+
+@utility generate-grid-table-header {
+  @apply pt-2;
+  @apply text-sm text-wrap;
+  @apply text-center;
+  @apply text-generate-text-input;
+}
+
 @utility generate-dark-inputbox {
   @apply flex;
   @apply rounded-md;
@@ -57,18 +94,34 @@
   @apply hover:border-r-6;
 }
 
-@utility generate-error-message {
-  @apply text-generate-text-bad;
+@utility generate-light-inputbox {
+  @apply flex;
+  @apply rounded-md;
+  @apply p-1.5;
   @apply text-sm;
+  @apply text-wrap;
+  @apply border-1 border-generate-text-outline;
+  @apply placeholder:text-generate-text-placeholder;
+  @apply bg-generate-light-input;
+}.generate-light-inputbox:not(:placeholder-shown) {
+  @apply text-generate-text-input;
 }
 
-
-
-
-
-
-
-
+@utility generate-light-actionbutton {
+  @apply block;
+  @apply rounded-md;
+  @apply p-1.5;
+  @apply items-center;
+  @apply justify-center;
+  @apply border-1 border-generate-text-outline;
+  @apply bg-generate-light-input;
+  @apply text-generate-text-input;
+  @apply hover:cursor-pointer;
+  @apply font-bold;
+  @apply hover:bg-generate-dark-input;
+  @apply hover:border-l-6;
+  @apply hover:border-r-6;
+}
 
 
 
@@ -138,6 +191,7 @@
 
 
 
+
 @utility icon {
   width: 20px;
   height: 20px;
@@ -151,25 +205,9 @@
 
 
 
-@utility generate-notificationpill {
-  @apply p-1.5;
-  @apply bg-generate-outline;
-  @apply border-b-1 border-generate-selected;
-  @apply text-generate-contrast-background;
-  @apply text-xs;
-  @apply rounded-md;
-  @apply shadow-sm;
-}
 
-@utility generate-actiontext {
-  @apply flex;
-  @apply gap-generate-pad;
-  @apply p-1.5;
-  @apply text-left;
-  @apply items-center;
-  @apply hover:text-generate-selected ;
-  @apply text-sm;
-}
+
+
 
 @utility generate-popup-header {
   @apply flex;
@@ -216,12 +254,6 @@
   @apply p-2;
 }
 
-@utility generate-grid-table-header {
-  @apply pt-2;
-  @apply text-sm text-wrap;
-  @apply text-center;
-  @apply border-r border-generate-outline/50;
-}
 
 @utility generate-grid-table-item {
   @apply text-2xl text-wrap;

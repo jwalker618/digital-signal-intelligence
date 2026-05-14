@@ -107,10 +107,12 @@ export default function Sidebar({
 
       <button
         onClick={onToggleOpen}
-        className="
-          absolute top-generate-pad right-generate-pad 
-          p-generate-pad"
-      >
+        className={`absolute top-generate-pad p-generate-pad ${
+                isOpen
+                  ? "right-1.5 "
+                  : "right-generate-pad "
+              }`}
+        >
         {isOpen ? (
           <PanelRightOpen className="generate-app-icon" />
         ) : (
@@ -122,7 +124,7 @@ export default function Sidebar({
       {isOpen && (
         <nav
           className="
-            absolute left-generate-indent right-0 py-generate-pad 
+            absolute left-generate-indent right-1.5 py-generate-pad 
             overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             top: collapsedWidthPx ?? 64,

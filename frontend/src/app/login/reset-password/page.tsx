@@ -59,8 +59,8 @@ function RequestResetForm() {
         
         {submitted ? 
         (
-          <p className="text-sm mb-2">
-            If an account exists for <strong className="hover:text-generate-selected">{email}</strong>, a reset link
+          <p className="text-sm mb-2 text-generate-text-placeholder">
+            If an account exists for <strong className="hover:text-generate-text-input">{email}</strong>, a reset link
             has been sent. Check your inbox.
           </p>
         ) : 
@@ -93,8 +93,8 @@ function RequestResetForm() {
           <a href="/login" 
             className="
               text-sm font-bold
-              text-generate-outline 
-              hover:text-generate-selected">
+              text-generate-text-placeholder 
+              hover:text-generate-text-input">
             Back To Sign In
           </a>
         </div>
@@ -180,7 +180,7 @@ function SetNewPasswordForm({
 
           </div>
 
-          {error && <div className="text-sm text-generate-decline">{error}</div>}
+          {error && <div className="text-sm generate-text-bad">{error}</div>}
           
           <button
             type="submit"

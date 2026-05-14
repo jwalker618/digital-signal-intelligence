@@ -37,7 +37,7 @@ export default function UserMenu() {
         <div className="
           absolute bottom-[5vw] left-0 z-40
           flex flex-col 
-          min-w-[10rem] 
+          w-[50%] 
           p-1.5 gap-1.5 mb-generate-pad
           bg-generate-dark-input 
           text-generate-text-placeholder text-sm
