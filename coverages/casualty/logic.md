@@ -150,14 +150,24 @@ This configuration contains **15 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `0.4%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 × 0.004 = **$40,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$40,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `revenue` (rating basis) | Routing-valid assumption | $15,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.4% |
+| **Base Premium** | `revenue` × Base Rate | **$60,000** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($10,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$45,000** |
+
+*Basis vs. limit: `revenue` is the total insured value the rate is applied to — a Base Rate of 0.4% on `revenue` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 
 ---
 
@@ -287,14 +297,24 @@ This configuration contains **10 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `2.5%` on `payroll` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `payroll` = $10,000,000
-  - Base Premium = $10,000,000 × 0.025 = **$250,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$250,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `payroll` (rating basis) | Routing-valid assumption | $3,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 2.5% |
+| **Base Premium** | `payroll` × Base Rate | **$75,000** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($10,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$56,250** |
+
+*Basis vs. limit: `payroll` is the total insured value the rate is applied to — a Base Rate of 2.5% on `payroll` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 
 ---
 
@@ -432,14 +452,24 @@ This configuration contains **17 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `3.5000000000000004%` on `fleet_value` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `fleet_value` = $10,000,000
-  - Base Premium = $10,000,000 × 0.035 = **$350,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$350,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `fleet_value` (rating basis) | Routing-valid assumption | $1,500,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 3.5% |
+| **Base Premium** | `fleet_value` × Base Rate | **$52,500** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($10,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band MICRO | 0.50 |
+| **Technical Premium** | Product of all factors | **$26,250** |
+
+*Basis vs. limit: `fleet_value` is the total insured value the rate is applied to — a Base Rate of 3.5% on `fleet_value` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 
 ---
 
@@ -578,14 +608,24 @@ This configuration contains **18 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `40.0%` on `underlying_premium` purchases exactly a `$1,000,000` Limit with a `$10,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `underlying_premium` = $10,000,000
-  - Base Premium = $10,000,000 × 0.4 = **$4,000,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$4,000,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `underlying_premium` (rating basis) | Routing-valid assumption | $75,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 40% |
+| **Base Premium** | `underlying_premium` × Base Rate | **$30,000** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($10,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band MICRO | 0.50 |
+| **Technical Premium** | Product of all factors | **$15,000** |
+
+*Basis vs. limit: `underlying_premium` is the total insured value the rate is applied to — a Base Rate of 40% on `underlying_premium` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 
 ---
 
@@ -754,14 +794,24 @@ This configuration contains **40 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `0.5%` on `revenue` purchases exactly a `$1,000,000` Limit with a `$25,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 × 0.005 = **$50,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$50,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `revenue` (rating basis) | Routing-valid assumption | $15,000,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.5% |
+| **Base Premium** | `revenue` × Base Rate | **$75,000** |
+| ILF relativity | Limit = anchor ($1,000,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($25,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$56,250** |
+
+*Basis vs. limit: `revenue` is the total insured value the rate is applied to — a Base Rate of 0.5% on `revenue` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $1,000,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 
 ---
 
@@ -893,12 +943,22 @@ This configuration contains **11 signals** distributed as follows:
 | EXTREMELY_COMPLEX | 81-100 | 1.6 | n/a |
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
-> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*
+> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor × Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*
 
-**1. The Pricing Anchor:** The Base Rate of `0.5%` on `revenue` purchases exactly a `$500,000` Limit with a `$5,000` Deductible.
-**2. Theoretical Execution:**
-  - Assume `revenue` = $10,000,000
-  - Base Premium = $10,000,000 × 0.005 = **$50,000**
-  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **$50,000**.
+**Worked example — standard-tier risk, requesting the anchor limit/deductible:**
+
+| Factor | Source | Value |
+|--------|--------|-------|
+| `revenue` (rating basis) | Routing-valid assumption | $2,500,000 |
+| Base Rate | Risk Tier 3 (STANDARD) | 0.5% |
+| **Base Premium** | `revenue` × Base Rate | **$12,500** |
+| ILF relativity | Limit = anchor ($500,000) | 1.00 |
+| Deductible factor | Deductible = anchor ($5,000) | 1.00 |
+| Loss frequency modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Loss severity modifier | Loss Tier 3 (MODERATE) | 1.00 |
+| Exposure modifier | Size band SMALL | 0.75 |
+| **Technical Premium** | Product of all factors | **$9,375** |
+
+*Basis vs. limit: `revenue` is the total insured value the rate is applied to — a Base Rate of 0.5% on `revenue` is the rated cost of risk, not the policy limit. The policy Limit (anchored at $500,000) is the maximum payout and scales premium independently via the ILF curve; requesting a limit above the anchor lifts the ILF relativity above 1.00. The Loss and Exposure modifiers are shown here at their standard-tier values and move with the tier scores in the Three-Layer Pricing Translation tables above.*
 

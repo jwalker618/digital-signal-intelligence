@@ -379,8 +379,53 @@ class DSIDocGenerator:
 
         return md
 
+    def _example_basis_value(self, config: dict, basis: str) -> float:
+        """Derive a routing-valid example value for the pricing basis (e.g. tiv)."""
+        routing = config.get('metadata', {}).get('routing_constraints', [])
+        lower = None
+        upper = None
+        for r in routing:
+            if r.get('field') != basis:
+                continue
+            val = r.get('value')
+            if not isinstance(val, (int, float)):
+                continue
+            if r.get('operator') in ('>=', '>'):
+                lower = val if lower is None else max(lower, val)
+            elif r.get('operator') in ('<=', '<'):
+                upper = val if upper is None else min(upper, val)
+
+        if lower is not None and upper is not None:
+            candidate = lower * 3
+            return candidate if candidate < upper else (lower + upper) / 2
+        if lower is not None:
+            return lower * 3
+        if upper is not None:
+            return upper / 2
+        return 10_000_000
+
+    def _exposure_modifier_for_value(self, config: dict, value: float) -> tuple:
+        """Find the exposure size band a basis value falls into; return (label, modifier)."""
+        size_bands = config.get('exposure', {}).get('size', {}).get('bands', [])
+        for band in size_bands:
+            app = band.get('interpretation', {}).get('application', {})
+            thresh = app.get('implied_thresholds') or {}
+            lo, hi = thresh.get('min'), thresh.get('max')
+            if lo is None and hi is None:
+                continue
+            if (lo is None or value >= lo) and (hi is None or value < hi):
+                return band.get('label', band.get('id')), app.get('applied')
+        return None, None
+
+    def _deductible_factor(self, pt_cfg: dict, deductible: float) -> float:
+        """Look up the deductible factor for a given deductible amount."""
+        for df in pt_cfg.get('deductible_factors', []):
+            if df.get('deductible') == deductible:
+                return df.get('factor')
+        return None
+
     def _generate_theoretical_pricing(self, config: dict) -> str:
-        """Generate theoretical pricing calculation example."""
+        """Generate a worked premium calculation showing the full factor chain."""
         pricing = config.get('pricing', {})
         b_limit = pricing.get('base_limit_reference', 0)
         b_ded = pricing.get('base_deductible_reference', 0)
@@ -391,23 +436,77 @@ class DSIDocGenerator:
         method = app.get('method', 'UNKNOWN')
 
         md = "### Theoretical Premium Calculation (Tier 3 Standard)\n"
-        md += "> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*\n"
-        md += "> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*\n\n"
 
         if method == "MULTIPLIER":
             rate = app.get('applied', 0)
+            rate_pct = round(rate * 100, 4)
             basis = app.get('basis', 'exposure')
-            md += f"**1. The Pricing Anchor:** The Base Rate of `{rate * 100}%` on `{basis}` purchases exactly a `${b_limit:,.0f}` Limit with a `${b_ded:,.0f}` Deductible.\n"
-            md += "**2. Theoretical Execution:**\n"
-            md += f"  - Assume `{basis}` = $10,000,000\n"
-            md += f"  - Base Premium = $10,000,000 × {rate} = **${10000000 * rate:,.0f}**\n"
-            md += f"  - If the client requests the Anchor Limit/Deductible, the factors are 1.00, resulting in a technical premium of **${10000000 * rate:,.0f}**.\n"
+            basis_value = self._example_basis_value(config, basis)
+            base_premium = basis_value * rate
+
+            # ILF / deductible factors are keyed by product type; use the primary one.
+            by_pt = pricing.get('by_product_type', {})
+            pt_cfg = by_pt.get('commercial_property') or (
+                next(iter(by_pt.values())) if by_pt else {}
+            )
+            anchor_limit = pt_cfg.get('ilf_curve', {}).get('anchor_limit', b_limit)
+            ded_factor = self._deductible_factor(pt_cfg, b_ded)
+            if ded_factor is None:
+                ded_factor = 1.0
+            ilf = 1.0  # client assumed to request the anchor limit
+
+            # Loss pillar — Tier 3 (MODERATE) frequency and severity modifiers.
+            loss_bands = config.get('loss_tier_bands', {}).get('bands', [])
+            loss_t3 = next((b for b in loss_bands if b.get('id') == 3), {})
+            loss_app = loss_t3.get('interpretation', {}).get('application', {})
+            freq_mod = loss_app.get('frequency_modifier', 1.0)
+            sev_mod = loss_app.get('severity_modifier', 1.0)
+
+            # Exposure pillar — size modifier for the example basis value.
+            exp_label, exp_mod = self._exposure_modifier_for_value(config, basis_value)
+            if exp_mod is None:
+                exp_mod, exp_label = 1.0, 'n/a'
+
+            final = base_premium * ilf * ded_factor * freq_mod * sev_mod * exp_mod
+
+            md += "> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*\n"
+            md += ("> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor "
+                   "× Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*\n\n")
+            md += "**Worked example — standard-tier risk, requesting the anchor limit/deductible:**\n\n"
+            md += "| Factor | Source | Value |\n"
+            md += "|--------|--------|-------|\n"
+            md += f"| `{basis}` (rating basis) | Routing-valid assumption | ${basis_value:,.0f} |\n"
+            md += f"| Base Rate | Risk Tier 3 (STANDARD) | {rate_pct:g}% |\n"
+            md += f"| **Base Premium** | `{basis}` × Base Rate | **${base_premium:,.0f}** |\n"
+            md += f"| ILF relativity | Limit = anchor (${anchor_limit:,.0f}) | {ilf:.2f} |\n"
+            md += f"| Deductible factor | Deductible = anchor (${b_ded:,.0f}) | {ded_factor:.2f} |\n"
+            md += (f"| Loss frequency modifier | Loss Tier 3 "
+                   f"({loss_t3.get('label', 'MODERATE')}) | {freq_mod:.2f} |\n")
+            md += (f"| Loss severity modifier | Loss Tier 3 "
+                   f"({loss_t3.get('label', 'MODERATE')}) | {sev_mod:.2f} |\n")
+            md += f"| Exposure modifier | Size band {exp_label} | {exp_mod:.2f} |\n"
+            md += f"| **Technical Premium** | Product of all factors | **${final:,.0f}** |\n\n"
+            md += (
+                f"*Basis vs. limit: `{basis}` is the total insured value the rate is applied "
+                f"to — a Base Rate of {rate_pct:g}% on `{basis}` is the rated cost of risk, "
+                f"not the policy limit. The policy Limit (anchored at ${anchor_limit:,.0f}) is "
+                f"the maximum payout and scales premium independently via the ILF curve; "
+                f"requesting a limit above the anchor lifts the ILF relativity above 1.00. "
+                f"The Loss and Exposure modifiers are shown here at their standard-tier values "
+                f"and move with the tier scores in the Three-Layer Pricing Translation tables "
+                f"above.*\n"
+            )
         elif method == "PREMIUM_BASE":
             val = app.get('value', 0)
-            md += f"**1. The Pricing Anchor:** The Flat Premium of `${val:,.0f}` purchases exactly the `${b_limit:,.0f}` Limit / `${b_ded:,.0f}` Deductible Base Package.\n"
+            md += "> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*\n"
+            md += "> *P_final = Base Package Premium × Modifiers*\n\n"
+            md += (f"**1. The Pricing Anchor:** The Flat Premium of `${val:,.0f}` purchases "
+                   f"exactly the `${b_limit:,.0f}` Limit / `${b_ded:,.0f}` Deductible Base "
+                   f"Package.\n")
             md += "**2. Theoretical Execution:**\n"
             md += f"  - Technical Premium = **${val:,.0f}**\n"
-            md += f"  - *Scaling relies entirely on selecting a different Limit ID from the Bundled limit_configuration packages.*\n"
+            md += ("  - *Scaling relies entirely on selecting a different Limit ID from the "
+                   "Bundled limit_configuration packages.*\n")
 
         return md
 

@@ -176,7 +176,7 @@ This configuration contains **40 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = Base Package Premium × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$18,000` purchases exactly the `$1,000,000` Limit / `$50,000` Deductible Base Package.
 **2. Theoretical Execution:**
@@ -336,7 +336,7 @@ This configuration contains **32 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = Base Package Premium × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$18,000` purchases exactly the `$1,000,000` Limit / `$50,000` Deductible Base Package.
 **2. Theoretical Execution:**
@@ -495,7 +495,7 @@ This configuration contains **32 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = Base Package Premium × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$18,000` purchases exactly the `$1,000,000` Limit / `$50,000` Deductible Base Package.
 **2. Theoretical Execution:**
@@ -654,7 +654,7 @@ This configuration contains **32 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = Base Package Premium × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$18,000` purchases exactly the `$1,000,000` Limit / `$50,000` Deductible Base Package.
 **2. Theoretical Execution:**
@@ -813,7 +813,7 @@ This configuration contains **32 signals** distributed as follows:
 
 ### Theoretical Premium Calculation (Tier 3 Standard)
 > *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*
-> *P_final = (Base × Rate) × ILF_relativity × Deductible_Factor × Modifiers*
+> *P_final = Base Package Premium × Modifiers*
 
 **1. The Pricing Anchor:** The Flat Premium of `$18,000` purchases exactly the `$1,000,000` Limit / `$50,000` Deductible Base Package.
 **2. Theoretical Execution:**
