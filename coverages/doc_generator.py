@@ -435,7 +435,7 @@ class DSIDocGenerator:
         app = t3.get('interpretation', {}).get('application', {})
         method = app.get('method', 'UNKNOWN')
 
-        md = "### Theoretical Premium Calculation (Tier 3 Standard)\n"
+        md = "### Theoretical Premium Calculation (Worked Example)\n"
 
         if method == "MULTIPLIER":
             rate = app.get('applied', 0)
@@ -455,24 +455,46 @@ class DSIDocGenerator:
                 ded_factor = 1.0
             ilf = 1.0  # client assumed to request the anchor limit
 
-            # Loss pillar — Tier 3 (MODERATE) frequency and severity modifiers.
-            loss_bands = config.get('loss_tier_bands', {}).get('bands', [])
-            loss_t3 = next((b for b in loss_bands if b.get('id') == 3), {})
-            loss_app = loss_t3.get('interpretation', {}).get('application', {})
+            # Loss pillar — bounds applied to the combined frequency × severity modifier.
+            loss_cfg = config.get('loss_tier_bands', {})
+            loss_bands = loss_cfg.get('bands', [])
+            loss_constraints = loss_cfg.get('constraints', {})
+            floor = loss_constraints.get('floor')
+            cap = loss_constraints.get('cap')
+
+            def loss_modifier(band):
+                la = band.get('interpretation', {}).get('application', {})
+                combined = la.get('frequency_modifier', 1.0) * la.get('severity_modifier', 1.0)
+                if floor is not None:
+                    combined = max(combined, floor)
+                if cap is not None:
+                    combined = min(combined, cap)
+                return combined
+
+            # The worked example holds Risk at Tier 3 (STANDARD) but uses an ELEVATED
+            # Loss tier so the loss loading is visible rather than collapsing to 1.00.
+            example_loss = next(
+                (b for b in loss_bands if b.get('id') == 4),
+                next((b for b in loss_bands if b.get('id') == 3), {}),
+            )
+            loss_app = example_loss.get('interpretation', {}).get('application', {})
             freq_mod = loss_app.get('frequency_modifier', 1.0)
             sev_mod = loss_app.get('severity_modifier', 1.0)
+            loss_mod = loss_modifier(example_loss)
 
             # Exposure pillar — size modifier for the example basis value.
             exp_label, exp_mod = self._exposure_modifier_for_value(config, basis_value)
             if exp_mod is None:
                 exp_mod, exp_label = 1.0, 'n/a'
 
-            final = base_premium * ilf * ded_factor * freq_mod * sev_mod * exp_mod
+            final = base_premium * ilf * ded_factor * loss_mod * exp_mod
 
             md += "> *Per the DSI Premium Calculation Methodology v2.0, the full factor chain is:*\n"
             md += ("> *P_final = (Basis × Base Rate) × ILF_relativity × Deductible_Factor "
-                   "× Loss_Frequency_Mod × Loss_Severity_Mod × Exposure_Mod*\n\n")
-            md += "**Worked example — standard-tier risk, requesting the anchor limit/deductible:**\n\n"
+                   "× Loss_Modifier × Exposure_Modifier*\n\n")
+            md += ("**Worked example — Risk Tier 3 (STANDARD), Loss Tier "
+                   f"{example_loss.get('id', '?')} ({example_loss.get('label', '')}), "
+                   "requesting the anchor limit/deductible:**\n\n")
             md += "| Factor | Source | Value |\n"
             md += "|--------|--------|-------|\n"
             md += f"| `{basis}` (rating basis) | Routing-valid assumption | ${basis_value:,.0f} |\n"
@@ -480,10 +502,17 @@ class DSIDocGenerator:
             md += f"| **Base Premium** | `{basis}` × Base Rate | **${base_premium:,.0f}** |\n"
             md += f"| ILF relativity | Limit = anchor (${anchor_limit:,.0f}) | {ilf:.2f} |\n"
             md += f"| Deductible factor | Deductible = anchor (${b_ded:,.0f}) | {ded_factor:.2f} |\n"
-            md += (f"| Loss frequency modifier | Loss Tier 3 "
-                   f"({loss_t3.get('label', 'MODERATE')}) | {freq_mod:.2f} |\n")
-            md += (f"| Loss severity modifier | Loss Tier 3 "
-                   f"({loss_t3.get('label', 'MODERATE')}) | {sev_mod:.2f} |\n")
+            md += (f"| Loss frequency modifier | Loss Tier "
+                   f"{example_loss.get('id', '?')} ({example_loss.get('label', '')}) "
+                   f"| {freq_mod:.2f} |\n")
+            md += (f"| Loss severity modifier | Loss Tier "
+                   f"{example_loss.get('id', '?')} ({example_loss.get('label', '')}) "
+                   f"| {sev_mod:.2f} |\n")
+            bound_note = ""
+            if floor is not None and cap is not None:
+                bound_note = f", bounded [{floor:g}, {cap:g}]"
+            md += (f"| **Loss modifier** | Frequency × Severity{bound_note} "
+                   f"| **{loss_mod:.2f}** |\n")
             md += f"| Exposure modifier | Size band {exp_label} | {exp_mod:.2f} |\n"
             md += f"| **Technical Premium** | Product of all factors | **${final:,.0f}** |\n\n"
             md += (
@@ -491,11 +520,25 @@ class DSIDocGenerator:
                 f"to — a Base Rate of {rate_pct:g}% on `{basis}` is the rated cost of risk, "
                 f"not the policy limit. The policy Limit (anchored at ${anchor_limit:,.0f}) is "
                 f"the maximum payout and scales premium independently via the ILF curve; "
-                f"requesting a limit above the anchor lifts the ILF relativity above 1.00. "
-                f"The Loss and Exposure modifiers are shown here at their standard-tier values "
-                f"and move with the tier scores in the Three-Layer Pricing Translation tables "
-                f"above.*\n"
+                f"requesting a limit above the anchor lifts the ILF relativity above 1.00.*\n\n"
             )
+
+            # Loss tier sensitivity — hold Risk and Exposure constant, vary the Loss tier.
+            if loss_bands:
+                md += ("**Loss Tier Sensitivity** — holding Risk Tier 3 and the Exposure "
+                       "modifier constant, the technical premium moves with the Loss tier:\n\n")
+                md += "| Loss Tier | Freq Mod | Sev Mod | Loss Modifier | Technical Premium |\n"
+                md += "|-----------|----------|---------|---------------|-------------------|\n"
+                for b in sorted(loss_bands, key=lambda x: x.get('id', 0)):
+                    la = b.get('interpretation', {}).get('application', {})
+                    lm = loss_modifier(b)
+                    prem = base_premium * ilf * ded_factor * lm * exp_mod
+                    marker = "  *(example)*" if b.get('id') == example_loss.get('id') else ""
+                    md += (f"| {b.get('id', '?')} {b.get('label', '')}{marker} "
+                           f"| {la.get('frequency_modifier', 1.0):.2f} "
+                           f"| {la.get('severity_modifier', 1.0):.2f} "
+                           f"| {lm:.2f} | ${prem:,.0f} |\n")
+                md += "\n"
         elif method == "PREMIUM_BASE":
             val = app.get('value', 0)
             md += "> *Per the DSI Premium Calculation Methodology v2.0, the core formula is:*\n"
