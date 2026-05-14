@@ -73,6 +73,52 @@ class DSIDocGenerator:
             'by_group': dict(by_group)
         }
 
+    def _signals_by_group(self, config: dict) -> dict:
+        """Bucket full signal objects by their assigned group id."""
+        signals = config.get('signal_registry', [])
+        by_group = defaultdict(list)
+        for sig in signals:
+            tla = sig.get('three_layer_assessment', {})
+            cats = sig.get('categories', {})
+            gid = tla.get('group_id') or cats.get('group_id') or 'ungrouped'
+            by_group[gid].append(sig)
+        return dict(by_group)
+
+    def _signal_layer_summary(self, sig: dict) -> dict:
+        """Extract per-layer weights and correlation direction for a scored signal."""
+        tla = sig.get('three_layer_assessment', {})
+        risk = tla.get('risk', {})
+        loss = tla.get('loss', {})
+        exposure = tla.get('exposure', {})
+
+        loss_freq = loss.get('frequency', {}).get('weight', 0)
+        loss_sev = loss.get('severity', {}).get('weight', 0)
+
+        exp_weight = 0.0
+        exp_dims = []
+        for dim, cfg in exposure.items():
+            if isinstance(cfg, dict) and 'weight' in cfg:
+                exp_weight += cfg['weight']
+                exp_dims.append(dim)
+
+        direction = (
+            risk.get('correlation_direction')
+            or loss.get('frequency', {}).get('correlation_direction')
+            or loss.get('severity', {}).get('correlation_direction')
+        )
+        for cfg in exposure.values():
+            if not direction and isinstance(cfg, dict):
+                direction = cfg.get('correlation_direction')
+
+        return {
+            'risk': risk.get('weight', 0),
+            'loss_freq': loss_freq,
+            'loss_sev': loss_sev,
+            'exposure': round(exp_weight, 3),
+            'exposure_dims': exp_dims,
+            'direction': direction,
+        }
+
     def _rank_groups_by_importance(self, weight_analysis: dict) -> list:
         """Rank signal groups by their combined weight importance."""
         groups = weight_analysis['groups']
@@ -109,6 +155,20 @@ class DSIDocGenerator:
             md += f"| {g['label']} | {g['risk']:.2f} | {g['loss']:.2f} | {g['exposure']:.2f} |\n"
         md += f"| **TOTAL** | **{analysis['totals']['risk']:.2f}** | **{analysis['totals']['loss']:.2f}** | **{analysis['totals']['exposure']:.2f}** |\n"
         md += "\n"
+
+        # Group definitions — surface the human-readable description of each group
+        groups = config.get('groups', {}).get('three_layer_assessment', [])
+        described = [g for g in groups if g.get('description')]
+        if described:
+            md += "**Group Definitions:**\n"
+            for g in described:
+                md += f"- **{g.get('label', g.get('id'))}:** {g['description']}\n"
+            md += "\n"
+        md += (
+            "*Reading the table: a group's three weights are independent. The same group "
+            "can be a dominant driver of one pillar and a minor input to another — e.g. a "
+            "group may carry most of the Exposure weight while contributing little to Risk.*\n\n"
+        )
 
         return md
 
@@ -175,6 +235,150 @@ class DSIDocGenerator:
 
         return md
 
+    def _generate_signal_detail_section(self, config: dict) -> str:
+        """Generate a per-group breakdown of individual signals and their layer weights."""
+        groups = config.get('groups', {}).get('three_layer_assessment', [])
+        by_group = self._signals_by_group(config)
+
+        md = "### Signal Detail by Group\n"
+        md += (
+            "> *Each signal is an objectively observable data point. The weights show how "
+            "strongly that signal informs each assessment pillar; correlation direction "
+            "indicates whether a higher observed value increases (+) or decreases (-) the "
+            "assessed exposure.*\n\n"
+        )
+
+        # Iterate groups in their configured order, then any unassigned bucket.
+        ordered_ids = [g['id'] for g in groups]
+        for gid in [g['id'] for g in groups] + [k for k in by_group if k not in ordered_ids]:
+            sigs = by_group.get(gid, [])
+            if not sigs:
+                continue
+            group_meta = next((g for g in groups if g['id'] == gid), {})
+            label = group_meta.get('label', gid)
+            md += f"#### {label}\n"
+            if group_meta.get('description'):
+                md += f"*{group_meta['description']}*\n\n"
+
+            scored = [s for s in sigs if 'three_layer_assessment' in s]
+            categorical = [s for s in sigs if 'categories' in s]
+
+            if scored:
+                md += "| Signal | Proxy Tier | Risk | Loss (Freq/Sev) | Exposure | Dir |\n"
+                md += "|--------|-----------|------|-----------------|----------|-----|\n"
+                for s in scored:
+                    ls = self._signal_layer_summary(s)
+                    direction = ls['direction'] or ''
+                    dir_sym = {'positive': '+', 'negative': '-'}.get(direction, direction)
+                    loss_cell = f"{ls['loss_freq']:.2f} / {ls['loss_sev']:.2f}"
+                    md += (
+                        f"| `{s.get('id', 'unknown')}` | {s.get('proxy_tier', 'UNKNOWN')} "
+                        f"| {ls['risk']:.2f} | {loss_cell} | {ls['exposure']:.2f} | {dir_sym} |\n"
+                    )
+                md += "\n"
+
+            for s in categorical:
+                cats = s.get('categories', {})
+                features = cats.get('features', [])
+                md += (
+                    f"**Categorical signal `{s.get('id', 'unknown')}`** — "
+                    f"proxy tier: `{s.get('proxy_tier', 'UNKNOWN')}`, "
+                    f"source: `{cats.get('source', 'n/a')}`\n\n"
+                )
+                if features:
+                    md += "| Category | Label | Applied Factor |\n"
+                    md += "|----------|-------|----------------|\n"
+                    for f in features:
+                        md += (
+                            f"| `{f.get('cat', '')}` | {f.get('label', '')} "
+                            f"| {f.get('applied', '')} |\n"
+                        )
+                    md += "\n"
+
+        return md
+
+    def _generate_pricing_translation_section(self, config: dict) -> str:
+        """Show how each pillar's tier score converts into a pricing action or modifier."""
+        md = "### Three-Layer Pricing Translation\n"
+        md += (
+            "> *How each pillar's tier score becomes a concrete underwriting action or "
+            "pricing modifier. This is the bridge between signal observation and premium.*\n\n"
+        )
+
+        risk_bands = config.get('risk_tier_bands', {}).get('bands', [])
+        if risk_bands:
+            md += "**Risk -> Underwriting Action & Base Rate**\n\n"
+            md += "| Tier | Score Band | Action | Rate / Method |\n"
+            md += "|------|-----------|--------|---------------|\n"
+            for b in sorted(risk_bands, key=lambda x: x.get('id', 0)):
+                interp = b.get('interpretation', {})
+                bands = interp.get('bands', {})
+                app = interp.get('application', {})
+                rate = app.get('applied')
+                method = app.get('method', '')
+                rate_cell = f"{rate * 100:g}% ({method})" if rate is not None else method
+                md += (
+                    f"| {b.get('label', b.get('id'))} "
+                    f"| {bands.get('min', '?')}-{bands.get('max', '?')} "
+                    f"| {interp.get('action', '')} | {rate_cell} |\n"
+                )
+            md += "\n"
+
+        loss_bands = config.get('loss_tier_bands', {}).get('bands', [])
+        if loss_bands:
+            md += "**Loss -> Frequency & Severity Modifiers**\n\n"
+            md += "| Tier | Score Band | Frequency Modifier | Severity Modifier |\n"
+            md += "|------|-----------|--------------------|-------------------|\n"
+            for b in sorted(loss_bands, key=lambda x: x.get('id', 0)):
+                interp = b.get('interpretation', {})
+                bands = interp.get('bands', {})
+                app = interp.get('application', {})
+                md += (
+                    f"| {b.get('label', b.get('id'))} "
+                    f"| {bands.get('min', '?')}-{bands.get('max', '?')} "
+                    f"| {app.get('frequency_modifier', '')} "
+                    f"| {app.get('severity_modifier', '')} |\n"
+                )
+            constraints = config.get('loss_tier_bands', {}).get('constraints', {})
+            md += "\n"
+            if constraints:
+                md += (
+                    f"*Loss modifier is bounded: floor {constraints.get('floor', 'n/a')}, "
+                    f"cap {constraints.get('cap', 'n/a')}.*\n\n"
+                )
+
+        exposure = config.get('exposure', {})
+        for dim, dim_cfg in exposure.items():
+            if not isinstance(dim_cfg, dict):
+                continue
+            bands = dim_cfg.get('bands', [])
+            if not bands:
+                continue
+            md += f"**Exposure ({dim}) -> Scale Modifier**\n\n"
+            md += "| Band | Score Band | Modifier | Implied Value Range |\n"
+            md += "|------|-----------|----------|---------------------|\n"
+            for b in sorted(bands, key=lambda x: x.get('id', 0)):
+                interp = b.get('interpretation', {})
+                score = interp.get('bands', {})
+                app = interp.get('application', {})
+                thresh = app.get('implied_thresholds', {})
+                t_min = thresh.get('min') if thresh else None
+                t_max = thresh.get('max') if thresh else None
+                if t_min is not None or t_max is not None:
+                    lo = f"${t_min:,.0f}" if t_min is not None else "-"
+                    hi = f"${t_max:,.0f}" if t_max is not None else "+"
+                    val_range = f"{lo} - {hi}"
+                else:
+                    val_range = "n/a"
+                md += (
+                    f"| {b.get('label', b.get('id'))} "
+                    f"| {score.get('min', '?')}-{score.get('max', '?')} "
+                    f"| {app.get('applied', '')} | {val_range} |\n"
+                )
+            md += "\n"
+
+        return md
+
     def _generate_theoretical_pricing(self, config: dict) -> str:
         """Generate theoretical pricing calculation example."""
         pricing = config.get('pricing', {})
@@ -218,6 +422,35 @@ class DSIDocGenerator:
         md += "- **Three-Layer Engine:** Modifiers explicitly target Risk, Loss, and Exposure dimensions.\n"
         md += "- **Phase 5 Anchoring:** Polymorphic pricing limits scale from mathematically absolute anchor points.\n\n"
 
+        md += "## The Three-Layer Assessment Engine\n"
+        md += (
+            "Every DSI model scores a risk across three independent pillars before any "
+            "premium is calculated. Each pillar answers a distinct underwriting question "
+            "and enters the pricing formula at a different point:\n\n"
+        )
+        md += (
+            "- **Risk** — *How likely is this account to behave badly?* Signal evidence is "
+            "aggregated into a quality score that maps to an underwriting action "
+            "(approve / refer / decline) and selects the base rate applied to the exposure basis.\n"
+        )
+        md += (
+            "- **Loss** — *If a loss occurs, how often and how severe?* Scored separately into "
+            "frequency and severity modifiers, letting the model distinguish attritional-loss "
+            "accounts from low-frequency / high-severity ones.\n"
+        )
+        md += (
+            "- **Exposure** — *How much value is at stake?* Scales premium to the size of the "
+            "insured object, independent of risk quality.\n\n"
+        )
+        md += (
+            "Within each pillar, signals are organised into groups (e.g. Construction Quality, "
+            "Occupancy Risk). The weight tables show how much each group contributes to each "
+            "pillar; the signal detail tables show how each individual signal informs them. "
+            "Critically, a single signal can carry very different weight across the three "
+            "pillars — highly predictive of loss severity, say, yet barely moving the exposure "
+            "score.\n\n"
+        )
+
         for config_name, config in yaml_data.items():
             if not isinstance(config, dict):
                 continue
@@ -241,8 +474,14 @@ class DSIDocGenerator:
             # Signal Rationale
             md += self._generate_signal_rationale_section(config)
 
+            # Signal Detail by Group
+            md += self._generate_signal_detail_section(config)
+
             # Group Importance
             md += self._generate_group_importance_section(config)
+
+            # Three-Layer Pricing Translation
+            md += self._generate_pricing_translation_section(config)
 
             # Theoretical Pricing
             md += self._generate_theoretical_pricing(config)
