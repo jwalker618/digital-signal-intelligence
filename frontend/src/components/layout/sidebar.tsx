@@ -108,9 +108,7 @@ export default function Sidebar({
       <button
         onClick={onToggleOpen}
         className={`absolute top-generate-pad p-generate-pad ${
-                isOpen
-                  ? "right-1.5 "
-                  : "right-generate-pad "
+                isOpen ? "right-1.5 " : "right-generate-pad "
               }`}
         >
         {isOpen ? (
@@ -124,8 +122,9 @@ export default function Sidebar({
       {isOpen && (
         <nav
           className="
-            absolute left-generate-indent right-1.5 py-generate-pad 
-            overflow-y-auto overflow-x-hidden no-scrollbar"
+            absolute left-generate-indent right-1.5 
+            overflow-y-auto overflow-x-hidden no-scrollbar
+            pt-12 gap-2"
           style={{
             top: collapsedWidthPx ?? 64,
             bottom: collapsedWidthPx ?? 64,
@@ -135,19 +134,19 @@ export default function Sidebar({
             {activeSubmission ? (
               /* ═══ DRILL-DOWN MODE ═══ */
               <>
+                
                 <button
                   onClick={navigateBack}
-                  className="
-                    w-full flex items-center gap-3 py-2 
-                    text-generate-text-placeholder hover:text-generate-text-input mb-2"
+                  className="w-full flex group items-center gap-1.5 pl-generate-pad pt-3 pb-3 border-b-1 border-generate-text-outline"
                 >
-                  <ArrowLeftToLine className="generate-app-icon" />
-                  <span className="text-sm tracking-wider truncate">
+                  <ArrowLeftToLine className="generate-app-icon group-hover:text-generate-text-input group-hover:font-bold" />
+                  <span className="group-hover:text-generate-text-input group-hover:font-bold">
                     Back to {previousMenu}
                   </span>
                 </button>
 
-                <ul className="ml-3 pl-generate-pad flex flex-col gap-1">
+
+                <ul className="flex flex-col">
                   <li>
                     <NavItem
                       icon={BookKey}
@@ -219,7 +218,7 @@ export default function Sidebar({
                 )}
 
                 {canViewWorldEngine && (
-                  <div className="mt-4">
+                  <div>
                     <NavItem
                       icon={Orbit}
                       label="World Engine"
@@ -235,7 +234,7 @@ export default function Sidebar({
                 )}
 
                 {canViewAnyAdmin && (
-                  <ul className="mt-4">
+                  <ul>
                     <NavGroup
                       icon={Wrench}
                       label="Admin"
@@ -277,7 +276,8 @@ export default function Sidebar({
         <div
           className="
             absolute left-generate-pad right-generate-pad 
-            border-t-3 border-generate-text-outline p-1.5
+            pl-generate-pad pr-generate-pad
+            border-t-3 border-generate-text-outline
             flex items-center justify-between"
           style={{ bottom: 0, height: collapsedWidthPx ?? 64 }}
         >

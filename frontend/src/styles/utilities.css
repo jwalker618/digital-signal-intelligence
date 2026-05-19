@@ -6,7 +6,6 @@
   display: none; /* Chrome, Safari and Opera */
 }
 
-
 @utility generate-login-icon {
   @apply w-25 h-25;
   @apply mx-auto; 
@@ -38,16 +37,6 @@
   @apply text-sm;
 }
 
-@utility generate-notificationpill {
-  @apply p-1.5;
-  @apply bg-generate-light-input;
-  @apply border-b-1 border-generate-text-outline;
-  @apply text-generate-text-input;
-  @apply text-xs;
-  @apply rounded-md;
-  @apply shadow-sm;
-}
-
 @utility generate-actiontext {
   @apply flex;
   @apply gap-generate-pad;
@@ -58,11 +47,13 @@
   @apply text-sm;
 }
 
-@utility generate-grid-table-header {
-  @apply pt-2;
-  @apply text-sm text-wrap;
-  @apply text-center;
-  @apply text-generate-text-input;
+@utility generate-usermenu {
+  @apply flex;
+  @apply pl-generate-pad;
+  @apply gap-1.5;
+  @apply pt-1.5;
+  @apply pb-1.5;
+  @apply items-center;
 }
 
 @utility generate-dark-inputbox {
@@ -123,157 +114,75 @@
   @apply hover:border-r-6;
 }
 
-
-
-
-
-
-
-
-
-
-@utility generate-app-inputbox {
+@utility generate-light-modalbutton {
   @apply flex;
+  @apply w-full;
+  @apply p-4 gap-1.5;
+  @apply bg-generate-light-background;
+  @apply hover:bg-generate-light-input;
+  @apply hover:border border-generate-text-outline;
+  @apply hover:text-generate-text-input;
   @apply rounded-md;
-  @apply p-1.5;
-  @apply text-sm;
-  @apply text-wrap;
-  @apply border-1 border-generate-text-outline;
-  @apply placeholder:text-generate-text-placeholder;
-  @apply bg-generate-text-input;
-}.generate-app-inputbox:not(:placeholder-shown) {
-  @apply text-generate-text-input;
 }
 
-@utility generate-app-actionbutton {
-  @apply block;
+@utility generate-light-notificationpill {
+  @apply p-1.5 gap-1.5;
+  @apply bg-generate-light-input;
+  @apply border-t-1 border-b-1 border-generate-text-outline;
+  @apply text-xs;
   @apply rounded-md;
-  @apply p-1.5;
-  @apply items-center;
-  @apply justify-center;
-  @apply border-1 border-generate-text-outline;
-  @apply bg-generate-text-input;
-  @apply text-generate-text-input;
-  @apply hover:cursor-pointer;
-  @apply font-bold;
-  @apply hover:bg-generate-text-input/60;
-  @apply hover:border-generate-main-text-selected;
-  @apply hover:text-generate-main-text-selected;
 }
 
-@utility generate-inputbox {
-  @apply block;
-  @apply rounded-md;
-  @apply p-1.5;
-  @apply border-1 border-generate-main-outline;
-  @apply bg-white;
-  @apply placeholder:text-generate-contrast-background/50;
-  @apply text-generate-sidebar-text;
-  @apply text-sm;
-  @apply text-wrap;
-}
-
-@utility generate-actionbutton {
-  @apply block;
-  @apply rounded-md;
-  @apply p-1.5;
-  @apply border-1 border-generate-main-outline;
-  @apply bg-generate-contrast-analysis;
-  @apply items-center;
-  @apply justify-center;
-  @apply text-generate-sidebar-text;
-  @apply font-bold;
-  @apply hover:border-2;
-  @apply hover:border-generate-sidebar-text-selected;
-  @apply hover:text-generate-sidebar-text-selected;
-}
-
-
-
-
-
-@utility icon {
-  width: 20px;
-  height: 20px;
-}
-
-@utility largeicon {
-  width: 40px;
-  height: 40px;
-  @apply text-generate-selected;
-}
-
-
-
-
-
-
-
-@utility generate-popup-header {
+@utility generate-light-sectionheader {
   @apply flex;
   @apply gap-generate-pad;
   @apply rounded-t-xl;
-  @apply border-b-1 border-generate-analysis-shadow;
-  @apply bg-generate-contrast-background;
-  @apply text-generate-analysis;
+  @apply border-b-1 border-generate-text-outline;
+  @apply bg-generate-dark-background;
+  @apply text-generate-text-placeholder;
+  @apply pl-generate-pad pr-generate-pad;
+  @apply pt-2 pb-2;
+}
+
+@utility generate-light-sectionanalysis {
+  @apply flex flex-col flex-1;
+  @apply border-b-3 border-generate-text-outline;
+  @apply border-r border-l border-generate-text-outline;
+  @apply rounded-b-xl;
+  @apply bg-generate-light-input;
+  @apply text-generate-text-placeholder;
+  @apply hover:text-generate-text-input;
+  @apply pl-generate-pad pr-generate-pad;
+  @apply pt-2 pb-2;
+}
+
+@utility generate-light-popupheader {
+  @apply flex;
+  @apply gap-generate-pad;
+  @apply rounded-t-xl;
+  @apply border-b-1 border-generate-text-outline;
+  @apply bg-generate-dark-background;
+  @apply text-generate-text-placeholder;
   @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;  
-
   @apply rounded-tr-none;
-  @apply hover:bg-generate-selected;
+  @apply hover:bg-generate-dark-input;
   @apply items-center;
   @apply justify-between;  
 }
 
-@utility generate-section-header {
-  @apply flex;
-  @apply gap-generate-pad;
-  @apply rounded-t-xl;
-  @apply border-b-1 border-generate-analysis-shadow;
-  @apply bg-generate-analysis-header;
-  @apply text-generate-analysis-text-selected;
-  @apply pl-generate-pad pr-generate-pad;
-  @apply pt-2 pb-2;
+@utility generate-light-gridheader {
+  @apply pt-2;
+  @apply text-sm text-wrap;
+  @apply text-center;
+  @apply text-generate-text-placeholder;
 }
 
-@utility generate-section-analysis {
-  @apply flex flex-col flex-1;
-  @apply border-b-3 border-generate-analysis-shadow;
-  @apply border-r border-l border-generate-analysis-outline;
-  @apply rounded-b-xl;
-  @apply bg-generate-analysis-background;
-  @apply text-generate-analysis-text;
-  @apply hover:text-generate-analysis-text-selected;
-  @apply pl-generate-pad pr-generate-pad;
-  @apply pt-2 pb-2;
-}
-
-@utility generate-contentbox {
-  @apply border border-generate-outline/80;
-  @apply rounded-md;
-  @apply p-2;
-}
-
-
-@utility generate-grid-table-item {
+@utility generate-light-griditem {
   @apply text-2xl text-wrap;
   @apply text-center;
   @apply font-bold;
-  @apply text-generate-selected;
-  @apply border-r border-generate-outline/50;
+  @apply text-generate-text-placeholder;
+  @apply hover:text-generate-text-input;
+  @apply border-r border-generate-text-outline;
 }
-
-@utility generate-analysis-description {
-  @apply pt-1;
-  @apply content-center;
-  @apply text-sm;
-  @apply text-left;
-}
-
-@utility generate-analysis-item {
-  @apply pt-1;
-  @apply content-center;
-  @apply font-bold;
-  @apply text-left;
-}
-

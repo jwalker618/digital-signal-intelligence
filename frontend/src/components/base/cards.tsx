@@ -10,9 +10,10 @@ import {
   SECTIONS,
   SectionKey,
   SectionWrapper,
-} from "@/components/submissions/Workbench/content/sections";
+} from "@/components/submissions/content/summary/sections";
 
 import {
+  accentVars,
   getPalette,
   KEYTERM,
 } from "@/lib/keytermPalette";
@@ -61,12 +62,12 @@ export const StandardCard = ({
 }: BaseCardProps) => {
   return (
     <div className={`flex flex-col h-full ${spanClass}`}>
-      <div className="generate-section-header">
-        {Icon && <Icon className="icon"/>}
+      <div className="generate-light-sectionheader">
+        {Icon && <Icon className="generate-app-icon"/>}
         <span className={`text-sm ${headerRight ? "flex-1" : ""}`}>{title}</span>
         {headerRight}
       </div>
-      <div className="generate-section-analysis">{children}</div>
+      <div className="generate-light-sectionanalysis">{children}</div>
     </div>
   );
 };
@@ -109,11 +110,11 @@ export const PopupCard = ({
           }
         }}
       >
-        <div className="generate-popup-header">
+        <div className="generate-light-popupheader">
           <span className="text-xs content-center">Expand</span>
-          <ArrowUpRight className="icon" />
+          <ArrowUpRight className="generate-app-icon" />
         </div>
-        <div className="generate-section-analysis font-bold">
+        <div className="generate-light-sectionanalysis font-bold">
           {teaser ?? title}
         </div>
       </div>
@@ -166,26 +167,27 @@ export const SubmissionHeaderCard = ({
     <div className={`
       sticky top-0 z-999
       pt-generate-pad pb-0.5
-      bg-generate-main-background
+      bg-generate-light-background
       ${spanClass}
     `}
     >
 
     <div
-      className={`
+      style={accentVars(color)}
+      className="
         rounded-xl
         pt-generate-pad pb-generate-pad
-        border-b-3 border-generate-contrast-background
-        bg-${color}
-        shadow-sm
-      `}
+        border-b-3 border-generate-text-outline
+        bg-generate-light-input
+        shadow-sm"
     >
       {/* Top row — decision label + caller-supplied status info */}
-      <div className="flex items-center justify-between pb-generate-pad border-b border-generate-outline/50">
-        <div className="flex gap-4 pl-generate-pad">
-          {Icon && <Icon className="generate-app-icon scale-150" />}
+      <div className="flex items-center justify-between pb-generate-pad border-b border-generate-text-outline">
+        
+        <div className="flex gap-4 pl-generate-pad items-center justify-between">
+          {Icon && <Icon className="generate-app-icon scale-200 text-[var(--accent)] hover:text-[var(--accent)]" />}
           <div>
-            <span className="text-2xl font-bold uppercase tracking-wider text-generate-selected">
+            <span className="text-3xl font-bold uppercase tracking-wider text-[var(--accent)]">
               {title}
             </span>
             {subtitle && <span className="block text-xs">{subtitle}</span>}
@@ -193,7 +195,7 @@ export const SubmissionHeaderCard = ({
         </div>
 
         {headerRight && (
-          <div className="flex items-center justify-between gap-4 pr-generate-pad">{headerRight}</div>
+          <div className="flex items-center justify-between gap-4 pr-generate-pad text-generate-text-placeholder">{headerRight}</div>
         )}
       </div>
       <div className="pl-generate-pad">

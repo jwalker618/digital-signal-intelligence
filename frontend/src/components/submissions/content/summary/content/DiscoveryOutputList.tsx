@@ -15,7 +15,7 @@ export default function DiscoveryOutputList() {
     <KeyValueList
       data={activeVersion?.discovery_output}
       renderLabel={(k) => formatText(k, "upper")}
-      valueClassName="text-generate-selected"
+      valueClassName="text-generate-text-placeholder"
       emptyMessage="No discovery output available."
     />
   );

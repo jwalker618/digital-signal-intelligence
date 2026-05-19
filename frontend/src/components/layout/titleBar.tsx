@@ -54,7 +54,7 @@ export default function TitleBar() {
           <div
             className="
               absolute left-[75%]
-              generate-notificationpill"
+              generate-light-notificationpill"
           >
             {sessionWarning}
           </div>

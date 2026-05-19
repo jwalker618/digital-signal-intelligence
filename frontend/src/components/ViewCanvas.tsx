@@ -15,9 +15,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
       
       {/*Top Context Window */}
       <div 
-        className="
-          absolute top-0 
-          left-generate-gap right-generate-gap"
+        className="absolute top-0 left-generate-gap right-generate-gap"
           style={{ 
             height: topContext ? ('var(--cw)') : (0) ,
           }}
@@ -27,10 +25,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
 
       {/* Main Analysis Area (Fixed Boundary Constraints) */}
       <div
-        className="
-          absolute 
-          left-generate-gap right-generate-gap 
-          no-scrollbar"
+        className="absolute left-generate-gap right-generate-gap no-scrollbar"
           style={{
             top: topContext ? ('var(--cw)') : (0) ,
             bottom: bottomContext ? ('var(--cw)') : (0) ,
@@ -40,9 +35,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
         {unstyledMain ? (
           children
         ) : (
-          <div className="
-            min-h-full  
-            p-generate-pad">
+          <div className="min-h-full p-generate-pad">
             {children}
           </div>
         )}
@@ -50,9 +43,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
 
       {/*Optional Bottom Context Window */}
       <div
-        className="
-          absolute bottom-0 
-          left-generate-gap right-generate-gap"
+        className="absolute bottom-0 left-generate-gap right-generate-gap"
           style={{ 
             height: bottomContext ? ('var(--cw)') : (0) 
           }}

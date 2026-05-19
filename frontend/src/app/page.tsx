@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import PipelineTable from "@/components/submissions/PipelineTable";
-import WorkbenchView from "@/components/submissions/WorkbenchView";
+import SelectionTable from "@/components/submissions/SelectionTable";
+import SelectionItem from "@/components/submissions/SelectionItem";
 
 export default function Home() {
   const {
@@ -20,18 +20,15 @@ export default function Home() {
 
   // If we have an active submission, ALWAYS show the Workbench wrapper
   if (activeSubmission) {
-    return <WorkbenchView />;
+    return <SelectionItem />;
   }
 
   // Otherwise, route the top-level menus
   switch (activeMenu) {
-    case "Referral Pipeline":
-      return <PipelineTable type="referral" />;
-    case "Full Pipeline":
-      return <PipelineTable type="full" />;
-    case "Performance Metrics":
-      return <div className="p-8 text-generate-selected">Analytics Dashboard Under Construction</div>;
-    default:
-      return <PipelineTable type="referral" />;
+    case "Referral Pipeline": return <SelectionTable type="referral" />;
+    case "Full Pipeline": return <SelectionTable type="full" />;
+    case "Performance Metrics": return <div>Analytics Dashboard Under Construction</div>;
+    
+    default: return <SelectionTable type="referral" />;
   }
 }

@@ -37,8 +37,8 @@ export default function UserMenu() {
         <div className="
           absolute bottom-[5vw] left-0 z-40
           flex flex-col 
-          w-[50%] 
-          p-1.5 gap-1.5 mb-generate-pad
+          w-[33%] 
+          mb-generate-pad
           bg-generate-dark-input 
           text-generate-text-placeholder text-sm
           border-t-1 border-b-1 border-generate-text-outline 
@@ -51,7 +51,7 @@ export default function UserMenu() {
                 setActiveMenu("Your Profile");
                 router.push("/profile");
               })}
-              className="flex gap-generate-pad items-center  group-hover:text-generate-text-input"
+              className="generate-usermenu group-hover:text-generate-text-input"
             >
               <CircleUserRound className="generate-app-icon group-hover:text-generate-text-input" /> Profile
             </button>
@@ -63,7 +63,7 @@ export default function UserMenu() {
                   await logout();
                   router.replace("/login");
                 })}
-                className="flex gap-generate-pad items-center group-hover:text-generate-text-input"
+                className="generate-usermenu group-hover:text-generate-text-input"
               >
                 <LogOut className="generate-app-icon group-hover:text-generate-text-input" /> 
                 <span>Sign out</span>

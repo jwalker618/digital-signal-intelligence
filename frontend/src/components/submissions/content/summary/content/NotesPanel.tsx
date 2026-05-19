@@ -1,14 +1,9 @@
 "use client";
 
-/**
- * Notes panel — inline add + persisted list. Body content for a
- * StandardCard (titled "Notes (N)"). The count should be surfaced on the
- * StandardCard title by the caller if desired.
- */
-
 import { useState } from "react";
 import { User, Plus } from "lucide-react";
 import { useDsiStore } from "@/store/dsiStore";
+import { formatText } from "@/lib/format";
 
 interface StoredNote {
   note?: string;
@@ -33,60 +28,48 @@ export default function NotesPanel() {
 
   return (
     <>
-      <div className="flex gap-2 mb-4">
+      <div className="flex gap-1 justify-between">
+        
         <input
           type="text"
           value={newNoteText}
           onChange={(e) => setNewNoteText(e.target.value)}
-          placeholder="Add a note..."
-          className="
-            flex-1
-            bg-generate-contrast-analysis
-            border-1 border-generate-contrast-analysis/30
-            pr-generate-pad pl-generate-pad ml-2 py-2
-            text-sm
-            hover:text-generate-selected
-            hover:border-generate-outline"
+          placeholder="Add a note..."   
+          className="generate-light-inputbox w-[95%]"
           onKeyDown={(e) => e.key === "Enter" && handleAddNote()}
           disabled={isAddingNote}
         />
+        
         <button
           onClick={handleAddNote}
           disabled={!newNoteText.trim() || isAddingNote}
-          className="
-            text-generate-analysis text-sm
-            gap-1
-            bg-generate-contrast-background
-            hover:bg-generate-selected
-            pr-generate-pad pl-generate-pad mr-2
-            flex items-center"
-        >
-          {isAddingNote ? "Saving..." : "Add"} <Plus className="icon" />
+          className="generate-light-actionbutton"
+        >{isAddingNote ? "Saving..." : "Add"}
         </button>
+
       </div>
 
       {notes.length === 0 ? (
-        <p className="generate-user-message">No notes recorded yet. Add one above.</p>
+        <p className="generate-comment-message mt-2">No notes recorded yet. Add one above.</p>
       ) : (
-        <div className="space-y-2 max-h-[300px] overflow-y-auto no-scrollbar">
+        
+        
+        <div className="mt-2 items-center">
           {[...notes].reverse().map((note, i) => {
             const text = typeof note === "object" ? note.note ?? note.text : note;
             const source = typeof note === "object" ? note.source ?? "System" : "System";
             return (
               <div
                 key={i}
-                className="bg-generate-background/30 rounded-lg p-3 border border-generate-outline/10 text-wrap"
+                className="flex pt-1 pr-2 text-sm text-wrap"
               >
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-[10px] opacity-50 flex items-center gap-1">
-                    <User className="w-2.5 h-2.5" /> {source}
-                  </span>
-                </div>
-                <p className="text-xs leading-relaxed">{text}</p>
+                <span className="flex w-[10%]"> {formatText(source,"capitalize")}</span>
+                <p className="flex pl-generate-pad">{text}</p>
               </div>
             );
           })}
         </div>
+
       )}
     </>
   );

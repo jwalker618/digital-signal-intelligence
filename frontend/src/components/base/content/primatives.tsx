@@ -2,16 +2,11 @@
 
 import { Fragment, useState } from "react";
 import {
-  formatNumber,
-  formatText,
-  formatCurrency,
-  formatPercent,
-  formatDate,
+  formatNumber, formatText, formatCurrency, formatPercent, formatDate,
 } from "@/lib/format";
 
 import {
-  getPalette,
-  KEYTERM,
+  accentVars,  getPalette,  KEYTERM,
 } from "@/lib/keytermPalette";
 
 import { 
@@ -191,9 +186,8 @@ export const ContributionTable = ({
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`generate-analysis-description text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pb-1`}
-        >
-          {c.label}
+          className={`text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pt-1.5 pb-1.5`}
+        > {c.label}
         </div>
       ))}
 
@@ -209,8 +203,8 @@ export const ContributionTable = ({
                 key={`v-${idx}-${i}`}
                 className={
                   isName
-                    ? `generate-analysis-description ${TEXTALIGN_CLASS[cellAlign(c)]} border-r-1 border-generate-text-outline pt-1 pb-1`
-                    : `generate-analysis-item ${TEXTALIGN_CLASS[cellAlign(c)]} pt-1 pb-1`
+                    ? `${TEXTALIGN_CLASS[cellAlign(c)]} text-sm border-r-1 border-generate-text-outline pt-1.5`
+                    : `${TEXTALIGN_CLASS[cellAlign(c)]} font-bold pt-1.5`
                 }
               >
                 {content}
@@ -506,13 +500,13 @@ const ROW_STYLES: Record<
   card: {
     wrapper: "",
     row: "flex justify-between",
-    label: "generate-analysis-description",
-    value: "generate-analysis-item",
+    label: "text-sm",
+    value: "font-bold",
   },
   modal: {
-    wrapper: "space-y-3 font-mono text-sm",
-    row: "flex justify-between items-center py-2 border-b border-generate-text-outline last:border-0",
-    label: "opacity-60",
+    wrapper: "text-sm",
+    row: "flex justify-between items-center py-2 last:border-0",
+    label: "text-sm",
     value: "font-bold text-right",
   },
 };
@@ -535,7 +529,7 @@ export const LabelValueList = ({
   className = "",
 }: LabelValueListProps) => {
   if (rows.length === 0) {
-    return <p className="generate-user-message">{emptyMessage}</p>;
+    return <p className="generate-comment-message">{emptyMessage}</p>;
   }
 
   const s = ROW_STYLES[variant];
@@ -640,11 +634,11 @@ export const KpiTile = ({
   return (
     <div>
       <span className="flex items-center gap-1 text-sm mb-1">
-        {Icon && <Icon className="icon" />}
+        {Icon && <Icon className="generate-app-icon" />}
         {label}
       </span>
       <span className={`block ${valueClass}`}>{value}</span>
-      {subtext && <span className="text-xs opacity-50 block">{subtext}</span>}
+      {subtext && <span className="text-xs block">{subtext}</span>}
     </div>
   );
 }
@@ -711,9 +705,9 @@ export const ScoreBar = ({
   return (
     <div className="flex items-center gap-2">
       {label !== undefined && (
-        <span className={`text-[10px] opacity-50 shrink-0 ${labelWidth}`}>{label}</span>
+        <span className={`text-[10px] shrink-0 ${labelWidth}`}>{label}</span>
       )}
-      <div className="flex-1 h-1.5 bg-generate-background rounded-full overflow-hidden">
+      <div className="flex-1 h-1.5 bg-generate-light-background rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all"
           style={{ width: `${pct}%`, backgroundColor: color }}
@@ -762,7 +756,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`h-${i}`}
-          className={`generate-grid-table-header ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`generate-light-gridheader ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.label}
         </div>
@@ -770,7 +764,7 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
       {columns.map((c, i) => (
         <div
           key={`v-${i}`}
-          className={`generate-grid-table-item ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
+          className={`generate-light-griditem ${TEXTALIGN_CLASS[c.align ?? "center"]} ${i === lastIdx ? "border-r-0" : ""}`}
         >
           {c.value}
         </div>
@@ -829,11 +823,11 @@ export const CompareRow = ({
     >
       <div>
         <span className="text-xs">{label}</span>
-        {sublabel && <span className="text-[10px] opacity-30 block">{sublabel}</span>}
+        {sublabel && <span className="text-[10px] block">{sublabel}</span>}
       </div>
-      <span className="text-right text-xs opacity-70">{original}</span>
+      <span className="text-right text-xs ">{original}</span>
       {showArrow ? (
-        <span className="text-center opacity-30 text-xs">→</span>
+        <span className="text-center text-xs">→</span>
       ) : (
         <span />
       )}
@@ -901,17 +895,17 @@ export const MetricCard = ({
   const toneStyles = tone ? METRIC_CARD_TONE[tone] : null;
   const frame = toneStyles
     ? `border-2 ${toneStyles.border} ${toneStyles.bg}`
-    : "border border-generate-outline/20";
+    : "border border-generate-text-outline";
   const valueColor = toneStyles?.text ?? "";
 
   return (
     <div className={`${frame} rounded-xl p-5 ${className}`}>
-      <span className="flex items-center gap-1 opacity-50 text-xs mb-1 uppercase tracking-wider">
-        {Icon && <Icon className="w-3 h-3" />}
+      <span className="flex items-center gap-1 text-xs mb-1 uppercase tracking-wider">
+        {Icon && <Icon className="generate-app-icon" />}
         {label}
       </span>
       <span className={`block font-bold text-xl ${valueColor}`}>{value}</span>
-      {subtext && <span className="block text-xs opacity-50 mt-1">{subtext}</span>}
+      {subtext && <span className="block text-xs mt-1">{subtext}</span>}
     </div>
   );
 }
@@ -931,17 +925,19 @@ export const SubmissionStatusPill = ({
   const Icon = lucideIcon ?? icon;
 
   return (
-    <div
-      className={`
-        inline-flex 
-        justify-center 
-        items-center gap-1
-        bg-${color}
-        text-${color}
-      `}
-    >
-      {Icon && <Icon className="generate-app-icon text-scale-200" />}
-      {decision}
+    <div className="group">
+      <div
+        style={accentVars(color)}
+        className="
+          inline-flex 
+          justify-center 
+          items-center gap-1
+          group-hover:font-bold
+          text-[var(--accent)]"
+      >
+        {Icon && <Icon className="generate-app-icon text-[var(--accent)] hover:text-[var(--accent)] group-hover:scale-120" />}
+        {formatText(decision,"capitalize")}
+      </div>
     </div>
   );
 };

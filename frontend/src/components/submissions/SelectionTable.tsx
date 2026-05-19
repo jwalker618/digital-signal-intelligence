@@ -5,15 +5,14 @@ import { CircleCheck, CircleX, Loader2, Filter, X } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
 import { useDsiStore } from "@/store/dsiStore";
-import { StatusPill, SubmissionStatusPill } from "@/components/base/content/primatives";
-import { DECISION_PALETTE } from "@/lib/keytermPalette";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { 
   formatText,
   formatCurrency, 
   formatNumber 
 } from "@/lib/format";
 
-export default function PipelineTable({ type }: { type: "full" | "referral" }) {
+export default function SelectionTable({ type }: { type: "full" | "referral" }) {
   const {
     setPageQuickAction,
     submissions,
@@ -38,7 +37,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
         className="
           p-1.5 gap-1.5
           bg-generate-light-input
-          text-generate-text-placeholder text-sm
+          text-generate-text-placeholder text-xs
           hover:text-generate-text-input
           border-t-1 border-b-1 border-generate-text-outline 
           rounded-md"
@@ -231,6 +230,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
 
                       ) : (
                         <div className="flex items-center justify-center gap-4">
+                          
                           <button
                             className="hover:scale-150 transition-transform"
                             onClick={(e) => {
@@ -238,7 +238,8 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                               if (sub.referral_id) updateDecision(sub.quote_code, "BOUND", "APPROVED");
                             }}
                           >
-                            <CircleCheck className="generate-app-icon" />
+                            <CircleCheck className="generate-app-icon hover:text-generate-text-good " />
+                          
                           </button>
                           <span className="text-generate-text-placeholder font-light">/</span>
                           <button
@@ -248,7 +249,7 @@ export default function PipelineTable({ type }: { type: "full" | "referral" }) {
                               if (sub.referral_id) updateDecision(sub.quote_code, "DECLINED", "DECLINED");
                             }}
                           >
-                            <CircleX className="generate-app-icon" />
+                            <CircleX className="generate-app-icon hover:text-generate-text-bad" />
                           </button>
                         </div>
                       )}

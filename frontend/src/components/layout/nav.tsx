@@ -35,9 +35,9 @@ export const NavItem = ({
     
     <button
       onClick={onClick}
-      className={`flex items-center w-full text-left rounded-md text-sm gap-generate-pad${
+      className={`flex items-center gap-1.5 pl-generate-pad pt-3 pb-3 w-full${
         isActive
-          ? "text-generate-text-input bg-generate-dark-input font-bold"
+          ? "text-generate-text-input bg-generate-dark-input font-bold w-full rounded-md "
           : "text-generate-text-placeholder group-hover:text-generate-text-input"
       } ${className}`}
     >
@@ -50,7 +50,7 @@ export const NavItem = ({
       } ${className}`}
       />
       
-      <span className="truncate pl-3 pt-1.5 pb-1.5">{label}</span>
+      <span className="">{label}</span>
     </button>
   </div>
 );
@@ -80,11 +80,11 @@ export const NavGroup = ({
     <div className="group"> 
       <button
         onClick={onToggle}
-        className="flex items-center w-full text-left rounded-md text-sm gap-generate-pad justify-between"
+        className="flex items-center w-full rounded-md justify-between"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 pl-generate-pad pt-3 pb-3">
           <Icon className="generate-app-icon group-hover:text-generate-text-input" />
-          <span className="truncate tracking-wider normal-case group-hover:text-generate-text-input">{label}</span>
+          <span className="group-hover:text-generate-text-input">{label}</span>
         </div>
         {isExpanded ? (
           <ChevronDown className="generate-app-icon group-hover:text-generate-text-input" />
@@ -95,7 +95,7 @@ export const NavGroup = ({
     </div>
 
     {isExpanded && (
-      <ul className="flex flex-col border-l-3 border-generate-text-placeholder ml-2 mt-2 p-generate-pad gap-generate-pad">
+      <ul className="flex flex-col border-l-3 border-generate-text-placeholder">
         {children}
       </ul>
     )}

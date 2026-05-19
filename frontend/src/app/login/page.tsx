@@ -92,16 +92,22 @@ export default function LoginPage() {
             <h2 className="text-2xl font-bold mb-4">
               Sign in to your account
             </h2>
-
-            <button
-              onClick={() => onToggleSSO(prev => !prev)}
-              className="flex gap-2 mb-2 items-center text-sm">
-              {isSSO ? (
-                <PanelBottomOpen className="generate-app-icon"/> 
-              ) : (
-                <PanelBottomClose className="generate-app-icon"/>
-              )}{isSSO ? "Tenant (for SSO)" : "Email Address / Password"}
-            </button>
+            
+            <div className="group">
+              <button
+                onClick={() => onToggleSSO(prev => !prev)}
+                className="flex gap-2 mb-2 items-center text-sm">
+                {isSSO ? (
+                  <PanelBottomOpen className="generate-app-icon group-hover:text-generate-text-input"/> 
+                ) : (
+                  <PanelBottomClose className="generate-app-icon group-hover:text-generate-text-input"/>
+                )}    
+                {isSSO ? 
+                  <span className="text-generate-text-placeholder group-hover:text-generate-text-input">Tenant (for SSO)</span> : 
+                  <span className="text-generate-text-placeholder group-hover:text-generate-text-input">Email Address / Password</span>
+                }
+              </button>
+            </div>
 
             {mfaChallengePending ? ( <MFAVerify/> ) 
             : (

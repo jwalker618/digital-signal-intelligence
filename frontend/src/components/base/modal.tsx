@@ -83,7 +83,7 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
         fixed inset-0 
         items-center 
         justify-center 
-        bg-generate-background/20 
+        bg-generate-light-input/5
         backdrop-blur-sm
         animate-in fade-in duration-200"
     >
@@ -99,20 +99,20 @@ export default function Modal({ isOpen, onClose, title, icon: Icon, children }: 
       >
 
         {/* Modal Header */}
-        <div className="generate-section-header items-center justify-between">
-          {Icon && <Icon className="icon"/>}
+        <div className="generate-light-sectionheader items-center justify-between">
+          {Icon && <Icon className="generate-app-icon"/>}
           <span id="generate-modal-title" className="font-bold">{title}</span>
           <button
             onClick={onClose}
             aria-label="Close"
-            className="hover:text-generate-selected"
+            className="hover:text-generate-text-input"
           >
-            <ArrowDownLeft className="icon" />
+            <ArrowDownLeft className="generate-app-icon" />
           </button>
         </div>
  
         {/* Modal Body */}
-        <div className="generate-section-analysis">{children}</div>
+        <div className="generate-light-sectionanalysis">{children}</div>
       </div>
     </div>
   );

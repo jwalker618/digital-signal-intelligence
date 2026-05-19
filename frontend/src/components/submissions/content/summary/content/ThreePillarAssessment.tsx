@@ -53,18 +53,21 @@ function Pillar({
 }: PillarProps) {
   return (
     <div>
-      <div className="flex gap-2 ml-generate-pad pt-1">
-        <Icon className="icon" />
-        <span className={`text-sm ${titleUnderline ? "underline" : ""}`}>{title}</span>
+      <div className="flex w-full pt-2 pb-2 gap-1.5 border-b-1 border-generate-text-outline font-bold">
+        <Icon className="generate-app-icon" />
+        <span className="text-sm">{title}</span>
       </div>
 
       {/* Top metrics — simple two-row list */}
-      <div className="pt-generate-pad">
+      
+      <div className="mt-4">
         {metrics.map((m, i) => (
-          <div key={i} className="flex justify-between">
-            <span className="generate-analysis-description">{m.label}</span>
+          
+          <div key={i} className="flex w-full justify-between items-center gap-1.5">
+            
+            <span className="text-sm">{m.label}</span>
             <span
-              className={`generate-analysis-item ${
+              className={`font-bold ${
                 m.align === "left" ? "text-left" : "text-right"
               }`}
             >
@@ -75,7 +78,7 @@ function Pillar({
       </div>
 
       {/* Calculation section label */}
-      <div className="generate-analysis-description text-xs pt-generate-pad">
+      <div className="text-xs mt-4 font-bold">
         {calculationLabel}
       </div>
 
@@ -122,7 +125,6 @@ export default function ThreePillarAssessment() {
       <Pillar
         title="Risk Analysis"
         icon={ChartNoAxesGantt}
-        titleUnderline
         calculationLabel="Composite Score Calculation"
         columns={[
           { label: "Group",        field: null,                width: "50%", format: "text",   textCase: "capitalize" },
