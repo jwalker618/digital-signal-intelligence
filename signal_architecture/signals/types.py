@@ -258,6 +258,12 @@ class SignalResult:
     # when every cascade level fails.
     primitive_type: Optional[str] = None  # PrimitiveType literal
 
+    # V7 Phase 11: variant-loop ancestry. None for primary signals;
+    # the parent signal_id for variants spawned by the within-cycle
+    # amplification loop. Single-hop invariant: the trigger predicate
+    # refuses to fan out from any signal where variant_of is not None.
+    variant_of: Optional[str] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}

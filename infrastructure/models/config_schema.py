@@ -978,6 +978,21 @@ class ValidatorPolicy(StrictModel):
     advance_bump_cap: EvidenceGradeName = "structured_attested"
 
 
+class VariantLoopPolicy(StrictModel):
+    """V7 Phase 11 — within-cycle variant amplification knobs.
+
+    `enabled`                       — master switch.
+    `max_per_trigger`               — per validator-confirmed signal, how
+                                       many sibling queries to generate.
+    `max_per_entity_per_cycle`      — hard cap across ALL triggers in one
+                                       cycle. Whichever cap binds first
+                                       binds.
+    """
+    enabled: bool = True
+    max_per_trigger: int = Field(default=5, ge=0, le=20)
+    max_per_entity_per_cycle: int = Field(default=25, ge=0, le=200)
+
+
 class EvidenceGradePolicy(StrictModel):
     """V7 Phase 4 policy block governing grade-driven referrals.
 
@@ -993,6 +1008,8 @@ class EvidenceGradePolicy(StrictModel):
     # existing config valid: configs without a `validator:` sub-block
     # parse correctly with the documented defaults.
     validator: ValidatorPolicy = Field(default_factory=ValidatorPolicy)
+    # V7 Phase 11 — variant-loop sub-policy. Same default-factory pattern.
+    variant_loop: VariantLoopPolicy = Field(default_factory=VariantLoopPolicy)
 
 
 class CoverageConfig(StrictModel):
