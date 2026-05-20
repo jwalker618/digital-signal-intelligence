@@ -19,7 +19,7 @@ import {
 import ViewCanvas from "@/components/ViewCanvas";
 import { CardGrid, StandardCard } from "@/components/base/cards";
 import { api, fmtDate } from "@/lib/api";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { useDsiStore } from "@/store/dsiStore";
 import type { RoleRow, UserRow } from "@/types/admin";
 
@@ -110,7 +110,7 @@ export default function UsersPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="w-full h-full overflow-y-auto no-scrollbar bg-generate-background text-generate-contrast-background p-generate-pad animate-in fade-in duration-500 pb-12">
+      <div className="w-full h-full overflow-y-auto no-scrollbar bg-generate-light-background text-generate-text-input p-generate-pad animate-in fade-in duration-500 pb-12">
 
         {error && (
           <div className="generate-notificationpill mb-generate-pad flex items-center gap-2">
@@ -161,7 +161,7 @@ export default function UsersPage() {
           <StandardCard title="Users" lucideIcon={UsersIcon}>
             <table className="w-full text-left whitespace-nowrap border-collapse">
               <thead>
-                <tr className="generate-grid-table-header text-generate-contrast-background">
+                <tr className="generate-grid-table-header text-generate-text-input">
                   <th className="p-1.5">Email</th>
                   <th className="p-1.5">Name</th>
                   <th className="p-1.5">Role</th>
@@ -173,14 +173,14 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
+                  <tr key={u.id} className="even:bg-generate-dark-input text-generate-text-input">
                     <td className="p-1.5 font-mono text-xs">{u.email}</td>
                     <td className="p-1.5">{u.full_name ?? "—"}</td>
                     <td className="p-1.5">{u.role_name ?? "—"}</td>
                     <td className="p-1.5 text-xs">{u.mfa_enabled ? "on" : "off"}</td>
                     <td className="p-1.5">
-                      <StatusBadge
-                        status={u.is_locked ? "locked" : u.is_active ? "active" : "inactive"}
+                      <SubmissionStatusPill
+                        decision={u.is_locked ? "locked" : u.is_active ? "active" : "inactive"}
                       />
                     </td>
                     <td className="p-1.5 text-xs opacity-80">{fmtDate(u.last_login)}</td>
@@ -189,7 +189,7 @@ export default function UsersPage() {
                         <button
                           onClick={() => void deactivate(u.id)}
                           disabled={busy === `deact:${u.id}`}
-                          className="text-xs text-generate-decline hover:underline flex items-center gap-1 disabled:opacity-50"
+                          className="text-xs text-generate-text-bad hover:underline flex items-center gap-1 disabled:opacity-50"
                         >
                           <UserX className="w-3 h-3" /> Deactivate
                         </button>
@@ -207,7 +207,7 @@ export default function UsersPage() {
           <StandardCard title="Roles" lucideIcon={ShieldCheck}>
             <table className="w-full text-left whitespace-nowrap border-collapse">
               <thead>
-                <tr className="generate-grid-table-header text-generate-contrast-background">
+                <tr className="generate-grid-table-header text-generate-text-input">
                   <th className="p-1.5">Name</th>
                   <th className="p-1.5">Description</th>
                   <th className="p-1.5 text-right">Users</th>
@@ -216,7 +216,7 @@ export default function UsersPage() {
               </thead>
               <tbody>
                 {roles.map((r) => (
-                  <tr key={r.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
+                  <tr key={r.id} className="even:bg-generate-dark-input text-generate-text-input">
                     <td className="p-1.5 font-semibold">{r.name}</td>
                     <td className="p-1.5 opacity-80">{r.description ?? "—"}</td>
                     <td className="p-1.5 text-right tabular-nums">{r.user_count}</td>
@@ -225,7 +225,7 @@ export default function UsersPage() {
                         {r.permissions.map((p) => (
                           <span
                             key={p}
-                            className="text-[10px] font-mono border border-generate-outline/30 rounded px-1"
+                            className="text-[10px] font-mono border border-generate-text-outline/30 rounded px-1"
                           >
                             {p}
                           </span>

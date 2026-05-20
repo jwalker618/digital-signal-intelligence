@@ -15,6 +15,21 @@ import {
 
 export type LabelValueVariant = "card" | "modal";
 export type KpiVariant = "default" | "emphasis";
+
+/**
+ * Shared tone palette — used by MetricCard and any other primitive that
+ * surfaces semantic intent (selected / positive / negative / warning /
+ * info / muted). All tokens resolve through theme.css so light/dark mode
+ * just works.
+ */
+export const TONE_PALETTE = {
+  selected: { border: "border-generate-text-outline/30",     bg: "bg-generate-light-input",        text: "text-generate-text-input"       },
+  positive: { border: "border-generate-text-good/30",        bg: "bg-generate-text-good/5",        text: "text-generate-text-good"        },
+  negative: { border: "border-generate-text-bad/30",         bg: "bg-generate-text-bad/5",         text: "text-generate-text-bad"         },
+  warning:  { border: "border-generate-text-maybe/30",       bg: "bg-generate-text-maybe/5",       text: "text-generate-text-maybe"       },
+  info:     { border: "border-generate-text-comment/30",     bg: "bg-generate-text-comment/5",     text: "text-generate-text-comment"     },
+  muted:    { border: "border-generate-text-placeholder/30", bg: "bg-generate-text-placeholder/5", text: "text-generate-text-placeholder" },
+} as const;
 export type StatusTone = keyof typeof TONE_PALETTE;
 
 export type Align = "left" | "center" | "right";
@@ -502,7 +517,7 @@ export const InfoPanel = ({
 
 /** GUIDANCE
  * key: Override the React key. Defaults to the label stringified + index.
- * valueClassName: Extra classes on the value `<span>` (e.g. `text-generate-selected`).
+ * valueClassName: Extra classes on the value `<span>` (e.g. `text-generate-text-input`).
  */
 export interface LabelValueRow {
   label: React.ReactNode;
@@ -542,7 +557,7 @@ const ROW_STYLES: Record<
 /**
  * Renders an ordered list of `{ label, value }` rows. Two visual variants:
  *   • "card"  — in-card summary rows (flex justify-between, uses
- *               generate-analysis-description / generate-analysis-item utilities).
+ *               generate-light-input-description / generate-light-input-item utilities).
  *   • "modal" — divided key/value rows inside a modal body (font-mono,
  *               bottom border per row, opacity-60 label).
  *
@@ -641,7 +656,7 @@ export interface KpiTileProps {
  *
  * Variants:
  *   • "default"  — base colour, lg value.
- *   • "emphasis" — text-generate-selected + xl value. For the "final" number in
+ *   • "emphasis" — text-generate-text-input + xl value. For the "final" number in
  *                  a row.
  *
  * Compose a row manually (`<div className="grid grid-cols-N gap-4">`) — a
@@ -677,7 +692,7 @@ export const KpiTile = ({
 
 /** GUIDANCE
  * at: Inclusive upper bound. First matching entry wins.
- * colour: CSS value for `backgroundColor`, e.g. `"var(--generate-decline)"`
+ * colour: CSS value for `backgroundColor`, e.g. `"var(--generate-text-bad)"`
  */
 export interface ScoreBarThreshold {
   at: number;
@@ -709,7 +724,7 @@ function pickColor(value: number, thresholds: ScoreBarThreshold[]): string {
   for (const t of thresholds) {
     if (value <= t.at) return t.color;
   }
-  return thresholds[thresholds.length - 1]?.color ?? "var(--generate-muted)";
+  return thresholds[thresholds.length - 1]?.color ?? "var(--generate-text-placeholder)";
 }
 
 /**
@@ -810,8 +825,8 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
  * sublabel: Optional secondary line under the label.
  * original: Original-state value (left comparand).
  * scenario: Scenario-state value (right comparand).
- * changed:  When true, highlights the row with `bg-generate-selected/5` and
- *           renders the scenario value in `text-generate-selected font-bold`.
+ * changed:  When true, highlights the row with `bg-generate-text-input/5` and
+ *           renders the scenario value in `text-generate-text-input font-bold`.
  * showArrow: Show the → between original and scenario. Default true.
  * gridTemplate: Override the grid-template-columns. Default
  *               `"1fr 80px 30px 80px"`.
@@ -870,25 +885,8 @@ export const CompareRow = ({
 
 /** METRIC CARD---------------------------------------------------------------------------------------------- */
 
-export type MetricCardTone =
-  | "selected"
-  | "positive"
-  | "negative"
-  | "warning"
-  | "info"
-  | "muted";
-
-const METRIC_CARD_TONE: Record<
-  MetricCardTone,
-  { border: string; bg: string; text: string }
-> = {
-  selected: { border: "border-generate-selected/30", bg: "bg-generate-selected/5", text: "text-generate-selected" },
-  positive: { border: "border-generate-approve/30", bg: "bg-generate-approve/5", text: "text-generate-approve" },
-  negative: { border: "border-generate-decline/30", bg: "bg-generate-decline/5", text: "text-generate-decline" },
-  warning:  { border: "border-generate-refer/30",  bg: "bg-generate-refer/5",  text: "text-generate-refer"  },
-  info:     { border: "border-generate-info/30",     bg: "bg-generate-info/5",     text: "text-generate-info"     },
-  muted:    { border: "border-generate-muted/30",    bg: "bg-generate-muted/5",    text: "text-generate-muted"    },
-};
+/** MetricCard reuses the shared TONE_PALETTE — same tone keys as elsewhere. */
+export type MetricCardTone = StatusTone;
 
 /** GUIDANCE
  * label:     Small uppercase caption above the hero value.
@@ -896,7 +894,7 @@ const METRIC_CARD_TONE: Record<
  * subtext:   Optional small caption beneath the value.
  * tone:      When provided, applies `border-2 border-generate-<tone>/30
  *            bg-generate-<tone>/5` and colours the value `text-generate-<tone>`.
- *            When omitted, renders a plain `border border-generate-outline/20` card.
+ *            When omitted, renders a plain `border border-generate-text-outline/20` card.
  * lucideIcon: Optional leading icon rendered before the label.
  */
 export interface MetricCardProps {
@@ -922,11 +920,11 @@ export const MetricCard = ({
   lucideIcon: Icon,
   className = "",
 }: MetricCardProps) => {
-  const toneStyles = tone ? METRIC_CARD_TONE[tone] : null;
+  const toneStyles = tone ? TONE_PALETTE[tone] : null;
   const frame = toneStyles
     ? `border-2 ${toneStyles.border} ${toneStyles.bg}`
     : "border border-generate-text-outline";
-  const valueColor = toneStyles?.text ?? "";
+  const valueColor = toneStyles?.text ?? "text-generate-text-input";
 
   return (
     <div className={`${frame} rounded-xl p-5 ${className}`}>

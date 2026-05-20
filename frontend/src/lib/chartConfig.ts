@@ -8,19 +8,19 @@
  */
 
 const DECISION_COLORS: Record<string, string> = {
-  approve: "var(--generate-approve)",
-  refer:   "var(--generate-refer)",
-  decline: "var(--generate-decline)",
+  approve: "var(--generate-text-good)",
+  refer:   "var(--generate-text-maybe)",
+  decline: "var(--generate-text-bad)",
 };
 
 export const getDecisionColor = (decision: string | undefined): string => {
-  if (!decision) return "var(--generate-analysis)";
-  return DECISION_COLORS[decision.toLowerCase()] || "var(--generate-analysis)";
+  if (!decision) return "var(--generate-light-input)";
+  return DECISION_COLORS[decision.toLowerCase()] || "var(--generate-light-input)";
 };
 
 export const tooltipStyle = {
-  backgroundColor: "var(--generate-selected)",
-  borderColor: "var(--generate-outline)",
+  backgroundColor: "var(--generate-text-input)",
+  borderColor: "var(--generate-text-outline)",
   color: "#f8fafc",
   borderRadius: "8px",
   fontSize: "12px",

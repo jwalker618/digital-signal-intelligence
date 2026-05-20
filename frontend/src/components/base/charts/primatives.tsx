@@ -28,7 +28,7 @@ export interface DistributionBarChartProps<T extends Record<string, unknown>> {
   valueKey: keyof T & string;
   /**
    * Per-bar colour resolver. Called once per row.
-   * Default: every bar painted `generate-selected`.
+   * Default: every bar painted `generate-text-input`.
    */
   colorFor?: (entry: T, index: number) => string;
   /** Human-readable name for the bar value in the tooltip. */
@@ -54,7 +54,7 @@ export const DistributionBarChart = <T extends Record<string, unknown>>({
   data,
   categoryKey,
   valueKey,
-  colorFor = () => "var(--generate-selected)",
+  colorFor = () => "var(--generate-text-input)",
   valueName,
   formatValue = (v) => formatNumber(v, 0),
   yDomain = ["auto", "auto"],
@@ -78,22 +78,22 @@ export const DistributionBarChart = <T extends Record<string, unknown>>({
         <BarChart data={data} margin={{ top: 5, right: 10, bottom: 5, left: -20 }}>
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--generate-outline)"
+            stroke="var(--generate-text-outline)"
             opacity={0.3}
           />
           <XAxis
             dataKey={categoryKey}
-            stroke="var(--generate-contrast-background)"
-            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-text-input)"
+            tick={{ fill: "var(--generate-text-input)", fontSize: 11 }}
           />
           <YAxis
-            stroke="var(--generate-contrast-background)"
-            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-text-input)"
+            tick={{ fill: "var(--generate-text-input)", fontSize: 11 }}
             domain={yDomain}
           />
           <RechartsTooltip
             contentStyle={tooltipStyle}
-            cursor={{ fill: "var(--generate-selected)", opacity: 0.2 }}
+            cursor={{ fill: "var(--generate-text-input)", opacity: 0.2 }}
             formatter={(value: unknown, name: string) => [
               formatValue(Number(value)),
               valueName ?? name,
@@ -157,9 +157,9 @@ export const HorizontalBarList = ({
             title={r.label}
           >{formatText(r.label,"capitalize")}
           </span>
-          <div className="flex-1 h-4 bg-generate-background rounded-full overflow-hidden">
+          <div className="flex-1 h-4 bg-generate-light-background rounded-full overflow-hidden">
             <div
-              className="h-full rounded-full bg-generate-selected/40"
+              className="h-full rounded-full bg-generate-text-input/40"
               style={{ width: `${Math.max(0, Math.min(100, r.percent))}%` }}
             />
           </div>
@@ -252,13 +252,13 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
           <CartesianGrid
             strokeDasharray="3 3"
             vertical={false}
-            stroke="var(--generate-outline)"
+            stroke="var(--generate-text-outline)"
             opacity={0.5}
           />
           <XAxis
             dataKey={categoryKey}
-            stroke="var(--generate-contrast-background)"
-            tick={{ fill: "var(--generate-contrast-background)", fontSize: 11 }}
+            stroke="var(--generate-text-input)"
+            tick={{ fill: "var(--generate-text-input)", fontSize: 11 }}
             interval={0}
             tickFormatter={(val: string) =>
               typeof val === "string" && val.length > maxCategoryLength
@@ -267,13 +267,13 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
             }
           />
           <YAxis
-            stroke="var(--generate-contrast-background)"
-            tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
+            stroke="var(--generate-text-input)"
+            tick={{ fill: "var(--generate-text-input)", fontSize: 12 }}
             domain={yDomain}
           />
           <RechartsTooltip
             contentStyle={tooltipStyle}
-            cursor={{ fill: "var(--generate-selected)", opacity: 0.4 }}
+            cursor={{ fill: "var(--generate-text-input)", opacity: 0.4 }}
             formatter={(value: unknown, name: string) => [
               formatValue(Number(value)),
               valueName ?? name,
@@ -289,14 +289,14 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
           {subjectValue !== undefined && (
             <ReferenceLine
               y={subjectValue}
-              stroke="var(--generate-selected)"
+              stroke="var(--generate-text-input)"
               strokeDasharray="6 3"
               strokeWidth={2}
             >
               <Label
                 value={`Subject ${formatNumber(subjectValue, subjectValueDecimals)}`}
                 position="right"
-                fill="var(--generate-selected)"
+                fill="var(--generate-text-input)"
                 fontSize={11}
               />
             </ReferenceLine>
@@ -317,7 +317,7 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                         x={x + width / 2}
                         y={y - 6}
                         textAnchor="middle"
-                        fill="var(--generate-contrast-background)"
+                        fill="var(--generate-text-input)"
                         fontSize={10}
                       >
                         n={n}
@@ -332,8 +332,8 @@ export const BenchmarkBarChart = <T extends Record<string, unknown>>({
                 key={`cell-${index}`}
                 fill={
                   entry[categoryKey] === subjectCategory
-                    ? "var(--generate-selected)"
-                    : "var(--generate-analysis)"
+                    ? "var(--generate-text-input)"
+                    : "var(--generate-light-input)"
                 }
               />
             ))}
@@ -371,10 +371,10 @@ interface PeerScatterChartProps {
 }
 
 const LEGEND = [
-  { label: "Approve", dotClass: "bg-generate-approve" },
-  { label: "Refer", dotClass: "bg-generate-refer" },
-  { label: "Decline", dotClass: "bg-generate-decline" },
-  { label: "Unknown", dotClass: "bg-generate-muted" },
+  { label: "Approve", dotClass: "bg-generate-text-good" },
+  { label: "Refer", dotClass: "bg-generate-text-maybe" },
+  { label: "Decline", dotClass: "bg-generate-text-bad" },
+  { label: "Unknown", dotClass: "bg-generate-text-placeholder" },
 ];
 
 
@@ -420,20 +420,20 @@ export const PeerScatterChart = ({
           <ScatterChart margin={{ top: 10, right: 30, bottom: 20, left: 0 }}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="var(--generate-outline)"
+              stroke="var(--generate-text-outline)"
               opacity={0.5}
             />
             <XAxis
               type="number"
               dataKey="x"
               name={xName}
-              stroke="var(--generate-contrast-background)"
-              tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
+              stroke="var(--generate-text-input)"
+              tick={{ fill: "var(--generate-text-input)", fontSize: 12 }}
               label={{
                 value: xLabel,
                 position: "insideBottom",
                 offset: -15,
-                fill: "var(--generate-contrast-background)",
+                fill: "var(--generate-text-input)",
                 fontSize: 12,
               }}
             />
@@ -441,13 +441,13 @@ export const PeerScatterChart = ({
               type="number"
               dataKey="y"
               name={yName}
-              stroke="var(--generate-contrast-background)"
-              tick={{ fill: "var(--generate-contrast-background)", fontSize: 12 }}
+              stroke="var(--generate-text-input)"
+              tick={{ fill: "var(--generate-text-input)", fontSize: 12 }}
               label={{
                 value: yLabel,
                 angle: -90,
                 position: "insideLeft",
-                fill: "var(--generate-contrast-background)",
+                fill: "var(--generate-text-input)",
                 fontSize: 12,
               }}
             />
@@ -463,13 +463,13 @@ export const PeerScatterChart = ({
             {/* Subject crosshair */}
             <ReferenceLine
               x={subject.x}
-              stroke="var(--generate-selected)"
+              stroke="var(--generate-text-input)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
             <ReferenceLine
               y={subject.y}
-              stroke="var(--generate-selected)"
+              stroke="var(--generate-text-input)"
               strokeDasharray="4 4"
               strokeOpacity={0.6}
             />
@@ -489,7 +489,7 @@ export const PeerScatterChart = ({
             <Scatter
               name="Active Submission"
               data={[subject]}
-              fill="var(--generate-selected)"
+              fill="var(--generate-text-input)"
               shape="star"
             />
           </ScatterChart>

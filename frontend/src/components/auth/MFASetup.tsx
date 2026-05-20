@@ -167,7 +167,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
       {stage === "backup-codes" && (
         <>
           
-          <div className="flex items-center gap-2 text-generate-selected">
+          <div className="flex items-center gap-2 text-generate-text-input">
             <KeyRound className="icon" />
             <span className="font-semibold">Save your backup codes</span>
           </div>
@@ -182,9 +182,9 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
               <li
                 key={c}
                 className="
-                  generate-analysis-item 
+                  generate-light-input-item 
                   font-normal text-xs p-1.5
-                  border-r border-b border-generate-outline 
+                  border-r border-b border-generate-text-outline 
                   rounded-sm"
               >
                 {c}
@@ -218,7 +218,7 @@ export function MFASetup({ onDone }: { onDone?: () => void }) {
       )}
 
       {stage === "done" && (
-        <p className="text-sm text-generate-selected">
+        <p className="text-sm text-generate-text-input">
           MFA is now enabled on your account.
         </p>
       )}

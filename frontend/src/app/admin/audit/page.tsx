@@ -102,10 +102,10 @@ export default function AuditPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="flex flex-col h-full bg-generate-background text-generate-contrast-analysis p-generate-pad animate-in fade-in duration-500">
+      <div className="flex flex-col h-full bg-generate-light-background text-generate-dark-input p-generate-pad animate-in fade-in duration-500">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm">
+        <div className="shrink-0 text-generate-text-input pb-4 text-sm">
           <div className="flex items-center gap-3 pb-2">
             <h1>Showing {events.length} events.</h1>
           </div>
@@ -172,8 +172,8 @@ export default function AuditPage() {
         {/* SCROLLABLE TABLE */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="sticky top-0 z-20 bg-generate-background">
-              <tr className="generate-grid-table-header text-generate-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-light-background">
+              <tr className="generate-grid-table-header text-generate-text-input">
                 <th className="p-1.5">When</th>
                 <th className="p-1.5">Action</th>
                 <th className="p-1.5">Resource</th>
@@ -188,7 +188,7 @@ export default function AuditPage() {
                   <Fragment key={e.id}>
                     <tr
                       onClick={() => setExpanded(open ? null : e.id)}
-                      className="cursor-pointer even:bg-generate-contrast-analysis text-generate-contrast-background hover:text-generate-selected"
+                      className="cursor-pointer even:bg-generate-dark-input text-generate-text-input hover:text-generate-text-input"
                     >
                       <td className="p-1.5 text-xs whitespace-nowrap">
                         {fmtDate(e.created_at)}
@@ -208,7 +208,7 @@ export default function AuditPage() {
                       </td>
                     </tr>
                     {open && (
-                      <tr className="bg-generate-analysis/40">
+                      <tr className="bg-generate-light-input/40">
                         <td colSpan={5} className="p-3">
                           <StateDiffViewer
                             before={e.before_state}
