@@ -76,6 +76,7 @@ export interface StandardTableColumn extends ColumnFormatOptions {
   width?: string;
   align?: Align;
   headeralign?: Align;
+  bold?: boolean;
 }
 
 export interface StandardTableRow extends Record<string, unknown> {
@@ -241,6 +242,7 @@ export interface ExpandableGroup<T> {
  * defaultEmptyMessage: Default empty-state text.
  */
 export interface ExpandableGroupTableProps<T> {
+  title: string;
   columns: StandardTableColumn[];
   groups: ExpandableGroup<T>[];
   renderItemCells?: (item: T, index: number, group: ExpandableGroup<T>) => React.ReactNode[];
@@ -272,10 +274,10 @@ export interface ExpandableGroupTableProps<T> {
  *
  *   <ExpandableGroupTable
  *     columns={[
- *       { label: "Adjustments", width: "50%", align: "left", headeralign: "left" },
+ *       { label: "Adjustments", width: "50%", align: "left",   headeralign: "left" },
  *       { label: "Modifier",    width: "10%", align: "center", headeralign: "center" },
- *       { label: "Impact",      width: "20%", align: "right", headeralign: "center" },
- *       { label: "Result",      width: "20%", align: "right", headeralign: "center" },
+ *       { label: "Impact",      width: "20%", align: "right",  headeralign: "center" },
+ *       { label: "Result",      width: "20%", align: "right",  headeralign: "center" },
  *     ]}
  *     groups={[
  *       { key: "categorical", title: "Categorical",
@@ -294,6 +296,7 @@ export interface ExpandableGroupTableProps<T> {
  *   />
  */
 export const ExpandableGroupTable = <T,>({
+  title,
   columns,
   groups,
   renderItemCells,
@@ -324,22 +327,38 @@ export const ExpandableGroupTable = <T,>({
 
   const cellAlign = (c: StandardTableColumn | undefined): Align =>
     c?.align ?? (c?.field ? "right" : "left");
+
   const headerAlign = (c: StandardTableColumn | undefined): Align =>
     c?.headeralign ?? (c?.field ? "center" : "left");
 
+  const isBold = (c: StandardTableColumn | undefined): boolean =>
+    c?.bold ?? (c?.field ? false : true);
+
   return (
+
+  <div>
+
+    {/* ── Title (optional) ───────────────────────────────── */}
+    {title &&
+      <div className="text-xs mt-4 font-bold">{title}</div>
+    }
+
     <div
       className={`grid ${className}`}
       style={{ gridTemplateColumns: template }}
     >
+       
       {/* ── Column headers (optional) ───────────────────────────────── */}
       {renderHeaders &&
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`generate-analysis-description flex gap-generate-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pb-1`}
-          >
-            {c.label}
+            className={`
+              text-xs pt-1.5 pb-1.5
+              border-b-1 border-generate-text-outline
+              ${TEXTALIGN_CLASS[headerAlign(c)]}
+              `}
+          >{c.label}
           </div>
         ))}
 
@@ -352,11 +371,15 @@ export const ExpandableGroupTable = <T,>({
             {/* Group header row — chevron + title cell */}
             <div
               onClick={() => toggle(g.key)}
-              className="generate-analysis-description border-t border-generate-text-outline hover:text-generate-text-input cursor-pointer flex gap-generate-pad pt-generate-pad pb-generate-pad"
+              className="flex text-sm pt-2 group"
             >
-              {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
-              {g.title}
+              {isOpen ? 
+              <ChevronDown className="generate-app-icon group-hover:text-generate-text-input" /> : 
+              <ChevronRight className="generate-app-icon group-hover:text-generate-text-input" />
+              }
+              <span className="text-sm group-hover:text-generate-text-input">{g.title}</span>
             </div>
+
             {/* Group header row — summary value cells (align with value cells) */}
             {g.summary.map((cell, i) => {
               const colIdx = i + 1;
@@ -366,11 +389,12 @@ export const ExpandableGroupTable = <T,>({
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`border-t border-generate-text-outline cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                    isLast ? "pl-generate-pad pr-generate-pad text-sm" : "text-xs"
-                  }`}
-                >
-                  {cell}
+                  className={`
+                    text-sm pt-1.5 pb-1.5
+                    ${TEXTALIGN_CLASS[cellAlign(col)]}
+                    ${isBold(col) ? "font-bold" : ""} 
+                    `}
+                > {cell}
                 </div>
               );
             })}
@@ -397,11 +421,13 @@ export const ExpandableGroupTable = <T,>({
                       return (
                         <div
                           key={colIdx}
-                          className={`bg-generate-light-input text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                            colIdx === 0 ? "pl-generate-padicon" : ""
-                          } ${colIdx === lastIdx ? "pr-generate-pad" : ""}`}
-                        >
-                          {cell}
+                          className={`
+                            text-xs pt-1 pb-1 
+                            ${TEXTALIGN_CLASS[cellAlign(col)]}
+                            ${isBold(col) ? "font-bold" : ""}
+                            ${colIdx === 0 ? "pl-generate-indent" : ""}  
+                            `}
+                        >{cell}
                         </div>
                       );
                     })}
@@ -412,7 +438,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className="text-xs opacity-50 italic pl-generate-padicon pt-1 pb-1 bg-generate-light-input"
+                className="text-xs italic pl-generate-indent pt-1 pb-1"
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}
@@ -422,6 +448,8 @@ export const ExpandableGroupTable = <T,>({
         );
       })}
     </div>
+  </div>
+    
   );
 }
 
@@ -632,6 +660,7 @@ export const KpiTile = ({
       : "font-bold text-lg";
 
   return (
+    
     <div>
       <span className="flex items-center gap-1 text-sm mb-1">
         {Icon && <Icon className="generate-app-icon" />}
@@ -640,6 +669,7 @@ export const KpiTile = ({
       <span className={`block ${valueClass}`}>{value}</span>
       {subtext && <span className="text-xs block">{subtext}</span>}
     </div>
+    
   );
 }
 

@@ -7,9 +7,7 @@ import ViewCanvas from "@/components/ViewCanvas";
 import { useDsiStore } from "@/store/dsiStore";
 import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { 
-  formatText,
-  formatCurrency, 
-  formatNumber 
+  formatText, formatCurrency,  formatNumber 
 } from "@/lib/format";
 
 export default function SelectionTable({ type }: { type: "full" | "referral" }) {
@@ -118,7 +116,7 @@ export default function SelectionTable({ type }: { type: "full" | "referral" }) 
             <thead className="sticky top-0 z-20">
               {/* Column titles */}
               
-              <tr className="generate-grid-table-header">
+              <tr className="generate-light-gridheader">
                 
                 <th className="p-1.5">
                   <ColumnFilterHeader

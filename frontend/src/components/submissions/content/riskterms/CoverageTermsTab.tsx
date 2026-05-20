@@ -2,7 +2,6 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { KpiTile, LabelValueList } from "@/components/base/content/primatives";
 import { FileCheck, ShieldCheck, ShieldAlert, LucideIcon } from "lucide-react";
 import { formatText } from "@/lib/format";
@@ -86,16 +85,7 @@ export default function CoverageTermsTab() {
   const additional = Object.entries(coverageTerms).filter(([k]) => !OVERVIEW_KEYS.has(k));
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
 
       <SectionCard icon={FileCheck} title="Coverage Overview">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">

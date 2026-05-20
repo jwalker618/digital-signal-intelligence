@@ -110,11 +110,11 @@ export const PopupCard = ({
           }
         }}
       >
-        <div className="generate-light-popupheader">
-          <span className="text-xs content-center">Expand</span>
-          <ArrowUpRight className="generate-app-icon" />
+        <div className="generate-light-popupheader group">
+          <span className="text-xs content-center group-hover:text-generate-text-input">Expand</span>
+          <ArrowUpRight className="generate-app-icon group-hover:text-generate-text-input" />
         </div>
-        <div className="generate-light-sectionanalysis font-bold">
+        <div className="generate-light-sectionanalysis font-bold group-hover:text-generate-text-input">
           {teaser ?? title}
         </div>
       </div>

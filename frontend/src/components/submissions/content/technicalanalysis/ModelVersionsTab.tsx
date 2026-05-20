@@ -34,9 +34,7 @@ export default function ModelVersionsTab() {
   }, [activeSubmission?.submission_code, fetchHistory]);
 
   return (
-    <div className="
-      w-full no-scrollbar
-      animate-in fade-in duration-500 pb-12"
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad"
       >
       {/* STICKY WRAPPER */}
       <div className="

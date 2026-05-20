@@ -12,7 +12,6 @@ import {
   InfoPanel,
 } from "@/components/base/content/primatives";
 import { StandardCard } from "@/components/base/cards";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import {
   PeerScatterChart,
   BenchmarkBarChart,
@@ -87,20 +86,9 @@ export default function ExposureTab() {
   }, [allConditions, exposureGroupKeys]);
 
   return (
-    <div className="
-      w-full no-scrollbar
-      animate-in fade-in duration-500 pb-12"
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad"
       >
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
-
+  
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all exposure fields
           ======================================================================= */}

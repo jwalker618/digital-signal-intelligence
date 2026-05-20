@@ -8,7 +8,6 @@ import {
 } from "lucide-react";
 import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
 import { formatNumber, formatCurrency } from "@/lib/format";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { StandardCard } from "@/components/base/cards";
 import { CompareRow } from "@/components/base/content/primatives";
 
@@ -110,17 +109,7 @@ export default function ScenarioTab() {
   const expBandInterp = activeVersion.exposure_band_interpretation;
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
-
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
 
       {isFetchingRiskSignals || !scenario ? (
         <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">

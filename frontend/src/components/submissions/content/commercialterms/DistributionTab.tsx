@@ -2,7 +2,6 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { KpiTile, MetricCard } from "@/components/base/content/primatives";
 import { Network, Building2, Users, Layers } from "lucide-react";
 import { formatCurrency, formatPercent, formatText } from "@/lib/format";
@@ -16,15 +15,16 @@ export default function DistributionTab() {
   const distType = (ct.distribution_type || "DIRECT").toUpperCase();
 
   const renderDirectContent = () => (
-    <div className="flex flex-col gap-4 px-generate-pad py-6">
-      <div className="flex items-center gap-4 p-6 rounded-xl border-2 border-generate-approve/20 bg-generate-approve/5">
+    <div className="flex flex-col">
+      <div className="flex items-center">
         <Building2 className="w-10 h-10 text-generate-approve" />
         <div>
-          <span className="text-lg font-bold block">Direct Writer</span>
-          <span className="text-sm opacity-60">100% written by {ct.entity_name || "entity"}</span>
+          <span className="">Direct Writer</span>
+          <span className="">100% written by {ct.entity_name || "entity"}</span>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-3">
+     
+     <div className="grid grid-cols-2 md:grid-cols-3">
         <KpiTile label="Entity" value={ct.entity_name || "N/A"} />
         <KpiTile label="Market" value={formatText(ct.entity_market, "upper", "N/A")} />
         <KpiTile label="Gross Premium" value={formatCurrency(ct.gross_premium)} />
@@ -33,8 +33,8 @@ export default function DistributionTab() {
   );
 
   const renderSubscriptionContent = () => (
-    <div className="flex flex-col gap-4 px-generate-pad py-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="flex flex-col">
+      <div className="grid grid-cols-2 md:grid-cols-4">
         <MetricCard
           tone="selected"
           label="Signed Line"
@@ -53,20 +53,20 @@ export default function DistributionTab() {
       </div>
 
       {ct.signed_line != null && ct.gross_premium != null && (
-        <div className="border border-generate-outline/20 rounded-lg p-4 grid grid-cols-3 gap-4">
+        <div className="">
           <KpiTile label="Order Premium (100%)" value={formatCurrency(ct.gross_premium)} />
           <div>
-            <span className="opacity-50 block text-xs mb-0.5">
+            <span className="">
               Line Premium ({formatPercent(ct.signed_line)})
             </span>
-            <span className="font-bold text-generate-selected">
+            <span className="">
               {formatCurrency(ct.gross_premium * ct.signed_line)}
             </span>
           </div>
           {ct.role === "LEAD" && ct.lead_loading_factor && ct.lead_loading_factor > 1 && (
             <div>
-              <span className="opacity-50 block text-xs mb-0.5">Lead-Loaded Premium</span>
-              <span className="font-bold text-generate-selected">
+              <span className="">Lead-Loaded Premium</span>
+              <span className="">
                 {formatCurrency(ct.gross_premium * ct.signed_line * ct.lead_loading_factor)}
               </span>
             </div>
@@ -115,16 +115,7 @@ export default function DistributionTab() {
   );
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
 
       <SectionCard icon={Network} title={`Distribution — ${distType}`}>
         {distType === "DIRECT" && renderDirectContent()}

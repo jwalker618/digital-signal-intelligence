@@ -2,7 +2,6 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import SectionCard from "@/components/shared/SectionCard";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { MetricCard, LabelValueList } from "@/components/base/content/primatives";
 import { Clock, Shield, DollarSign } from "lucide-react";
 import { formatCurrency, formatNumber, formatText } from "@/lib/format";
@@ -15,17 +14,8 @@ export default function SIRWaitingPeriodsTab() {
   const rt = activeRisk;
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
-
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
+    
       <SectionCard icon={Shield} title="Self-Insured Retention (SIR)">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-generate-pad py-4">
           <MetricCard

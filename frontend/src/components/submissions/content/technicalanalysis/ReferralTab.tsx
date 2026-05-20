@@ -10,7 +10,6 @@ import {
 import { formatNumber, formatPercent } from "@/lib/format";
 import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { StandardCard } from "@/components/base/cards";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
 import { KEYTERM, getPalette } from "@/lib/keytermPalette";
 
 export default function ReferralTab() {
@@ -97,17 +96,7 @@ export default function ReferralTab() {
   const reasons = activeSubmission?.referral_reasons || activeVersion?.referral_reasons || [];
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
-
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
 
       {/* REFERRAL CONTEXT HEADER */}
       <div className="flex items-stretch gap-4 rounded-xl border-2 border-generate-refer/30 bg-generate-refer/5 px-generate-pad py-4 mt-2 mb-4">
