@@ -993,6 +993,22 @@ class VariantLoopPolicy(StrictModel):
     max_per_entity_per_cycle: int = Field(default=25, ge=0, le=200)
 
 
+class MechanismMemoryPolicy(StrictModel):
+    """V7 Phase 12 — cross-cycle abstract-pattern memory knobs.
+
+    `enabled`               — master switch.
+    `top_k`                 — how many priors to recall per (primitive,
+                              coverage) at cycle start.
+    `prune_older_than_days` — pruning cutoff for low-recall mechanisms.
+    `prune_min_recall`      — keep a mechanism if recall_count >= this,
+                              regardless of age.
+    """
+    enabled: bool = True
+    top_k: int = Field(default=3, ge=0, le=10)
+    prune_older_than_days: int = Field(default=365, ge=30, le=3650)
+    prune_min_recall: int = Field(default=3, ge=0, le=100)
+
+
 class EvidenceGradePolicy(StrictModel):
     """V7 Phase 4 policy block governing grade-driven referrals.
 
@@ -1010,6 +1026,8 @@ class EvidenceGradePolicy(StrictModel):
     validator: ValidatorPolicy = Field(default_factory=ValidatorPolicy)
     # V7 Phase 11 — variant-loop sub-policy. Same default-factory pattern.
     variant_loop: VariantLoopPolicy = Field(default_factory=VariantLoopPolicy)
+    # V7 Phase 12 — mechanism memory sub-policy. Same default-factory pattern.
+    mechanism_memory: MechanismMemoryPolicy = Field(default_factory=MechanismMemoryPolicy)
 
 
 class CoverageConfig(StrictModel):
