@@ -428,7 +428,7 @@ async def api_info():
 # =============================================================================
 
 # Import routers after app is created to avoid circular imports
-from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, losses, grade_calibration, events, recompute
+from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, losses, grade_calibration, events, recompute, evidence, disclosure, mechanism, entity_events, commitments
 from .auth.routes import router as auth_router
 from .websocket.routes import router as websocket_router
 from .admin import router as admin_router
@@ -453,6 +453,11 @@ app.include_router(losses.router, prefix="/api/v1", tags=["Losses"])
 app.include_router(grade_calibration.router, prefix="/api/v1", tags=["GradeCalibration"])
 app.include_router(events.router, prefix="/api/v1", tags=["Events"])
 app.include_router(recompute.router, prefix="/api/v1", tags=["Recompute"])
+app.include_router(evidence.router, prefix="/api/v1", tags=["Evidence"])
+app.include_router(disclosure.router, prefix="/api/v1", tags=["Disclosure"])
+app.include_router(mechanism.router, prefix="/api/v1", tags=["Mechanism"])
+app.include_router(entity_events.router, prefix="/api/v1", tags=["EntityEvents"])
+app.include_router(commitments.router, prefix="/api/v1", tags=["Commitments"])
 app.include_router(recalibration_router, prefix="/api/v1", tags=["Recalibration"])
 app.include_router(push_router, prefix="/api/v1", tags=["Push"])
 app.include_router(world_engine_router, prefix="/api/v1/world-engine", tags=["World Engine"])

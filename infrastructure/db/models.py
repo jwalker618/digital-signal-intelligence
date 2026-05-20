@@ -388,6 +388,11 @@ class Referral(Base):
     premium_adjustment = Column(Float)
     adjustments = Column(JSONB, default=dict)
 
+    # V7 Phase 14: cached disclosure packet (Markdown + JSON payload).
+    # Populated by the workflow at referral creation; the disclosure
+    # endpoint reads this directly when present, avoiding re-generation.
+    disclosure_packet = Column(JSONB, nullable=True)
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
