@@ -1658,3 +1658,34 @@ class SignalStabilityObservation(Base):
         ),
         Index("ix_stability_obs_observed", "observed_at"),
     )
+
+
+class EntityEvent(Base):
+    """V7 Phase 13 — external event triggering a delta-aware recompute.
+
+    The dispatcher reads undispatched rows, computes the blast radius
+    (set of signals the event plausibly affects), and runs a targeted
+    workflow that re-extracts only that subset. `resulting_model_version_id`
+    points to the new ModelVersion produced by the recompute.
+    """
+    __tablename__ = "entity_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type = Column(String(64), nullable=False)
+    entity_id = Column(String(128), nullable=False)
+    submission_id = Column(UUID(as_uuid=True), nullable=True)
+    received_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    source_feed = Column(String(64), nullable=False)
+    dedup_key = Column(String(128), nullable=True, unique=True)
+    payload = Column(JSONB, default=dict)
+    dispatched_at = Column(DateTime(timezone=True), nullable=True)
+    blast_radius = Column(JSONB, default=list)
+    resulting_model_version_id = Column(UUID(as_uuid=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_entity_events_entity_received", "entity_id", "received_at"),
+        Index("ix_entity_events_type_received", "event_type", "received_at"),
+        Index("ix_entity_events_dispatched", "dispatched_at"),
+    )
