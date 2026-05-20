@@ -8,11 +8,11 @@ import {
 } from "lucide-react";
 import { runFullCascade, distributeGroupOverride, ScenarioOverrides, ScenarioResult } from "@/lib/scenarioEngine";
 import { formatNumber, formatCurrency } from "@/lib/format";
-import { StandardCard } from "@/components/base/cards";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import { CompareRow } from "@/components/base/content/primatives";
 
 const deltaColor = (s: number, o: number) =>
-  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-generate-decline' : 'text-generate-approve';
+  Math.abs(s - o) < 0.01 ? '' : s > o ? 'text-generate-text-bad' : 'text-generate-text-good';
 
 export default function ScenarioTab() {
   const {
@@ -109,7 +109,8 @@ export default function ScenarioTab() {
   const expBandInterp = activeVersion.exposure_band_interpretation;
 
   return (
-    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
       {isFetchingRiskSignals || !scenario ? (
         <div className="flex flex-col items-center justify-center py-20 opacity-50 space-y-4">
@@ -128,12 +129,12 @@ export default function ScenarioTab() {
               headerRight={
                 <div className="flex items-center gap-generate-pad">
                   {Object.keys(signalOverrides).length > 0 && (
-                    <span className="text-[10px] bg-generate-selected/20 text-generate-selected px-2 py-0.5 rounded font-bold">
+                    <span className="text-[10px] bg-generate-text-input/20 text-generate-text-input px-2 py-0.5 rounded font-bold">
                       {Object.keys(signalOverrides).length} modified
                     </span>
                   )}
                   {hasAnyOverride && (
-                    <button onClick={resetAll} className="flex items-center gap-2 text-xs hover:bg-generate-outline/10 px-2 py-1 rounded transition-colors text-generate-selected">
+                    <button onClick={resetAll} className="flex items-center gap-2 text-xs hover:bg-generate-text-outline/10 px-2 py-1 rounded transition-colors text-generate-text-input">
                       <RotateCcw className="w-3 h-3" /> Reset All
                     </button>
                   )}
@@ -148,16 +149,16 @@ export default function ScenarioTab() {
                 <span className="text-xs opacity-40 ml-2">Tier {scenario.original_tier}</span>
               </div>
               <div>
-                <span className="text-generate-selected block text-xs mb-1 font-bold">Scenario Composite</span>
+                <span className="text-generate-text-input block text-xs mb-1 font-bold">Scenario Composite</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="font-bold text-2xl text-generate-selected">{formatNumber(scenario.composite_score, 1)}</span>
+                  <span className="font-bold text-2xl text-generate-text-input">{formatNumber(scenario.composite_score, 1)}</span>
                   {Math.abs(scenario.composite_score - scenario.original_composite) > 0.1 && (
                     <span className={`text-xs font-bold ${deltaColor(scenario.composite_score, scenario.original_composite)}`}>
                       ({scenario.composite_score > scenario.original_composite ? '+' : ''}{formatNumber(scenario.composite_score - scenario.original_composite, 1)})
                     </span>
                   )}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
-                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-generate-decline' : 'text-generate-approve'}`}>
+                    <span className={`text-xs font-bold ml-1 ${scenario.tier.tier_id > scenario.original_tier ? 'text-generate-text-bad' : 'text-generate-text-good'}`}>
                       → Tier {scenario.tier.tier_id}
                     </span>
                   )}
@@ -166,15 +167,15 @@ export default function ScenarioTab() {
             </div>
 
             {/* Group accordion */}
-            <div className="flex flex-col flex-1 border-b-3 border-generate-contrast-background overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-generate-analysis shadow-sm pt-0 pb-2">
+            <div className="flex flex-col flex-1 border-b-3 border-generate-text-input overflow-x-auto whitespace-nowrap border-collapse rounded-b-xl bg-generate-light-input shadow-sm pt-0 pb-2">
               {/* Column headers */}
               <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 text-[11px] underline opacity-70 px-generate-pad py-2">
                 <span>Group / Signal</span>
                 <span className="text-right">Orig Score</span>
                 <span className="text-right">Weight</span>
                 <span className="text-right">Contribution</span>
-                <span className="text-center text-generate-selected">Scenario</span>
-                <span className="text-right text-generate-selected">New Score</span>
+                <span className="text-center text-generate-text-input">Scenario</span>
+                <span className="text-right text-generate-text-input">New Score</span>
               </div>
 
               {groupEntries.map(([groupId, gs]: [string, any]) => {
@@ -187,7 +188,7 @@ export default function ScenarioTab() {
                 return (
                   <div key={groupId}>
                     {/* GROUP HEADER */}
-                    <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-generate-pad py-2.5 border-t border-generate-outline/20 cursor-pointer hover:bg-generate-background/20 transition-colors">
+                    <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-generate-pad py-2.5 border-t border-generate-text-outline/20 cursor-pointer hover:bg-generate-light-background/20 transition-colors">
                       <div className="flex items-center gap-2" onClick={() => toggleGroup(groupId)}>
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                         <span className="font-bold text-sm">{groupId}</span>
@@ -198,12 +199,12 @@ export default function ScenarioTab() {
                       <span className="text-right text-sm font-bold" onClick={() => toggleGroup(groupId)}>{formatNumber(gs?.risk_contribution, 1)}</span>
                       {/* F2: Group-level override input */}
                       <div className="flex items-center justify-center gap-0.5">
-                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore - 1)} className="p-0.5 rounded hover:bg-generate-outline/20 text-generate-selected/60 hover:text-generate-selected">
+                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore - 1)} className="p-0.5 rounded hover:bg-generate-text-outline/20 text-generate-text-input/60 hover:text-generate-text-input">
                           <ChevronDown className="w-3.5 h-3.5" />
                         </button>
                         <input
                           type="number"
-                          className={`w-16 bg-generate-background border rounded px-1.5 py-1 text-center text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${groupChanged ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20'}`}
+                          className={`w-16 bg-generate-light-background border rounded px-1.5 py-1 text-center text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${groupChanged ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20'}`}
                           value={groupChanged ? Math.round(scenGroupScore * 10) / 10 : ''}
                           placeholder={formatNumber(origGroupScore, 1)}
                           onChange={(e) => {
@@ -219,11 +220,11 @@ export default function ScenarioTab() {
                             }
                           }}
                         />
-                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore + 1)} className="p-0.5 rounded hover:bg-generate-outline/20 text-generate-selected/60 hover:text-generate-selected">
+                        <button onClick={() => handleGroupOverride(groupId, scenGroupScore + 1)} className="p-0.5 rounded hover:bg-generate-text-outline/20 text-generate-text-input/60 hover:text-generate-text-input">
                           <ChevronUp className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <span className={`text-right text-sm font-bold ${groupChanged ? 'text-generate-selected' : ''}`}>
+                      <span className={`text-right text-sm font-bold ${groupChanged ? 'text-generate-text-input' : ''}`}>
                         {formatNumber(scenGroupScore, 1)}
                       </span>
                     </div>
@@ -233,21 +234,21 @@ export default function ScenarioTab() {
                       const isOverridden = signalOverrides[sig.code] !== undefined;
                       const currentScore = isOverridden ? signalOverrides[sig.code] : (sig.score || 0);
                       return (
-                        <div key={`${sig.code}-${sidx}`} className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-generate-pad py-1.5 bg-generate-background/10 hover:bg-generate-background/20 transition-colors">
+                        <div key={`${sig.code}-${sidx}`} className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] gap-0 px-generate-pad py-1.5 bg-generate-light-background/10 hover:bg-generate-light-background/20 transition-colors">
                           <div className="flex items-center gap-2 pl-6">
                             <span className="text-sm">{sig.code}</span>
-                            {sig.was_absent && <span className="text-[10px] text-generate-decline font-bold">ABSENT</span>}
+                            {sig.was_absent && <span className="text-[10px] text-generate-text-bad font-bold">ABSENT</span>}
                           </div>
                           <span className="text-right text-sm">{formatNumber(sig.score, 1)}</span>
                           <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
                           <span className="text-right text-sm">{formatNumber(sig.contribution, 2)}</span>
                           <div className="flex items-center justify-center gap-0.5">
-                            <button onClick={() => handleStep(sig.code, sig.score || 0, -1)} className="p-0.5 rounded hover:bg-generate-outline/20 text-generate-selected/60 hover:text-generate-selected">
+                            <button onClick={() => handleStep(sig.code, sig.score || 0, -1)} className="p-0.5 rounded hover:bg-generate-text-outline/20 text-generate-text-input/60 hover:text-generate-text-input">
                               <ChevronDown className="w-3 h-3" />
                             </button>
                             <input
                               type="number"
-                              className={`w-14 bg-generate-background border rounded px-1 py-0.5 text-center text-xs outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOverridden ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20 focus:border-generate-selected/50'}`}
+                              className={`w-14 bg-generate-light-background border rounded px-1 py-0.5 text-center text-xs outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${isOverridden ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20 focus:border-generate-text-input/50'}`}
                               value={isOverridden ? currentScore : ''}
                               placeholder={formatNumber(sig.score, 1)}
                               onChange={(e) => {
@@ -260,11 +261,11 @@ export default function ScenarioTab() {
                                 });
                               }}
                             />
-                            <button onClick={() => handleStep(sig.code, sig.score || 0, 1)} className="p-0.5 rounded hover:bg-generate-outline/20 text-generate-selected/60 hover:text-generate-selected">
+                            <button onClick={() => handleStep(sig.code, sig.score || 0, 1)} className="p-0.5 rounded hover:bg-generate-text-outline/20 text-generate-text-input/60 hover:text-generate-text-input">
                               <ChevronUp className="w-3 h-3" />
                             </button>
                           </div>
-                          <span className={`text-right text-sm ${isOverridden ? 'font-bold text-generate-selected' : ''}`}>
+                          <span className={`text-right text-sm ${isOverridden ? 'font-bold text-generate-text-input' : ''}`}>
                             {formatNumber(currentScore, 1)}
                           </span>
                         </div>
@@ -286,7 +287,7 @@ export default function ScenarioTab() {
               <div>
                 {/* Waterfall grid */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
-                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-generate-selected">Scenario</span>
+                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-generate-text-input">Scenario</span>
                 </div>
                 <CompareRow label="Signal-weighted avg" sublabel="Loss group scores" original={formatNumber(100 - (activeVersion?.loss_propensity_score || 50), 1)} scenario={scenario.loss_modifier ? formatNumber(100 - scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
                 <CompareRow label="Propensity Score" sublabel="Inverted (100 - avg)" original={formatNumber(activeVersion?.loss_propensity_score, 1)} scenario={scenario.loss_modifier ? formatNumber(scenario.loss_modifier.propensity_score, 1) : '-'} changed={scenario.loss_modifier != null} />
@@ -294,7 +295,7 @@ export default function ScenarioTab() {
                 <CompareRow label="Frequency Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.frequency_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_frequency_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.frequency_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
                 <CompareRow label="Severity Multiplier" sublabel={`Weight: ${formatNumber(lossConfig?.severity_weight, 2)}`} original={`${formatNumber(activeVersion?.loss_severity_multiplier, 3)}x`} scenario={scenario.loss_modifier ? `${formatNumber(scenario.loss_modifier.severity_multiplier, 3)}x` : '-'} changed={scenario.loss_modifier != null} />
                 {/* Combined result */}
-                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t-2 border-generate-outline/20 mt-1">
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t-2 border-generate-text-outline/20 mt-1">
                   <span className="text-sm font-bold">Combined Modifier</span>
                   <span className="text-right text-sm font-bold">{formatNumber(scenario.original_loss_combined, 3)}x</span>
                   <span className="text-center opacity-30">→</span>
@@ -303,10 +304,10 @@ export default function ScenarioTab() {
                   </span>
                 </div>
                 {/* Override input */}
-                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-generate-outline/10">
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-generate-text-outline/10">
                   <span className="text-xs opacity-60 shrink-0">Direct override:</span>
                   <input type="number" step="0.01"
-                    className={`w-20 bg-generate-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${lossModifierOverride !== null ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20'}`}
+                    className={`w-20 bg-generate-light-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${lossModifierOverride !== null ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20'}`}
                     value={lossModifierOverride ?? ''} placeholder={formatNumber(scenario.scenario_loss_combined, 3)}
                     onChange={(e) => setLossModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
@@ -320,12 +321,12 @@ export default function ScenarioTab() {
               <div>
                 {/* Exposure waterfall */}
                 <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 text-[11px] underline opacity-70 py-2">
-                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-generate-selected">Scenario</span>
+                  <span>Step</span><span className="text-right">Original</span><span></span><span className="text-right text-generate-text-input">Scenario</span>
                 </div>
                 <CompareRow label="Exposure Value" sublabel="TIV / Revenue" original={formatCurrency(activeVersion?.exposure_value)} scenario={formatCurrency(activeVersion?.exposure_value)} changed={false} />
                 <CompareRow label="Size Score" sublabel="" original={formatNumber(activeVersion?.exposure_size_score, 1)} scenario={formatNumber(activeVersion?.exposure_size_score, 1)} changed={false} />
                 <CompareRow label="Exposure Band" sublabel="" original={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} scenario={(activeVersion?.exposure_band_label || 'N/A').toUpperCase()} changed={false} />
-                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t border-generate-outline/20">
+                <div className="grid grid-cols-[1fr_80px_30px_80px] gap-0 px-0 py-2 border-t border-generate-text-outline/20">
                   <span className="text-sm font-bold">Exposure Modifier</span>
                   <span className="text-right text-sm font-bold">{formatNumber(scenario.original_exposure_modifier, 3)}x</span>
                   <span className="text-center opacity-30">→</span>
@@ -333,10 +334,10 @@ export default function ScenarioTab() {
                     {formatNumber(scenario.scenario_exposure_modifier, 3)}x
                   </span>
                 </div>
-                <div className="flex items-center gap-2 mt-1 pt-2 border-t border-generate-outline/10">
+                <div className="flex items-center gap-2 mt-1 pt-2 border-t border-generate-text-outline/10">
                   <span className="text-xs opacity-60 shrink-0">Direct override:</span>
                   <input type="number" step="0.01"
-                    className={`w-20 bg-generate-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${exposureModifierOverride !== null ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20'}`}
+                    className={`w-20 bg-generate-light-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${exposureModifierOverride !== null ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20'}`}
                     value={exposureModifierOverride ?? ''} placeholder={formatNumber(scenario.original_exposure_modifier, 3)}
                     onChange={(e) => setExposureModifierOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                   />
@@ -344,13 +345,13 @@ export default function ScenarioTab() {
                 </div>
 
                 {/* Limit + Deductible */}
-                <div className="grid grid-cols-2 gap-3 border-t border-generate-outline/10 pt-3 mt-3">
+                <div className="grid grid-cols-2 gap-3 border-t border-generate-text-outline/10 pt-3 mt-3">
                   <div>
                     <span className="text-xs opacity-60 block mb-1">Policy Limit</span>
                     <div className="flex items-center gap-1">
                       <span className="text-xs opacity-40">$</span>
                       <input type="number" step="1000000"
-                        className={`w-full bg-generate-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${limitOverride !== null ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20'}`}
+                        className={`w-full bg-generate-light-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${limitOverride !== null ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20'}`}
                         value={limitOverride ?? ''} placeholder={String(activeVersion?.final_premium_detail?.limit || '')}
                         onChange={(e) => setLimitOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
@@ -362,7 +363,7 @@ export default function ScenarioTab() {
                     <div className="flex items-center gap-1">
                       <span className="text-xs opacity-40">$</span>
                       <input type="number" step="25000"
-                        className={`w-full bg-generate-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${deductibleOverride !== null ? 'border-generate-selected text-generate-selected' : 'border-generate-outline/20'}`}
+                        className={`w-full bg-generate-light-background border rounded px-2 py-1 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${deductibleOverride !== null ? 'border-generate-text-input text-generate-text-input' : 'border-generate-text-outline/20'}`}
                         value={deductibleOverride ?? ''} placeholder={String(activeVersion?.final_premium_detail?.deductible || '')}
                         onChange={(e) => setDeductibleOverride(e.target.value === '' ? null : parseFloat(e.target.value))}
                       />
@@ -389,9 +390,9 @@ export default function ScenarioTab() {
                 <div className="flex gap-generate-pad text-sm pb-2">
                   <ArrowRightToLine className="icon"/> Tier Assignment
                 </div>
-                <div className="text-xs text-right pr-generate-pad border-r border-generate-outline/50 content-center">Original</div>
-                <div className="text-sm text-right bg-generate-selected/5 content-center">Tier {scenario.original_tier}</div>
-                <div className={`pl-generate-pad pr-generate-pad text-right text-sm font-bold bg-generate-selected/10 content-center ${scenario.tier && scenario.tier.tier_id !== scenario.original_tier ? 'text-generate-selected' : ''}`}>
+                <div className="text-xs text-right pr-generate-pad border-r border-generate-text-outline/50 content-center">Original</div>
+                <div className="text-sm text-right bg-generate-text-input/5 content-center">Tier {scenario.original_tier}</div>
+                <div className={`pl-generate-pad pr-generate-pad text-right text-sm font-bold bg-generate-text-input/10 content-center ${scenario.tier && scenario.tier.tier_id !== scenario.original_tier ? 'text-generate-text-input' : ''}`}>
                   {scenario.tier ? `Tier ${scenario.tier.tier_id}` : `Tier ${scenario.original_tier}`}
                   {scenario.tier && scenario.tier.tier_id !== scenario.original_tier && (
                     <span className="text-[10px] ml-1 opacity-60">({scenario.tier.label})</span>
@@ -399,26 +400,26 @@ export default function ScenarioTab() {
                 </div>
 
                 {/* BASE PREMIUM */}
-                <div className="flex gap-generate-pad text-sm pt-3 pb-2 border-t border-generate-outline/10">
+                <div className="flex gap-generate-pad text-sm pt-3 pb-2 border-t border-generate-text-outline/10">
                   <ArrowRightToLine className="icon"/> Base Premium
                 </div>
-                <div className="text-xs text-right pr-generate-pad border-r border-generate-outline/50 border-t border-generate-outline/10 content-center pt-3">
+                <div className="text-xs text-right pr-generate-pad border-r border-generate-text-outline/50 border-t border-generate-text-outline/10 content-center pt-3">
                   {activeVersion?.base_premium_method || ''}
                 </div>
-                <div className="text-sm text-right bg-generate-selected/5 border-t border-generate-outline/10 content-center pt-3">
+                <div className="text-sm text-right bg-generate-text-input/5 border-t border-generate-text-outline/10 content-center pt-3">
                   {formatCurrency(scenario.original_base_premium)}
                 </div>
-                <div className={`pl-generate-pad pr-generate-pad text-right text-sm font-bold bg-generate-selected/10 border-t border-generate-outline/10 content-center pt-3 ${Math.abs(scenario.base_premium - scenario.original_base_premium) > 1 ? 'text-generate-selected' : ''}`}>
+                <div className={`pl-generate-pad pr-generate-pad text-right text-sm font-bold bg-generate-text-input/10 border-t border-generate-text-outline/10 content-center pt-3 ${Math.abs(scenario.base_premium - scenario.original_base_premium) > 1 ? 'text-generate-text-input' : ''}`}>
                   {formatCurrency(scenario.base_premium)}
                 </div>
 
                 {/* MODIFIERS */}
-                <div className="flex gap-generate-pad text-sm pt-3 pb-2 border-t border-generate-outline/10">
+                <div className="flex gap-generate-pad text-sm pt-3 pb-2 border-t border-generate-text-outline/10">
                   <PenLine className="icon"/> Adjustments
                 </div>
-                <div className="text-xs text-center border-t border-generate-outline/10 content-center pt-3">Factor</div>
-                <div className="text-xs text-right border-t border-generate-outline/10 content-center pt-3">Original</div>
-                <div className="text-xs text-right pr-generate-pad border-t border-generate-outline/10 content-center pt-3 text-generate-selected font-bold">Scenario</div>
+                <div className="text-xs text-center border-t border-generate-text-outline/10 content-center pt-3">Factor</div>
+                <div className="text-xs text-right border-t border-generate-text-outline/10 content-center pt-3">Original</div>
+                <div className="text-xs text-right pr-generate-pad border-t border-generate-text-outline/10 content-center pt-3 text-generate-text-input font-bold">Scenario</div>
               </div>
 
               {/* Modifier rows */}
@@ -426,11 +427,11 @@ export default function ScenarioTab() {
                 const changed = Math.abs(step.scenario_factor - step.original_factor) > 0.001;
                 return (
                   <div key={idx} className="contents">
-                    <div className={`grid grid-cols-[50%_10%_20%_20%] px-generate-pad ${changed ? 'bg-generate-selected/5' : ''}`}>
+                    <div className={`grid grid-cols-[50%_10%_20%_20%] px-generate-pad ${changed ? 'bg-generate-text-input/5' : ''}`}>
                       <div className="text-xs pl-generate-padicon py-1.5 truncate" title={step.name}>{step.name}</div>
                       <div className="text-center text-xs content-center">{formatNumber(step.scenario_factor, 3)}x</div>
                       <div className="text-right text-xs content-center">{formatNumber(step.original_factor, 3)}x</div>
-                      <div className={`pr-generate-pad text-right text-xs content-center font-bold ${changed ? 'text-generate-selected' : ''}`}>
+                      <div className={`pr-generate-pad text-right text-xs content-center font-bold ${changed ? 'text-generate-text-input' : ''}`}>
                         {formatNumber(step.scenario_factor, 3)}x
                       </div>
                     </div>
@@ -438,7 +439,7 @@ export default function ScenarioTab() {
                 );
               })}
 
-              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t border-generate-outline/20 pt-2 mt-1">
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t border-generate-text-outline/20 pt-2 mt-1">
                 <div className="text-sm font-bold py-1">Premium After Modifiers</div>
                 <div></div>
                 <div className="text-right text-sm">{formatCurrency(activeVersion?.premium_after_modifiers)}</div>
@@ -448,11 +449,11 @@ export default function ScenarioTab() {
               </div>
 
               {/* ILF + DEDUCTIBLE + GUARDRAILS */}
-              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t border-generate-outline/10 pt-2 mt-1">
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t border-generate-text-outline/10 pt-2 mt-1">
                 <div className="text-xs py-1 pl-generate-padicon">ILF Factor ({activeVersion?.ilf_method || 'N/A'})</div>
                 <div className="text-center text-xs content-center">{formatNumber(scenario.ilf_factor, 3)}x</div>
                 <div className="text-right text-xs content-center">{formatNumber(scenario.original_ilf_factor, 3)}x</div>
-                <div className={`pr-generate-pad text-right text-xs content-center font-bold ${Math.abs(scenario.ilf_factor - scenario.original_ilf_factor) > 0.001 ? 'text-generate-selected' : ''}`}>
+                <div className={`pr-generate-pad text-right text-xs content-center font-bold ${Math.abs(scenario.ilf_factor - scenario.original_ilf_factor) > 0.001 ? 'text-generate-text-input' : ''}`}>
                   {formatNumber(scenario.ilf_factor, 3)}x
                 </div>
               </div>
@@ -461,17 +462,17 @@ export default function ScenarioTab() {
                 <div className="text-xs py-1 pl-generate-padicon">Deductible Factor</div>
                 <div className="text-center text-xs content-center">{formatNumber(scenario.deductible_factor, 3)}x</div>
                 <div className="text-right text-xs content-center">{formatNumber(scenario.original_deductible_factor, 3)}x</div>
-                <div className={`pr-generate-pad text-right text-xs content-center font-bold ${Math.abs(scenario.deductible_factor - scenario.original_deductible_factor) > 0.001 ? 'text-generate-selected' : ''}`}>
+                <div className={`pr-generate-pad text-right text-xs content-center font-bold ${Math.abs(scenario.deductible_factor - scenario.original_deductible_factor) > 0.001 ? 'text-generate-text-input' : ''}`}>
                   {formatNumber(scenario.deductible_factor, 3)}x
                 </div>
               </div>
 
               {/* Guardrails */}
               {scenario.guardrails.warnings.length > 0 && (
-                <div className="mx-generate-pad mt-2 p-2 border border-generate-refer/20 bg-generate-refer/5 rounded-lg">
+                <div className="mx-generate-pad mt-2 p-2 border border-generate-text-maybe/20 bg-generate-text-maybe/5 rounded-lg">
                   <div className="flex items-center gap-2 mb-1">
-                    <ShieldAlert className="w-3.5 h-3.5 text-generate-refer" />
-                    <span className="text-xs font-bold text-generate-refer">Guardrails Active</span>
+                    <ShieldAlert className="w-3.5 h-3.5 text-generate-text-maybe" />
+                    <span className="text-xs font-bold text-generate-text-maybe">Guardrails Active</span>
                   </div>
                   {scenario.guardrails.warnings.map((w, i) => (
                     <p key={i} className="text-xs opacity-70 text-wrap ml-5">{w}</p>
@@ -480,7 +481,7 @@ export default function ScenarioTab() {
               )}
 
               {/* FINAL PREMIUM */}
-              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t-2 border-generate-outline/30 pt-3 mt-3">
+              <div className="grid grid-cols-[50%_10%_20%_20%] px-generate-pad border-t-2 border-generate-text-outline/30 pt-3 mt-3">
                 <div className="text-lg font-black py-1">Final Premium</div>
                 <div></div>
                 <div className="text-right text-lg font-bold content-center">{formatCurrency(scenario.original_final_premium)}</div>
@@ -504,6 +505,7 @@ export default function ScenarioTab() {
           </div>
         </>
       )}
+      </CardGrid>
     </div>
   );
 }

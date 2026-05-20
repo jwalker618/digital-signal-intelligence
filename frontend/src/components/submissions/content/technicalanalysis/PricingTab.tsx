@@ -5,7 +5,7 @@ import {
   formatNumber, formatPercent, formatCurrency, formatText,
 } from "@/lib/format";
 import { ExpandableGroupTable } from "@/components/base/content/primatives";
-import { StandardCard } from "@/components/base/cards";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import {
   Calculator, HandCoins, ArrowRightToLine,
   ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis,
@@ -106,10 +106,8 @@ export default function PricingTab() {
   };
 
   return (
-    <div className="w-full no-scrollbar pb-12 pt-generate-pad"
-      >
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3">
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1 lg:grid-cols-3" className="gap-2">
 
         <StandardCard
           title="Pricing Anatomy"
@@ -376,7 +374,7 @@ export default function PricingTab() {
 
         </div>
 
-      </div>
+      </CardGrid>
     </div>
   );
 }

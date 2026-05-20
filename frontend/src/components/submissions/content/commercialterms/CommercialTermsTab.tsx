@@ -1,7 +1,7 @@
 "use client";
 
 import { useDsiStore } from "@/store/dsiStore";
-import { StandardCard } from "@/components/base/cards";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import { KpiTile } from "@/components/base/content/primatives";
 import { FileText, Building2, DollarSign, ArrowRightLeft, Calendar } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber, formatDate, formatText } from "@/lib/format";
@@ -22,11 +22,12 @@ const rowClass = (row: WaterfallRow) => {
 };
 
 export default function CommercialTermsTab() {
-  const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
+  const { activeSubmission, activeVersion, activeCommercial } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  const ct = activeCommercial;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ct = activeCommercial as any;
   const deductions = ct.deductions || {};
 
   const pickRate = (rate: number | null | undefined, fallback: number | null | undefined) =>
@@ -54,9 +55,10 @@ export default function CommercialTermsTab() {
   ];
 
   return (
-    <div className="w-full no-scrollbar pb-12 pt-generate-pad ">
+    <div className="w-full pb-12 pt-generate-pad ">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
-      <StandardCard 
+      <StandardCard
           title="Entity Identity"
           lucideIcon={Building2}
           spanClass="lg:col-span-2 mb-2"
@@ -189,6 +191,8 @@ export default function CommercialTermsTab() {
           <KpiTile label="Earned Method" value={formatText(ct.earned_method, "upper", "N/A")} />
         </div>
       </StandardCard>
+
+      </CardGrid>
     </div>
   );
 }

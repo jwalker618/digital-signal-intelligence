@@ -22,7 +22,7 @@ import { SHOCK_SCENARIOS, ActiveShock, applyMultipleShocks, generateEmergingScen
 import { formatNumber, formatCurrency, formatPercent, formatText, formatTimeRelative, formatDate } from "@/lib/format";
 
 import { api, } from "@/lib/api";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 
 import type {
   DiscoveredRelationship,
@@ -31,14 +31,14 @@ import type {
   WorldEngineStats,
 } from "@/types/worldEngine";
 
-const TIER_COLORS = ['var(--generate-approve)', 'var(--generate-info)', 'var(--generate-refer)', 'var(--generate-decline)', 'var(--generate-decline)'];
+const TIER_COLORS = ['var(--generate-text-good)', 'var(--generate-text-comment)', 'var(--generate-text-maybe)', 'var(--generate-text-bad)', 'var(--generate-text-bad)'];
 
 const LIKELIHOOD_COLOR: Record<string, string> = {
-  'High': 'text-generate-decline',
-  'Elevated': 'text-generate-refer',
-  'Moderate': 'text-generate-refer',
-  'Low-Moderate': 'text-generate-muted',
-  'Low': 'text-generate-muted',
+  'High': 'text-generate-text-bad',
+  'Elevated': 'text-generate-text-maybe',
+  'Moderate': 'text-generate-text-maybe',
+  'Low-Moderate': 'text-generate-text-placeholder',
+  'Low': 'text-generate-text-placeholder',
 };
 
 export default function WorldEngineView() {
@@ -173,11 +173,11 @@ export default function WorldEngineView() {
             
             <div className="generate-contentbox flex flex-col">
 
-              <span className="generate-analysis-description text-center">Maturity Stage</span>
-              <span className="generate-analysis-item text-center text-xl">{maturity?.stage ?? "—"}</span>
+              <span className="generate-light-input-description text-center">Maturity Stage</span>
+              <span className="generate-light-input-item text-center text-xl">{maturity?.stage ?? "—"}</span>
               
               {maturity && (
-                <span className="generate-analysis-item text-xs font-normal text-center">
+                <span className="generate-light-input-item text-xs font-normal text-center">
                   {formatNumber(maturity.time_depth_months, 1)} months of data
                 </span>
               )}
@@ -185,11 +185,11 @@ export default function WorldEngineView() {
 
             <div className="generate-contentbox flex flex-col">
 
-              <span className="generate-analysis-description text-center">Active Relationships</span>
-              <span className="generate-analysis-item text-center text-xl">{weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
+              <span className="generate-light-input-description text-center">Active Relationships</span>
+              <span className="generate-light-input-item text-center text-xl">{weStats?.relationships_by_state?.active ?? maturity?.active_relationships ?? "—"}
               </span>
               {maturity && (
-                <span className="generate-analysis-item text-xs font-normal text-center">
+                <span className="generate-light-input-item text-xs font-normal text-center">
                   {maturity.provisional_relationships} provisional &middot; {maturity.candidate_relationships} candidate
                 </span>
               )}
@@ -197,18 +197,18 @@ export default function WorldEngineView() {
             
             <div className="generate-contentbox flex flex-col">
 
-              <span className="generate-analysis-description text-center">Open Drift Alerts</span>
-              <span className={`generate-analysis-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-generate-decline" : "text-generate-contrast-background"}`}>
+              <span className="generate-light-input-description text-center">Open Drift Alerts</span>
+              <span className={`generate-light-input-item text-center text-xl ${weStats && weStats.drift_alerts_unacknowledged > 0 ? "text-generate-text-bad" : "text-generate-text-input"}`}>
                 {weStats?.drift_alerts_unacknowledged ?? "—"}
               </span>
             </div>
             
             <div className="generate-contentbox flex flex-col">
 
-              <span className="generate-analysis-description text-center">Assessed Entities</span>
-              <span className="generate-analysis-item text-center text-xl">{maturity?.assessed_entity_count ?? "—"}</span>
+              <span className="generate-light-input-description text-center">Assessed Entities</span>
+              <span className="generate-light-input-item text-center text-xl">{maturity?.assessed_entity_count ?? "—"}</span>
               {maturity && (
-                <span className="generate-analysis-item text-xs font-normal text-center">
+                <span className="generate-light-input-item text-xs font-normal text-center">
                   {maturity.entities_with_temporal_data} with history
                 </span>
               )}
@@ -225,7 +225,7 @@ export default function WorldEngineView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
+                <tr className="generate-grid-table-header text-generate-text-input text-wrap">
                   <th className="p-1.5 text-left">Signal</th>
                   <th className="p-1.5 text-left">Severity</th>
                   <th className="p-1.5 text-left">Type</th>
@@ -236,9 +236,9 @@ export default function WorldEngineView() {
               </thead>
               <tbody>
                 {alerts.map((a) => (
-                  <tr key={a.id} className="cursor-pointer text-generate-contrast-background hover:text-generate-selected">
+                  <tr key={a.id} className="cursor-pointer text-generate-text-input hover:text-generate-text-input">
                     <td className="p-1.5 text-left">{formatText(a.source_signal ?? "—","capitalize")}</td>
-                    <td className="p-1.5 text-left "><StatusBadge status={formatText(a.severity,"capitalize")} /></td>
+                    <td className="p-1.5 text-left "><SubmissionStatusPill decision={formatText(a.severity,"capitalize")} /></td>
                     <td className="p-1.5 text-left">{formatText(a.alert_type,"capitalize")}</td>
                     <td className="p-1.5 text-center">{formatTimeRelative(a.detected_at)}</td>
                     <td className="p-1.5 text-left">{formatText(a.description,"capitalize")}</td>
@@ -277,7 +277,7 @@ export default function WorldEngineView() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
+                <tr className="generate-grid-table-header text-generate-text-input text-wrap">
                   <th className="p-1.5 text-left">Source signal</th>
                   <th className="p-1.5 text-left">Target signal</th>
                   <th className="p-1.5 text-left">Direction</th>
@@ -290,14 +290,14 @@ export default function WorldEngineView() {
               </thead>
               <tbody>
                 {rels.map((r) => (
-                  <tr key={r.id} className="cursor-pointer text-generate-contrast-background hover:text-generate-selected">
+                  <tr key={r.id} className="cursor-pointer text-generate-text-input hover:text-generate-text-input">
                     <td className="p-1.5 text-left">{formatText(r.source_signal,"capitalize")}</td>
                     <td className="p-1.5 text-left">{formatText(r.target_signal,"capitalize")}</td>
                     <td className="p-1.5 text-left">{formatText(r.direction.replaceAll("_", " "),"capitalize")}</td>
                     <td className="p-1.5 text-center tabular-nums">{formatNumber(r.correlation_rho, 2)}</td>
                     <td className="p-1.5 text-center tabular-nums">{formatPercent(r.influence_weight)}</td>
                     <td className="p-1.5 text-center tabular-nums">{r.population_size}</td>
-                    <td className="p-1.5 text-left"><StatusBadge status={formatText(r.lifecycle_state,"capitalize")} /></td>
+                    <td className="p-1.5 text-left"><SubmissionStatusPill decision={formatText(r.lifecycle_state,"capitalize")} /></td>
                     <td className="p-1.5 text-center">{formatDate(r.created_at)}</td>
                   </tr>
                 ))}
@@ -322,24 +322,24 @@ export default function WorldEngineView() {
           <div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
               <div className="generate-contentbox flex flex-col">
-                <span className="generate-analysis-description text-center">Total Submissions</span>
-                <span className="generate-analysis-item text-center text-xl">{formatNumber(portfolio.count)}</span>
+                <span className="generate-light-input-description text-center">Total Submissions</span>
+                <span className="generate-light-input-item text-center text-xl">{formatNumber(portfolio.count)}</span>
                 </div>
               <div className="generate-contentbox flex flex-col">
-                <span className="generate-analysis-description text-center">Aggregate Premium</span>
-                <span className="generate-analysis-item text-center text-xl">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span>
+                <span className="generate-light-input-description text-center">Aggregate Premium</span>
+                <span className="generate-light-input-item text-center text-xl">{`${formatNumber(portfolio.totalPremium / 1000000, 1)}M`}</span>
                 </div>
               <div className="generate-contentbox flex flex-col">
-                <span className="generate-analysis-description text-center">Average Score</span>
-                <span className="generate-analysis-item text-center text-xl">{formatNumber(portfolio.avgScore)}</span>
+                <span className="generate-light-input-description text-center">Average Score</span>
+                <span className="generate-light-input-item text-center text-xl">{formatNumber(portfolio.avgScore)}</span>
                 </div>
               <div className="generate-contentbox flex flex-col">
-                <span className="generate-analysis-description text-center">Approval Rate</span>
-                <span className="generate-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span>
+                <span className="generate-light-input-description text-center">Approval Rate</span>
+                <span className="generate-light-input-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['approve'] || 0) / portfolio.count) : "0%"}</span>
                 </div>
               <div className="generate-contentbox flex flex-col">
-                <span className="generate-analysis-description text-center">Referral Rate</span>
-                <span className="generate-analysis-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span>
+                <span className="generate-light-input-description text-center">Referral Rate</span>
+                <span className="generate-light-input-item text-center text-xl">{portfolio.count > 0 ? formatPercent((portfolio.decDist['refer'] || 0) / portfolio.count) : "0%"}</span>
                 </div>
             </div>
             
@@ -351,7 +351,7 @@ export default function WorldEngineView() {
                   data={tierChartData}
                   categoryKey="tier"
                   valueKey="count"
-                  colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
+                  colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-light-input)'}
                   valueName="Count"
                   height={200}
                 />
@@ -381,7 +381,7 @@ export default function WorldEngineView() {
           <div>
             {emergingScenarios.map((es) => (
               
-              <div key={es.id} className="flex items-center justify-between py-2.5 border-b border-generate-outline/10 hover:text-generate-selected">
+              <div key={es.id} className="flex items-center justify-between py-2.5 border-b border-generate-text-outline/10 hover:text-generate-text-input">
                 <div className="flex-1 min-w-0 text-wrap">
                   <div className="flex items-center gap-2 mb-0.5">
                     
@@ -433,14 +433,14 @@ export default function WorldEngineView() {
 
               <div>
                 
-                <span className="generate-analysis-description text-center">Scenario</span>
+                <span className="generate-light-input-description text-center">Scenario</span>
                 
                 <select 
                   value={pendingScope} 
                   onChange={(e) => setPendingScope(e.target.value)} 
                   className="
                     w-full 
-                    bg-generate-background mt-2
+                    bg-generate-light-background mt-2
                     rounded-md p-1.5 text-sm">
                   <option value="all">ALL</option>
                   {coverages.map(c => 
@@ -454,14 +454,14 @@ export default function WorldEngineView() {
 
               <div>
                 
-                <span className="generate-analysis-description text-center">Scope</span>
+                <span className="generate-light-input-description text-center">Scope</span>
 
                 <select 
                   value={pendingScenario} 
                   onChange={(e) => setPendingScenario(e.target.value)} 
                   className="
                     w-full 
-                    bg-generate-background mt-2
+                    bg-generate-light-background mt-2
                     rounded-md p-1.5 text-sm">
                     {SHOCK_SCENARIOS.map(s => 
                       <option 
@@ -473,7 +473,7 @@ export default function WorldEngineView() {
               </div>
               
               <div>
-                <span className="generate-analysis-description text-center">Magnitude: {pendingMagnitude} pts</span>
+                <span className="generate-light-input-description text-center">Magnitude: {pendingMagnitude} pts</span>
                 <input 
                   type="range" min="5" max="50" step="1" 
                   value={pendingMagnitude} 
@@ -501,11 +501,11 @@ export default function WorldEngineView() {
             {activeShocks.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {activeShocks.map((shock, idx) => (
-                  <div key={idx} className="flex items-center gap-2 bg-generate-decline/10 border border-generate-decline/20 rounded px-3 py-1.5 text-sm">
-                    <Zap className="w-3 h-3 text-generate-decline" />
+                  <div key={idx} className="flex items-center gap-2 bg-generate-text-bad/10 border border-generate-text-bad/20 rounded px-3 py-1.5 text-sm">
+                    <Zap className="w-3 h-3 text-generate-text-bad" />
                     <span className="font-semibold">{shock.scenario.name}</span>
                     <span className="opacity-50 text-xs">({shock.scope}, -{shock.magnitude}pts)</span>
-                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-generate-decline"><X className="w-3 h-3" /></button>
+                    <button onClick={() => removeShock(idx)} className="ml-1 hover:text-generate-text-bad"><X className="w-3 h-3" /></button>
                   </div>
                 ))}
               </div>
@@ -530,25 +530,25 @@ export default function WorldEngineView() {
               <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 
                 <div className="generate-contentbox flex flex-col">
-                  <span className="generate-analysis-description text-center">Risks Affected</span>
-                  <span className="generate-analysis-item text-center text-xl">{shockResult.total_affected}</span></div>
+                  <span className="generate-light-input-description text-center">Risks Affected</span>
+                  <span className="generate-light-input-item text-center text-xl">{shockResult.total_affected}</span></div>
                 
                 <div className="generate-contentbox flex flex-col">
-                  <span className="generate-analysis-description text-center">Tier Migrations</span>
-                  <span className="generate-analysis-item text-center text-xl">{shockResult.tier_migrations}</span></div>
+                  <span className="generate-light-input-description text-center">Tier Migrations</span>
+                  <span className="generate-light-input-item text-center text-xl">{shockResult.tier_migrations}</span></div>
                 
                 <div className="generate-contentbox flex flex-col">
-                  <span className="generate-analysis-description text-center">Decision Changes</span>
-                  <span className="generate-analysis-item text-center text-xl">{shockResult.decision_changes}</span></div>
+                  <span className="generate-light-input-description text-center">Decision Changes</span>
+                  <span className="generate-light-input-item text-center text-xl">{shockResult.decision_changes}</span></div>
                 
                 <div className="generate-contentbox flex flex-col">
-                  <span className="generate-analysis-description text-center">Premium Impact</span>
-                  <span className="generate-analysis-item text-center text-xl"> {shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K</span>
+                  <span className="generate-light-input-description text-center">Premium Impact</span>
+                  <span className="generate-light-input-item text-center text-xl"> {shockResult.premium_delta > 0 ? '+' : ''}${formatNumber(shockResult.premium_delta / 1000)}K</span>
                 </div>
                 
                 <div className="generate-contentbox flex flex-col">
-                  <span className="generate-analysis-description text-center">Premium Change</span>
-                  <span className="generate-analysis-item text-center text-xl"> {shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span>
+                  <span className="generate-light-input-description text-center">Premium Change</span>
+                  <span className="generate-light-input-item text-center text-xl"> {shockResult.aggregate_premium_before > 0 ? `${shockResult.premium_delta > 0 ? '+' : ''}${formatPercent(shockResult.premium_delta / shockResult.aggregate_premium_before, 1)}` : 'N/A'}</span>
                 </div>
               </div>
 
@@ -560,7 +560,7 @@ export default function WorldEngineView() {
                     data={tierChartData}
                     categoryKey="tier"
                     valueKey="count"
-                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-light-input)'}
                     valueName="Count"
                     height={180}
                   />
@@ -571,7 +571,7 @@ export default function WorldEngineView() {
                     data={afterTierData}
                     categoryKey="tier"
                     valueKey="count"
-                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-analysis)'}
+                    colorFor={(e: any) => TIER_COLORS[e.tierNum - 1] || 'var(--generate-light-input)'}
                     valueName="Count"
                     height={180}
                   />
@@ -584,7 +584,7 @@ export default function WorldEngineView() {
               <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left whitespace-nowrap">
                   <thead>
-                    <tr className="generate-grid-table-header text-generate-contrast-background text-wrap">
+                    <tr className="generate-grid-table-header text-generate-text-input text-wrap">
                       <th className="p-1.5 text-left">Entity</th>
                       <th className="p-1.5 text-center">Before</th>
                       <th className="p-1.5 text-center">After</th>
@@ -598,7 +598,7 @@ export default function WorldEngineView() {
                   <tbody>
                     {shockResult.affected.slice(0, 15).map((item, idx) => (
                       
-                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`cursor-pointer text-generate-contrast-background hover:text-generate-selected ${item.tier_changed ? 'bg-generate-decline/5' : ''}`}>
+                      <tr key={idx} onClick={() => fetchCoreSubmissionDetail(item.original)} className={`cursor-pointer text-generate-text-input hover:text-generate-text-input ${item.tier_changed ? 'bg-generate-text-bad/5' : ''}`}>
                         <td className="p-1.5 text-left">{formatText(item.original.entity_name,"upper")}</td>
                         <td className="p-1.5 text-center">{formatNumber(item.original_score, 0)}</td>
                         <td className="p-1.5 text-center">{formatNumber(item.shocked_score, 0)}</td>

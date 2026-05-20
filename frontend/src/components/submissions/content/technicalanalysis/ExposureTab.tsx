@@ -11,7 +11,7 @@ import {
   KpiTile,
   InfoPanel,
 } from "@/components/base/content/primatives";
-import { StandardCard } from "@/components/base/cards";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import {
   PeerScatterChart,
   BenchmarkBarChart,
@@ -86,9 +86,9 @@ export default function ExposureTab() {
   }, [allConditions, exposureGroupKeys]);
 
   return (
-    <div className="w-full no-scrollbar pb-12 pt-generate-pad"
-      >
-  
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
+
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all exposure fields
           ======================================================================= */}
@@ -142,17 +142,17 @@ export default function ExposureTab() {
                     <span className="font-bold uppercase">{activeVersion.exposure_band_label}</span>
                     <span>Band ceiling</span>
                   </div>
-                  <div className="relative h-6 bg-generate-background rounded-full overflow-hidden border border-generate-outline/20">
+                  <div className="relative h-6 bg-generate-light-background rounded-full overflow-hidden border border-generate-text-outline/20">
                     <div
-                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-generate-approve/30 via-generate-muted/30 to-generate-refer/30 rounded-full"
+                      className="absolute inset-y-0 left-0 bg-gradient-to-r from-generate-text-good/30 via-generate-text-placeholder/30 to-generate-text-maybe/30 rounded-full"
                       style={{ width: '100%' }}
                     />
                     {/* Position marker */}
                     <div
-                      className="absolute top-0 bottom-0 w-0.5 bg-generate-selected z-10"
+                      className="absolute top-0 bottom-0 w-0.5 bg-generate-text-input z-10"
                       style={{ left: `${Math.max(2, Math.min(98, (bandPct || 0) * 100))}%` }}
                     >
-                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-generate-selected whitespace-nowrap">
+                      <div className="absolute -top-5 left-1/2 -translate-x-1/2 text-[10px] font-bold text-generate-text-input whitespace-nowrap">
                         {formatCurrency(exposureValue)}
                       </div>
                     </div>
@@ -238,7 +238,7 @@ export default function ExposureTab() {
 
                 {/* Combined modifier */}
                 {combinedModifier != null && (
-                  <div className="border-t border-generate-outline/20 pt-3 flex items-center justify-between">
+                  <div className="border-t border-generate-text-outline/20 pt-3 flex items-center justify-between">
                     <span className="text-xs opacity-60">Combined Modifier</span>
                     <span className="font-bold text-lg">{formatNumber(combinedModifier, 3)}x</span>
                   </div>
@@ -343,14 +343,14 @@ export default function ExposureTab() {
                     const isModifier = actionKey === 'modifier';
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
-                    const tagColor = isModifier ? 'bg-generate-info/15 text-generate-info' :
-                                     isReferral ? 'bg-generate-refer/15 text-generate-refer' :
-                                     isTierOverride ? 'bg-generate-decline/15 text-generate-decline' :
-                                     'bg-generate-muted/15 text-generate-muted';
+                    const tagColor = isModifier ? 'bg-generate-text-comment/15 text-generate-text-comment' :
+                                     isReferral ? 'bg-generate-text-maybe/15 text-generate-text-maybe' :
+                                     isTierOverride ? 'bg-generate-text-bad/15 text-generate-text-bad' :
+                                     'bg-generate-text-placeholder/15 text-generate-text-placeholder';
                     return (
-                      <div key={idx} className="flex items-center justify-between px-generate-pad py-2 border-b border-generate-outline/10 hover:bg-generate-background/20 transition-colors">
+                      <div key={idx} className="flex items-center justify-between px-generate-pad py-2 border-b border-generate-text-outline/10 hover:bg-generate-light-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-generate-refer' : isModifier ? 'text-generate-info' : 'text-generate-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-generate-text-maybe' : isModifier ? 'text-generate-text-comment' : 'text-generate-text-placeholder'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
@@ -379,6 +379,7 @@ export default function ExposureTab() {
         </>
       )}
 
+      </CardGrid>
     </div>
   );
 }

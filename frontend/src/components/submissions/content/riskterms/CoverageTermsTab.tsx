@@ -1,7 +1,7 @@
 "use client";
 
 import { useDsiStore } from "@/store/dsiStore";
-import SectionCard from "@/components/shared/SectionCard";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import { KpiTile, LabelValueList } from "@/components/base/content/primatives";
 import { FileCheck, ShieldCheck, ShieldAlert, LucideIcon } from "lucide-react";
 import { formatText } from "@/lib/format";
@@ -36,19 +36,22 @@ const CoverageItemList = ({
   items,
   emptyMessage,
   tone,
-  icon: Icon,
+  lucideIcon: Icon,
 }: {
   items: unknown[];
   emptyMessage: string;
   tone: "positive" | "negative";
-  icon: LucideIcon;
+  lucideIcon: LucideIcon;
 }) => {
   if (items.length === 0) {
     return <p className="text-xs opacity-50 italic text-center py-4">{emptyMessage}</p>;
   }
 
-  const bgClass = tone === "positive" ? "bg-generate-approve/5 border-generate-approve/10" : "bg-generate-decline/5 border-generate-decline/10";
-  const iconClass = tone === "positive" ? "text-generate-approve" : "text-generate-decline";
+  const bgClass =
+    tone === "positive"
+      ? "bg-generate-text-good/5 border-generate-text-good/30"
+      : "bg-generate-text-bad/5 border-generate-text-bad/30";
+  const iconClass = tone === "positive" ? "text-generate-text-good" : "text-generate-text-bad";
 
   return (
     <div className="flex flex-col gap-2">
@@ -72,11 +75,12 @@ const CoverageItemList = ({
 };
 
 export default function CoverageTermsTab() {
-  const { activeSubmission, activeQuote, activeVersion, activeRisk } = useDsiStore();
+  const { activeSubmission, activeVersion, activeRisk } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  const rt = activeRisk;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rt = activeRisk as any;
   const coverageTerms = (rt.coverage_terms ?? {}) as Record<string, unknown>;
   const extensions = Array.isArray(coverageTerms.extensions) ? coverageTerms.extensions : [];
   const exclusions = Array.isArray(coverageTerms.exclusions) ? coverageTerms.exclusions : [];
@@ -85,51 +89,54 @@ export default function CoverageTermsTab() {
   const additional = Object.entries(coverageTerms).filter(([k]) => !OVERVIEW_KEYS.has(k));
 
   return (
-    <div className="w-full no-scrollbar pb-12 pt-generate-pad">
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
-      <SectionCard icon={FileCheck} title="Coverage Overview">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
-          <KpiTile label="Coverage Territory" value={formatText(territory, "capitalize", "N/A")} />
-          <KpiTile label="Coverage Trigger" value={formatText(trigger, "capitalize", "N/A")} />
-          <KpiTile label="Extensions Count" value={extensions.length} />
-          <KpiTile label="Exclusions Count" value={exclusions.length} />
-        </div>
-      </SectionCard>
+        <StandardCard lucideIcon={FileCheck} title="Coverage Overview">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 py-2">
+            <KpiTile label="Coverage Territory" value={formatText(territory, "capitalize", "N/A")} />
+            <KpiTile label="Coverage Trigger" value={formatText(trigger, "capitalize", "N/A")} />
+            <KpiTile label="Extensions Count" value={extensions.length} />
+            <KpiTile label="Exclusions Count" value={exclusions.length} />
+          </div>
+        </StandardCard>
 
-      <SectionCard icon={ShieldCheck} title={`Extensions (${extensions.length})`}>
-        <div className="px-generate-pad py-4">
-          <CoverageItemList
-            items={extensions}
-            emptyMessage="No extensions defined"
-            tone="positive"
-            icon={ShieldCheck}
-          />
-        </div>
-      </SectionCard>
+        <StandardCard lucideIcon={ShieldCheck} title={`Extensions (${extensions.length})`}>
+          <div className="py-2">
+            <CoverageItemList
+              items={extensions}
+              emptyMessage="No extensions defined"
+              tone="positive"
+              lucideIcon={ShieldCheck}
+            />
+          </div>
+        </StandardCard>
 
-      <SectionCard icon={ShieldAlert} title={`Exclusions (${exclusions.length})`}>
-        <div className="px-generate-pad py-4">
-          <CoverageItemList
-            items={exclusions}
-            emptyMessage="No exclusions defined"
-            tone="negative"
-            icon={ShieldAlert}
-          />
-        </div>
-      </SectionCard>
+        <StandardCard lucideIcon={ShieldAlert} title={`Exclusions (${exclusions.length})`}>
+          <div className="py-2">
+            <CoverageItemList
+              items={exclusions}
+              emptyMessage="No exclusions defined"
+              tone="negative"
+              lucideIcon={ShieldAlert}
+            />
+          </div>
+        </StandardCard>
 
-      {additional.length > 0 && (
-        <SectionCard icon={FileCheck} title="Additional Terms">
-          <LabelValueList
-            className="px-generate-pad py-4"
-            rows={additional.map(([key, value]) => ({
-              key,
-              label: formatText(key, "capitalize"),
-              value: typeof value === "object" ? JSON.stringify(value) : String(value),
-            }))}
-          />
-        </SectionCard>
-      )}
+        {additional.length > 0 && (
+          <StandardCard lucideIcon={FileCheck} title="Additional Terms">
+            <LabelValueList
+              className="py-2"
+              rows={additional.map(([key, value]) => ({
+                key,
+                label: formatText(key, "capitalize"),
+                value: typeof value === "object" ? JSON.stringify(value) : String(value),
+              }))}
+            />
+          </StandardCard>
+        )}
+
+      </CardGrid>
     </div>
   );
 }

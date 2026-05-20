@@ -17,7 +17,7 @@ import ViewCanvas from "@/components/ViewCanvas";
 import { CardGrid, StandardCard } from "@/components/base/cards";
 import { api, fmtDate } from "@/lib/api";
 import { formatNumber, formatPercent } from "@/lib/format";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { useDsiStore } from "@/store/dsiStore";
 
 import type {
@@ -93,17 +93,17 @@ export default function AdminSystemHealthPage() {
             {health ? (
               <>
                 <div className="flex items-center gap-2 mb-generate-pad">
-                  <StatusBadge status={health.status} />
+                  <SubmissionStatusPill decision={health.status} />
                   <span className="text-xs">
                     as of {fmtDate(health.checked_at)}
                   </span>
                 </div>
 
-                <ul className="divide-y divide-generate-outline/20">
+                <ul className="divide-y divide-generate-text-outline/20">
                   {Object.entries(health.components ?? {}).map(([name, c]) => (
                     
                     <li key={name} className="flex items-center gap-3 py-1 text-sm">
-                      <StatusBadge status={c.status} />
+                      <SubmissionStatusPill decision={c.status} />
                       <span>{name}</span>
                       {c.detail && <span>{c.detail}</span>}
                     </li>
@@ -138,7 +138,7 @@ export default function AdminSystemHealthPage() {
             <table className="w-full text-left whitespace-nowrap border-collapse">
               
               <thead>
-                <tr className="generate-grid-table-header text-generate-contrast-background">
+                <tr className="generate-grid-table-header text-generate-text-input">
                   <th className="p-1.5">Extractor</th>
                   <th className="p-1.5">Mode</th>
                   <th className="p-1.5 text-right">Success</th>
@@ -150,12 +150,12 @@ export default function AdminSystemHealthPage() {
               
               <tbody>
                 {extractors.map((e) => (
-                  <tr key={e.name} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
+                  <tr key={e.name} className="even:bg-generate-dark-input text-generate-text-input">
                     <td className="p-1.5 text-xs">{e.name}</td>
                     <td className="p-1.5">{e.mode}</td>
                     <td className="p-1.5 text-right tabular-nums">{e.success_count}</td>
                     <td className="p-1.5 text-right tabular-nums">{e.error_count}</td>
-                    <td className="p-1.5"><StatusBadge status={e.status} /></td>
+                    <td className="p-1.5"><SubmissionStatusPill decision={e.status} /></td>
                     <td className="p-1.5 text-xs truncate max-w-xs">
                       {e.last_error ?? "—"}
                     </td>
@@ -187,9 +187,9 @@ export default function AdminSystemHealthPage() {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-generate-outline/20 rounded-lg p-3">
+    <div className="border border-generate-text-outline/20 rounded-lg p-3">
       <span className="text-xs block mb-1">{label}</span>
-      <span className="text-xl font-black text-generate-selected">{value}</span>
+      <span className="text-xl font-black text-generate-text-input">{value}</span>
     </div>
   );
 }
