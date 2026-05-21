@@ -139,6 +139,18 @@ class SanctionsSignalBridge(RoutingBridge):
             failed_sources = len(result.extractors_failed)
             confidence = 1.0 - (failed_sources / total_sources) if total_sources > 0 else 0.5
 
+            # V7 Phase 10/11: surface cluster_summaries so the calling
+            # inference function can stamp cluster_id onto SignalResult.
+            # `representative_cluster_id` is the first cluster — for
+            # sanctions a single entity typically maps to one cluster,
+            # and that's the one the variant loop will fan out from.
+            cluster_summaries = result.cluster_summaries or []
+            rep_cluster_id = cluster_summaries[0]["cluster_id"] if cluster_summaries else None
+            rep_deterministic = (
+                cluster_summaries[0]["deterministic"]
+                if cluster_summaries else None
+            )
+
             return {
                 'score': score,
                 'risk_level': sanctions_result.risk_level.value,
@@ -161,6 +173,11 @@ class SanctionsSignalBridge(RoutingBridge):
                     }
                     for m in sanctions_result.matches[:10]  # Limit to top 10
                 ],
+                # V7 Phase 10 root-cause cluster summary list + chosen
+                # representative for inference-function consumption.
+                'cluster_summaries': cluster_summaries,
+                'cluster_id': rep_cluster_id,
+                'cluster_deterministic': rep_deterministic,
             }
 
         except Exception as e:
@@ -292,6 +309,15 @@ class CorporateSignalBridge(RoutingBridge):
             failed_sources = len(result.extractors_failed)
             confidence = 1.0 - (failed_sources / total_sources) if total_sources > 0 else 0.5
 
+            # V7 Phase 10/11: surface cluster_summaries for the inference
+            # function's SignalResult.metadata.
+            cluster_summaries = result.cluster_summaries or []
+            rep_cluster_id = cluster_summaries[0]["cluster_id"] if cluster_summaries else None
+            rep_deterministic = (
+                cluster_summaries[0]["deterministic"]
+                if cluster_summaries else None
+            )
+
             return {
                 'score': round(combined_score, 1),
                 'registration_score': registration_score,
@@ -315,6 +341,10 @@ class CorporateSignalBridge(RoutingBridge):
                     'is_active': corp_result.primary_record.is_active,
                     'source': corp_result.primary_record.source,
                 } if corp_result.primary_record else None,
+                # V7 Phase 10 cluster summaries.
+                'cluster_summaries': cluster_summaries,
+                'cluster_id': rep_cluster_id,
+                'cluster_deterministic': rep_deterministic,
                 'execution_time_ms': (time.time() - start_time) * 1000,
             }
 

@@ -737,6 +737,14 @@ class SignalOutput:
     # V7 Phase 8/9: reproducibility class + risk-primitive class.
     reproducibility: Optional[str] = None      # stable | flaky | unstable | unknown
     primitive_type: Optional[str] = None       # PrimitiveType literal
+    # V7 Phase 10/11: root-cause cluster id (set by routing aggregators
+    # when this signal was produced via a multi-source cluster). The
+    # variant loop's is_trigger reads this to decide whether to spawn
+    # sibling queries. cluster_deterministic indicates whether the
+    # underlying cluster used an authoritative key (True) or required
+    # an LLM merge (False).
+    cluster_id: Optional[str] = None
+    cluster_deterministic: Optional[bool] = None
 
 
 @dataclass

@@ -245,32 +245,96 @@ async def _update_submission_status(
             sub["discovered_domain"] = discovered_domain
 
 
-async def _persist_quote(quote_code: str, quote_data: Dict[str, Any]) -> None:
-    """Persist a quote to the active storage backend."""
+async def _persist_quote(
+    quote_code: str,
+    quote_data: Dict[str, Any],
+    workflow_result: Optional[WorkflowResult] = None,
+) -> None:
+    """Persist a quote to the active storage backend.
+
+    V7 follow-up: when `workflow_result` is supplied AND no
+    ModelVersionRecord exists for the submission yet, create one (the
+    primary first-cycle write path that was previously missing). This
+    persists the V7 composite-grade fields, signal_history rows for the
+    disclosure endpoint, and any cached disclosure packet on the referral.
+    """
     if _db_available():
         try:
             from ...db.repositories import (
+                ModelVersionRepository,
+                ModelVersionSignalRepository,
                 QuoteRepository,
                 SubmissionRepository,
-                ModelVersionRepository,
             )
+            from layers.risk.v7_persistence import (
+                disclosure_packet_payload_from_result,
+                mv_create_kwargs_from_result,
+                signal_records_from_outputs,
+            )
+
             session = await _get_db_session()
             if session:
                 try:
                     sub_repo = SubmissionRepository(session)
                     sub = await sub_repo.get_by_code(quote_data["submission_code"])
-                    if sub:
-                        mv_repo = ModelVersionRepository(session)
-                        mv = await mv_repo.get_latest(sub.id)
-                        if mv:
-                            repo = QuoteRepository(session)
-                            await repo.create(
-                                submission_id=sub.id,
-                                model_version_id=mv.id,
-                                recommended_premium=quote_data.get("recommended_premium", 0),
-                                recommended_limit=quote_data.get("recommended_limit"),
+                    if not sub:
+                        return
+
+                    mv_repo = ModelVersionRepository(session)
+                    mv = await mv_repo.get_latest(sub.id)
+
+                    # V7 follow-up: create primary ModelVersion if missing.
+                    if mv is None and workflow_result is not None:
+                        mv_kwargs = mv_create_kwargs_from_result(
+                            workflow_result, version_type="initial",
+                        )
+                        mv = await mv_repo.create(submission_id=sub.id, **mv_kwargs)
+                        # Persist per-signal rows so the disclosure endpoint
+                        # has data to render.
+                        mvs_repo = ModelVersionSignalRepository(session)
+                        signals_payload = signal_records_from_outputs(
+                            workflow_result.model_version.signal_outputs
+                            if workflow_result.model_version else [],
+                            entity_code=workflow_result.entity_id or "unknown",
+                        )
+                        if signals_payload:
+                            await mvs_repo.bulk_record(
+                                model_version_id=mv.id, signals=signals_payload,
                             )
-                            await session.commit()
+
+                    if mv is None:
+                        # Still no MV — fall through to in-memory cache.
+                        _memory.quotes[quote_code] = quote_data
+                        return
+
+                    repo = QuoteRepository(session)
+                    quote = await repo.create(
+                        submission_id=sub.id,
+                        model_version_id=mv.id,
+                        recommended_premium=quote_data.get("recommended_premium", 0),
+                        recommended_limit=quote_data.get("recommended_limit"),
+                    )
+
+                    # V7 — cache the disclosure packet on any grade
+                    # referral so the disclosure endpoint serves it
+                    # without re-generation.
+                    if workflow_result is not None:
+                        packet = disclosure_packet_payload_from_result(
+                            workflow_result, model_version_id=mv.id,
+                        )
+                        if packet is not None:
+                            from ...db.models import Referral
+                            # Attach to any referral on this quote.
+                            from sqlalchemy import select as _select
+                            referrals = (
+                                await session.execute(
+                                    _select(Referral).where(Referral.quote_id == quote.id)
+                                )
+                            ).scalars().all()
+                            for r in referrals:
+                                r.disclosure_packet = packet
+
+                    await session.commit()
                     return
                 finally:
                     await session.close()
@@ -294,7 +358,7 @@ async def process_submission_async(
 
         quote_code = generate_id("quo")
         quote = workflow_result_to_quote(result, submission_code, quote_code)
-        await _persist_quote(quote_code, quote)
+        await _persist_quote(quote_code, quote, workflow_result=result)
         await _update_submission_status(
             submission_code,
             SubmissionStatus.READY,

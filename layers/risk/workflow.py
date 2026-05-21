@@ -1110,6 +1110,10 @@ class WorkflowEngine:
         # cluster_id, etc. We only need the fields the predicate inspects.
         from signal_architecture.signals.types import SignalResult as _SR
 
+        # V7 follow-up: SignalOutput now carries cluster_id and
+        # cluster_deterministic propagated from the routed inference
+        # functions via the scorer. The variant trigger predicate reads
+        # them through SignalResult.metadata.
         signals = [
             _SR(
                 signal_id=o.signal_id,
@@ -1123,14 +1127,12 @@ class WorkflowEngine:
                 absence_sub_type=o.absence_sub_type,
                 primitive_type=o.primitive_type,
                 metadata={
-                    "cluster_id": (o.evidence_pro or "_no_cluster"),
-                    # The scorer doesn't currently propagate the cluster_id
-                    # from aggregator metadata onto SignalOutput. When
-                    # Phase 10's wiring lands, this will read the real
-                    # cluster_id; until then `is_trigger` will reject these
-                    # signals (no real cluster -> not a trigger), so the
-                    # loop is correctly a no-op.
-                    "deterministic": False,
+                    "cluster_id": o.cluster_id,
+                    "deterministic": (
+                        o.cluster_deterministic
+                        if o.cluster_deterministic is not None
+                        else True  # absence of explicit flag treated as deterministic
+                    ),
                 },
             )
             for o in scoring_result.signal_outputs

@@ -690,6 +690,11 @@ class ModelScorer:
             # Convert SignalResult to SignalOutput.
             # V7 Phase 3: propagate evidence-grade fields so the scorer's
             # group/composite rollups can read them downstream.
+            # V7 Phase 10/11: cluster_id + cluster_deterministic come from
+            # the routed inference function's metadata when it ran through
+            # the multi-source clustering pass. Variant loop trigger
+            # predicate reads these.
+            md = result.metadata or {}
             return SignalOutput(
                 signal_id=signal.id,
                 signal_name=signal.id.replace("_", " ").title(),
@@ -698,9 +703,9 @@ class ModelScorer:
                 confidence=result.confidence if result.confidence else self.default_confidence,
                 weighted_score=(result.score or self.default_score) * weight,
                 weight=weight,
-                data_sources=[result.metadata.get("extractor", "unknown")] if result.metadata else [],
+                data_sources=[md.get("extractor", "unknown")] if md else [],
                 extracted_at=utcnow(),
-                from_cache=result.metadata.get("from_cache", False) if result.metadata else False,
+                from_cache=md.get("from_cache", False) if md else False,
                 execution_time_ms=result.execution_time_ms or elapsed_ms,
                 error=result.error,
                 evidence_grade=result.evidence_grade,
@@ -711,6 +716,8 @@ class ModelScorer:
                 absence_sub_type=result.absence_sub_type,
                 reproducibility=result.reproducibility,
                 primitive_type=primitive,
+                cluster_id=md.get("cluster_id"),
+                cluster_deterministic=md.get("cluster_deterministic"),
             )
 
         except Exception as e:
