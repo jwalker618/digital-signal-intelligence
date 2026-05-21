@@ -1047,7 +1047,104 @@ class WorkflowEngine:
             # WE-2: Consistency
             consistency_score=consistency_score_value,
             divergent_pairs=divergent_pairs,
+            # V7 — composite evidence-grade rollup propagated from
+            # ScoringResult so the route layer can persist it without
+            # reaching back into the scorer's intermediate state.
+            composite_min_grade=scoring_result.composite_min_grade,
+            composite_weighted_mean_grade=scoring_result.composite_weighted_mean_grade,
+            composite_grade_distribution=dict(scoring_result.composite_grade_distribution or {}),
+            group_grade_rollups={
+                gid: {
+                    "min_grade": r.min_grade,
+                    "weighted_mean_grade": r.weighted_mean_grade,
+                    "distribution": dict(r.distribution or {}),
+                }
+                for gid, r in (scoring_result.group_grade_rollups or {}).items()
+            },
+            primitive_grade_rollups={
+                pid: {
+                    "min_grade": r.min_grade,
+                    "weighted_mean_grade": r.weighted_mean_grade,
+                    "distribution": dict(r.distribution or {}),
+                }
+                for pid, r in (scoring_result.primitive_grade_rollups or {}).items()
+            },
         )
+
+    def run_variant_loop_for_scored(
+        self,
+        scoring_result: "ScoringResult",
+        *,
+        validator_verdicts: Optional[Dict[str, bool]] = None,
+        llm_callable=None,
+        extract_for_variant=None,
+        audit=None,
+        max_per_trigger: int = 5,
+        max_per_entity_per_cycle: int = 25,
+    ) -> "list":
+        """V7 Phase 11 — run the variant loop over a scored result.
+
+        Returns the new variant SignalResult list. Caller is responsible
+        for merging them into a recompute (typically via re-running scoring
+        + composite rollup over signal_outputs + new variants). The hook
+        is sync; callers integrate it into their async flow.
+
+        ``validator_verdicts`` is a dict ``signal_id -> bool`` (True =
+        validator advanced). Missing entries treated as False.
+
+        ``llm_callable`` and ``extract_for_variant`` must both be provided
+        for the loop to produce anything — they're left optional so the
+        method can be called as a no-op in environments without an LLM.
+        """
+        if llm_callable is None or extract_for_variant is None:
+            return []
+        # Lazy import: avoids loading the variants package until it's used.
+        from signal_architecture.variants import (
+            run_variant_loop,
+            select_triggers,
+        )
+
+        verdicts = validator_verdicts or {}
+        # Reconstruct SignalResult-shapes from scoring_result.signal_outputs
+        # so the variant loop's `is_trigger` can read evidence_grade,
+        # cluster_id, etc. We only need the fields the predicate inspects.
+        from signal_architecture.signals.types import SignalResult as _SR
+
+        signals = [
+            _SR(
+                signal_id=o.signal_id,
+                score=o.raw_score,
+                confidence=o.confidence,
+                evidence_grade=o.evidence_grade,
+                evidence_basis=o.evidence_basis,
+                evidence_pro=o.evidence_pro,
+                evidence_counter=o.evidence_counter,
+                evidence_tie_breaker=o.evidence_tie_breaker,
+                absence_sub_type=o.absence_sub_type,
+                primitive_type=o.primitive_type,
+                metadata={
+                    "cluster_id": (o.evidence_pro or "_no_cluster"),
+                    # The scorer doesn't currently propagate the cluster_id
+                    # from aggregator metadata onto SignalOutput. When
+                    # Phase 10's wiring lands, this will read the real
+                    # cluster_id; until then `is_trigger` will reject these
+                    # signals (no real cluster -> not a trigger), so the
+                    # loop is correctly a no-op.
+                    "deterministic": False,
+                },
+            )
+            for o in scoring_result.signal_outputs
+        ]
+        triggers = select_triggers(signals, verdicts)
+        new_signals, _ = run_variant_loop(
+            triggers,
+            llm_callable=llm_callable,
+            extract_for_variant=extract_for_variant,
+            audit=audit,
+            max_per_trigger=max_per_trigger,
+            max_per_entity_per_cycle=max_per_entity_per_cycle,
+        )
+        return new_signals
 
     def verify_inputs(
         self,

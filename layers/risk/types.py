@@ -1214,6 +1214,19 @@ class WorkflowResult:
     consistency_score: Optional[float] = None              # 0-1 overall
     divergent_pairs: List[str] = field(default_factory=list)  # signal pairs flagged as divergent
 
+    # V7 — composite evidence-grade rollup carried through from
+    # ScoringResult so the route layer can persist it onto
+    # ModelVersionRecord and the workbench can render it without an
+    # extra round-trip. All three fields are Optional / empty by
+    # default so pre-V7 callers stay valid.
+    composite_min_grade: Optional[str] = None              # EvidenceGrade literal
+    composite_weighted_mean_grade: Optional[float] = None  # display-only
+    composite_grade_distribution: Dict[str, float] = field(default_factory=dict)
+    # Per-group and per-primitive rollups, keyed by group_id / primitive name.
+    # Each value is a dict with the same shape as GradeRollupDTO.
+    group_grade_rollups: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    primitive_grade_rollups: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+
 
 # Backward compatibility aliases
 LimitBand = LimitBandConfig

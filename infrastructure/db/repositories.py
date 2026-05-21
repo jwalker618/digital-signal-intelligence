@@ -675,6 +675,17 @@ class ModelVersionSignalRepository:
                 "proxy_tier": src.proxy_tier,
                 "expectation_level": src.expectation_level,
                 "was_absent": src.was_absent,
+                # V7 evidence-grade fields propagate to the new version so
+                # an underwriter override doesn't drop the audit-grade
+                # context that earned the original signal its place.
+                "evidence_grade": src.evidence_grade,
+                "evidence_basis": src.evidence_basis,
+                "evidence_sources": src.evidence_sources or [],
+                "evidence_pro": src.evidence_pro,
+                "evidence_counter": src.evidence_counter,
+                "evidence_tie_breaker": src.evidence_tie_breaker,
+                "absence_sub_type": src.absence_sub_type,
+                "primitive_type": src.primitive_type,
             }
             # Apply override for the audited signal
             if override_signal_id and src.signal_id == override_signal_id and override_values:

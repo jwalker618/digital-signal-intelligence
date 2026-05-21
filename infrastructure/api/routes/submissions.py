@@ -94,6 +94,12 @@ def workflow_result_to_quote(
         WorkflowDecisionType.DECLINE: "decline",
     }
 
+    # V7 composite-grade rollup, surfaced in the quote dict so the
+    # frontend has it without a follow-up GET. Empty dicts when the
+    # workflow hasn't been re-run since V7 landed.
+    from layers.risk.v7_persistence import quote_dict_evidence_fields
+    v7_evidence = quote_dict_evidence_fields(result)
+
     return {
         "quote_code": quote_code,
         "submission_code": submission_code,
@@ -119,6 +125,8 @@ def workflow_result_to_quote(
         "notes": result.notes,
         "created_at": now,
         "valid_until": now + timedelta(days=30),
+        # V7 composite evidence-grade rollup.
+        "evidence": v7_evidence,
     }
 
 
