@@ -8,6 +8,7 @@
 # VERSION: 2.1 - Added multiplexer support (model_specificity, routing_constraints) (Phase V4)
 # VERSION: 2.2 - Added Pricing Anchors & Decoupled Limits (Phase V5)
 # VERSION: 2.3 - Added expectation_level for adaptive signal absence (Phase 10)
+# VERSION: 2.4 - Added evidence_grade_policy block + grade-driven referral rules (V7 Phase 4)
 #
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
@@ -783,5 +784,84 @@
 #
 #   Arbiter prefers high-confidence (>70% completeness) results over
 #   low-confidence results, even if the latter has higher specificity.
+#
+# =============================================================================
+
+
+# =============================================================================
+# EVIDENCE-GRADE POLICY (V7 Phase 4)
+# =============================================================================
+#
+# Permissive default. The block carries one rule (distribution share at
+# OBSERVED or above >= 50%) that emits zero referrals on the V6 data plane
+# because every production extractor was migrated to OBSERVED+ in Phase 2.
+# Per-coverage tuning lands in V8.
+#
+# Grade-driven referrals NEVER produce tier overrides or DECLINE. Action is
+# REFER only. Triggered conditions carry condition_class="evidence_grade"
+# so downstream consumers (UI, audit) distinguish them from score-driven
+# referrals.
+#
+# Three rule types are supported. Use them in this order of preference:
+#
+#   1. distribution_share_below_grade  (PORTFOLIO GUARDRAIL)
+#        floor:  EvidenceGradeName  (e.g. "observed")
+#        share:  float 0.0..1.0     (e.g. 0.5 = 50%)
+#        note:   format string with {actual_share}, {floor}, {share}
+#      Fires when the proportion of composite weight at floor-or-above is
+#      below share. Robust to single-signal outliers; prefer this rule.
+#
+#   2. min_grade_below                  (HARD FLOOR)
+#        threshold: EvidenceGradeName  (e.g. "observed")
+#        note:      format string with {actual}, {threshold}
+#      Fires when composite_min_grade is strictly below threshold. A single
+#      "inferred" signal in an otherwise STRUCTURED_ATTESTED stack will fire
+#      this rule — use sparingly.
+#
+#   3. high_weight_signal_below_expected  (TARGETED CHECK)
+#        weight_threshold: float (0,1]   (e.g. 0.10 = 10%)
+#        note:             format string with {signal_id}, {weight},
+#                                            {actual}, {expected}
+#      Pairs with `expected_grades.grades[signal_id]`. Fires when a signal
+#      contributing weight_threshold or more of composite weight has an
+#      actual grade below its expected floor. Signals absent from
+#      expected_grades are skipped.
+#
+# DO NOT INTRODUCE a "weighted_evidence_grade_below" rule. The composite
+# scalar mean is a cardinal display value over an ordinal taxonomy and is
+# NEVER thresholded by production code (Phase 4 enforces this via grep).
+#
+# DEFAULT BLOCK (injected by scripts/add_evidence_grade_policy.py):
+#
+#   evidence_grade_policy:
+#     enabled: true
+#     expected_grades:
+#       grades: {}
+#     composite_referral:
+#       enabled: true
+#       rules:
+#         - condition: distribution_share_below_grade
+#           floor: observed
+#           share: 0.5
+#           note: "Only {actual_share:.0%} of weight is at OBSERVED or above (target 50%)"
+#
+# TIGHTENING EXAMPLES (per-coverage, hand-authored — not generated):
+#
+#   evidence_grade_policy:
+#     enabled: true
+#     expected_grades:
+#       grades:
+#         sanctions_screening_result: structured_attested
+#         director_litigation_history: corroborated
+#     composite_referral:
+#       enabled: true
+#       rules:
+#         - condition: distribution_share_below_grade
+#           floor: corroborated
+#           share: 0.6
+#           note: "Only {actual_share:.0%} of weight is corroborated+ (target 60%)"
+#         - condition: high_weight_signal_below_expected
+#           weight_threshold: 0.10
+#           note: "Signal {signal_id} (weight {weight:.0%}) grade {actual} < expected {expected}"
 #
 # =============================================================================

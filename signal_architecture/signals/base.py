@@ -10,7 +10,7 @@ consistent interfaces throughout the system.
 
 from abc import ABC, abstractmethod
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from .types import (
     ExtractorResult,
@@ -18,6 +18,7 @@ from .types import (
     CategorizerResult,
     InferenceContext,
 )
+from .evidence import EvidenceGrade, EvidenceSource, assert_within_role
 
 
 def utcnow() -> datetime:
@@ -77,7 +78,7 @@ class BaseExtractor(ABC):
     SOURCE_NAME: str = "unknown"
     SOURCE_VERSION: str = "1.0"
     DEFAULT_TTL_SECONDS: int = 3600  # 1 hour default
-    
+
     # Common TTL presets (seconds)
     TTL_REALTIME = 60           # 1 minute - for live data
     TTL_FREQUENT = 300          # 5 minutes
@@ -85,7 +86,32 @@ class BaseExtractor(ABC):
     TTL_DAILY = 86400           # 24 hours
     TTL_WEEKLY = 604800         # 7 days
     TTL_MONTHLY = 2592000       # 30 days
-    
+
+    # V7 Phase 1: per-class evidence cap. Subclasses tighten as needed.
+    MAX_EVIDENCE_GRADE: "EvidenceGrade" = "behaviourally_validated"
+
+    # V7 Phase 8: race-sensitive extractors (live BGP, sentiment/social,
+    # anything whose value legitimately varies second-to-second) get a
+    # relaxed reproducibility threshold — 70% agreement counts as `stable`
+    # instead of the default 90%. Default False; subclasses opt in.
+    RACE_SENSITIVE: bool = False
+
+    # V7 Phase 2: every extractor has now declared an explicit cap (either
+    # through inheritance from StubExtractor/ProductionExtractor or by
+    # overriding MAX_EVIDENCE_GRADE on the subclass). Enforcement flipped
+    # from "warn" to "raise": any extractor that asserts a grade above its
+    # declared cap fails loudly.
+    _EVIDENCE_ENFORCEMENT_MODE: str = "raise"
+
+    def _check_evidence_role(self, claimed: "EvidenceGrade") -> None:
+        """Call from any extractor that asserts a grade on a SignalResult."""
+        assert_within_role(
+            type(self).__name__,
+            self.MAX_EVIDENCE_GRADE,
+            claimed,
+            mode=self._EVIDENCE_ENFORCEMENT_MODE,  # type: ignore[arg-type]
+        )
+
     @abstractmethod
     def extract(
         self, 
@@ -259,16 +285,71 @@ class BaseAggregator(ABC):
     ) -> AggregatorResult:
         """
         Aggregate and normalize extractor results.
-        
+
         Args:
             extractor_results: List of ExtractorResult from one or more extractors
             **kwargs: Additional parameters for aggregation logic
-        
+
         Returns:
             AggregatorResult containing normalized data or error information
         """
         pass
-    
+
+    def aggregate_evidence(
+        self,
+        contributing: "Sequence[SignalResult]",
+    ) -> "Tuple[Optional[EvidenceGrade], List[EvidenceSource]]":
+        """V7 Phase 3 — return (max_grade, union_of_sources) across `contributing`.
+
+        Skips ungraded contributors (errors, failed_fetch absences). Use this
+        when an aggregator wants a quick (grade, sources) tuple without doing
+        a full promotion-merge — see `merge_contributing_signals` for the
+        value-aware promotion semantics.
+        """
+        from .evidence import bump_evidence as _bump  # local import: avoid cycles
+        max_grade: Optional[EvidenceGrade] = None
+        sources: List[EvidenceSource] = []
+        for sig in contributing:
+            if sig.evidence_grade is None:
+                continue
+            if getattr(sig, "absence_sub_type", None) == "absence_failed_fetch":
+                continue
+            if sig.error is not None or sig.skipped:
+                continue
+            max_grade = _bump(max_grade, sig.evidence_grade)
+            if sig.evidence_sources:
+                sources.extend(sig.evidence_sources)
+        return max_grade, sources
+
+    def merge_contributing_signals(
+        self,
+        signal_id: str,
+        contributors: "Sequence[SignalResult]",
+    ) -> "SignalResult":
+        """V7 Phase 3 — value-aware promotion-merge over multiple
+        SignalResults that share a signal_id.
+
+        Delegates to `signals.aggregators.grade_rollup.merge_contributors`.
+        Aggregator implementations call this whenever they receive >1 result
+        for the same signal_id.
+        """
+        from .aggregators.grade_rollup import merge_contributors  # local import
+        if not contributors:
+            raise ValueError(
+                f"merge_contributing_signals({signal_id!r}) called with 0 contributors"
+            )
+        merged = merge_contributors(contributors)
+        # Caller expects the signal_id we asked for. The merge helper preserves
+        # the contributor's signal_id, but if the caller batches contributors
+        # of varying signal_id (caller bug), we hard-fail here.
+        if merged.result.signal_id != signal_id:
+            raise ValueError(
+                f"merge_contributing_signals: contributor signal_id="
+                f"{merged.result.signal_id!r} does not match expected "
+                f"{signal_id!r}"
+            )
+        return merged.result
+
     def _create_success_result(
         self,
         data: Dict[str, Any],

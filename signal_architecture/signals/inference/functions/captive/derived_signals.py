@@ -38,6 +38,9 @@ def _padded(signal_id: str, entity_id: str) -> SignalResult:
         score=_deterministic_score(entity_id, signal_id),
         confidence=_deterministic_confidence(entity_id, signal_id),
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: deterministic derived synthetic value",
+        evidence_sources=[],
     )
 
 

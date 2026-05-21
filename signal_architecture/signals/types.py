@@ -9,8 +9,10 @@ All components use these standardized types to ensure consistent data flow.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone, timedelta
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from enum import Enum
+
+from .evidence import EvidenceGrade, EvidenceSource
 
 
 def utcnow() -> datetime:
@@ -217,14 +219,66 @@ class SignalResult:
     error: Optional[str] = None
     execution_time_ms: Optional[float] = None
     skipped: bool = False
-    
+
+    # --- V7 Phase 1: evidence fields. Optional during migration. ---
+    # Phase 2 populates them in every extractor.
+    # Phase 6 tightens `evidence_grade` and `evidence_basis` to required.
+    evidence_grade: Optional[EvidenceGrade] = None
+    evidence_basis: Optional[str] = None
+    evidence_sources: List[EvidenceSource] = field(default_factory=list)
+
+    # Adversarial validation (populated by Phase 6).
+    evidence_pro: Optional[str] = None
+    evidence_counter: Optional[str] = None
+    evidence_tie_breaker: Optional[str] = None
+
+    # V7 Phase 3: absence sub-typing.
+    #   - "absence_failed_fetch" — extractor could not retrieve a value;
+    #     excluded from rollups; carries no grade.
+    #   - "absence_authoritative_empty" — source authoritatively returned
+    #     "no record" (e.g. OFAC clean screen); INCLUDED in rollups; carries
+    #     the source's grade (typically structured_attested).
+    absence_sub_type: Optional[Literal["absence_failed_fetch", "absence_authoritative_empty"]] = None
+
+    # V7 Phase 8: reproducibility class — a separate axis from both
+    # confidence ("we got a value") and grade ("what kind of evidence").
+    # Answers: "would the source agree with itself on a re-pull tomorrow?"
+    #   stable   — multi-pull verified or a known-stable register
+    #   flaky    — 50-90% agreement across pulls
+    #   unstable — <50% agreement, or value differs per replica
+    #   unknown  — single-pull, no reproducibility data yet
+    # Populated by the workflow from signal_stability_classification before
+    # commit; None until then.
+    reproducibility: Optional[Literal["stable", "flaky", "unstable", "unknown"]] = None
+
+    # V7 Phase 9: risk-primitive class — orthogonal to source taxonomy,
+    # coverage, and signal_id. Lets the platform group an entity's
+    # evidence-grade distribution by risk primitive. Set by the scorer
+    # at construction via the classification cascade; "unknown" only
+    # when every cascade level fails.
+    primitive_type: Optional[str] = None  # PrimitiveType literal
+
+    # V7 Phase 11: variant-loop ancestry. None for primary signals;
+    # the parent signal_id for variants spawned by the within-cycle
+    # amplification loop. Single-hop invariant: the trigger predicate
+    # refuses to fan out from any signal where variant_of is not None.
+    variant_of: Optional[str] = None
+
     def __post_init__(self):
         if self.metadata is None:
             self.metadata = {}
-        
+
         # Validate score range if present
         if self.score is not None and not (0 <= self.score <= 100):
             raise ValueError(f"Score must be between 0 and 100, got {self.score}")
+
+        # V7 Phase 1: validate evidence_basis length only if present.
+        if self.evidence_basis is not None and len(self.evidence_basis) > 500:
+            raise ValueError(
+                f"evidence_basis must be <=500 chars, got {len(self.evidence_basis)}"
+            )
+        if self.evidence_basis is not None and len(self.evidence_basis) == 0:
+            raise ValueError("evidence_basis must be non-empty if present")
     
     @property
     def is_valid(self) -> bool:
@@ -235,6 +289,36 @@ class SignalResult:
     def is_error(self) -> bool:
         """Check if result represents an error state."""
         return self.error is not None
+
+
+# ---------------------------------------------------------------------------
+# V7 Phase 3: group- and composite-level grade summaries.
+# ---------------------------------------------------------------------------
+
+@dataclass
+class GroupResult:
+    """Per-group rollup, including grade summary.
+
+    `min_grade` and `grade_distribution` are the primary fields used by
+    Phase 4 referral conditions. `weighted_mean_grade` is a display-only
+    scalar (cardinal arithmetic on an ordinal taxonomy is suspect — never
+    use this field for thresholding).
+    """
+    group_id: str
+    weighted_score: float
+    confidence: float
+    signal_results: Dict[str, SignalResult]
+    min_grade: Optional[str] = None              # EvidenceGrade literal
+    weighted_mean_grade: Optional[float] = None  # display only
+    grade_distribution: Dict[str, float] = field(default_factory=dict)
+
+
+@dataclass
+class CompositeGradeRollup:
+    """Coverage-level grade summary."""
+    min_grade: Optional[str] = None
+    weighted_mean_grade: Optional[float] = None
+    grade_distribution: Dict[str, float] = field(default_factory=dict)
 
 
 @dataclass

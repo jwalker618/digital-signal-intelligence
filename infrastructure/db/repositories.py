@@ -543,6 +543,16 @@ class ModelVersionSignalRepository:
         proxy_tier: Optional[str] = None,
         expectation_level: Optional[str] = None,
         was_absent: bool = False,
+        # V7 Phase 5/9 evidence-grade fields. All optional; existing callers
+        # remain compatible.
+        evidence_grade: Optional[str] = None,
+        evidence_basis: Optional[str] = None,
+        evidence_sources: Optional[List[Dict[str, Any]]] = None,
+        evidence_pro: Optional[str] = None,
+        evidence_counter: Optional[str] = None,
+        evidence_tie_breaker: Optional[str] = None,
+        absence_sub_type: Optional[str] = None,
+        primitive_type: Optional[str] = None,
     ) -> ModelVersionSignal:
         """Record that a model version consumed a specific signal."""
         signal_id = await self._resolve_signal_id(signal_code)
@@ -558,6 +568,14 @@ class ModelVersionSignalRepository:
             proxy_tier=proxy_tier,
             expectation_level=expectation_level,
             was_absent=was_absent,
+            evidence_grade=evidence_grade,
+            evidence_basis=evidence_basis,
+            evidence_sources=evidence_sources or [],
+            evidence_pro=evidence_pro,
+            evidence_counter=evidence_counter,
+            evidence_tie_breaker=evidence_tie_breaker,
+            absence_sub_type=absence_sub_type,
+            primitive_type=primitive_type,
         )
         self.db.add(record)
         await self.db.flush()
@@ -568,7 +586,13 @@ class ModelVersionSignalRepository:
         model_version_id: uuid.UUID,
         signals: List[Dict[str, Any]],
     ) -> List[ModelVersionSignal]:
-        """Record multiple signal usages in one call."""
+        """Record multiple signal usages in one call.
+
+        V7 Phase 5: each `signals[i]` dict may carry additional keys —
+        `evidence_grade`, `evidence_basis`, `evidence_sources`,
+        `evidence_pro`, `evidence_counter`, `evidence_tie_breaker`,
+        `absence_sub_type`. They map straight through to the ORM columns.
+        """
         records = []
         for sig in signals:
             signal_id = await self._resolve_signal_id(sig["signal_code"])
@@ -584,6 +608,14 @@ class ModelVersionSignalRepository:
                 proxy_tier=sig.get("proxy_tier"),
                 expectation_level=sig.get("expectation_level"),
                 was_absent=sig.get("was_absent", False),
+                evidence_grade=sig.get("evidence_grade"),
+                evidence_basis=sig.get("evidence_basis"),
+                evidence_sources=sig.get("evidence_sources", []),
+                evidence_pro=sig.get("evidence_pro"),
+                evidence_counter=sig.get("evidence_counter"),
+                evidence_tie_breaker=sig.get("evidence_tie_breaker"),
+                absence_sub_type=sig.get("absence_sub_type"),
+                primitive_type=sig.get("primitive_type"),
             )
             records.append(record)
         self.db.add_all(records)
@@ -643,6 +675,17 @@ class ModelVersionSignalRepository:
                 "proxy_tier": src.proxy_tier,
                 "expectation_level": src.expectation_level,
                 "was_absent": src.was_absent,
+                # V7 evidence-grade fields propagate to the new version so
+                # an underwriter override doesn't drop the audit-grade
+                # context that earned the original signal its place.
+                "evidence_grade": src.evidence_grade,
+                "evidence_basis": src.evidence_basis,
+                "evidence_sources": src.evidence_sources or [],
+                "evidence_pro": src.evidence_pro,
+                "evidence_counter": src.evidence_counter,
+                "evidence_tie_breaker": src.evidence_tie_breaker,
+                "absence_sub_type": src.absence_sub_type,
+                "primitive_type": src.primitive_type,
             }
             # Apply override for the audited signal
             if override_signal_id and src.signal_id == override_signal_id and override_values:

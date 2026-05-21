@@ -56,6 +56,9 @@ class ADBSanctionsExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "adb_sanctions"
     SOURCE_VERSION = "1.0"
@@ -182,6 +185,9 @@ class IDBSanctionsExtractor(ProductionExtractor):
     """
     Queries Inter-American Development Bank sanctions list.
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "idb_sanctions"
     SOURCE_VERSION = "1.0"
@@ -306,6 +312,9 @@ class EBRDIneligibleExtractor(ProductionExtractor):
     """
     Queries European Bank for Reconstruction and Development ineligible entities.
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "ebrd_ineligible"
     SOURCE_VERSION = "1.0"
@@ -429,6 +438,9 @@ class AfDBSanctionsExtractor(ProductionExtractor):
     """
     Queries African Development Bank sanctions list.
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "afdb_sanctions"
     SOURCE_VERSION = "1.0"

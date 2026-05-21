@@ -38,6 +38,9 @@ def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
         score=float(default),
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral scoring stand-in",
+        evidence_sources=[],
     )
 
 
@@ -48,6 +51,9 @@ def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
         category=default,
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral categorical stand-in",
+        evidence_sources=[],
     )
 
 
@@ -57,20 +63,33 @@ def _run_pipeline(signal_id: str, extractor, aggregator, entity_id: str, context
     try:
         ext_result = extractor.extract(entity_id, context=context, **extract_kwargs)
         if not ext_result.success:
-            return SignalResult(signal_id=signal_id, score=default, confidence=0.3, error="Extraction failed")
-        
+            return SignalResult(
+                signal_id=signal_id, score=default, confidence=0.3, error="Extraction failed",
+                evidence_grade="inferred",
+                evidence_basis="Pipeline error fallback (extraction failed)",
+                evidence_sources=[],
+            )
+
         agg_result = aggregator.aggregate([ext_result])
         score = agg_result.data.get(score_field, default) if agg_result.success else default
         execution_time = (time.time() - start_time) * 1000
-        
+
         return SignalResult(
             signal_id=signal_id, score=round(score, 1), confidence=1.0,
             execution_time_ms=execution_time, raw_data=ext_result.data,
             aggregated_data=agg_result.data,
-            metadata={"extractor": type(extractor).__name__, "aggregator": type(aggregator).__name__, "from_cache": ext_result.from_cache}
+            metadata={"extractor": type(extractor).__name__, "aggregator": type(aggregator).__name__, "from_cache": ext_result.from_cache},
+            evidence_grade="observed",
+            evidence_basis=f"Single-source pipeline: {type(extractor).__name__}",
+            evidence_sources=[],
         )
     except Exception as e:
-        return SignalResult(signal_id=signal_id, score=default, confidence=0.0, error=str(e))
+        return SignalResult(
+            signal_id=signal_id, score=default, confidence=0.0, error=str(e),
+            evidence_grade="inferred",
+            evidence_basis="Pipeline exception fallback",
+            evidence_sources=[],
+        )
 
 
 def _run_categorical(signal_id: str, extractor, aggregator, entity_id: str, context, cat_field: str, default: str) -> SignalResult:
@@ -79,19 +98,32 @@ def _run_categorical(signal_id: str, extractor, aggregator, entity_id: str, cont
     try:
         ext_result = extractor.extract(entity_id, context=context)
         if not ext_result.success:
-            return SignalResult(signal_id=signal_id, category=default, confidence=0.3, error="Extraction failed")
-        
+            return SignalResult(
+                signal_id=signal_id, category=default, confidence=0.3, error="Extraction failed",
+                evidence_grade="inferred",
+                evidence_basis="Pipeline error fallback (extraction failed)",
+                evidence_sources=[],
+            )
+
         agg_result = aggregator.aggregate([ext_result])
         category = agg_result.data.get(cat_field, default) if agg_result.success else default
         execution_time = (time.time() - start_time) * 1000
-        
+
         return SignalResult(
             signal_id=signal_id, category=category, confidence=0.85,
             execution_time_ms=execution_time, raw_data=ext_result.data, aggregated_data=agg_result.data,
-            metadata={"extractor": type(extractor).__name__, "aggregator": type(aggregator).__name__}
+            metadata={"extractor": type(extractor).__name__, "aggregator": type(aggregator).__name__},
+            evidence_grade="observed",
+            evidence_basis=f"Single-source categorical pipeline: {type(extractor).__name__}",
+            evidence_sources=[],
         )
     except Exception as e:
-        return SignalResult(signal_id=signal_id, category=default, confidence=0.0, error=str(e))
+        return SignalResult(
+            signal_id=signal_id, category=default, confidence=0.0, error=str(e),
+            evidence_grade="inferred",
+            evidence_basis="Pipeline exception fallback",
+            evidence_sources=[],
+        )
 
 
 # =============================================================================

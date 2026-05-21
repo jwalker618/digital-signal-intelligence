@@ -11,7 +11,7 @@ These types connect the signal architecture to the pricing workflow.
 
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 from enum import Enum
 
 
@@ -725,6 +725,27 @@ class SignalOutput:
     execution_time_ms: float = 0.0
     error: Optional[str] = None
 
+    # V7 Phase 1/2/3: evidence-grade payload propagated from SignalResult.
+    # Optional throughout V7 — Phase 6 may eventually tighten via separate
+    # gate. The scorer's group/composite rollups consume these fields.
+    evidence_grade: Optional[str] = None       # EvidenceGrade literal
+    evidence_basis: Optional[str] = None
+    evidence_pro: Optional[str] = None
+    evidence_counter: Optional[str] = None
+    evidence_tie_breaker: Optional[str] = None
+    absence_sub_type: Optional[str] = None     # absence_failed_fetch | absence_authoritative_empty
+    # V7 Phase 8/9: reproducibility class + risk-primitive class.
+    reproducibility: Optional[str] = None      # stable | flaky | unstable | unknown
+    primitive_type: Optional[str] = None       # PrimitiveType literal
+    # V7 Phase 10/11: root-cause cluster id (set by routing aggregators
+    # when this signal was produced via a multi-source cluster). The
+    # variant loop's is_trigger reads this to decide whether to spawn
+    # sibling queries. cluster_deterministic indicates whether the
+    # underlying cluster used an authoritative key (True) or required
+    # an LLM merge (False).
+    cluster_id: Optional[str] = None
+    cluster_deterministic: Optional[bool] = None
+
 
 @dataclass
 class CategoricalOutput:
@@ -799,6 +820,10 @@ class TriggeredCondition:
     action: ConditionAction
     action_value: Any
     note: str
+    # V7 Phase 4: classifies the condition family so downstream consumers
+    # (UI, audit, persistence) can distinguish grade-driven referrals from
+    # score-driven ones. "score" is the default for backward compat.
+    condition_class: Literal["score", "evidence_grade"] = "score"
 
 
 @dataclass
@@ -1001,6 +1026,30 @@ class ScoringResult:
     notes: List[str] = field(default_factory=list)
     modifiers: List[Dict[str, Any]] = field(default_factory=list)
 
+    # V7 Phase 3: composite + per-group evidence-grade rollups.
+    # `composite_min_grade` is the bottom rung among contributing signals;
+    # `composite_grade_distribution` is the weight share at each rung
+    # (these two are the primary fields used by Phase 4 referral rules).
+    # `composite_weighted_mean_grade` is display-only — never thresholded.
+    composite_min_grade: Optional[str] = None              # EvidenceGrade literal
+    composite_weighted_mean_grade: Optional[float] = None  # display only
+    composite_grade_distribution: Dict[str, float] = field(default_factory=dict)
+    group_grade_rollups: Dict[str, "GroupGradeRollup"] = field(default_factory=dict)
+
+    # V7 Phase 9: per-risk-primitive grade rollups. Keyed by primitive_type;
+    # each value is a GroupGradeRollup (reusing the shape — group_id holds
+    # "primitive::<name>"). Lets the UI render a primitive heatmap.
+    primitive_grade_rollups: Dict[str, "GroupGradeRollup"] = field(default_factory=dict)
+
+
+@dataclass
+class GroupGradeRollup:
+    """V7 Phase 3 — per-group grade summary attached to ScoringResult."""
+    group_id: str
+    min_grade: Optional[str] = None              # EvidenceGrade literal
+    weighted_mean_grade: Optional[float] = None  # display only
+    distribution: Dict[str, float] = field(default_factory=dict)
+
 
 @dataclass
 class QueryEvaluationResult:
@@ -1172,6 +1221,19 @@ class WorkflowResult:
     # World Engine consistency (WE-2). None if scoring failed or was skipped.
     consistency_score: Optional[float] = None              # 0-1 overall
     divergent_pairs: List[str] = field(default_factory=list)  # signal pairs flagged as divergent
+
+    # V7 — composite evidence-grade rollup carried through from
+    # ScoringResult so the route layer can persist it onto
+    # ModelVersionRecord and the workbench can render it without an
+    # extra round-trip. All three fields are Optional / empty by
+    # default so pre-V7 callers stay valid.
+    composite_min_grade: Optional[str] = None              # EvidenceGrade literal
+    composite_weighted_mean_grade: Optional[float] = None  # display-only
+    composite_grade_distribution: Dict[str, float] = field(default_factory=dict)
+    # Per-group and per-primitive rollups, keyed by group_id / primitive name.
+    # Each value is a dict with the same shape as GradeRollupDTO.
+    group_grade_rollups: Dict[str, Dict[str, Any]] = field(default_factory=dict)
+    primitive_grade_rollups: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
 
 # Backward compatibility aliases

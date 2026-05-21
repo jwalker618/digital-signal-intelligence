@@ -78,6 +78,17 @@ def sanctions_check_routed(
         # Determine confidence based on sources
         confidence = data.get('confidence', 0.8)
 
+        # V7 Phase 3: zero-match across the queried sanctions registers is an
+        # authoritative-empty result, not absence-of-data. The signal is clean
+        # AND the source has authoritatively confirmed there's nothing to find.
+        total_matches = data.get('total_matches', 0)
+        sources_checked = data.get('sources_checked', []) or []
+        absence_sub_type = (
+            "absence_authoritative_empty"
+            if total_matches == 0 and not data.get('error') and len(sources_checked) > 0
+            else None
+        )
+
         return SignalResult(
             signal_id='sanctions_check_routed',
             score=data.get('score', 50),
@@ -95,9 +106,16 @@ def sanctions_check_routed(
                 'locale': data.get('locale'),
                 'strategy': data.get('strategy'),
                 'routing_type': 'multi_source',
+                'cluster_id': data.get('cluster_id'),
+                'cluster_deterministic': data.get('cluster_deterministic'),
+                'cluster_summaries': data.get('cluster_summaries', []),
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
+            absence_sub_type=absence_sub_type,
         )
 
     except Exception as e:
@@ -108,6 +126,9 @@ def sanctions_check_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -161,9 +182,15 @@ def corporate_registry_routed(
                 'sources_checked': data.get('sources_checked', []),
                 'locale': data.get('locale'),
                 'routing_type': 'multi_source',
+                'cluster_id': data.get('cluster_id'),
+                'cluster_deterministic': data.get('cluster_deterministic'),
+                'cluster_summaries': data.get('cluster_summaries', []),
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -174,6 +201,9 @@ def corporate_registry_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -213,9 +243,15 @@ def corporate_status_routed(
             metadata={
                 'locale': data.get('locale'),
                 'routing_type': 'multi_source',
+                'cluster_id': data.get('cluster_id'),
+                'cluster_deterministic': data.get('cluster_deterministic'),
+                'cluster_summaries': data.get('cluster_summaries', []),
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -226,6 +262,9 @@ def corporate_status_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -265,9 +304,15 @@ def corporate_age_routed(
             metadata={
                 'locale': data.get('locale'),
                 'routing_type': 'multi_source',
+                'cluster_id': data.get('cluster_id'),
+                'cluster_deterministic': data.get('cluster_deterministic'),
+                'cluster_summaries': data.get('cluster_summaries', []),
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -278,6 +323,9 @@ def corporate_age_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -330,9 +378,15 @@ def lei_verification_routed(
             metadata={
                 'locale': data.get('locale'),
                 'routing_type': 'multi_source',
+                'cluster_id': data.get('cluster_id'),
+                'cluster_deterministic': data.get('cluster_deterministic'),
+                'cluster_summaries': data.get('cluster_summaries', []),
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -343,6 +397,9 @@ def lei_verification_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -385,6 +442,9 @@ def email_auth_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -412,6 +472,9 @@ def email_auth_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -422,6 +485,9 @@ def email_auth_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -454,6 +520,9 @@ def dnssec_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -478,6 +547,9 @@ def dnssec_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -488,6 +560,9 @@ def dnssec_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -525,6 +600,9 @@ def domain_age_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -552,6 +630,9 @@ def domain_age_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -562,6 +643,9 @@ def domain_age_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -603,6 +687,9 @@ def security_headers_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -628,6 +715,9 @@ def security_headers_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -638,6 +728,9 @@ def security_headers_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -673,6 +766,9 @@ def tls_config_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -699,6 +795,9 @@ def tls_config_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -709,6 +808,9 @@ def tls_config_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -746,6 +848,9 @@ def infrastructure_routed(
             confidence=0.0,
             error='No domain provided or discovered',
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     try:
@@ -772,6 +877,9 @@ def infrastructure_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -782,6 +890,9 @@ def infrastructure_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -838,6 +949,9 @@ def vulnerability_routed(
             },
             error=data.get('error'),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
         )
 
     except Exception as e:
@@ -848,6 +962,9 @@ def vulnerability_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )
 
 
@@ -888,6 +1005,9 @@ def breach_history_routed(
                 confidence=0.0,
                 error='HHS breach extractor not available',
                 execution_time_ms=(time.time() - start_time) * 1000,
+                evidence_grade="structured_attested",
+                evidence_basis="Multi-source routed signal across authoritative registers",
+                evidence_sources=[],
             )
 
         result = extractor.extract(entity_id)
@@ -898,6 +1018,9 @@ def breach_history_routed(
                 confidence=0.0,
                 error=result.error,
                 execution_time_ms=(time.time() - start_time) * 1000,
+                evidence_grade="inferred",
+                evidence_basis="Routed fallback (extractor/exception path)",
+                evidence_sources=[],
             )
 
         data = result.data
@@ -920,6 +1043,11 @@ def breach_history_routed(
             else:
                 score = 80
 
+        # V7 Phase 3: HHS confirmed zero breaches is an authoritative-empty
+        # result — the source has affirmatively said "nothing here", not just
+        # "no data".
+        absence_sub_type = "absence_authoritative_empty" if not breaches else None
+
         return SignalResult(
             signal_id='breach_history_routed',
             score=score,
@@ -935,6 +1063,10 @@ def breach_history_routed(
                 'routing_type': 'security',
             },
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="structured_attested",
+            evidence_basis="Multi-source routed signal across authoritative registers",
+            evidence_sources=[],
+            absence_sub_type=absence_sub_type,
         )
 
     except Exception as e:
@@ -945,4 +1077,7 @@ def breach_history_routed(
             confidence=0.0,
             error=str(e),
             execution_time_ms=(time.time() - start_time) * 1000,
+            evidence_grade="inferred",
+            evidence_basis="Routed fallback (extractor/exception path)",
+            evidence_sources=[],
         )

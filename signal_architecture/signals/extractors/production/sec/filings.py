@@ -75,6 +75,9 @@ class SECFilingsExtractor(ProductionExtractor):
             'has_recent_8k': bool,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "sec_edgar_filings"
     SOURCE_VERSION = "1.0"

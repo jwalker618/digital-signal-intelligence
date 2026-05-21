@@ -388,6 +388,11 @@ class Referral(Base):
     premium_adjustment = Column(Float)
     adjustments = Column(JSONB, default=dict)
 
+    # V7 Phase 14: cached disclosure packet (Markdown + JSON payload).
+    # Populated by the workflow at referral creation; the disclosure
+    # endpoint reads this directly when present, avoiding re-generation.
+    disclosure_packet = Column(JSONB, nullable=True)
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
@@ -441,6 +446,13 @@ class ModelVersionRecord(Base):
     # Conditions
     signal_conditions = Column(JSONB, default=list)
     query_conditions = Column(JSONB, default=list)
+
+    # V7 Phase 5: composite evidence-grade rollup. min_grade + distribution
+    # are the primary fields used by Phase 4 referral rules; weighted_mean
+    # is display-only (never thresholded by production code).
+    composite_min_grade = Column(String(32), nullable=True)
+    composite_weighted_mean_grade = Column(Float, nullable=True)
+    composite_grade_distribution = Column(JSONB, default=dict)
 
     # Tier
     tier_overrides = Column(JSONB, default=list)
@@ -652,6 +664,19 @@ class ModelVersionSignal(Base):
     proxy_tier = Column(String(50))                # DIRECT_OBSERVABLE / INFERRED_PROXY / COHORT_INFERENCE
     expectation_level = Column(String(50))         # UNIVERSAL / ENTERPRISE / etc.
     was_absent = Column(Boolean, default=False)    # Signal expected but not found
+
+    # V7 Phase 5 evidence-grade columns.
+    # Phase 6 alembic 024 will tighten evidence_grade to NOT NULL once the
+    # validator guarantees every committed row has a grade.
+    evidence_grade = Column(String(32), nullable=True)
+    evidence_basis = Column(String(500), nullable=True)
+    evidence_sources = Column(JSONB, default=list)
+    evidence_pro = Column(Text(), nullable=True)
+    evidence_counter = Column(Text(), nullable=True)
+    evidence_tie_breaker = Column(Text(), nullable=True)
+    absence_sub_type = Column(String(32), nullable=True)
+    # V7 Phase 9: risk-primitive class (alembic 027).
+    primitive_type = Column(String(32), nullable=True)
 
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
@@ -1384,3 +1409,288 @@ class WeConstraintHistory(Base):
         Index("ix_we_constraint_history_effective", "effective_from"),
     )
 
+
+
+# =============================================================================
+# V7 PHASE 5 — EVIDENCE-GRADE PERSISTENCE
+# =============================================================================
+
+class SignalHistory(Base):
+    """V7 Phase 5 — append-only longitudinal grade trail.
+
+    One row per (model_version_id, signal_id, recorded_at). Insert on every
+    cycle commit; never update or delete (the unique key enforces idempotency
+    within the same recorded_at instant).
+    """
+    __tablename__ = "signal_history"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    submission_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    signal_id = Column(String(128), nullable=False)
+    recorded_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    score = Column(Float, nullable=True)
+    category = Column(String(128), nullable=True)
+    confidence = Column(Float, nullable=True)
+    evidence_grade = Column(String(32), nullable=True)
+    evidence_basis = Column(String(500), nullable=True)
+    evidence_sources = Column(JSONB, default=list)
+    evidence_pro = Column(Text, nullable=True)
+    evidence_counter = Column(Text, nullable=True)
+    evidence_tie_breaker = Column(Text, nullable=True)
+    absence_sub_type = Column(String(32), nullable=True)
+    # V7 Phase 9: risk-primitive class (alembic 027).
+    primitive_type = Column(String(32), nullable=True)
+    history_metadata = Column(JSONB, default=dict)
+
+    __table_args__ = (
+        Index("ix_signal_history_submission_signal", "submission_id", "signal_id"),
+        Index("ix_signal_history_recorded_at", "recorded_at"),
+    )
+
+
+class SignalCommitment(Base):
+    """V7 Phase 5 — SHA3-224 commitment over a canonical-JSON signal payload.
+
+    Recorded at four scopes:
+      full_payload     — entire SignalResult dict (auditor-grade)
+      value_and_grade  — minimum tuple to defend a quote later
+      pro_counter      — pro/counter/tie-breaker text only (Phase 6 writes)
+      composite        — composite_min_grade + distribution + referrals
+    """
+    __tablename__ = "signal_commitments"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    # null for composite-scoped commitments
+    signal_id = Column(String(128), nullable=True)
+    scope = Column(String(32), nullable=False)
+    algorithm = Column(String(16), nullable=False, default="sha3_224")
+    digest = Column(String(64), nullable=False)
+    committed_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    canonical_keys = Column(JSONB, default=list)
+
+    __table_args__ = (
+        Index("ix_commitments_mv", "model_version_id"),
+    )
+
+
+class ComplianceAuditLog(Base):
+    """V7 Phase 5 — compliance-grade audit lane.
+
+    Distinct from operational `audit_logs`. Carries:
+      evidence_grade_referral_fired   (Phase 4)
+      evidence_grade_policy_evaluated (Phase 4)
+      validator_verdict               (Phase 6 — separate table for full payload)
+      calibration_sample_logged       (Phase 7)
+      commitment_committed            (Phase 5)
+      mechanism_stored                (Phase 12)
+    """
+    __tablename__ = "compliance_audit_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type = Column(String(64), nullable=False)
+    event_at = Column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False,
+    )
+    model_version_id = Column(UUID(as_uuid=True), nullable=True)
+    submission_id = Column(UUID(as_uuid=True), nullable=True)
+    signal_id = Column(String(128), nullable=True)
+    actor = Column(String(128), nullable=True)
+    payload = Column(JSONB, default=dict)
+
+    __table_args__ = (
+        Index("ix_comp_audit_event_type", "event_type"),
+        Index("ix_comp_audit_submission", "submission_id"),
+    )
+
+
+class ValidatorVerdictRecord(Base):
+    """V7 Phase 6 — persisted output of the adversarial 4-axis validator.
+
+    One row per (model_version_id, signal_id). The associated
+    ValidatorVerdict dataclass lives in
+    signal_architecture/validation/types.py and is the public payload type.
+    """
+    __tablename__ = "validator_verdicts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    signal_id = Column(String(128), nullable=False)
+    mode = Column(String(16), nullable=False)   # quick_pass | full_pass
+    advance = Column(Boolean, nullable=False)
+    grade_before = Column(String(32), nullable=True)
+    grade_after = Column(String(32), nullable=True)
+    axes = Column(JSONB, default=dict)
+    pro_argument = Column(Text, nullable=False, default="")
+    counter_argument = Column(Text, nullable=False, default="")
+    tie_breaker = Column(Text, nullable=False, default="")
+    raw_response = Column(Text, nullable=True)
+    elapsed_seconds = Column(Float, nullable=True)
+    decided_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("ix_validator_verdicts_advance", "advance"),
+        Index("ix_validator_verdicts_signal", "signal_id"),
+    )
+
+
+class GradeCalibrationSample(Base):
+    """V7 Phase 7 — sampled (model_version_id, signal_id) pair queued for
+    human grade review.
+
+    State machine:  pending -> decided (or pending -> expired after 90d).
+
+    Unique on (model_version_id, signal_id) so the deterministic sampler is
+    idempotent within a single cycle.
+    """
+    __tablename__ = "grade_calibration_samples"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    submission_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("submissions.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    coverage = Column(String(64), nullable=False)
+    signal_id = Column(String(128), nullable=False)
+    signal_weight = Column(Float, nullable=False)
+    extractor_grade = Column(String(32), nullable=False)
+    validator_grade = Column(String(32), nullable=True)
+    sampling_reason = Column(String(64), nullable=False)
+    state = Column(String(16), nullable=False, default="pending")
+    expires_at = Column(DateTime(timezone=True), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_calibration_state", "state"),
+        Index("ix_calibration_coverage_grade", "coverage", "extractor_grade"),
+    )
+
+
+class GradeCalibrationDecision(Base):
+    """V7 Phase 7 — human-grade verdict for a single calibration sample.
+
+    Match flags (exact_match_*, within_one_*) are pre-computed at write
+    time so the stats endpoint is cheap.
+    """
+    __tablename__ = "grade_calibration_decisions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sample_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("grade_calibration_samples.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+    )
+    human_grade = Column(String(32), nullable=False)
+    note = Column(Text, nullable=True)
+    decided_by = Column(UUID(as_uuid=True), nullable=False)
+    decided_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    exact_match_extractor = Column(Boolean, nullable=False)
+    exact_match_validator = Column(Boolean, nullable=True)
+    within_one_extractor = Column(Boolean, nullable=False)
+
+    __table_args__ = (
+        Index(
+            "ix_calibration_decision_match",
+            "exact_match_extractor", "decided_at",
+        ),
+    )
+
+
+class SignalStabilityObservation(Base):
+    """V7 Phase 8 — append-only reproducibility observation.
+
+    One row per pull of a (source_id, signal_id, entity_id) triple. The
+    materialised view `signal_stability_classification` (alembic 026)
+    aggregates the last 90 days of these into a reproducibility class.
+    """
+    __tablename__ = "signal_stability_observations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id = Column(String(64), nullable=False)
+    signal_id = Column(String(128), nullable=False)
+    entity_id = Column(String(128), nullable=False)
+    observed_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    value_score = Column(Float, nullable=True)
+    value_category = Column(String(128), nullable=True)
+    value_hash = Column(String(64), nullable=False)
+    response_hash = Column(String(64), nullable=True)
+    race_sensitive = Column(Boolean, nullable=False, default=False)
+
+    __table_args__ = (
+        Index(
+            "ix_stability_obs_triple",
+            "source_id", "signal_id", "entity_id",
+        ),
+        Index("ix_stability_obs_observed", "observed_at"),
+    )
+
+
+class EntityEvent(Base):
+    """V7 Phase 13 — external event triggering a delta-aware recompute.
+
+    The dispatcher reads undispatched rows, computes the blast radius
+    (set of signals the event plausibly affects), and runs a targeted
+    workflow that re-extracts only that subset. `resulting_model_version_id`
+    points to the new ModelVersion produced by the recompute.
+    """
+    __tablename__ = "entity_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    event_type = Column(String(64), nullable=False)
+    entity_id = Column(String(128), nullable=False)
+    submission_id = Column(UUID(as_uuid=True), nullable=True)
+    received_at = Column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False,
+    )
+    source_feed = Column(String(64), nullable=False)
+    dedup_key = Column(String(128), nullable=True, unique=True)
+    payload = Column(JSONB, default=dict)
+    dispatched_at = Column(DateTime(timezone=True), nullable=True)
+    blast_radius = Column(JSONB, default=list)
+    resulting_model_version_id = Column(UUID(as_uuid=True), nullable=True)
+
+    __table_args__ = (
+        Index("ix_entity_events_entity_received", "entity_id", "received_at"),
+        Index("ix_entity_events_type_received", "event_type", "received_at"),
+        Index("ix_entity_events_dispatched", "dispatched_at"),
+    )

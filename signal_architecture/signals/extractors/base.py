@@ -58,7 +58,11 @@ class StubExtractor(BaseExtractor):
                 }
                 return self._create_success_result(data)
     """
-    
+
+    # V7 Phase 2: stubs return deterministic synthetic data, so any signal
+    # produced from a stub extraction is at most `inferred`.
+    MAX_EVIDENCE_GRADE = "inferred"
+
     def extract(
         self, 
         entity_id: str, 

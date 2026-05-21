@@ -38,6 +38,8 @@ celery_app = Celery(
     backend=RESULT_BACKEND,
     include=[
         "infrastructure.workers.telemetry",
+        # V7 — periodic tasks for delta dispatch / matview / mechanism prune.
+        "infrastructure.workers.v7_tasks",
     ],
 )
 
@@ -115,6 +117,27 @@ celery_app.conf.beat_schedule = {
     "cleanup-stale-signals": {
         "task": "infrastructure.workers.telemetry.cleanup_stale_signals",
         "schedule": crontab(minute=0, hour=2),  # 2 AM daily
+        "options": {"queue": "low_priority"},
+    },
+
+    # V7 Phase 13 — process queued entity_events every 30s.
+    "v7-dispatch-due-events": {
+        "task": "dsi.v7.dispatch_due_events",
+        "schedule": 30.0,
+        "options": {"queue": "default"},
+    },
+
+    # V7 Phase 8 — refresh the reproducibility-classification matview daily.
+    "v7-refresh-stability-matview": {
+        "task": "dsi.v7.refresh_stability_matview",
+        "schedule": crontab(minute=15, hour=2),  # 2:15 AM daily, after cleanup
+        "options": {"queue": "low_priority"},
+    },
+
+    # V7 Phase 12 — prune low-recall mechanism rows weekly.
+    "v7-prune-mechanism-memory": {
+        "task": "dsi.v7.prune_mechanism_memory",
+        "schedule": crontab(minute=0, hour=4, day_of_week=0),  # Sunday 4 AM
         "options": {"queue": "low_priority"},
     },
 }
