@@ -465,6 +465,17 @@ class ModelVersionRecord(Base):
     composite_weighted_mean_grade = Column(Float, nullable=True)
     composite_grade_distribution = Column(JSONB, default=dict)
 
+    # v8 Phase 2: peer cohort percentile rank. Populated at persistence
+    # time by layers/cohort/queries.py when the entity has both NAICS
+    # and revenue in its submission_data; otherwise all five stay NULL.
+    # peer_cohort_* prefix is intentional -- distinct from loss_cohort_*
+    # below which describes loss-similarity, not peer comparison.
+    peer_cohort_id = Column(String(64), nullable=True, index=True)
+    peer_cohort_size = Column(Integer, nullable=True)
+    peer_percentile_rank = Column(Float, nullable=True)
+    peer_cohort_mean_score = Column(Float, nullable=True)
+    peer_cohort_median_score = Column(Float, nullable=True)
+
     # Tier
     tier_overrides = Column(JSONB, default=list)
     score_based_tier = Column(Integer)
@@ -1735,3 +1746,42 @@ class Broker(Base):
     tenant = relationship("Tenant", back_populates="brokers")
     users = relationship("User", back_populates="broker", foreign_keys="User.broker_id")
     submissions = relationship("Submission", back_populates="broker", foreign_keys="Submission.broker_id")
+
+
+class CohortMembership(Base):
+    """v8 Phase 2: denormalised peer cohort membership.
+
+    One row per (entity_key, coverage). The latest assessment of each
+    real-world entity is tracked here, keyed by `entity_key` (the
+    submission's entity_name normalised to lowercase + stripped). The
+    cohort percentile lookup query reads this table directly rather
+    than scanning model_versions -- much faster for the portal's
+    /peers endpoint.
+
+    Membership is upserted by layers/cohort/queries.py on every
+    successful model_version persistence where the submission carries
+    NAICS code and revenue. Submissions without those attributes do
+    not produce a membership row -- their model_versions also stay
+    NULL on the peer_cohort_* fields.
+    """
+    __tablename__ = "cohort_membership"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_key = Column(String(255), nullable=False)
+    coverage = Column(String(64), nullable=False)
+    cohort_id = Column(String(64), nullable=False)
+    composite_score = Column(Float, nullable=False)
+    naics_section = Column(String(8), nullable=False)
+    revenue_band = Column(String(16), nullable=False)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    last_assessed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("uq_cohort_membership_entity_coverage", "entity_key", "coverage", unique=True),
+        Index("ix_cohort_membership_cohort", "cohort_id", "composite_score"),
+        Index("ix_cohort_membership_model_version", "model_version_id"),
+    )
