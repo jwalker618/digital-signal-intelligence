@@ -52,11 +52,19 @@ export type Permission =
   | "world_engine:view"
   | "admin:system"
   | "admin:users"
-  | "admin:audit";
+  | "admin:audit"
+  // v8 client portal -- broker and client surfaces
+  | "portal:broker:read"
+  | "portal:broker:reply"
+  | "portal:client:read"
+  | "portal:client:submit";
 
 export type Role =
   | "ADMIN"
   | "ACTUARIAL"
   | "SENIOR_UNDERWRITER"
   | "UNDERWRITER"
-  | "READ_ONLY";
+  | "READ_ONLY"
+  // v8 client portal
+  | "BROKER"
+  | "CLIENT";

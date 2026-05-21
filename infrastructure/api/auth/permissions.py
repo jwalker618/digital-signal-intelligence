@@ -49,21 +49,43 @@ class Permission(str, Enum):
     # World Engine
     WORLD_ENGINE_VIEW = "world_engine:view"
 
+    # v8 Client Portal -- broker and client surfaces
+    PORTAL_BROKER_READ = "portal:broker:read"
+    PORTAL_BROKER_REPLY = "portal:broker:reply"
+    PORTAL_CLIENT_READ = "portal:client:read"
+    PORTAL_CLIENT_SUBMIT = "portal:client:submit"
 
-# Default role templates. Seeded by migration 012 and by seed_v5.py.
-# Temporarily every role carries the full permission set so the whole
-# application is exercisable without permission-gated UI hiding features
-# during development. Tailor these back role-by-role once the product
-# boundaries stabilise -- the Permission enum, require_permission()
-# dependency, and PermissionGate components are all still in place, so
-# shrinking a role's list will start hiding items again immediately.
-_ALL_PERMISSIONS: list[Permission] = [p for p in Permission]
+
+# Default role templates. Seeded by migration 012 (carrier roles) and
+# migration 030 (v8 portal roles), and re-applied by seed_v5.py.
+#
+# Carrier-side roles temporarily carry the full carrier permission set so
+# the whole application is exercisable without permission-gated UI hiding
+# features during development. Tailor these back role-by-role once the
+# product boundaries stabilise.
+#
+# Portal roles (BROKER, CLIENT) are intentionally scoped to portal:*
+# permissions only -- they must not see underwriter surfaces.
+_CARRIER_PERMISSIONS: list[Permission] = [
+    p for p in Permission if not p.value.startswith("portal:")
+]
+_PORTAL_BROKER_PERMISSIONS: list[Permission] = [
+    Permission.PORTAL_BROKER_READ,
+    Permission.PORTAL_BROKER_REPLY,
+    Permission.PORTAL_CLIENT_READ,
+]
+_PORTAL_CLIENT_PERMISSIONS: list[Permission] = [
+    Permission.PORTAL_CLIENT_READ,
+    Permission.PORTAL_CLIENT_SUBMIT,
+]
 DEFAULT_ROLES: dict[str, list[Permission]] = {
-    "UNDERWRITER": list(_ALL_PERMISSIONS),
-    "SENIOR_UNDERWRITER": list(_ALL_PERMISSIONS),
-    "ACTUARIAL": list(_ALL_PERMISSIONS),
-    "ADMIN": list(_ALL_PERMISSIONS),
-    "READ_ONLY": list(_ALL_PERMISSIONS),
+    "UNDERWRITER": list(_CARRIER_PERMISSIONS),
+    "SENIOR_UNDERWRITER": list(_CARRIER_PERMISSIONS),
+    "ACTUARIAL": list(_CARRIER_PERMISSIONS),
+    "ADMIN": list(_CARRIER_PERMISSIONS),
+    "READ_ONLY": list(_CARRIER_PERMISSIONS),
+    "BROKER": list(_PORTAL_BROKER_PERMISSIONS),
+    "CLIENT": list(_PORTAL_CLIENT_PERMISSIONS),
 }
 
 

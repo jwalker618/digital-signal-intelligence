@@ -96,6 +96,7 @@ class Tenant(Base):
     users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
     roles = relationship("Role", back_populates="tenant", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="tenant", cascade="all, delete-orphan")
+    brokers = relationship("Broker", back_populates="tenant", cascade="all, delete-orphan")
 
 
 class Role(Base):
@@ -140,6 +141,9 @@ class User(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="RESTRICT"), nullable=True)
 
+    # v8: broker identity for BROKER-role users -- nullable for all other roles
+    broker_id = Column(UUID(as_uuid=True), ForeignKey("brokers.id", ondelete="SET NULL"), nullable=True, index=True)
+
     # MFA
     mfa_secret = Column(String(255))  # Encrypted TOTP secret
     mfa_backup_codes = Column(JSONB)  # Encrypted list of single-use codes
@@ -161,6 +165,7 @@ class User(Base):
     tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])
     role = relationship("Role", back_populates="users", foreign_keys=[role_id])
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", foreign_keys="UserSession.user_id")
+    broker = relationship("Broker", back_populates="users", foreign_keys=[broker_id])
 
 
 class UserSession(Base):
@@ -251,11 +256,17 @@ class Submission(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # v8: broker that placed this submission, if any. Nullable -- direct
+    # carrier submissions have no broker. Populated for submissions routed
+    # through the client portal.
+    broker_id = Column(UUID(as_uuid=True), ForeignKey("brokers.id", ondelete="SET NULL"), nullable=True, index=True)
+
     # Relationships
     created_by_user = relationship("User", back_populates="submissions")
     quotes = relationship("Quote", back_populates="submission", cascade="all, delete-orphan")
     model_versions = relationship("ModelVersionRecord", back_populates="submission", cascade="all, delete-orphan")
     notes = relationship("SubmissionNote", back_populates="submission", cascade="all, delete-orphan", order_by="SubmissionNote.created_at")
+    broker = relationship("Broker", back_populates="submissions", foreign_keys=[broker_id])
 
     __table_args__ = (
         Index("ix_submissions_entity_coverage", "entity_name", "coverage"),
@@ -1694,3 +1705,33 @@ class EntityEvent(Base):
         Index("ix_entity_events_type_received", "event_type", "received_at"),
         Index("ix_entity_events_dispatched", "dispatched_at"),
     )
+
+
+class Broker(Base):
+    """v8: insurance broker organisation.
+
+    A broker represents an intermediary (e.g. Marsh) that places business
+    on behalf of insured clients. Each broker is anchored in its own
+    tenant (the broker's organisation). BROKER-role users link to a
+    broker via `users.broker_id`. Submissions placed by a broker link via
+    `submissions.broker_id`.
+
+    Cross-tenant scoping: a broker's tenant_id points to the broker's own
+    organisation, but the submissions it references may live in any
+    client tenant. Visibility rules are enforced at the portal API layer
+    (see infrastructure/api/routes/portal/, v8 Phase 6).
+    """
+    __tablename__ = "brokers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(64), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", back_populates="brokers")
+    users = relationship("User", back_populates="broker", foreign_keys="User.broker_id")
+    submissions = relationship("Submission", back_populates="broker", foreign_keys="Submission.broker_id")
