@@ -182,7 +182,7 @@ export function NotificationPreferences() {
           </thead>
           <tbody>
             {Object.entries(prefs).map(([cat, p]) => (
-              <tr key={cat} className="border-t border-generate-outline/20">
+              <tr key={cat} className="border-t border-generate-text-outline/20">
                 <td className="py-2 pr-2">{CATEGORY_LABELS[cat] ?? cat}</td>
                 <td className="text-center">
                   <input

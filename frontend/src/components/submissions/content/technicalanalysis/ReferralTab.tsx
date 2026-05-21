@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import { formatNumber, formatPercent } from "@/lib/format";
 import { SubmissionStatusPill } from "@/components/base/content/primatives";
-import { StandardCard } from "@/components/base/cards";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CardGrid, StandardCard } from "@/components/base/cards";
+import Modal from "@/components/base/modal";
 import { KEYTERM, getPalette } from "@/lib/keytermPalette";
 
 export default function ReferralTab() {
@@ -97,24 +97,15 @@ export default function ReferralTab() {
   const reasons = activeSubmission?.referral_reasons || activeVersion?.referral_reasons || [];
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12">
-
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
       {/* REFERRAL CONTEXT HEADER */}
-      <div className="flex items-stretch gap-4 rounded-xl border-2 border-generate-refer/30 bg-generate-refer/5 px-generate-pad py-4 mt-2 mb-4">
-        <div className="flex items-center gap-3 pr-6 border-r border-generate-refer/20">
-          <ShieldAlert className="w-8 h-8 text-generate-refer" />
+      <div className="flex items-stretch gap-4 rounded-xl border-2 border-generate-text-maybe/30 bg-generate-text-maybe/5 px-generate-pad py-4">
+        <div className="flex items-center gap-3 pr-6 border-r border-generate-text-maybe/20">
+          <ShieldAlert className="w-8 h-8 text-generate-text-maybe" />
           <div>
-            <span className="text-lg font-black uppercase tracking-wider text-generate-refer">
+            <span className="text-lg font-black uppercase tracking-wider text-generate-text-maybe">
               {typeof activeReferral === 'object' && activeReferral?.status
                 ? activeReferral.status.replace(/_/g, ' ')
                 : 'Referred'}
@@ -126,11 +117,11 @@ export default function ReferralTab() {
         </div>
         <div className="flex items-center gap-6 px-4">
           <div className="text-center">
-            <span className="block text-xl font-black text-generate-selected">{flaggedCount}</span>
+            <span className="block text-xl font-black text-generate-text-input">{flaggedCount}</span>
             <span className="block text-[10px] uppercase opacity-50">Flagged</span>
           </div>
           <div className="text-center">
-            <span className="block text-xl font-black text-generate-approve">{overrideCount}</span>
+            <span className="block text-xl font-black text-generate-text-good">{overrideCount}</span>
             <span className="block text-[10px] uppercase opacity-50">Audited</span>
           </div>
           <div className="text-center">
@@ -152,7 +143,7 @@ export default function ReferralTab() {
       <div className="pt-2 pb-2">
         <StandardCard title="Referral Context" lucideIcon={ShieldAlert}>
           {/* Triggers — expandable */}
-          <div onClick={() => toggleGroup('triggers')} className="flex items-center justify-between px-generate-pad py-2.5 border-b border-generate-outline/20 cursor-pointer hover:bg-generate-background/20 transition-colors">
+          <div onClick={() => toggleGroup('triggers')} className="flex items-center justify-between px-generate-pad py-2.5 border-b border-generate-text-outline/20 cursor-pointer hover:bg-generate-light-background/20 transition-colors">
             <div className="flex items-center gap-2">
               {expandedGroups['triggers'] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               <span className="text-sm font-bold">Referral Triggers</span>
@@ -160,7 +151,7 @@ export default function ReferralTab() {
             </div>
           </div>
           {expandedGroups['triggers'] && (
-            <div className="pl-8 pr-generate-pad py-2 bg-generate-background/10 text-wrap">
+            <div className="pl-8 pr-generate-pad py-2 bg-generate-light-background/10 text-wrap">
               {reasons.length > 0 ? (
                 <ul className="list-disc pl-4 space-y-1 text-sm opacity-80">
                   {reasons.map((r: string, i: number) => <li key={i}>{r}</li>)}
@@ -172,7 +163,7 @@ export default function ReferralTab() {
           )}
 
           {/* Conditions — expandable */}
-          <div onClick={() => toggleGroup('ref_conditions')} className="flex items-center justify-between px-generate-pad py-2.5 border-b border-generate-outline/20 cursor-pointer hover:bg-generate-background/20 transition-colors">
+          <div onClick={() => toggleGroup('ref_conditions')} className="flex items-center justify-between px-generate-pad py-2.5 border-b border-generate-text-outline/20 cursor-pointer hover:bg-generate-light-background/20 transition-colors">
             <div className="flex items-center gap-2">
               {expandedGroups['ref_conditions'] ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
               <span className="text-sm font-bold">Triggering Conditions</span>
@@ -182,9 +173,9 @@ export default function ReferralTab() {
           {expandedGroups['ref_conditions'] && referralConditions.map((cond: any, idx: number) => {
             const actionKey = typeof cond.action === 'string' ? cond.action.toLowerCase() : (cond.action?.value || 'note');
             return (
-              <div key={idx} className="flex items-center justify-between px-generate-pad py-2 pl-8 bg-generate-background/10 border-b border-generate-outline/5 hover:bg-generate-background/20 transition-colors">
+              <div key={idx} className="flex items-center justify-between px-generate-pad py-2 pl-8 bg-generate-light-background/10 border-b border-generate-text-outline/5 hover:bg-generate-light-background/20 transition-colors">
                 <div className="flex items-center gap-3 min-w-0">
-                  <ShieldAlert className={`w-3 h-3 shrink-0 ${getPalette(KEYTERM, actionKey).text}`} />
+                  <ShieldAlert className="w-3 h-3 shrink-0" style={{ color: `var(--${getPalette(KEYTERM, actionKey).color})` }} />
                   <div className="min-w-0">
                     <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                     <span className="text-[10px] opacity-40 block">{cond.source_id}</span>
@@ -224,8 +215,8 @@ export default function ReferralTab() {
                 <span className="text-right">Weight</span>
                 <span className="text-right">Contrib</span>
                 <span className="text-center">Absent</span>
-                <span className="text-right text-generate-selected">Audited</span>
-                <span className="text-generate-selected">Rationale</span>
+                <span className="text-right text-generate-text-input">Audited</span>
+                <span className="text-generate-text-input">Rationale</span>
                 <span className="text-center">Action</span>
               </div>
 
@@ -240,17 +231,17 @@ export default function ReferralTab() {
                     {/* GROUP HEADER */}
                     <div
                       onClick={() => toggleGroup(groupId)}
-                      className="grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-generate-pad py-2.5 border-t border-generate-outline/20 cursor-pointer hover:bg-generate-background/20 transition-colors"
+                      className="grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-generate-pad py-2.5 border-t border-generate-text-outline/20 cursor-pointer hover:bg-generate-light-background/20 transition-colors"
                     >
                       <div className="flex items-center gap-2">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5 shrink-0" /> : <ChevronRight className="w-3.5 h-3.5 shrink-0" />}
                         <span className="font-bold text-sm">{groupId}</span>
                         <span className="text-[10px] opacity-40">({signals.length})</span>
                         {groupFlagged > 0 && (
-                          <span className="text-[10px] bg-generate-refer/10 text-generate-refer px-1.5 py-0.5 rounded font-bold">{groupFlagged} flagged</span>
+                          <span className="text-[10px] bg-generate-text-maybe/10 text-generate-text-maybe px-1.5 py-0.5 rounded font-bold">{groupFlagged} flagged</span>
                         )}
                         {groupAudited > 0 && (
-                          <span className="text-[10px] bg-generate-approve/10 text-generate-approve px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
+                          <span className="text-[10px] bg-generate-text-good/10 text-generate-text-good px-1.5 py-0.5 rounded font-bold">{groupAudited} audited</span>
                         )}
                       </div>
                       <span className="text-right text-sm">{formatNumber(gs?.risk_score, 1)}</span>
@@ -266,30 +257,30 @@ export default function ReferralTab() {
                       return (
                         <div
                           key={`${sig.code}-${sidx}`}
-                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-generate-pad py-1.5 bg-generate-background/10 hover:bg-generate-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-generate-refer' : ''} ${sig.is_overridden ? 'border-l-2 border-l-generate-approve' : ''}`}
+                          className={`grid grid-cols-[1fr_70px_70px_70px_70px_70px_80px_100px_60px] gap-0 px-generate-pad py-1.5 bg-generate-light-background/10 hover:bg-generate-light-background/20 transition-colors ${sig.is_flagged && !sig.is_overridden ? 'border-l-2 border-l-generate-text-maybe' : ''} ${sig.is_overridden ? 'border-l-2 border-l-generate-text-good' : ''}`}
                         >
                           <div className="flex items-center gap-2 pl-6">
-                            {isHighImpact && <Flame className="w-3 h-3 text-generate-refer shrink-0" />}
-                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3 h-3 text-generate-refer shrink-0" />}
-                            {sig.is_overridden && <Check className="w-3 h-3 text-generate-approve shrink-0" />}
-                            <span className={`text-sm truncate max-w-[160px] ${isHighImpact ? 'text-generate-refer font-bold' : ''}`} title={sig.signal_name || sig.code}>
+                            {isHighImpact && <Flame className="w-3 h-3 text-generate-text-maybe shrink-0" />}
+                            {sig.is_flagged && !sig.is_overridden && !isHighImpact && <AlertTriangle className="w-3 h-3 text-generate-text-maybe shrink-0" />}
+                            {sig.is_overridden && <Check className="w-3 h-3 text-generate-text-good shrink-0" />}
+                            <span className={`text-sm truncate max-w-[160px] ${isHighImpact ? 'text-generate-text-maybe font-bold' : ''}`} title={sig.signal_name || sig.code}>
                               {(sig.signal_name || sig.code)?.replace(/_/g, ' ')}
                             </span>
                           </div>
-                          <span className={`text-right text-sm ${sig.is_overridden ? 'text-generate-approve font-bold' : ''}`}>
+                          <span className={`text-right text-sm ${sig.is_overridden ? 'text-generate-text-good font-bold' : ''}`}>
                             {formatNumber(sig.score, 1)}
                           </span>
-                          <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-generate-refer font-bold' : 'opacity-70'}`}>
+                          <span className={`text-right text-xs content-center ${(sig.confidence || 0) < 0.7 ? 'text-generate-text-maybe font-bold' : 'opacity-70'}`}>
                             {sig.confidence != null ? formatPercent(sig.confidence, 0) : '-'}
                           </span>
                           <span className="text-right text-sm opacity-50">{formatNumber(sig.weight, 2)}</span>
-                          <span className={`text-right text-sm ${isHighImpact ? 'font-bold text-generate-refer' : ''}`}>
+                          <span className={`text-right text-sm ${isHighImpact ? 'font-bold text-generate-text-maybe' : ''}`}>
                             {formatNumber(sig.contribution || sig.contribution_to_score, 2)}
                           </span>
                           <span className="text-center text-xs">
-                            {sig.was_absent ? <span className="text-generate-decline font-bold">YES</span> : <span className="opacity-30">NO</span>}
+                            {sig.was_absent ? <span className="text-generate-text-bad font-bold">YES</span> : <span className="opacity-30">NO</span>}
                           </span>
-                          <span className="text-right text-sm font-bold text-generate-approve">
+                          <span className="text-right text-sm font-bold text-generate-text-good">
                             {sig.is_overridden ? formatNumber(sig.audited_value, 2) : "—"}
                           </span>
                           <span className="text-xs opacity-80 truncate max-w-[90px]" title={sig.override_rationale}>
@@ -298,7 +289,7 @@ export default function ReferralTab() {
                           <span className="text-center">
                             <button
                               onClick={() => { setOverrideModal({ isOpen: true, signal: sig }); setAuditedValue(sig.inferred_value ?? sig.score ?? ''); }}
-                              className="p-1 hover:text-generate-selected transition-colors"
+                              className="p-1 hover:text-generate-text-input transition-colors"
                               title="Audit Signal"
                             >
                               <Edit3 className="w-3.5 h-3.5" />
@@ -333,13 +324,13 @@ export default function ReferralTab() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => handleFinalDecision("decline")}
-                  className="flex items-center gap-2 px-6 py-2 border border-generate-decline/50 text-generate-decline rounded font-semibold hover:bg-generate-decline/10 transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 border border-generate-text-bad/50 text-generate-text-bad rounded font-semibold hover:bg-generate-text-bad/10 transition-colors"
                 >
                   <X className="w-5 h-5" /> Decline Risk
                 </button>
                 <button
                   onClick={() => handleFinalDecision("approve")}
-                  className="flex items-center gap-2 px-6 py-2 bg-generate-approve text-white rounded font-semibold hover:bg-generate-approve transition-colors"
+                  className="flex items-center gap-2 px-6 py-2 bg-generate-text-good text-white rounded font-semibold hover:bg-generate-text-good transition-colors"
                 >
                   <Check className="w-5 h-5" /> Approve & Bind
                 </button>
@@ -349,62 +340,75 @@ export default function ReferralTab() {
         </div>
       )}
 
+      </CardGrid>
+
       {/* OVERRIDE MODAL */}
-      {overrideModal?.isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-generate-contrast-background/80 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="w-full max-w-md bg-generate-background border border-generate-outline rounded-2xl shadow-2xl flex flex-col overflow-hidden">
-            <div className="px-6 py-4 border-b border-generate-outline/20 bg-generate-analysis/60">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Edit3 className="w-5 h-5" /> Audit Signal
-              </h2>
+      <Modal
+        isOpen={!!overrideModal?.isOpen}
+        onClose={() => setOverrideModal(null)}
+        title="Audit Signal"
+        icon={Edit3}
+      >
+        {overrideModal?.signal && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between text-sm">
+              <span>{overrideModal.signal.signal_name || overrideModal.signal.code}</span>
+              {overrideModal.signal.confidence != null && (
+                <span className="bg-generate-text-input/10 px-2 py-0.5 rounded text-xs">
+                  Conf: {formatPercent(overrideModal.signal.confidence, 0)}
+                </span>
+              )}
             </div>
-            <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between text-sm opacity-70 mb-6">
-                <span>{overrideModal.signal.signal_name || overrideModal.signal.code}</span>
-                {overrideModal.signal.confidence != null && (
-                  <span className="bg-generate-selected/10 px-2 rounded">Conf: {formatPercent(overrideModal.signal.confidence, 0)}</span>
-                )}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1">
+                <label className="text-xs uppercase tracking-wider opacity-70">Current Score</label>
+                <input
+                  type="text"
+                  disabled
+                  value={overrideModal.signal.score ?? overrideModal.signal.inferred_value ?? ""}
+                  className="generate-light-inputbox w-full mt-1 opacity-60"
+                />
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <label className="text-xs uppercase tracking-wider opacity-70">Current Score</label>
-                  <input type="text" disabled value={overrideModal.signal.score ?? overrideModal.signal.inferred_value ?? ''} className="w-full mt-1 p-2 bg-generate-background/50 border border-generate-outline/20 rounded text-generate-selected opacity-50" />
-                </div>
-                <ArrowRight className="w-6 h-6 mt-5 opacity-50" />
-                <div className="flex-1">
-                  <label className="text-xs uppercase tracking-wider opacity-70 text-generate-selected font-bold">Audited Value</label>
-                  <input
-                    type="number" autoFocus
-                    value={auditedValue}
-                    onChange={(e) => setAuditedValue(e.target.value)}
-                    className="w-full mt-1 p-2 bg-generate-background border-2 border-generate-selected/50 rounded text-generate-selected focus:outline-none focus:border-generate-selected"
-                  />
-                </div>
-              </div>
-              <div className="pt-4">
-                <label className="text-xs uppercase tracking-wider opacity-70">Audit Rationale</label>
-                <textarea
-                  rows={3}
-                  value={rationale}
-                  onChange={(e) => setRationale(e.target.value)}
-                  placeholder="Required: Provide context or evidence reference for this change..."
-                  className="w-full mt-1 p-2 bg-generate-background border border-generate-outline/30 rounded text-sm text-generate-selected focus:outline-none focus:border-generate-selected resize-none"
+              <ArrowRight className="w-5 h-5 mt-5 opacity-50" />
+              <div className="flex-1">
+                <label className="text-xs uppercase tracking-wider opacity-70 font-bold">Audited Value</label>
+                <input
+                  type="number"
+                  autoFocus
+                  value={auditedValue}
+                  onChange={(e) => setAuditedValue(e.target.value)}
+                  className="generate-light-inputbox w-full mt-1"
                 />
               </div>
             </div>
-            <div className="px-6 py-4 border-t border-generate-outline/20 flex items-center justify-end gap-3 bg-generate-analysis/60">
-              <button onClick={() => setOverrideModal(null)} className="px-4 py-2 rounded text-sm font-semibold opacity-70 hover:opacity-100">Cancel</button>
+            <div>
+              <label className="text-xs uppercase tracking-wider opacity-70">Audit Rationale</label>
+              <textarea
+                rows={3}
+                value={rationale}
+                onChange={(e) => setRationale(e.target.value)}
+                placeholder="Required: Provide context or evidence reference for this change..."
+                className="generate-light-inputbox w-full mt-1 resize-none"
+              />
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                onClick={() => setOverrideModal(null)}
+                className="px-4 py-2 rounded text-sm opacity-70 hover:opacity-100"
+              >
+                Cancel
+              </button>
               <button
                 onClick={handleOverride}
                 disabled={!auditedValue || !rationale}
-                className="px-4 py-2 bg-generate-selected text-generate-background rounded text-sm font-semibold hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="generate-light-actionbutton disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Apply Override
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </Modal>
     </div>
   );
 }

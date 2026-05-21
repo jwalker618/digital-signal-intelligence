@@ -6,7 +6,7 @@ import { AlertTriangle, RefreshCw, ShieldCheck } from "lucide-react";
 import ViewCanvas from "@/components/ViewCanvas";
 import { formatNumber, formatPercent, formatText } from "@/lib/format";
 import { api, fmtDate } from "@/lib/api";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import type { ConfigVersionRow } from "@/types/admin";
@@ -98,7 +98,7 @@ export default function ConfigsPage() {
       <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-generate-pad">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm flex items-center gap-3">
+        <div className="shrink-0 text-generate-text-input pb-4 text-sm flex items-center gap-3">
           <h1>Showing {summaries.length} configs.</h1>
         </div>
 
@@ -113,8 +113,8 @@ export default function ConfigsPage() {
 
           <table className="w-full text-left whitespace-nowrap border-collapse">
 
-            <thead className="sticky top-0 z-20 bg-generate-background">
-              <tr className="generate-grid-table-header text-generate-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-light-background">
+              <tr className="generate-grid-table-header text-generate-text-input">
                 <th className="p-1.5 text-left">Coverage</th>
                 <th className="p-1.5 text-left ">Config</th>
                 <th className="p-1.5 text-left">Active</th>
@@ -128,7 +128,7 @@ export default function ConfigsPage() {
                 <tr
                   key={`${s.coverage}/${s.config_name}`}
                   onClick={() => void loadHistory(s.coverage, s.config_name)}
-                  className="cursor-pointer even:bg-generate-contrast-analysis text-generate-contrast-background hover:text-generate-selected"
+                  className="cursor-pointer even:bg-generate-dark-input text-generate-text-input hover:text-generate-text-input"
                 >
                   <td className="p-1.5">{formatText(s.coverage,"upper")}</td>
                   <td className="p-1.5">{formatText(s.config_name,"capitalize")}</td>
@@ -146,7 +146,7 @@ export default function ConfigsPage() {
 
           {selected && (
             <>
-              <div className="mt-generate-gap text-generate-contrast-background text-sm pb-2">
+              <div className="mt-generate-gap text-generate-text-input text-sm pb-2">
                 <span className="font-bold">{selected.coverage}</span>
                 <span className="opacity-50"> / </span>
                 <span className="font-bold">{selected.config_name}</span>
@@ -155,7 +155,7 @@ export default function ConfigsPage() {
 
               <table className="w-full text-left whitespace-nowrap border-collapse">
                 <thead>
-                  <tr className="generate-grid-table-header text-generate-contrast-background">
+                  <tr className="generate-grid-table-header text-generate-text-input">
                     <th className="p-1.5">v</th>
                     <th className="p-1.5">Status</th>
                     <th className="p-1.5">Author</th>
@@ -166,9 +166,9 @@ export default function ConfigsPage() {
                 </thead>
                 <tbody>
                   {history.map((v) => (
-                    <tr key={v.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
+                    <tr key={v.id} className="even:bg-generate-dark-input text-generate-text-input">
                       <td className="p-1.5 font-mono tabular-nums">{v.version}</td>
-                      <td className="p-1.5"><StatusBadge status={v.status} /></td>
+                      <td className="p-1.5"><SubmissionStatusPill decision={v.status} /></td>
                       <td className="p-1.5 font-mono text-[10px] opacity-70">
                         {v.author_id ? v.author_id.slice(0, 8) : "—"}
                       </td>
@@ -178,14 +178,14 @@ export default function ConfigsPage() {
                         <button
                           onClick={() => void action(v.id, "validate")}
                           disabled={busy !== null}
-                          className="text-xs border border-generate-outline/40 rounded px-2 py-0.5 hover:bg-generate-outline/10 disabled:opacity-50"
+                          className="text-xs border border-generate-text-outline/40 rounded px-2 py-0.5 hover:bg-generate-text-outline/10 disabled:opacity-50"
                         >
                           Validate
                         </button>
                         <button
                           onClick={() => void action(v.id, "calibrate")}
                           disabled={busy !== null}
-                          className="text-xs border border-generate-outline/40 rounded px-2 py-0.5 hover:bg-generate-outline/10 disabled:opacity-50"
+                          className="text-xs border border-generate-text-outline/40 rounded px-2 py-0.5 hover:bg-generate-text-outline/10 disabled:opacity-50"
                         >
                           Calibrate
                         </button>
@@ -193,7 +193,7 @@ export default function ConfigsPage() {
                           <button
                             onClick={() => void action(v.id, "deploy")}
                             disabled={busy !== null}
-                            className="text-xs bg-generate-selected/20 border border-generate-selected/40 rounded px-2 py-0.5 disabled:opacity-50"
+                            className="text-xs bg-generate-text-input/20 border border-generate-text-input/40 rounded px-2 py-0.5 disabled:opacity-50"
                           >
                             <ShieldCheck className="inline w-3 h-3 mr-1" />
                             Deploy

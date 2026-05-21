@@ -2,14 +2,10 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import {
-  formatNumber,
-  formatPercent,
-  formatCurrency,
-  formatText,
+  formatNumber, formatPercent, formatCurrency, formatText,
 } from "@/lib/format";
 import { ExpandableGroupTable } from "@/components/base/content/primatives";
-import { StandardCard } from "@/components/base/cards";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import {
   Calculator, HandCoins, ArrowRightToLine,
   ShieldEllipsis, PenLine, WeightTilde, Check, CircleEllipsis,
@@ -20,9 +16,7 @@ export default function PricingTab() {
 
   if (!activeSubmission || !activeVersion) {
     return (
-      <div className="flex items-center justify-center h-full text-generate-selected/50 animate-pulse">
-        Loading pricing details...
-      </div>
+      <div className="generate-light-loadingpage">Loading pricing details...</div>
     );
   }
 
@@ -112,115 +106,63 @@ export default function PricingTab() {
   };
 
   return (
-    <div className="
-      w-full no-scrollbar
-      animate-in fade-in duration-500 pb-12"
-      >
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
-
-      <div className="
-        grid grid-cols-1 lg:grid-cols-3
-        gap-2
-        pt-2 pb-2
-        ">
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1 lg:grid-cols-3" className="gap-2">
 
         <StandardCard
           title="Pricing Anatomy"
           lucideIcon={Calculator}
           spanClass="lg:col-span-2"
         >
-          <div className="flex-1 overflow-x-auto">
+          
+          <div className="flex-1">
+
+            <div className="flex text-sm gap-1.5 items-center mb-4"
+            >
+              <ArrowRightToLine className="generate-app-icon hover:text-generate-text-placeholder"/> 
+              Tier 
+              <span className="font-bold text-generate-text-input">{activeVersion.final_tier}</span>
+              base premium using 
+              <span className="font-bold text-generate-text-input">{formatText(activeVersion?.base_premium_derivation?.method || 'N/A',"upper")}</span> 
+              methodology
+            </div>
 
               {/* BASE PREMIUM */}
-              <div className="
-                border-b-1 border-generate-outline/50
-                pb-generate-pad
-              "
-              >
-                <div className="grid grid-cols-[50%_10%_20%_20%]">
+                <div className="grid grid-cols-[60%_10%_15%_15%]">
 
                   {/* row 1 */}
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    flex gap-generate-pad text-sm"
-                    >
-                      <ArrowRightToLine className="icon"/> Tier {activeVersion.final_tier} Base Premium using {activeVersion?.base_premium_derivation?.method || 'N/A'} methodology
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Basis
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-sm text-right uppercase bg-generate-selected/10 text-generate-selected"
-                    >{activeVersion?.base_premium_derivation?.basis_field || 'N/A'} @
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
-                    >{formatCurrency(activeVersion?.base_premium_derivation?.basis_value || 0)}
-                  </div>
+                  <div className="text-sm pl-generate-pad">Basis</div>
+                  <div></div>
+                  <div className="font-bold text-right">{formatText(activeVersion?.base_premium_derivation?.basis_field + " @" || '-', "capitalize")}</div>
+                  <div className="font-bold text-right">{formatCurrency(activeVersion?.base_premium_derivation?.basis_value || 0)}</div>
 
                   {/* row 2 */}
+                  <div className="text-sm pl-generate-pad">Rate</div>
+                  <div className="font-bold text-center">{activeVersion?.base_premium_derivation?.rate + "x" || '-'}</div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Rate
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    bg-generate-selected/10 text-generate-selected"
-                    >
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
-                    >{activeVersion?.base_premium_derivation?.rate || 'N/A'}x
-                  </div>
+                  <div></div>
 
                   {/* row 3 */}
+                  <div className="text-sm pl-generate-pad">Result</div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Result
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    bg-generate-selected/10 text-generate-selected"
-                    >
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right font-bold bg-generate-selected/10 text-generate-selected"
-                    >{formatCurrency(activeVersion?.base_premium_derivation?.result || 0)}
-                  </div>
+                  <div></div>
+                  <div className="font-bold text-right">{formatCurrency(activeVersion?.base_premium_derivation?.result || 0)}</div>
                 </div>
 
-              </div>
-
             {/* ADJUSTMENTS — ExpandableGroupTable over the 5 modifier sources */}
+            
             <ExpandableGroupTable
+
+              title="Detailed Premium Calculation"
+              
               columns={[
                 {
-                  label: (<><PenLine className="icon" /> Adjustments</>),
-                  field: "name",       width: "50%", format: "text", textCase: "capitalize",
-                  headeralign: "left",
-                },
-                { label: "Modifier", field: "multiplier", width: "10%", format: "number",   decimals: 3, align: "center", headeralign: "center" },
-                { label: "Impact",   field: "impact",     width: "20%", format: "currency",                       headeralign: "right" },
-                { label: "Result",   field: null,         width: "20%", align: "right", headeralign: "right" },
+                  label: "Type",     field: "name",       width: "60%",  headeralign: "left", align: "left",  },
+                { label: "Modifier", field: "multiplier", width: "10%",  headeralign: "center", align: "center",  bold: true  },
+                { label: "Impact",   field: "impact",     width: "15%",  headeralign: "center", align: "right", bold: true  },
+                { label: "Result",   field: null,         width: "15%",  headeralign: "center", align: "right", bold: true   },
               ]}
+              
               groups={[
                 {
                   key: "categorical", title: "Categorical", items: categoricalItems,
@@ -232,7 +174,7 @@ export default function PricingTab() {
                   emptyMessage: "No modifiers applied.",
                 },
                 {
-                  key: "signal", title: "Signal", items: signalItems,
+                  key: "signal", title: "Signals", items: signalItems,
                   summary: [
                     `${signalItems.length} items`,
                     formatCurrency(signalTotal),
@@ -241,7 +183,7 @@ export default function PricingTab() {
                   emptyMessage: "No modifiers applied.",
                 },
                 {
-                  key: "direct", title: "Direct Query", items: directItems,
+                  key: "direct", title: "Direct Queries", items: directItems,
                   summary: [
                     `${directItems.length} items`,
                     formatCurrency(directTotal),
@@ -267,171 +209,105 @@ export default function PricingTab() {
                   ],
                   emptyMessage: "No modifiers applied.",
                 },
+
               ]}
               renderItemCells={(mod: typeof categoricalItems[number]) => [
                 formatText(mod.name, "capitalize"),
-                `${formatNumber(mod.multiplier, 3)}x`,
+                formatNumber(mod.multiplier, 3) + "x",
                 formatCurrency(mod.impact),
                 "-",
               ]}
             />
 
+            <div className="flex text-sm gap-1.5 items-center mt-4 mb-4 border-t-1 border-generate-text-outline pt-4">
+              <WeightTilde className="generate-app-icon hover:text-generate-text-placeholder"/> 
+              <span className="font-bold">Final Premium Calculation</span>
+            </div>
+
+
               {/* FINAL PREMIUM CALCULATION */}
-              <div className="
-                border-t-1 border-generate-outline/50
-                pt-generate-pad pb-generate-pad
-              "
-              >
-                <div className="grid grid-cols-[50%_10%_20%_20%]">
+                <div className="grid grid-cols-[60%_10%_15%_15%]">
 
                   {/* row 1 */}
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    flex gap-generate-pad text-sm"
-                    >
-                      <WeightTilde className="icon"/> Final Premium Calculation
-                  </div>
+                  <div className="text-sm pl-generate-pad">Loaded Premium</div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Loaded Premium
+                  <div></div>
+                  <div className="font-bold text-right">
+                    {formatCurrency(activeVersion?.final_premium_detail?.premium_before_scaling || 0)}
                   </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
-                    >{formatCurrency(activeVersion?.final_premium_detail?.premium_before_scaling || 0)}
-                  </div>
-
+                  
                   {/* row 2 */}
+                  <div className="text-sm pl-generate-pad">ILF Factor</div>
+                  
+                  <div className="font-bold text-center">{formatNumber(activeVersion?.final_premium_detail?.ilf_factor || 0, 3)}x
+                  </div>
                   <div></div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >ILF Factor
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
-                    >{formatNumber(activeVersion?.final_premium_detail?.ilf_factor || 0, 3)}x
-                  </div>
 
                   {/* row 3 */}
+                  <div className="text-sm pl-generate-pad">Deductible Factor</div>
+                  <div className="font-bold text-center">{formatNumber(activeVersion?.final_premium_detail?.deductible_factor || 0, 3)}x
+                  </div>
                   <div></div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Deductible Factor
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected"
-                    >{formatNumber(activeVersion?.final_premium_detail?.deductible_factor || 0, 3)}x
-                  </div>
-
-                  {/* GUARDRAILS */}
-                  {activeVersion.guardrail_warnings && activeVersion.guardrail_warnings.length > 0 && (
-                    <div className="contents">
-                      <div className="pt-2"></div>
-                      <div className="pt-2"></div>
-                      <div className="pt-2"></div>
-                      <div className="pt-2"></div>
-                      
-                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
-                      <div className="border-t-1 border-generate-outline/50 pt-2"></div>
-
-                      <div className="
-                        flex gap-generate-pad text-sm
-                        overflow-x-hidden whitespace-nowrap border-collapse"
-                        >
-                          <ShieldEllipsis className="icon"/> Guardrails Applied
-                      </div>
-                      <div></div>
-                      <div className="
-                        overflow-x-hidden whitespace-nowrap border-collapse
-                        text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50
-                        "
-                        >Uncapped Premium *
-                      </div>
-                      <div className="
-                        overflow-x-hidden whitespace-nowrap border-collapse
-                        pl-generate-pad pr-generate-pad text-right text-sm bg-generate-selected/10 text-generate-selected line-through
-                        "
-                        >{formatCurrency(activeVersion.uncapped_premium)}
-                      </div>
-                      
-                      {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
-                        <div key={i} className="col-span-4 text-xs pl-generate-indent text-wrap italic text-generate-selected pt-1">
-                          * {warning.note}
-                        </div>
-                      ))}
-                      <div className="col-span-4 pb-2"></div>
-                    </div>
-                  )}
 
                   {/* Final Premium */}
+                  <div className="text-sm pl-generate-pad">Final Premium</div>
                   <div></div>
                   <div></div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    text-xs text-right pr-generate-pad border-r-1 border-generate-outline/50"
-                    >Final Premium
-                  </div>
-                  <div className="
-                    overflow-x-hidden whitespace-nowrap border-collapse
-                    pl-generate-pad pr-generate-pad text-right font-bold bg-generate-selected/10 text-generate-selected"
-                    >{formatCurrency(activeVersion?.final_premium_detail?.premium_after_scaling || 0)}
+                  <div className="font-bold text-right">
+                    {formatCurrency(activeVersion?.final_premium_detail?.premium_after_scaling || 0)}
                   </div>
                   
                 </div>
 
+            {/* GUARDRAILS */}
+            {activeVersion.guardrail_warnings && activeVersion.guardrail_warnings.length > 0 && (
+
+            <div>
+
+              <div className="flex text-sm gap-1.5 items-center mt-4 mb-4 border-t-1 border-generate-text-outline pt-4">
+                <ShieldEllipsis className="generate-app-icon text-generate-text-maybe hover:text-generate-text-maybe"/> 
+                <span className="font-bold text-generate-text-maybe">Guardrails</span>
               </div>
+              
+              <div className="flex justify-between"> 
+                <span className="text-sm">Uncapped Premium</span>
+                <span className="font-bold text-right">{formatCurrency(activeVersion.uncapped_premium)}</span>
+              </div>
+
+              <div className="text-xs mt-2">Rationale</div>
+
+              {activeVersion.guardrail_warnings.map((warning: any, i: number) => (
+                <div 
+                  key={i} 
+                  className="col-span-4"
+                  >
+                  {warning.note}
+                </div>
+              ))}
+            
+            </div>
+
+
+          )}                
 
           </div>
         </StandardCard>
 
-
         {/* RIGHT COLUMN: Recommended Quote Details + Limit Options */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pl-2">
 
           <StandardCard
-            title="Recommended Quote Details"
-            lucideIcon={HandCoins}
-          >
-            <div className="grid grid-cols-2 grid-rows-1 pl-generate-pad pt-2 pb-4">
-              <div className="bg-generate-selected/10 border-r-1 border-generate-outline/50 pb-2 pt-1 text-generate-selected">
-                <div className="mt-1 pl-generate-pad pr-generate-pad text-sm text-center underline pb-2">
-                  Final Premium
-                </div>
-                <div className="pl-generate-pad pr-generate-pad font-bold text-xl text-right">
-                  {formatCurrency(recommendedPremium)}
-                </div>
-              </div>
-              <div className="bg-generate-selected/10 text-generate-selected mr-3">
-                <div className="mt-1 pl-generate-pad pr-generate-pad text-sm text-center underline pb-2">
-                  Final Limit
-                </div>
-                <div className="pl-generate-pad pr-generate-pad font-bold text-xl text-right">
-                  {formatCurrency(recommendedLimit)}
-                </div>
-              </div>
-            </div>
-          </StandardCard>
-
-          <StandardCard
-            title="Calculated Quote Options"
+            title="Recommended Quote and Calculated Options"
             lucideIcon={CircleEllipsis}
             spanClass="flex-1"
           >
 
             {/* =======================================================================
-                COMPONENT C: LIMIT OPTIONS
+                COMPONENT B: LIMIT OPTIONS
                 ======================================================================= */}
-            <div className="pl-generate-pad pr-generate-pad w-full space-y-2">
+            <div className="w-full">
               {limitOptions.length > 0 ? (
                 limitOptions.map((option) => {
                   const isCurrentRecommended = recommendedLimit === option.limit;
@@ -439,64 +315,57 @@ export default function PricingTab() {
                   return (
                     <div
                       key={option.limit}
-                      className={`p-generate-pad rounded-lg border ${
-                        isCurrentRecommended
-                          ? 'border-generate-selected text-generate-selected'
-                          : 'border-generate-outline/10 hover:border-generate-selected hover:text-generate-selected'
+                      className={`pt-2 ${
+                        isCurrentRecommended? '' : 'border-t-1 border-generate-text-outline'
                       }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <div className="flex items-center gap-2">
-
-
-                          {option.label === 'Upper' && !isCurrentRecommended && (
-                            <span className="uppercase font-bold">
-                              Upper
-                            </span>
-                          )}
-                          {option.label === 'Lower' && !isCurrentRecommended && (
-                            <span className="uppercase font-bold">
-                              Lower
-                            </span>
-                          )}
-
-                          <span className="text-sm">{formatCurrency(option.limit)} Limit</span>
-
-                        </div>
-                        <span className="font-bold">
-                          {formatCurrency(option.premium)}
-                        </span>
+                      <div className="justify between">
+                        {option.label === 'Upper' && !isCurrentRecommended && (
+                          <span className="font-bold mb-2">Upper</span>
+                        )}
+                        {option.label === 'Lower' && !isCurrentRecommended && (
+                          <span className="font-bold mb-2">Lower</span>
+                        )}
+                      </div>
+                      
+                      <div className="flex justify-between gap-2">
+                        <span className="text-sm">Techncial Limit</span>
+                        <span className="font-bold">{formatCurrency(option.limit)}</span>
+                      </div>
+                      
+                      <div className="flex justify-between gap-2">
+                        <span className="text-sm">Techncial Premium</span>
+                        <span className="font-bold">{formatCurrency(option.premium)}</span>
                       </div>
 
-                      <div className="flex justify-between items-center pt-1">
-                        <span className="text-xs text-wrap">{option.rationale}</span>
-                        <span className="text-xs pl-2">ROL {formatPercent(option.rol, 1)}</span>
+                      <div className="flex justify-between gap-2">
+                        <span className="text-sm">RoL</span>
+                        <span className="font-bold">{formatPercent(option.rol, 1)}</span>
+                      </div>
+
+                      <div className="flex flex-col mt-4 pt-2 pb-2 border-t-1 border-dashed border-generate-text-outline">
+                        <span className="text-xs">Rationale</span>
+                        <span className="text-sm text-wrap">{option.rationale}</span>
                       </div>
 
                       {!isCurrentRecommended && (
-                        <div className="pt-2">
+                        <div className="w-full right-0">
+                          
                           <button
                             disabled={isSelectingLimit}
                             onClick={() => handleSelectOption(option.limit)}
-                            className="
-                              flex items-center gap-1
-                              text-xs uppercase font-bold tracking-wider 
-                              border border-generate-outline/30 rounded
-                              px-2 py-1
-                              hover:bg-generate-selected/10 hover:text-generate-selected hover:border-generate-selected
-                              disabled:opacity-50 disabled:cursor-not-allowed
-                            "
+                            className="generate-light-actionbutton w-full"
                           >
-                            <Check className="w-3 h-3" />
-                            {isSelectingLimit ? 'Selecting...' : 'Select Option'}
+                            {isSelectingLimit ? 'Selecting...' : 'Select'}
                           </button>
                         </div>
                       )}
+
                     </div>
                   );
                 })
               ) : (
-                <div className="flex h-24 items-center justify-center opacity-50 italic text-sm border border-dashed border-generate-outline/20 rounded-lg">
+                <div className="flex">
                   No limit options available.
                 </div>
               )}
@@ -505,7 +374,7 @@ export default function PricingTab() {
 
         </div>
 
-      </div>
+      </CardGrid>
     </div>
   );
 }

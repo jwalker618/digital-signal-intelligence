@@ -1,3 +1,5 @@
+import type { CSSProperties } from "react";
+
 import {
   LucideIcon,
   CloudAlert,
@@ -10,6 +12,9 @@ export interface PaletteEntry {
   color: string;
   icon?: LucideIcon;
 }
+
+export const accentVars = (color: string): CSSProperties =>
+  ({ "--accent": `var(--${color})` }) as CSSProperties;
 
 export function getPalette(
   palette: Record<string, PaletteEntry>,

@@ -44,7 +44,6 @@ interface PillarProps {
 function Pillar({
   title,
   icon: Icon,
-  titleUnderline = false,
   metrics,
   calculationLabel,
   columns,

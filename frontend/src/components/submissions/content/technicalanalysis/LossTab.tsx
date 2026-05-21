@@ -6,8 +6,7 @@ import {
   TrendingUp, TrendingDown, Activity, Target, ShieldAlert, BarChart3,
   Minus, Clock, GitBranch, Layers, AlertTriangle
 } from "lucide-react";
-import { StandardCard } from "@/components/base/cards";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import {
   formatNumber, formatPercent, formatCurrency
 } from "@/lib/format";
@@ -95,8 +94,8 @@ export default function LossTab() {
 
   const getTrendIcon = (trend: string) => {
     const t = trend?.toLowerCase() || '';
-    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-generate-approve" />;
-    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-generate-decline" />;
+    if (t.includes('improv')) return <TrendingDown className="w-4 h-4 text-generate-text-good" />;
+    if (t.includes('deter') || t.includes('worsen')) return <TrendingUp className="w-4 h-4 text-generate-text-bad" />;
     return <Minus className="w-4 h-4 opacity-50" />;
   };
 
@@ -107,22 +106,11 @@ export default function LossTab() {
     return 'Stable';
   };
 
-  const getVelocityColor = (v: number) => v > 0 ? 'text-generate-decline' : v < 0 ? 'text-generate-approve' : 'opacity-50';
+  const getVelocityColor = (v: number) => v > 0 ? 'text-generate-text-bad' : v < 0 ? 'text-generate-text-good' : 'opacity-50';
 
   return (
-    <div className="
-      w-full no-scrollbar
-      animate-in fade-in duration-500 pb-12"
-      >
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
       {/* =======================================================================
           COMPONENT A: SUBJECT PROFILE — expanded with all loss fields
@@ -165,7 +153,7 @@ export default function LossTab() {
             <KpiTile
               label="Score Velocity"
               value={
-                <span className={activeVersion.loss_score_velocity > 0 ? 'text-generate-decline' : 'text-generate-approve'}>
+                <span className={activeVersion.loss_score_velocity > 0 ? 'text-generate-text-bad' : 'text-generate-text-good'}>
                   {activeVersion.loss_score_velocity > 0 ? '+' : ''}{activeVersion.loss_score_velocity || "0.0"}
                 </span>
               }
@@ -173,7 +161,7 @@ export default function LossTab() {
           </div>
 
           {/* Row 2: Meta line */}
-          <div className="flex items-center gap-4 pl-generate-pad pr-generate-pad mt-3 pt-3 border-t border-generate-outline/10 text-xs opacity-40">
+          <div className="flex items-center gap-4 pl-generate-pad pr-generate-pad mt-3 pt-3 border-t border-generate-text-outline/10 text-xs opacity-40">
             {activeVersion.loss_last_refresh && (
               <span className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
@@ -230,7 +218,7 @@ export default function LossTab() {
                 <div className="space-y-3">
 
                   {/* Overall trend */}
-                  <div className="border border-generate-outline/20 rounded-lg p-3">
+                  <div className="border border-generate-text-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-70 block mb-2">Overall Trend</span>
                     <div className="flex items-center gap-2">
                       {getTrendIcon(trendDirection)}
@@ -250,7 +238,7 @@ export default function LossTab() {
                   </div>
 
                   {/* Frequency breakdown */}
-                  <div className="border border-generate-outline/20 rounded-lg p-3">
+                  <div className="border border-generate-text-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-70 block mb-2">Frequency Component</span>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -269,7 +257,7 @@ export default function LossTab() {
                   </div>
 
                   {/* Severity breakdown */}
-                  <div className="border border-generate-outline/20 rounded-lg p-3">
+                  <div className="border border-generate-text-outline/20 rounded-lg p-3">
                     <span className="text-xs opacity-70 block mb-2">Severity Component</span>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -289,19 +277,19 @@ export default function LossTab() {
 
                   {/* Book-wide context */}
                   {trendTotal > 0 && (
-                    <div className="border-t border-generate-outline/20 pt-3">
+                    <div className="border-t border-generate-text-outline/20 pt-3">
                       <span className="text-xs opacity-70 block mb-2">Book-wide Trend ({trendTotal} peers)</span>
                       <div className="flex gap-3 text-xs">
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-generate-approve"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-generate-text-good"></span>
                           {getTrendCount('improv')} improving
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-generate-muted"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-generate-text-placeholder"></span>
                           {getTrendCount('stable')} stable
                         </span>
                         <span className="flex items-center gap-1">
-                          <span className="inline-block w-2 h-2 rounded-full bg-generate-decline"></span>
+                          <span className="inline-block w-2 h-2 rounded-full bg-generate-text-bad"></span>
                           {getTrendCount('deter')} deteriorating
                         </span>
                       </div>
@@ -350,7 +338,7 @@ export default function LossTab() {
                       const sevScore = detail?.severity_score ?? 0;
                       const confidence = detail?.confidence;
                       return (
-                        <div key={group} className="py-2.5 border-b border-generate-outline/10 hover:bg-generate-background/20 transition-colors">
+                        <div key={group} className="py-2.5 border-b border-generate-text-outline/10 hover:bg-generate-light-background/20 transition-colors">
                           <div className="flex items-center justify-between mb-1.5">
                             <span className="text-xs font-semibold truncate max-w-[140px]" title={group}>{group}</span>
                             {confidence != null && (
@@ -392,14 +380,14 @@ export default function LossTab() {
                     const isModifier = actionKey === 'modifier';
                     const isReferral = actionKey === 'referral' || actionKey === 'refer';
                     const isTierOverride = actionKey === 'tier_override';
-                    const tagColor = isModifier ? 'bg-generate-info/15 text-generate-info' :
-                                     isReferral ? 'bg-generate-refer/15 text-generate-refer' :
-                                     isTierOverride ? 'bg-generate-decline/10 text-generate-decline' :
-                                     'bg-generate-muted/15 text-generate-muted';
+                    const tagColor = isModifier ? 'bg-generate-text-comment/15 text-generate-text-comment' :
+                                     isReferral ? 'bg-generate-text-maybe/15 text-generate-text-maybe' :
+                                     isTierOverride ? 'bg-generate-text-bad/10 text-generate-text-bad' :
+                                     'bg-generate-text-placeholder/15 text-generate-text-placeholder';
                     return (
-                      <div key={idx} className="flex items-center justify-between px-generate-pad py-2 border-b border-generate-outline/10 hover:bg-generate-background/20 transition-colors">
+                      <div key={idx} className="flex items-center justify-between px-generate-pad py-2 border-b border-generate-text-outline/10 hover:bg-generate-light-background/20 transition-colors">
                         <div className="flex items-center gap-3 min-w-0">
-                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-generate-refer' : isModifier ? 'text-generate-info' : 'text-generate-muted'}`} />
+                          <ShieldAlert className={`w-3.5 h-3.5 shrink-0 ${isReferral ? 'text-generate-text-maybe' : isModifier ? 'text-generate-text-comment' : 'text-generate-text-placeholder'}`} />
                           <div className="min-w-0">
                             <span className="text-sm block truncate">{cond.note || cond.source_name || 'Condition'}</span>
                             <span className="text-[10px] opacity-40 block">{cond.source_type}: {cond.source_id}</span>
@@ -428,6 +416,7 @@ export default function LossTab() {
         </>
       )}
 
+      </CardGrid>
     </div>
   );
 }

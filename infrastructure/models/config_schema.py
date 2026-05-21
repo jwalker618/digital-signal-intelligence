@@ -269,12 +269,35 @@ class ThreeLayerAssessment(StrictModel):
 # SIGNAL REGISTRY - COMPLETE SIGNAL
 # =============================================================================
 
+PrimitiveTypeName = Literal[
+    "counterparty",
+    "regulatory",
+    "operational",
+    "financial",
+    "reputational",
+    "cyber",
+    "climate",
+    "governance",
+    "crime",
+    "physical_asset",
+    "behavioural",
+    "human_capital",
+    "unknown",
+]
+
+
 class SignalDefinition(StrictModel):
     """Complete signal definition in signal_registry."""
     id: str
     inference_utility_function: str
     proxy_tier: ProxyTier = ProxyTier.INFERRED_PROXY
     expectation_level: ExpectationLevel = ExpectationLevel.UNIVERSAL
+
+    # V7 Phase 9: optional explicit risk-primitive override. When set, it
+    # is level 1 of the classification cascade (beats the prefix map and
+    # the coverage default). Absent for almost all signals — the cascade
+    # resolves them deterministically.
+    primitive_type: Optional[PrimitiveTypeName] = None
 
     # Either categories OR three_layer_assessment
     categories: Optional[SignalCategories] = None
@@ -860,6 +883,153 @@ class Guardrails(StrictModel):
 # COMPLETE COVERAGE CONFIG
 # =============================================================================
 
+# =============================================================================
+# V7 PHASE 4 — EVIDENCE-GRADE POLICY
+# =============================================================================
+
+EvidenceGradeName = Literal[
+    "inferred",
+    "observed",
+    "corroborated",
+    "structured_attested",
+    "behaviourally_validated",
+]
+
+
+class ExpectedGradeMap(StrictModel):
+    """Per-signal expected minimum evidence grade.
+
+    Signals listed here trigger a referral when their actual grade is below
+    the value here. Signals not listed have no floor.
+    """
+    grades: Dict[str, EvidenceGradeName] = Field(default_factory=dict)
+
+
+class MinGradeBelowRule(StrictModel):
+    """Composite-min-grade-below-threshold referral rule."""
+    condition: Literal["min_grade_below"]
+    threshold: EvidenceGradeName
+    note: str = "Composite min grade {actual} below threshold {threshold}"
+
+
+class DistributionShareBelowGradeRule(StrictModel):
+    """Distribution-share-at-or-above-floor referral rule.
+
+    Fires when LESS than `share` of composite weight is at `floor` or above.
+    Prefer this over min-grade for portfolio-style guardrails.
+    """
+    condition: Literal["distribution_share_below_grade"]
+    floor: EvidenceGradeName
+    share: float = Field(ge=0.0, le=1.0)
+    note: str = (
+        "Only {actual_share:.0%} of weight is at {floor} or above "
+        "(target {share:.0%})"
+    )
+
+
+class HighWeightSignalBelowExpectedRule(StrictModel):
+    """High-weight-signal-below-expected referral rule.
+
+    Fires when a signal contributing >= weight_threshold of the composite has
+    an actual grade below its `evidence_grade_policy.expected_grades[signal_id]`
+    floor. Only signals appearing in `expected_grades` participate.
+    """
+    condition: Literal["high_weight_signal_below_expected"]
+    weight_threshold: float = Field(gt=0.0, le=1.0)
+    note: str = (
+        "Signal {signal_id} (weight {weight:.0%}) has grade {actual} "
+        "below expected {expected}"
+    )
+
+
+CompositeGradeRule = Union[
+    MinGradeBelowRule,
+    DistributionShareBelowGradeRule,
+    HighWeightSignalBelowExpectedRule,
+]
+
+
+class CompositeReferral(StrictModel):
+    """Composite-level referral rules.
+
+    Each rule emits at most one REFER per fire. Multiple rules may fire in
+    one cycle and each is recorded separately.
+    """
+    enabled: bool = True
+    rules: List[CompositeGradeRule] = Field(default_factory=list)
+
+
+class ValidatorPolicy(StrictModel):
+    """V7 Phase 6 — adversarial-validator runtime knobs.
+
+    `full_pass_floor`        — grade at or above which full_pass (4 axes)
+                                runs; below this grade the quick_pass
+                                (2 axes) is used unless the signal_id is
+                                in expected_grades.
+    `advance_bump_cap`       — validator may bump up to this grade. The
+                                rule lifts a single rung at most, never
+                                above the cap.
+    `max_concurrent`         — concurrency budget for parallel validator
+                                calls per cycle.
+    """
+    enabled: bool = True
+    max_concurrent: int = Field(default=5, ge=1, le=50)
+    full_pass_floor: EvidenceGradeName = "corroborated"
+    advance_bump_cap: EvidenceGradeName = "structured_attested"
+
+
+class VariantLoopPolicy(StrictModel):
+    """V7 Phase 11 — within-cycle variant amplification knobs.
+
+    `enabled`                       — master switch.
+    `max_per_trigger`               — per validator-confirmed signal, how
+                                       many sibling queries to generate.
+    `max_per_entity_per_cycle`      — hard cap across ALL triggers in one
+                                       cycle. Whichever cap binds first
+                                       binds.
+    """
+    enabled: bool = True
+    max_per_trigger: int = Field(default=5, ge=0, le=20)
+    max_per_entity_per_cycle: int = Field(default=25, ge=0, le=200)
+
+
+class MechanismMemoryPolicy(StrictModel):
+    """V7 Phase 12 — cross-cycle abstract-pattern memory knobs.
+
+    `enabled`               — master switch.
+    `top_k`                 — how many priors to recall per (primitive,
+                              coverage) at cycle start.
+    `prune_older_than_days` — pruning cutoff for low-recall mechanisms.
+    `prune_min_recall`      — keep a mechanism if recall_count >= this,
+                              regardless of age.
+    """
+    enabled: bool = True
+    top_k: int = Field(default=3, ge=0, le=10)
+    prune_older_than_days: int = Field(default=365, ge=30, le=3650)
+    prune_min_recall: int = Field(default=3, ge=0, le=100)
+
+
+class EvidenceGradePolicy(StrictModel):
+    """V7 Phase 4 policy block governing grade-driven referrals.
+
+    Permissive default: no expected_grades, one composite rule asserting
+    that 50%+ of weight is at OBSERVED or above. Phase 2 graded every
+    production extractor at OBSERVED at minimum, so this default emits zero
+    referrals on the current data plane. Per-coverage tuning lands in V8.
+    """
+    enabled: bool = True
+    expected_grades: ExpectedGradeMap = Field(default_factory=ExpectedGradeMap)
+    composite_referral: CompositeReferral = Field(default_factory=CompositeReferral)
+    # V7 Phase 6 — validator sub-policy. Default factory keeps every
+    # existing config valid: configs without a `validator:` sub-block
+    # parse correctly with the documented defaults.
+    validator: ValidatorPolicy = Field(default_factory=ValidatorPolicy)
+    # V7 Phase 11 — variant-loop sub-policy. Same default-factory pattern.
+    variant_loop: VariantLoopPolicy = Field(default_factory=VariantLoopPolicy)
+    # V7 Phase 12 — mechanism memory sub-policy. Same default-factory pattern.
+    mechanism_memory: MechanismMemoryPolicy = Field(default_factory=MechanismMemoryPolicy)
+
+
 class CoverageConfig(StrictModel):
     """
     Complete coverage configuration.
@@ -881,6 +1051,12 @@ class CoverageConfig(StrictModel):
     limit_configuration: Optional[LimitConfiguration] = None
     pricing: Pricing
     guardrails: Guardrails = Field(default_factory=Guardrails)
+
+    # V7 Phase 4 — grade-driven referral policy. Default factory keeps every
+    # pre-V7 config valid: the empty `expected_grades` plus the one
+    # permissive composite rule emit zero referrals on the current data
+    # plane.
+    evidence_grade_policy: EvidenceGradePolicy = Field(default_factory=EvidenceGradePolicy)
 
     @model_validator(mode="after")
     def validate_cross_references(self) -> "CoverageConfig":

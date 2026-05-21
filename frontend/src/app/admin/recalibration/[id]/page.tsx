@@ -21,7 +21,7 @@ import {
 
 import { api, fmtDate } from "@/lib/api";
 import { formatNumber } from "@/lib/format";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { useAuthStore } from "@/store/authStore";
 import type { ProposalDetail } from "@/types/recalibration";
 
@@ -124,18 +124,18 @@ export default function ProposalDetailPage({
             {detail.id.slice(0, 8)}…
           </span>
         </h1>
-        <StatusBadge status={detail.status} />
+        <SubmissionStatusPill decision={detail.status} />
         <button
           onClick={() => void load()}
-          className="ml-auto border-2 border-generate-outline py-1 px-3 rounded text-sm flex items-center gap-1"
+          className="ml-auto border-2 border-generate-text-outline py-1 px-3 rounded text-sm flex items-center gap-1"
         >
           <RefreshCw className="w-4 h-4" /> Refresh
         </button>
       </header>
 
       {error && (
-        <div className="border-2 border-generate-decline rounded p-3 text-sm flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-generate-decline" /> {error}
+        <div className="border-2 border-generate-text-bad rounded p-3 text-sm flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-generate-text-bad" /> {error}
         </div>
       )}
 
@@ -177,41 +177,41 @@ export default function ProposalDetailPage({
       </section>
 
       {canApprove && (
-        <section className="border-2 border-generate-outline rounded p-4 flex flex-col gap-2">
+        <section className="border-2 border-generate-text-outline rounded p-4 flex flex-col gap-2">
           <h2 className="font-semibold tracking-wider">Governance actions</h2>
           <textarea
             value={rationale}
             onChange={(e) => setRationale(e.target.value)}
             placeholder="Rationale (required for approve / reject)"
             rows={2}
-            className="border-2 border-generate-outline bg-generate-background px-2 py-1 rounded text-sm"
+            className="border-2 border-generate-text-outline bg-generate-light-background px-2 py-1 rounded text-sm"
           />
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => void simulate()}
               disabled={busy !== null}
-              className="flex items-center gap-1 border-2 border-generate-outline py-1 px-3 rounded text-sm"
+              className="flex items-center gap-1 border-2 border-generate-text-outline py-1 px-3 rounded text-sm"
             >
               <PlayCircle className="w-4 h-4" /> Simulate
             </button>
             <button
               onClick={() => void act("approve", true)}
               disabled={!canEdit || busy !== null}
-              className="flex items-center gap-1 bg-generate-approve/20 border border-generate-approve py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-generate-text-good/20 border border-generate-text-good py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <CheckCircle2 className="w-4 h-4" /> Approve
             </button>
             <button
               onClick={() => void act("reject", true)}
               disabled={!canReject || busy !== null}
-              className="flex items-center gap-1 bg-generate-decline/20 border border-generate-decline py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-generate-text-bad/20 border border-generate-text-bad py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <XCircle className="w-4 h-4" /> Reject
             </button>
             <button
               onClick={() => void act("deploy", false)}
               disabled={!canDeploy || busy !== null}
-              className="flex items-center gap-1 bg-generate-selected/20 border border-generate-selected py-1 px-3 rounded text-sm disabled:opacity-50"
+              className="flex items-center gap-1 bg-generate-text-input/20 border border-generate-text-input py-1 px-3 rounded text-sm disabled:opacity-50"
             >
               <Rocket className="w-4 h-4" /> Deploy
             </button>
@@ -234,13 +234,13 @@ export default function ProposalDetailPage({
               {detail.weight_changes.map((w) => (
                 <tr
                   key={w.signal_id}
-                  className="border-t border-generate-outline/20 align-top"
+                  className="border-t border-generate-text-outline/20 align-top"
                 >
                   <td className="py-1 pr-2 font-mono">{w.signal_id}</td>
                   <td className="py-1 pr-2 text-right tabular-nums">
                     {formatNumber(w.current_weight, 3)}
                   </td>
-                  <td className="py-1 pr-2 text-right tabular-nums text-generate-selected">
+                  <td className="py-1 pr-2 text-right tabular-nums text-generate-text-input">
                     {formatNumber(w.proposed_weight, 3)}
                   </td>
                   <td className="py-1 opacity-80">{w.rationale}</td>
@@ -263,14 +263,14 @@ export default function ProposalDetailPage({
               {detail.tier_threshold_changes.map((t, i) => (
                 <tr
                   key={`${t.band_id}-${t.boundary}-${i}`}
-                  className="border-t border-generate-outline/20"
+                  className="border-t border-generate-text-outline/20"
                 >
                   <td className="py-1 pr-2 font-mono">{t.band_id}</td>
                   <td className="py-1 pr-2">{t.boundary}</td>
                   <td className="py-1 pr-2 text-right tabular-nums">
                     {t.current_value}
                   </td>
-                  <td className="py-1 text-right tabular-nums text-generate-selected">
+                  <td className="py-1 text-right tabular-nums text-generate-text-input">
                     {t.proposed_value}
                   </td>
                 </tr>
@@ -288,7 +288,7 @@ export default function ProposalDetailPage({
         </Card>
       )}
 
-      <details className="border-2 border-generate-outline rounded p-3 text-xs">
+      <details className="border-2 border-generate-text-outline rounded p-3 text-xs">
         <summary className="cursor-pointer font-semibold tracking-wider">
           Raw proposal payload
         </summary>
@@ -314,7 +314,7 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <div className="border-2 border-generate-outline rounded p-4">
+    <div className="border-2 border-generate-text-outline rounded p-4">
       <h2 className="font-semibold tracking-wider mb-2">{title}</h2>
       {children}
     </div>

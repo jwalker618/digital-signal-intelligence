@@ -27,6 +27,9 @@ def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
         score=float(default),
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral scoring stand-in",
+        evidence_sources=[],
     )
 
 
@@ -37,6 +40,9 @@ def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
         category=default,
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral categorical stand-in",
+        evidence_sources=[],
     )
 
 

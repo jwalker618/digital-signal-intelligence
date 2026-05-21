@@ -51,21 +51,21 @@ export default function ProfilePage() {
 
           <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
             
-            <dt className="generate-analysis-description">Email</dt>
-            <dd className="generate-analysis-item">{user.email ?? "—"}</dd>
+            <dt className="generate-light-input-description">Email</dt>
+            <dd className="generate-light-input-item">{user.email ?? "—"}</dd>
             
-            <dt className="generate-analysis-description">User ID</dt>
-            <dd className="generate-analysis-item">{user.user_id}</dd>
+            <dt className="generate-light-input-description">User ID</dt>
+            <dd className="generate-light-input-item">{user.user_id}</dd>
             
-            <dt className="generate-analysis-description">Tenant</dt>
-            <dd className="generate-analysis-item">{user.tenant_id}</dd>
+            <dt className="generate-light-input-description">Tenant</dt>
+            <dd className="generate-light-input-item">{user.tenant_id}</dd>
             
-            <dt className="generate-analysis-description">Role</dt>
-            <dd className="generate-analysis-item">{user.role ?? "—"}</dd>
+            <dt className="generate-light-input-description">Role</dt>
+            <dd className="generate-light-input-item">{user.role ?? "—"}</dd>
             
             <dt className="
               flex
-              generate-analysis-description 
+              generate-light-input-description 
               items-start 
               ">Permissions</dt>
             <dd className="flex flex-wrap gap-1">
@@ -73,9 +73,9 @@ export default function ProfilePage() {
                 <span
                   key={p}
                   className="
-                    generate-analysis-item 
+                    generate-light-input-item 
                     font-normal text-xs p-1.5
-                    border-r border-b border-generate-outline 
+                    border-r border-b border-generate-text-outline 
                     rounded-sm"
                 >
                   {p}

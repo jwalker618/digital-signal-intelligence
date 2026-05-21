@@ -1,8 +1,7 @@
 "use client";
 
 import { useDsiStore } from "@/store/dsiStore";
-import SectionCard from "@/components/shared/SectionCard";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import { KpiTile } from "@/components/base/content/primatives";
 import { FileText, Building2, DollarSign, ArrowRightLeft, Calendar } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber, formatDate, formatText } from "@/lib/format";
@@ -16,18 +15,19 @@ interface WaterfallRow {
 }
 
 const rowClass = (row: WaterfallRow) => {
-  if (row.accent) return "bg-generate-selected/10 border border-generate-selected/20";
-  if (row.highlight) return "bg-generate-background/30 font-semibold";
-  if (row.sub) return "pl-6 opacity-70";
+  if (row.accent) return "bg-red-100";
+  if (row.highlight) return "bg-yellow-100";
+  if (row.sub) return "bg-green-100";
   return "";
 };
 
 export default function CommercialTermsTab() {
-  const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
+  const { activeSubmission, activeVersion, activeCommercial } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  const ct = activeCommercial;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ct = activeCommercial as any;
   const deductions = ct.deductions || {};
 
   const pickRate = (rate: number | null | undefined, fallback: number | null | undefined) =>
@@ -55,44 +55,50 @@ export default function CommercialTermsTab() {
   ];
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full pb-12 pt-generate-pad ">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
-      <SectionCard icon={Building2} title="Entity Identity">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard
+          title="Entity Identity"
+          lucideIcon={Building2}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <KpiTile label="Entity Name" value={ct.entity_name || "N/A"} />
           <KpiTile label="Entity ID" value={ct.entity_id || "N/A"} />
           <KpiTile label="Market" value={formatText(ct.entity_market, "upper", "N/A")} />
           <KpiTile label="Base Currency" value={ct.base_currency || "USD"} />
         </div>
-      </SectionCard>
 
-      <SectionCard icon={DollarSign} title="Premium Waterfall">
-        <div className="flex flex-col gap-3 px-generate-pad py-4">
+      </StandardCard>
+
+      <StandardCard 
+          title="Premium Waterfall"
+          lucideIcon={DollarSign}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="flex flex-col">
           {waterfallRows.map((row) => (
             <div
               key={row.label}
-              className={`flex justify-between items-center py-2 px-3 rounded text-sm ${rowClass(row)}`}
+              className={`flex justify-between items-center ${rowClass(row)}`}
             >
               <span>{row.label}</span>
-              <span className={`font-bold ${row.accent ? "text-generate-selected text-lg" : ""}`}>
+              <span className={`font-bold ${row.accent ? "" : ""}`}>
                 {row.value}
               </span>
             </div>
           ))}
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={FileText} title="Commission Structure">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard 
+          title="Commission Structure"
+          lucideIcon={FileText}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <KpiTile label="Brokerage" value={pickRate(deductions.brokerage_rate, deductions.brokerage)} />
           <KpiTile label="Overrider" value={pickRate(deductions.overrider_rate, deductions.overrider)} />
           <KpiTile
@@ -101,10 +107,14 @@ export default function CommercialTermsTab() {
           />
           <KpiTile label="Total Commission" value={formatCurrency(ct.total_commission)} />
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={ArrowRightLeft} title="FX Context">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard 
+          title="FX Context"
+          lucideIcon={ArrowRightLeft}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <KpiTile label="Base Currency" value={ct.base_currency || "USD"} />
           <KpiTile
             label="FX Rate to USD"
@@ -113,10 +123,14 @@ export default function CommercialTermsTab() {
           <KpiTile label="Rate Source" value={ct.fx_rate_source || "N/A"} />
           <KpiTile label="Rate Date" value={formatDate(ct.fx_rate_date, "en-GB", "N/A")} />
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={FileText} title="Distribution Structure">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard 
+          title="Distribution Structure"
+          lucideIcon={FileText}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <KpiTile label="Distribution Type" value={formatText(ct.distribution_type, "upper", "N/A")} />
           <KpiTile
             label="Signed Line"
@@ -128,13 +142,17 @@ export default function CommercialTermsTab() {
             value={ct.lead_loading_factor != null ? `${ct.lead_loading_factor}x` : "N/A"}
           />
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={DollarSign} title="Offered Premium">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard 
+          title="Offered Premium"
+          lucideIcon={DollarSign}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <div>
-            <span className="opacity-50 block text-xs mb-0.5">Offered Premium</span>
-            <span className="font-bold text-generate-selected text-lg">{formatCurrency(ct.offered_premium)}</span>
+            <span className="block ">Offered Premium</span>
+            <span className="font-bold">{formatCurrency(ct.offered_premium)}</span>
           </div>
           <KpiTile
             label="Discretion"
@@ -142,15 +160,15 @@ export default function CommercialTermsTab() {
           />
           <KpiTile label="Minimum Premium" value={formatCurrency(ct.minimum_gross_premium)} />
           <div>
-            <span className="opacity-50 block text-xs mb-0.5">At Minimum?</span>
-            <span className={`font-bold ${ct.at_minimum_premium ? "text-generate-refer" : ""}`}>
+            <span className="">At Minimum?</span>
+            <span className={`font-bold ${ct.at_minimum_premium ? "" : ""}`}>
               {ct.at_minimum_premium ? "YES" : "No"}
             </span>
           </div>
           {ct.offered_premium_rationale && (
             <div className="col-span-full">
-              <span className="opacity-50 block text-xs mb-0.5">Rationale</span>
-              <span className="text-sm italic">{ct.offered_premium_rationale}</span>
+              <span className="">Rationale</span>
+              <span className="">{ct.offered_premium_rationale}</span>
             </div>
           )}
           {ct.offered_premium_set_at && (
@@ -159,16 +177,22 @@ export default function CommercialTermsTab() {
             </div>
           )}
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={Calendar} title="Written / Earned Period">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
+      <StandardCard 
+          title="Written / Earned Period"
+          lucideIcon={Calendar}
+          spanClass="lg:col-span-2 mb-2"
+        >
+        <div className="grid grid-cols-2 md:grid-cols-4">
           <KpiTile label="Written Date" value={formatDate(ct.written_date, "en-GB", "N/A")} />
           <KpiTile label="Earned Start" value={formatDate(ct.earned_start, "en-GB", "N/A")} />
           <KpiTile label="Earned End" value={formatDate(ct.earned_end, "en-GB", "N/A")} />
           <KpiTile label="Earned Method" value={formatText(ct.earned_method, "upper", "N/A")} />
         </div>
-      </SectionCard>
+      </StandardCard>
+
+      </CardGrid>
     </div>
   );
 }

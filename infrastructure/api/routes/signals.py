@@ -337,6 +337,11 @@ async def override_signal(
         tier_overrides=old_model.tier_overrides,
         modifiers_applied=old_model.modifiers_applied,
         referral_reasons=old_model.referral_reasons,
+        # V7 — carry composite-grade rollup forward so an underwriter
+        # signal override doesn't drop audit-grade context.
+        composite_min_grade=getattr(old_model, "composite_min_grade", None),
+        composite_weighted_mean_grade=getattr(old_model, "composite_weighted_mean_grade", None),
+        composite_grade_distribution=getattr(old_model, "composite_grade_distribution", None) or {},
         # Loss propensity (carry forward)
         loss_propensity_score=old_model.loss_propensity_score,
         severity_propensity_score=old_model.severity_propensity_score,

@@ -73,6 +73,9 @@ class AustraliaABNExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "australia_abn"
     SOURCE_VERSION = "1.0"

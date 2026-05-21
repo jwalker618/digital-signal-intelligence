@@ -43,6 +43,19 @@ from .base import (
     InferenceFunction,
 )
 
+# V7 Phase 1 — evidence taxonomy & promotion mechanics
+from .evidence import (
+    EvidenceGrade,
+    EvidenceSource,
+    EvidenceRoleViolation,
+    EVIDENCE_GRADES,
+    bump_evidence,
+    evidence_compare,
+    evidence_at_or_above,
+    evidence_rank,
+    default_cap_for,
+)
+
 __all__ = [
     # Types
     "SignalType",
@@ -61,4 +74,14 @@ __all__ = [
     "BaseCategorizer",
     "BaseInferenceFunction",
     "InferenceFunction",
+    # V7 Phase 1 — evidence
+    "EvidenceGrade",
+    "EvidenceSource",
+    "EvidenceRoleViolation",
+    "EVIDENCE_GRADES",
+    "bump_evidence",
+    "evidence_compare",
+    "evidence_at_or_above",
+    "evidence_rank",
+    "default_cap_for",
 ]

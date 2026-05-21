@@ -7,7 +7,15 @@ from signal_architecture.signals.types import SignalResult
 PROXY_TIER_CONFIDENCE = {"DIRECT_OBSERVABLE": 0.90, "INFERRED_PROXY": 0.70, "TRIANGULATED": 0.55, "DIRECT_INQUIRY": 0.40, "CORRELATIONAL": 0.30}
 
 def _neutral_result(signal_id: str, proxy_tier: str) -> SignalResult:
-    return SignalResult(signal_id=signal_id, score=50.0, confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5), execution_time_ms=0.0)
+    return SignalResult(
+        signal_id=signal_id,
+        score=50.0,
+        confidence=PROXY_TIER_CONFIDENCE.get(proxy_tier, 0.5),
+        execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis=f"Stub: neutral scaffold (proxy_tier={proxy_tier})",
+        evidence_sources=[],
+    )
 
 
 @register_inference_function("brand_reputation_basefunction")

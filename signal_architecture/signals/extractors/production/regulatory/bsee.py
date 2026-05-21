@@ -69,6 +69,9 @@ class BSEEIncidentExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "bsee_incidents"
     SOURCE_VERSION = "1.0"

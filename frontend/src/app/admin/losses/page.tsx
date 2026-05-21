@@ -12,7 +12,7 @@ import { AlertTriangle, Link2, Upload } from "lucide-react";
 import ViewCanvas from "@/components/ViewCanvas";
 import { api, fmtDate } from "@/lib/api";
 import { formatCurrency } from "@/lib/format";
-import { StatusBadge } from "@/components/shared/StatusBadge";
+import { SubmissionStatusPill } from "@/components/base/content/primatives";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import type { LossEvent } from "@/types/recalibration";
@@ -128,10 +128,10 @@ export default function LossesPage() {
 
   return (
     <ViewCanvas unstyledMain={true}>
-      <div className="flex flex-col h-full bg-generate-background text-generate-contrast-analysis p-generate-pad animate-in fade-in duration-500">
+      <div className="flex flex-col h-full bg-generate-light-background text-generate-dark-input p-generate-pad animate-in fade-in duration-500">
 
         {/* FIXED TOP */}
-        <div className="shrink-0 text-generate-contrast-background pb-4 text-sm">
+        <div className="shrink-0 text-generate-text-input pb-4 text-sm">
           <div className="flex items-center gap-3 pb-2">
             <h1>Showing {items.length} loss events.</h1>
             {importResult && (
@@ -211,8 +211,8 @@ export default function LossesPage() {
         {/* SCROLLABLE TABLE */}
         <div className="flex-1 overflow-y-auto no-scrollbar pb-12">
           <table className="w-full text-left whitespace-nowrap border-collapse">
-            <thead className="sticky top-0 z-20 bg-generate-background">
-              <tr className="generate-grid-table-header text-generate-contrast-background">
+            <thead className="sticky top-0 z-20 bg-generate-light-background">
+              <tr className="generate-grid-table-header text-generate-text-input">
                 <th className="p-1.5">Entity</th>
                 <th className="p-1.5">Coverage</th>
                 <th className="p-1.5">Event date</th>
@@ -224,7 +224,7 @@ export default function LossesPage() {
             </thead>
             <tbody>
               {items.map((l) => (
-                <tr key={l.id} className="even:bg-generate-contrast-analysis text-generate-contrast-background">
+                <tr key={l.id} className="even:bg-generate-dark-input text-generate-text-input">
                   <td className="p-1.5">{l.entity_name}</td>
                   <td className="p-1.5 font-mono text-xs">{l.coverage}</td>
                   <td className="p-1.5 text-xs">{fmtDate(l.event_date)}</td>
@@ -232,7 +232,7 @@ export default function LossesPage() {
                   <td className="p-1.5 text-right tabular-nums opacity-80">
                     {l.net_amount != null ? formatCurrency(l.net_amount) : "—"}
                   </td>
-                  <td className="p-1.5"><StatusBadge status={l.status} /></td>
+                  <td className="p-1.5"><SubmissionStatusPill decision={l.status} /></td>
                   <td className="p-1.5 text-xs">{l.quote_id ? "yes" : "no"}</td>
                 </tr>
               ))}

@@ -15,6 +15,21 @@ import {
 
 export type LabelValueVariant = "card" | "modal";
 export type KpiVariant = "default" | "emphasis";
+
+/**
+ * Shared tone palette — used by MetricCard and any other primitive that
+ * surfaces semantic intent (selected / positive / negative / warning /
+ * info / muted). All tokens resolve through theme.css so light/dark mode
+ * just works.
+ */
+export const TONE_PALETTE = {
+  selected: { border: "border-generate-text-outline/30",     bg: "bg-generate-light-input",        text: "text-generate-text-input"       },
+  positive: { border: "border-generate-text-good/30",        bg: "bg-generate-text-good/5",        text: "text-generate-text-good"        },
+  negative: { border: "border-generate-text-bad/30",         bg: "bg-generate-text-bad/5",         text: "text-generate-text-bad"         },
+  warning:  { border: "border-generate-text-maybe/30",       bg: "bg-generate-text-maybe/5",       text: "text-generate-text-maybe"       },
+  info:     { border: "border-generate-text-comment/30",     bg: "bg-generate-text-comment/5",     text: "text-generate-text-comment"     },
+  muted:    { border: "border-generate-text-placeholder/30", bg: "bg-generate-text-placeholder/5", text: "text-generate-text-placeholder" },
+} as const;
 export type StatusTone = keyof typeof TONE_PALETTE;
 
 export type Align = "left" | "center" | "right";
@@ -76,6 +91,7 @@ export interface StandardTableColumn extends ColumnFormatOptions {
   width?: string;
   align?: Align;
   headeralign?: Align;
+  bold?: boolean;
 }
 
 export interface StandardTableRow extends Record<string, unknown> {
@@ -241,6 +257,7 @@ export interface ExpandableGroup<T> {
  * defaultEmptyMessage: Default empty-state text.
  */
 export interface ExpandableGroupTableProps<T> {
+  title: string;
   columns: StandardTableColumn[];
   groups: ExpandableGroup<T>[];
   renderItemCells?: (item: T, index: number, group: ExpandableGroup<T>) => React.ReactNode[];
@@ -272,10 +289,10 @@ export interface ExpandableGroupTableProps<T> {
  *
  *   <ExpandableGroupTable
  *     columns={[
- *       { label: "Adjustments", width: "50%", align: "left", headeralign: "left" },
+ *       { label: "Adjustments", width: "50%", align: "left",   headeralign: "left" },
  *       { label: "Modifier",    width: "10%", align: "center", headeralign: "center" },
- *       { label: "Impact",      width: "20%", align: "right", headeralign: "center" },
- *       { label: "Result",      width: "20%", align: "right", headeralign: "center" },
+ *       { label: "Impact",      width: "20%", align: "right",  headeralign: "center" },
+ *       { label: "Result",      width: "20%", align: "right",  headeralign: "center" },
  *     ]}
  *     groups={[
  *       { key: "categorical", title: "Categorical",
@@ -294,6 +311,7 @@ export interface ExpandableGroupTableProps<T> {
  *   />
  */
 export const ExpandableGroupTable = <T,>({
+  title,
   columns,
   groups,
   renderItemCells,
@@ -324,22 +342,38 @@ export const ExpandableGroupTable = <T,>({
 
   const cellAlign = (c: StandardTableColumn | undefined): Align =>
     c?.align ?? (c?.field ? "right" : "left");
+
   const headerAlign = (c: StandardTableColumn | undefined): Align =>
     c?.headeralign ?? (c?.field ? "center" : "left");
 
+  const isBold = (c: StandardTableColumn | undefined): boolean =>
+    c?.bold ?? (c?.field ? false : true);
+
   return (
+
+  <div>
+
+    {/* ── Title (optional) ───────────────────────────────── */}
+    {title &&
+      <div className="text-xs mt-4 font-bold">{title}</div>
+    }
+
     <div
       className={`grid ${className}`}
       style={{ gridTemplateColumns: template }}
     >
+       
       {/* ── Column headers (optional) ───────────────────────────────── */}
       {renderHeaders &&
         columns.map((c, i) => (
           <div
             key={`ch-${i}`}
-            className={`generate-analysis-description flex gap-generate-pad text-xs ${TEXTALIGN_CLASS[headerAlign(c)]} border-b-1 border-generate-text-outline pb-1`}
-          >
-            {c.label}
+            className={`
+              text-xs pt-1.5 pb-1.5
+              border-b-1 border-generate-text-outline
+              ${TEXTALIGN_CLASS[headerAlign(c)]}
+              `}
+          >{c.label}
           </div>
         ))}
 
@@ -352,11 +386,15 @@ export const ExpandableGroupTable = <T,>({
             {/* Group header row — chevron + title cell */}
             <div
               onClick={() => toggle(g.key)}
-              className="generate-analysis-description border-t border-generate-text-outline hover:text-generate-text-input cursor-pointer flex gap-generate-pad pt-generate-pad pb-generate-pad"
+              className="flex text-sm pt-2 group"
             >
-              {isOpen ? <ChevronDown className="icon" /> : <ChevronRight className="icon" />}
-              {g.title}
+              {isOpen ? 
+              <ChevronDown className="generate-app-icon group-hover:text-generate-text-input" /> : 
+              <ChevronRight className="generate-app-icon group-hover:text-generate-text-input" />
+              }
+              <span className="text-sm group-hover:text-generate-text-input">{g.title}</span>
             </div>
+
             {/* Group header row — summary value cells (align with value cells) */}
             {g.summary.map((cell, i) => {
               const colIdx = i + 1;
@@ -366,11 +404,12 @@ export const ExpandableGroupTable = <T,>({
                 <div
                   key={`${g.key}-sum-${i}`}
                   onClick={() => toggle(g.key)}
-                  className={`border-t border-generate-text-outline cursor-pointer content-center ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                    isLast ? "pl-generate-pad pr-generate-pad text-sm" : "text-xs"
-                  }`}
-                >
-                  {cell}
+                  className={`
+                    text-sm pt-1.5 pb-1.5
+                    ${TEXTALIGN_CLASS[cellAlign(col)]}
+                    ${isBold(col) ? "font-bold" : ""} 
+                    `}
+                > {cell}
                 </div>
               );
             })}
@@ -397,11 +436,13 @@ export const ExpandableGroupTable = <T,>({
                       return (
                         <div
                           key={colIdx}
-                          className={`bg-generate-light-input text-xs content-center pt-1 pb-1 ${TEXTALIGN_CLASS[cellAlign(col)]} ${
-                            colIdx === 0 ? "pl-generate-padicon" : ""
-                          } ${colIdx === lastIdx ? "pr-generate-pad" : ""}`}
-                        >
-                          {cell}
+                          className={`
+                            text-xs pt-1 pb-1 
+                            ${TEXTALIGN_CLASS[cellAlign(col)]}
+                            ${isBold(col) ? "font-bold" : ""}
+                            ${colIdx === 0 ? "pl-generate-indent" : ""}  
+                            `}
+                        >{cell}
                         </div>
                       );
                     })}
@@ -412,7 +453,7 @@ export const ExpandableGroupTable = <T,>({
             {/* Empty state when expanded + no items */}
             {isOpen && g.items.length === 0 && (
               <div
-                className="text-xs opacity-50 italic pl-generate-padicon pt-1 pb-1 bg-generate-light-input"
+                className="text-xs italic pl-generate-indent pt-1 pb-1"
                 style={{ gridColumn: "1 / -1" }}
               >
                 {g.emptyMessage ?? defaultEmptyMessage}
@@ -422,6 +463,8 @@ export const ExpandableGroupTable = <T,>({
         );
       })}
     </div>
+  </div>
+    
   );
 }
 
@@ -474,7 +517,7 @@ export const InfoPanel = ({
 
 /** GUIDANCE
  * key: Override the React key. Defaults to the label stringified + index.
- * valueClassName: Extra classes on the value `<span>` (e.g. `text-generate-selected`).
+ * valueClassName: Extra classes on the value `<span>` (e.g. `text-generate-text-input`).
  */
 export interface LabelValueRow {
   label: React.ReactNode;
@@ -514,7 +557,7 @@ const ROW_STYLES: Record<
 /**
  * Renders an ordered list of `{ label, value }` rows. Two visual variants:
  *   • "card"  — in-card summary rows (flex justify-between, uses
- *               generate-analysis-description / generate-analysis-item utilities).
+ *               generate-light-input-description / generate-light-input-item utilities).
  *   • "modal" — divided key/value rows inside a modal body (font-mono,
  *               bottom border per row, opacity-60 label).
  *
@@ -613,7 +656,7 @@ export interface KpiTileProps {
  *
  * Variants:
  *   • "default"  — base colour, lg value.
- *   • "emphasis" — text-generate-selected + xl value. For the "final" number in
+ *   • "emphasis" — text-generate-text-input + xl value. For the "final" number in
  *                  a row.
  *
  * Compose a row manually (`<div className="grid grid-cols-N gap-4">`) — a
@@ -632,6 +675,7 @@ export const KpiTile = ({
       : "font-bold text-lg";
 
   return (
+    
     <div>
       <span className="flex items-center gap-1 text-sm mb-1">
         {Icon && <Icon className="generate-app-icon" />}
@@ -640,6 +684,7 @@ export const KpiTile = ({
       <span className={`block ${valueClass}`}>{value}</span>
       {subtext && <span className="text-xs block">{subtext}</span>}
     </div>
+    
   );
 }
 
@@ -647,7 +692,7 @@ export const KpiTile = ({
 
 /** GUIDANCE
  * at: Inclusive upper bound. First matching entry wins.
- * colour: CSS value for `backgroundColor`, e.g. `"var(--generate-decline)"`
+ * colour: CSS value for `backgroundColor`, e.g. `"var(--generate-text-bad)"`
  */
 export interface ScoreBarThreshold {
   at: number;
@@ -679,7 +724,7 @@ function pickColor(value: number, thresholds: ScoreBarThreshold[]): string {
   for (const t of thresholds) {
     if (value <= t.at) return t.color;
   }
-  return thresholds[thresholds.length - 1]?.color ?? "var(--generate-muted)";
+  return thresholds[thresholds.length - 1]?.color ?? "var(--generate-text-placeholder)";
 }
 
 /**
@@ -780,8 +825,8 @@ export const StatsGrid = ({ columns, className = "" }: StatsGridProps) => {
  * sublabel: Optional secondary line under the label.
  * original: Original-state value (left comparand).
  * scenario: Scenario-state value (right comparand).
- * changed:  When true, highlights the row with `bg-generate-selected/5` and
- *           renders the scenario value in `text-generate-selected font-bold`.
+ * changed:  When true, highlights the row with `bg-generate-text-input/5` and
+ *           renders the scenario value in `text-generate-text-input font-bold`.
  * showArrow: Show the → between original and scenario. Default true.
  * gridTemplate: Override the grid-template-columns. Default
  *               `"1fr 80px 30px 80px"`.
@@ -840,25 +885,8 @@ export const CompareRow = ({
 
 /** METRIC CARD---------------------------------------------------------------------------------------------- */
 
-export type MetricCardTone =
-  | "selected"
-  | "positive"
-  | "negative"
-  | "warning"
-  | "info"
-  | "muted";
-
-const METRIC_CARD_TONE: Record<
-  MetricCardTone,
-  { border: string; bg: string; text: string }
-> = {
-  selected: { border: "border-generate-selected/30", bg: "bg-generate-selected/5", text: "text-generate-selected" },
-  positive: { border: "border-generate-approve/30", bg: "bg-generate-approve/5", text: "text-generate-approve" },
-  negative: { border: "border-generate-decline/30", bg: "bg-generate-decline/5", text: "text-generate-decline" },
-  warning:  { border: "border-generate-refer/30",  bg: "bg-generate-refer/5",  text: "text-generate-refer"  },
-  info:     { border: "border-generate-info/30",     bg: "bg-generate-info/5",     text: "text-generate-info"     },
-  muted:    { border: "border-generate-muted/30",    bg: "bg-generate-muted/5",    text: "text-generate-muted"    },
-};
+/** MetricCard reuses the shared TONE_PALETTE — same tone keys as elsewhere. */
+export type MetricCardTone = StatusTone;
 
 /** GUIDANCE
  * label:     Small uppercase caption above the hero value.
@@ -866,7 +894,7 @@ const METRIC_CARD_TONE: Record<
  * subtext:   Optional small caption beneath the value.
  * tone:      When provided, applies `border-2 border-generate-<tone>/30
  *            bg-generate-<tone>/5` and colours the value `text-generate-<tone>`.
- *            When omitted, renders a plain `border border-generate-outline/20` card.
+ *            When omitted, renders a plain `border border-generate-text-outline/20` card.
  * lucideIcon: Optional leading icon rendered before the label.
  */
 export interface MetricCardProps {
@@ -892,11 +920,11 @@ export const MetricCard = ({
   lucideIcon: Icon,
   className = "",
 }: MetricCardProps) => {
-  const toneStyles = tone ? METRIC_CARD_TONE[tone] : null;
+  const toneStyles = tone ? TONE_PALETTE[tone] : null;
   const frame = toneStyles
     ? `border-2 ${toneStyles.border} ${toneStyles.bg}`
     : "border border-generate-text-outline";
-  const valueColor = toneStyles?.text ?? "";
+  const valueColor = toneStyles?.text ?? "text-generate-text-input";
 
   return (
     <div className={`${frame} rounded-xl p-5 ${className}`}>

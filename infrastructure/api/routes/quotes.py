@@ -352,6 +352,12 @@ async def select_limit_option(
         tier_overrides=old_model.tier_overrides,
         modifiers_applied=old_model.modifiers_applied,
         referral_reasons=old_model.referral_reasons,
+        # V7 — carry composite-grade rollup forward so a limit-selection
+        # re-quote doesn't drop audit-grade context. Pre-V7 rows have
+        # NULL here and the carry-forward stays NULL — harmless.
+        composite_min_grade=getattr(old_model, "composite_min_grade", None),
+        composite_weighted_mean_grade=getattr(old_model, "composite_weighted_mean_grade", None),
+        composite_grade_distribution=getattr(old_model, "composite_grade_distribution", None) or {},
         # Scoring (carry forward)
         group_scores=old_model.group_scores,
         pure_composite_score=old_model.pure_composite_score,

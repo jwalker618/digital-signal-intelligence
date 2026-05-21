@@ -50,4 +50,7 @@ def f1(entity_id, context):
         },
         aggregated_data={"regulatory_monitoring_score": score},
         metadata={"stub": True, "enhancement": "priority_1", "cross_coverage": True},
+        evidence_grade="inferred",
+        evidence_basis="Stub: priority-1 inference function pending production extractor",
+        evidence_sources=[],
     )

@@ -85,6 +85,17 @@
   @apply hover:border-r-6;
 }
 
+@utility generate-light-loadingpage {
+  @apply flex;
+  @apply items-center;
+  @apply justify-center;
+  @apply h-full; 
+  @apply text-generate-text-placeholder; 
+  @apply animate-pulse;
+  @apply text-xl;
+}
+
+
 @utility generate-light-inputbox {
   @apply flex;
   @apply rounded-md;
@@ -93,6 +104,8 @@
   @apply text-wrap;
   @apply border-1 border-generate-text-outline;
   @apply placeholder:text-generate-text-placeholder;
+  @apply hover:border-l-6;
+  @apply hover:border-r-6;
   @apply bg-generate-light-input;
 }.generate-light-inputbox:not(:placeholder-shown) {
   @apply text-generate-text-input;
@@ -151,7 +164,6 @@
   @apply rounded-b-xl;
   @apply bg-generate-light-input;
   @apply text-generate-text-placeholder;
-  @apply hover:text-generate-text-input;
   @apply pl-generate-pad pr-generate-pad;
   @apply pt-2 pb-2;
 }
@@ -183,6 +195,5 @@
   @apply text-center;
   @apply font-bold;
   @apply text-generate-text-placeholder;
-  @apply hover:text-generate-text-input;
   @apply border-r border-generate-text-outline;
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useDsiStore } from "@/store/dsiStore";
-import SectionCard from "@/components/shared/SectionCard";
-import KeyDetailsBar from "@/components/base/keyDetailsBar";
+import { CardGrid, StandardCard } from "@/components/base/cards";
 import { MetricCard, KpiTile } from "@/components/base/content/primatives";
 import { Calculator, ArrowDown, AlertTriangle, DollarSign } from "lucide-react";
 import { formatCurrency, formatPercent, formatNumber } from "@/lib/format";
@@ -30,10 +29,10 @@ const WaterfallStep = ({
   sublabel?: React.ReactNode;
 }) => {
   const toneBg =
-    tone === "info"     ? "bg-generate-info/5 border-generate-info/20 text-generate-info"
-    : tone === "positive" ? "bg-generate-approve/5 border-generate-approve/20 text-generate-approve"
-    : tone === "selected" ? "bg-generate-selected/10 border-2 border-generate-selected/30 text-generate-selected"
-    : "bg-generate-background/30 border-generate-outline/10";
+    tone === "info"     ? "bg-generate-text-comment/5 border-generate-text-comment/20 text-generate-text-comment"
+    : tone === "positive" ? "bg-generate-text-good/5 border-generate-text-good/20 text-generate-text-good"
+    : tone === "selected" ? "bg-generate-text-input/10 border-2 border-generate-text-input/30 text-generate-text-input"
+    : "bg-generate-light-background/30 border-generate-text-outline/10";
   const valueSize = tone === "selected" ? "text-2xl font-black" : "text-lg font-bold";
 
   return (
@@ -60,9 +59,9 @@ const GroupedList = ({
   totalLabel: string;
   total: React.ReactNode;
 }) => {
-  const border = tone === "negative" ? "border-generate-decline/20" : "border-generate-refer/20";
-  const headerBg = tone === "negative" ? "bg-generate-decline/5 border-generate-decline/10" : "bg-generate-refer/5 border-generate-refer/10";
-  const footerBg = tone === "negative" ? "bg-generate-decline/5" : "bg-generate-refer/5";
+  const border = tone === "negative" ? "border-generate-text-bad/20" : "border-generate-text-maybe/20";
+  const headerBg = tone === "negative" ? "bg-generate-text-bad/5 border-generate-text-bad/10" : "bg-generate-text-maybe/5 border-generate-text-maybe/10";
+  const footerBg = tone === "negative" ? "bg-generate-text-bad/5" : "bg-generate-text-maybe/5";
 
   return (
     <div className={`border ${border} rounded-lg overflow-hidden`}>
@@ -72,7 +71,7 @@ const GroupedList = ({
       {items.map((item) => (
         <div
           key={item.label}
-          className="flex justify-between items-center py-2 px-4 text-sm border-b border-generate-outline/5 last:border-0"
+          className="flex justify-between items-center py-2 px-4 text-sm border-b border-generate-text-outline/5 last:border-0"
         >
           <span className="opacity-70">{item.label}</span>
           {item.valueNode}
@@ -93,11 +92,12 @@ const ArrowSpacer = () => (
 );
 
 export default function PremiumAssemblyTab() {
-  const { activeSubmission, activeQuote, activeVersion, activeCommercial } = useDsiStore();
+  const { activeSubmission, activeVersion, activeCommercial } = useDsiStore();
 
   if (!activeSubmission || !activeVersion) return null;
 
-  const ct = activeCommercial;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const ct = activeCommercial as any;
   const deductions = ct.deductions || {};
   const taxes = ct.taxes_and_levies || {};
 
@@ -143,23 +143,15 @@ export default function PremiumAssemblyTab() {
       : null;
 
   const discretionTone =
-    discretionPct != null && discretionPct > 0 ? "text-generate-approve"
-    : discretionPct != null && discretionPct < 0 ? "text-generate-decline"
+    discretionPct != null && discretionPct > 0 ? "text-generate-text-good"
+    : discretionPct != null && discretionPct < 0 ? "text-generate-text-bad"
     : "";
 
   return (
-    <div className="w-full no-scrollbar animate-in fade-in duration-500 pb-12 pt-3">
-      <KeyDetailsBar
-        status={activeQuote?.status}
-        validFrom={activeQuote?.valid_from}
-        validUntil={activeQuote?.valid_until}
-        boundAt={activeQuote?.bound_at}
-        policyNumber={activeQuote?.policy_number}
-        submissionCode={activeSubmission?.submission_code}
-        quoteCode={activeQuote?.quote_code}
-      />
+    <div className="w-full pb-12 pt-generate-pad">
+      <CardGrid cols="grid-cols-1" className="gap-4">
 
-      <SectionCard icon={Calculator} title="Premium Assembly Waterfall">
+      <StandardCard lucideIcon={Calculator} title="Premium Assembly Waterfall">
         <div className="flex flex-col gap-1 px-generate-pad py-4">
           <WaterfallStep
             label="Technical Premium (USD)"
@@ -186,7 +178,7 @@ export default function PremiumAssemblyTab() {
                 label: item.label,
                 valueNode: (
                   <div className="text-right">
-                    <span className="font-bold text-generate-decline">
+                    <span className="font-bold text-generate-text-bad">
                       {item.rate != null ? formatPercent(item.rate) : "-"}
                     </span>
                     {item.amount != null && (
@@ -238,9 +230,9 @@ export default function PremiumAssemblyTab() {
             value={formatCurrency(ct.offered_premium)}
           />
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={AlertTriangle} title="Minimum Premium Check">
+      <StandardCard lucideIcon={AlertTriangle} title="Minimum Premium Check">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 px-generate-pad py-4">
           <MetricCard label="Minimum Gross Premium" value={formatCurrency(ct.minimum_gross_premium)} />
           <MetricCard
@@ -257,14 +249,14 @@ export default function PremiumAssemblyTab() {
             }
           />
         </div>
-      </SectionCard>
+      </StandardCard>
 
-      <SectionCard icon={DollarSign} title="Discretion Analysis">
+      <StandardCard lucideIcon={DollarSign} title="Discretion Analysis">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-3 px-generate-pad py-4">
           <KpiTile label="Gross Premium" value={formatCurrency(ct.gross_premium)} />
           <div>
             <span className="flex items-center gap-1 text-sm mb-1">Offered Premium</span>
-            <span className="block font-bold text-lg text-generate-selected">
+            <span className="block font-bold text-lg text-generate-text-input">
               {formatCurrency(ct.offered_premium)}
             </span>
           </div>
@@ -278,7 +270,9 @@ export default function PremiumAssemblyTab() {
           </div>
           <KpiTile label="Rationale" value={ct.offered_premium_rationale || "None provided"} />
         </div>
-      </SectionCard>
+      </StandardCard>
+
+      </CardGrid>
     </div>
   );
 }

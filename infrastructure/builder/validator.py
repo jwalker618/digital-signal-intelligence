@@ -122,6 +122,12 @@ class ConfigValidator:
         if "pricing" in inner:
             issues.extend(self._validate_pricing(inner["pricing"]))
 
+        # V7 Phase 4 — evidence_grade_policy is optional. Builder fails the
+        # config only when malformed; absence is permitted (default factory
+        # in Pydantic supplies an empty-rule policy on load).
+        if "evidence_grade_policy" in inner:
+            issues.extend(self._validate_evidence_grade_policy(inner["evidence_grade_policy"]))
+
         # Cross-section validation
         issues.extend(self._validate_cross_references(inner))
 
@@ -852,6 +858,165 @@ class ConfigValidator:
                         message=f"Product '{prod}' missing 'ilf_curve' or 'deductible_factors'",
                         path=f"pricing.by_product_type.{prod}"
                     ))
+        return issues
+
+    def _validate_evidence_grade_policy(self, policy: Dict[str, Any]) -> List[ValidationIssue]:
+        """V7 Phase 4 — validate the evidence_grade_policy block.
+
+        Per-rule strict validation: each rule must carry the fields the
+        condition demands. Unknown condition names rejected. Grade names
+        must be one of the five EvidenceGrade rungs.
+        """
+        from infrastructure.models.config_schema import EvidenceGradeName
+        try:
+            valid_grades = set(EvidenceGradeName.__args__)  # type: ignore[attr-defined]
+        except AttributeError:
+            valid_grades = {
+                "inferred", "observed", "corroborated",
+                "structured_attested", "behaviourally_validated",
+            }
+        valid_conditions = {
+            "min_grade_below",
+            "distribution_share_below_grade",
+            "high_weight_signal_below_expected",
+        }
+        issues: List[ValidationIssue] = []
+
+        if not isinstance(policy, dict):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="evidence_grade_policy",
+                message="evidence_grade_policy must be a mapping",
+                path="evidence_grade_policy",
+            ))
+            return issues
+
+        # expected_grades.grades — each value must be a valid grade name.
+        eg = policy.get("expected_grades")
+        if eg is not None:
+            if not isinstance(eg, dict):
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="evidence_grade_policy",
+                    message="expected_grades must be a mapping",
+                    path="evidence_grade_policy.expected_grades",
+                ))
+            else:
+                grades = eg.get("grades", {})
+                if not isinstance(grades, dict):
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="evidence_grade_policy",
+                        message="expected_grades.grades must be a mapping",
+                        path="evidence_grade_policy.expected_grades.grades",
+                    ))
+                else:
+                    for sig_id, grade in grades.items():
+                        if grade not in valid_grades:
+                            issues.append(ValidationIssue(
+                                severity=ValidationSeverity.ERROR,
+                                category="evidence_grade_policy",
+                                message=(
+                                    f"expected_grades.grades['{sig_id}']: "
+                                    f"unknown grade {grade!r}; valid: {sorted(valid_grades)}"
+                                ),
+                                path=f"evidence_grade_policy.expected_grades.grades.{sig_id}",
+                            ))
+
+        # composite_referral.rules — per-condition required-field check.
+        composite = policy.get("composite_referral", {})
+        if not isinstance(composite, dict):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="evidence_grade_policy",
+                message="composite_referral must be a mapping",
+                path="evidence_grade_policy.composite_referral",
+            ))
+            return issues
+
+        rules = composite.get("rules", [])
+        if not isinstance(rules, list):
+            issues.append(ValidationIssue(
+                severity=ValidationSeverity.ERROR,
+                category="evidence_grade_policy",
+                message="composite_referral.rules must be a list",
+                path="evidence_grade_policy.composite_referral.rules",
+            ))
+            return issues
+
+        for i, rule in enumerate(rules):
+            path = f"evidence_grade_policy.composite_referral.rules[{i}]"
+            if not isinstance(rule, dict):
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="evidence_grade_policy",
+                    message="rule must be a mapping",
+                    path=path,
+                ))
+                continue
+            cond = rule.get("condition")
+            if cond not in valid_conditions:
+                issues.append(ValidationIssue(
+                    severity=ValidationSeverity.ERROR,
+                    category="evidence_grade_policy",
+                    message=(
+                        f"unknown condition {cond!r}; "
+                        f"valid: {sorted(valid_conditions)}"
+                    ),
+                    path=path,
+                ))
+                continue
+
+            if cond == "min_grade_below":
+                threshold = rule.get("threshold")
+                if threshold not in valid_grades:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="evidence_grade_policy",
+                        message=(
+                            f"min_grade_below requires `threshold` to be a "
+                            f"valid grade; got {threshold!r}"
+                        ),
+                        path=f"{path}.threshold",
+                    ))
+
+            elif cond == "distribution_share_below_grade":
+                floor = rule.get("floor")
+                share = rule.get("share")
+                if floor not in valid_grades:
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="evidence_grade_policy",
+                        message=(
+                            f"distribution_share_below_grade requires "
+                            f"`floor` to be a valid grade; got {floor!r}"
+                        ),
+                        path=f"{path}.floor",
+                    ))
+                if not isinstance(share, (int, float)) or not (0.0 <= float(share) <= 1.0):
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="evidence_grade_policy",
+                        message=(
+                            f"distribution_share_below_grade requires `share` "
+                            f"in [0.0, 1.0]; got {share!r}"
+                        ),
+                        path=f"{path}.share",
+                    ))
+
+            elif cond == "high_weight_signal_below_expected":
+                wt = rule.get("weight_threshold")
+                if not isinstance(wt, (int, float)) or not (0.0 < float(wt) <= 1.0):
+                    issues.append(ValidationIssue(
+                        severity=ValidationSeverity.ERROR,
+                        category="evidence_grade_policy",
+                        message=(
+                            f"high_weight_signal_below_expected requires "
+                            f"`weight_threshold` in (0.0, 1.0]; got {wt!r}"
+                        ),
+                        path=f"{path}.weight_threshold",
+                    ))
+
         return issues
 
     def _validate_cross_references(self, inner: Dict[str, Any]) -> List[ValidationIssue]:

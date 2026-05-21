@@ -223,6 +223,9 @@ def _run_pipeline(signal_id, *args, default=50.0, **kwargs):
         score=float(default),
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral scoring stand-in",
+        evidence_sources=[],
     )
 
 
@@ -233,6 +236,9 @@ def _run_categorical(signal_id, *args, default="OTHER", **kwargs):
         category=default,
         confidence=0.5,
         execution_time_ms=0.0,
+        evidence_grade="inferred",
+        evidence_basis="Stub: neutral categorical stand-in",
+        evidence_sources=[],
     )
 
 
@@ -262,6 +268,9 @@ def f49(entity_id, context):
         },
         aggregated_data={"port_state_control_score": score},
         metadata={"stub": True, "enhancement": "priority_1"},
+        evidence_grade="inferred",
+        evidence_basis="Stub: priority-1 inference function pending production extractor",
+        evidence_sources=[],
     )
 
 
@@ -293,4 +302,7 @@ def f50(entity_id, context):
         },
         aggregated_data={"classification_society_quality_score": score},
         metadata={"stub": True, "enhancement": "priority_1"},
+        evidence_grade="inferred",
+        evidence_basis="Stub: priority-1 inference function pending production extractor",
+        evidence_sources=[],
     )

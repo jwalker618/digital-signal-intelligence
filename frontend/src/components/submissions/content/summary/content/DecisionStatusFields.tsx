@@ -19,19 +19,19 @@ export default function DecisionStatusFields() {
     <>
       <div className="flex flex-col items-center">
         <span className="text-sm">Status</span>
-        <span className="font-bold hover:text-generate-text-input">{formatText(status, "upper")}</span>
+        <span className="font-bold">{formatText(status, "upper")}</span>
       </div>
 
       {(status === "draft" || status === "ready") && (
         <>
           <div className="flex flex-col items-center">
             <span className="text-sm">Valid From</span>
-            <span className="font-bold hover:text-generate-text-input">{formatDate(activeQuote.valid_from)}</span>
+            <span className="font-bold">{formatDate(activeQuote.valid_from)}</span>
           </div>
           
           <div className="flex flex-col items-center">
             <span className="text-sm">Valid Until</span>
-            <span className="font-bold hover:text-generate-text-input">{formatDate(activeQuote.valid_until)}</span>
+            <span className="font-bold">{formatDate(activeQuote.valid_until)}</span>
           </div>
         </>
       )}
@@ -40,12 +40,12 @@ export default function DecisionStatusFields() {
         <>
           <div className="flex flex-col items-center">
             <span className="text-sm">Bound Date</span>
-            <span className="font-bold hover:text-generate-text-input">{formatDate(activeQuote.bound_at)}</span>
+            <span className="font-bold">{formatDate(activeQuote.bound_at)}</span>
           </div>
           
           <div className="flex flex-col items-center">
             <span className="text-sm">Policy Ref</span>
-            <span className="font-bold hover:text-generate-text-input">
+            <span className="font-bold">
               {formatText(activeQuote.policy_number, "upper", "pending")}
             </span>
           </div>

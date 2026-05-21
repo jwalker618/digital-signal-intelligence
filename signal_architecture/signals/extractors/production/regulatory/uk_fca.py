@@ -72,6 +72,9 @@ class UKFCARegisterExtractor(ProductionExtractor):
             'risk_score': float,
         }
     """
+    # V7 Phase 2: authoritative register source.
+    MAX_EVIDENCE_GRADE = "structured_attested"
+
 
     SOURCE_NAME = "uk_fca_register"
     SOURCE_VERSION = "1.0"

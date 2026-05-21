@@ -80,7 +80,7 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
 
   if (isBooting && !isPublic) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-generate-background">
+      <div className="min-h-screen flex items-center justify-center bg-generate-light-background">
         <Loader2 className="icon animate-spin" />
       </div>
     );

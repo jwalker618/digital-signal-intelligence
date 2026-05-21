@@ -45,7 +45,7 @@ export function StateDiffViewer({
 
   if (keys.length === 0) {
     return (
-      <pre className="text-xs bg-generate-background border border-generate-outline/30 rounded p-2 overflow-auto">
+      <pre className="text-xs bg-generate-light-background border border-generate-text-outline/30 rounded p-2 overflow-auto">
         {formatValue(after ?? before)}
       </pre>
     );
@@ -68,8 +68,8 @@ export function StateDiffViewer({
           return (
             <tr
               key={k}
-              className={`border-t border-generate-outline/20 ${
-                changed ? "bg-generate-refer/5" : ""
+              className={`border-t border-generate-text-outline/20 ${
+                changed ? "bg-generate-text-maybe/5" : ""
               }`}
             >
               <td className="py-1 pr-2 align-top">{k}</td>
@@ -78,7 +78,7 @@ export function StateDiffViewer({
               </td>
               <td
                 className={`py-1 align-top whitespace-pre-wrap ${
-                  changed ? "text-generate-selected" : ""
+                  changed ? "text-generate-text-input" : ""
                 }`}
               >
                 {formatValue(a)}
