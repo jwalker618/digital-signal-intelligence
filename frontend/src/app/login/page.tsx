@@ -21,11 +21,13 @@ export default function LoginPage() {
 
   const router = useRouter();
   const params = useSearchParams();
-  const nextPath = params.get("next") ?? "/";
+  // v8 Phase 8: when ?next= is set we honour it, otherwise route by role.
+  const nextPath = params.get("next");
 
   const login = useAuthStore((s) => s.login);
   const loginSSO = useAuthStore((s) => s.loginSSO);
   const isAuthed = useAuthStore((s) => s.isAuthenticated());
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const mfaChallengePending = useAuthStore((s) => s.mfaChallengePending);
 
   const [email, setEmail] = useState("");
@@ -34,10 +36,20 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Once fully authenticated, leave the login page
+  // Once fully authenticated, leave the login page. Route portal users
+  // (BROKER, CLIENT) to /portal; everyone else lands on the carrier home.
   useEffect(() => {
-    if (isAuthed) router.replace(nextPath);
-  }, [isAuthed, nextPath, router]);
+    if (!isAuthed) return;
+    if (nextPath) {
+      router.replace(nextPath);
+      return;
+    }
+    if (userRole === "BROKER" || userRole === "CLIENT") {
+      router.replace("/portal");
+    } else {
+      router.replace("/");
+    }
+  }, [isAuthed, nextPath, router, userRole]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
