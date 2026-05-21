@@ -429,6 +429,7 @@ async def api_info():
 
 # Import routers after app is created to avoid circular imports
 from .routes import commercialterms, riskterms, submissions, quotes, referrals, analytics, simulate, modelversion, frontend, signals, losses, grade_calibration, events, recompute, evidence, disclosure, mechanism, entity_events, commitments, referral_messages
+from .routes.portal import router as portal_router
 from .auth.routes import router as auth_router
 from .websocket.routes import router as websocket_router
 from .admin import router as admin_router
@@ -443,6 +444,7 @@ app.include_router(submissions.router, prefix="/api/v1", tags=["Submissions"])
 app.include_router(quotes.router, prefix="/api/v1", tags=["Quotes"])
 app.include_router(referrals.router, prefix="/api/v1", tags=["Referrals"])
 app.include_router(referral_messages.router, prefix="/api/v1", tags=["ReferralMessages"])
+app.include_router(portal_router, prefix="/api/v1/portal", tags=["Portal"])
 app.include_router(analytics.router, prefix="/api/v1", tags=["Analytics"])
 app.include_router(simulate.router, prefix="/api/v1", tags=["Simulate"])
 app.include_router(frontend.router, prefix="/api/v1", tags=["Frontend"])
