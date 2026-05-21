@@ -1030,6 +1030,43 @@ class EvidenceGradePolicy(StrictModel):
     mechanism_memory: MechanismMemoryPolicy = Field(default_factory=MechanismMemoryPolicy)
 
 
+# =============================================================================
+# V8 PHASE 4: SIGNAL REMEDIATION
+# =============================================================================
+# Per-signal guidance authored alongside the signal definitions. Powers
+# /portal/actions on the client portal -- a leverage-sorted action plan
+# for any signal that appears as a drag on the entity's quote. Signals
+# without an authored entry receive a generic runtime placeholder.
+
+class RemediationEffort(str, Enum):
+    """Coarse effort classification for a remediation action.
+
+    Authoring rule of thumb:
+      LOW    -- <=30 days, <=$10k
+      MEDIUM -- <=90 days, <=$100k
+      HIGH   -- >90 days OR >$100k
+    """
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
+class SignalRemediation(StrictModel):
+    """Authored remediation guidance for a single signal.
+
+    Stored in coverage YAML under signal_remediation.{signal_id}. The
+    fields are not used by scoring or pricing -- this is portal-only
+    informational content.
+    """
+    headline: str = Field(..., min_length=1, max_length=120)
+    description: str = Field(..., min_length=1, max_length=600)
+    effort: RemediationEffort
+    typical_duration: str = Field(..., min_length=1, max_length=60)
+    typical_cost_usd: float = Field(..., ge=0)
+    evidence_required: str = Field(..., min_length=1, max_length=300)
+    references: List[str] = Field(default_factory=list)
+
+
 class CoverageConfig(StrictModel):
     """
     Complete coverage configuration.
@@ -1057,6 +1094,11 @@ class CoverageConfig(StrictModel):
     # permissive composite rule emit zero referrals on the current data
     # plane.
     evidence_grade_policy: EvidenceGradePolicy = Field(default_factory=EvidenceGradePolicy)
+
+    # V8 Phase 4 — per-signal remediation guidance for the client portal.
+    # Optional: configs without a signal_remediation block parse cleanly;
+    # signals without an entry get a generic runtime placeholder.
+    signal_remediation: Optional[Dict[str, SignalRemediation]] = None
 
     @model_validator(mode="after")
     def validate_cross_references(self) -> "CoverageConfig":

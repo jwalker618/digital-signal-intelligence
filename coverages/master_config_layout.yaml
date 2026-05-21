@@ -9,6 +9,7 @@
 # VERSION: 2.2 - Added Pricing Anchors & Decoupled Limits (Phase V5)
 # VERSION: 2.3 - Added expectation_level for adaptive signal absence (Phase 10)
 # VERSION: 2.4 - Added evidence_grade_policy block + grade-driven referral rules (V7 Phase 4)
+# VERSION: 2.5 - Added signal_remediation block for client-portal action plans (V8 Phase 4)
 #
 # STRUCTURAL PRINCIPLES:
 # 1. Signals are defined once in signal_registry
@@ -863,5 +864,41 @@
 #         - condition: high_weight_signal_below_expected
 #           weight_threshold: 0.10
 #           note: "Signal {signal_id} (weight {weight:.0%}) grade {actual} < expected {expected}"
+#
+# =============================================================================
+# SIGNAL_REMEDIATION (v8 Phase 4)
+# =============================================================================
+#
+# Per-signal, optional. Powers the client portal's /actions view --
+# a leverage-sorted action plan for any signal that appears as a
+# drag on the entity's quote. Signals without an entry receive a
+# generic runtime placeholder; non-cyber coverages may ship partial.
+#
+# Effort tiers (used to compute leverage = |premium delta| / effort_score
+# where LOW=1, MEDIUM=3, HIGH=9):
+#   LOW    -- <=30 days,  <=$10k    (configuration changes, attestations)
+#   MEDIUM -- <=90 days,  <=$100k   (process / tooling rollouts)
+#   HIGH   -- >90 days  OR >$100k   (programme-level investments)
+#
+# AUTHORING TONE:
+#   - headline: <=120 chars, action-oriented, verb-first
+#   - description: <=600 chars, plain language, no jargon
+#   - evidence_required: what artifact proves the action is complete
+#
+# EXAMPLE BLOCK:
+#
+#   signal_remediation:
+#     mfa_enabled:
+#       headline: "Deploy MFA across all administrative accounts"
+#       description: "Enable multi-factor authentication on email, admin
+#                     consoles, and remote access. Most providers offer
+#                     this free."
+#       effort: LOW
+#       typical_duration: "2-4 weeks"
+#       typical_cost_usd: 5000
+#       evidence_required: "Screenshot of MFA enforcement policy or
+#                           attestation from IT"
+#       references:
+#         - "https://www.cisa.gov/MFA"
 #
 # =============================================================================
