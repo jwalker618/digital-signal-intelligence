@@ -64,9 +64,16 @@ class ReferralStatus(str, enum.Enum):
     """Referral review status."""
     PENDING = "pending"
     IN_REVIEW = "in_review"
+    AWAITING_BROKER = "awaiting_broker"  # v8 Phase 5: query raised, awaiting broker reply
     APPROVED = "approved"
     DECLINED = "declined"
     MODIFIED = "modified"
+
+
+class MessageDirection(str, enum.Enum):
+    """v8 Phase 5: who sent a referral message."""
+    UNDERWRITER_TO_BROKER = "u2b"
+    BROKER_TO_UNDERWRITER = "b2u"
 
 
 # =============================================================================
@@ -404,12 +411,23 @@ class Referral(Base):
     # endpoint reads this directly when present, avoiding re-generation.
     disclosure_packet = Column(JSONB, nullable=True)
 
+    # v8 Phase 5: redundant-with-status helper for queue queries.
+    # Set to "broker" while status == AWAITING_BROKER; cleared when
+    # the referral transitions back to IN_REVIEW.
+    awaiting_party = Column(String(16), nullable=True)
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     quote = relationship("Quote", back_populates="referrals")
+    messages = relationship(
+        "ReferralMessage",
+        back_populates="referral",
+        cascade="all, delete-orphan",
+        order_by="ReferralMessage.created_at",
+    )
 
 
 class ModelVersionRecord(Base):
@@ -1784,4 +1802,50 @@ class CohortMembership(Base):
         Index("uq_cohort_membership_entity_coverage", "entity_key", "coverage", unique=True),
         Index("ix_cohort_membership_cohort", "cohort_id", "composite_score"),
         Index("ix_cohort_membership_model_version", "model_version_id"),
+    )
+
+
+class ReferralMessage(Base):
+    """v8 Phase 5: one message in the broker-underwriter thread on a referral.
+
+    Direction is captured by `direction` ("u2b" = underwriter->broker
+    query; "b2u" = broker->underwriter reply). When a broker reply
+    carries a `signal_value_update`, the route handler triggers a
+    re-assessment and links the resulting Quote via `new_quote_id` for
+    auditability ("this reply produced that quote").
+
+    `request_signal_evidence` is populated on underwriter queries to
+    hint the broker UI which signal the carrier wants evidence for
+    (e.g. "mfa_enabled"). Optional on both directions.
+    """
+    __tablename__ = "referral_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    referral_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("referrals.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    direction = Column(String(4), nullable=False)  # "u2b" or "b2u"
+    author_user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    body = Column(Text, nullable=False)
+    signal_value_update = Column(JSONB, nullable=True)
+    triggered_reassessment = Column(Boolean, nullable=False, default=False)
+    new_quote_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("quotes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    request_signal_evidence = Column(String(128), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    referral = relationship("Referral", back_populates="messages")
+
+    __table_args__ = (
+        Index("ix_referral_messages_referral", "referral_id", "created_at"),
+        Index("ix_referral_messages_quote", "new_quote_id"),
     )
