@@ -18,7 +18,8 @@ def test_cli_parser_exposes_all_commands():
         if getattr(a, "choices", None)
     )
     cmds = set(sub_action.choices.keys())
-    assert cmds == {"init", "bench", "v5", "synthetic", "reset", "verify"}
+    # v8 Phase 7 adds demo-reset for the client portal demo state.
+    assert cmds == {"init", "bench", "v5", "synthetic", "reset", "verify", "demo-reset"}
 
 
 def test_reset_without_confirm_refuses():
