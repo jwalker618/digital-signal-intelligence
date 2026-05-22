@@ -36,18 +36,19 @@ export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Once fully authenticated, leave the login page. Route portal users
-  // (BROKER, CLIENT) to /portal; everyone else lands on the carrier home.
+  // Once fully authenticated, leave the login page. Portal users
+  // (BROKER, CLIENT) always land on /portal; carrier roles honour
+  // ?next= or fall back to the carrier home. Without this rule a
+  // portal user bounced from / via SessionGuard would re-enter / on
+  // login (its ?next=/ would override the role-based default).
   useEffect(() => {
     if (!isAuthed) return;
-    if (nextPath) {
-      router.replace(nextPath);
-      return;
-    }
-    if (userRole === "BROKER" || userRole === "CLIENT") {
-      router.replace("/portal");
+    const isPortalRole = userRole === "BROKER" || userRole === "CLIENT";
+    if (isPortalRole) {
+      const portalNext = nextPath && nextPath.startsWith("/portal") ? nextPath : "/portal";
+      router.replace(portalNext);
     } else {
-      router.replace("/");
+      router.replace(nextPath ?? "/");
     }
   }, [isAuthed, nextPath, router, userRole]);
 
