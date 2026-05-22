@@ -25,7 +25,7 @@ export default function ViewCanvas({ children, topContext, bottomContext, unstyl
 
       {/* Main Analysis Area (Fixed Boundary Constraints) */}
       <div
-        className="absolute left-generate-gap right-generate-gap overflow-y-auto overflow-x-hidden"
+        className="absolute left-generate-gap right-generate-gap overflow-y-auto overflow-x-hidden no-scrollbar"
           style={{
             top: topContext ? ('var(--cw)') : (0) ,
             bottom: bottomContext ? ('var(--cw)') : (0) ,
