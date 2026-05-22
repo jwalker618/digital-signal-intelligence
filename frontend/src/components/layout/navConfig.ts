@@ -10,10 +10,12 @@
  */
 
 import {
-  LucideIcon,  Activity,  Building2,  Calculator,  ChartNoAxesGantt,
-  Clock,  FileCheck,  FileStack,  FileText,  FileX,  FlaskConical,
-  Globe,  History,  Layers,  Network,  RefreshCw,  Rows4,  Bot,
-  Scale,  TrendingUpDown,  Users,  UserStar,
+  LucideIcon,  Activity,  Briefcase,  Building2,  Calculator,
+  ChartNoAxesGantt,  ChartPie,  Clock,  FileCheck,  FileStack,
+  FileText,  FileX,  FlaskConical,  Gauge,  Globe,  History,
+  Inbox,  Layers,  Lightbulb,  ListChecks,  Network,
+  RefreshCw,  Rows4,  Bot,  Scale,  TrendingUpDown,  Users,
+  UserStar,
 } from "lucide-react";
 
 export interface NavLeaf {
@@ -48,6 +50,31 @@ export const ADMIN_CHILDREN: AdminNavLeaf[] = [
   { name: "Audit Log",      icon: History,         href: "/admin/audit",          permission: "admin:audit" },
   { name: "Loss Register",  icon: FileX,           href: "/admin/losses",         permission: "assessment:write" },
   { name: "Recalibration",  icon: TrendingUpDown,  href: "/admin/recalibration",  permission: "recalibration:view" },
+];
+
+/**
+ * v8 Phase 8: client portal sidebar children.
+ *
+ * Two parallel sets -- one for BROKER, one for CLIENT -- so each role
+ * sees a nav tailored to its workflow without permission-gating leaves
+ * individually. The sidebar dispatches on role rather than on
+ * per-leaf permission gating.
+ */
+
+/** Broker view: book-of-clients + portfolio insight + queries inbox. */
+export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
+  { name: "Book of Clients",   icon: Briefcase,       href: "/portal",                permission: "portal:broker:read" },
+  { name: "Portfolio Metrics", icon: ChartPie,        href: "/portal/portfolio",      permission: "portal:broker:read" },
+  { name: "Open Queries",      icon: Inbox,           href: "/portal/queries",        permission: "portal:broker:reply" },
+  { name: "Market Conditions", icon: TrendingUpDown,  href: "/portal/market",         permission: "portal:broker:read" },
+];
+
+/** Client view: own coverages + drivers + peers + actions. */
+export const PORTAL_CLIENT_CHILDREN: AdminNavLeaf[] = [
+  { name: "Overview",        icon: Gauge,           href: "/portal",                  permission: "portal:client:read" },
+  { name: "Signal Drivers",  icon: ListChecks,      href: "/portal/drivers",          permission: "portal:client:read" },
+  { name: "Peer Comparison", icon: TrendingUpDown,  href: "/portal/peers",            permission: "portal:client:read" },
+  { name: "Action Plan",     icon: Lightbulb,       href: "/portal/actions",          permission: "portal:client:read" },
 ];
 
 /** Drill-down categories shown when a submission is active. */

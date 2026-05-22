@@ -19,6 +19,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeftToLine,
   BookKey,
+  Briefcase,
   Bug,
   Inbox,
   Lightbulb,
@@ -26,6 +27,7 @@ import {
   Orbit,
   PanelRightClose,
   PanelRightOpen,
+  User,
   Wrench,
 } from "lucide-react";
 
@@ -37,6 +39,8 @@ import { NavGroup, NavItem, SidebarIconBtn } from "./nav";
 import {
   ADMIN_CHILDREN,
   DRILL_DOWN_CATEGORIES,
+  PORTAL_BROKER_CHILDREN,
+  PORTAL_CLIENT_CHILDREN,
   SUBMISSIONS_CHILDREN,
 } from "./navConfig";
 import UserMenu from "./userMenu";
@@ -75,12 +79,28 @@ export default function Sidebar({
   } = useDsiStore();
 
   const hasPermission = useAuthStore((s) => s.hasPermission);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const canViewSubmissions = hasPermission("assessment:read");
   const canViewWorldEngine = hasPermission("world_engine:view");
   const canViewAnyAdmin = ADMIN_CHILDREN.some((i) => hasPermission(i.permission));
 
+  // v8 Phase 8: portal users see a tailored nav. The role drives which
+  // children render; per-leaf permission still applies for safety.
+  const isBroker = userRole === "BROKER";
+  const isClient = userRole === "CLIENT";
+  const isPortalUser = isBroker || isClient;
+  const portalChildren = isBroker
+    ? PORTAL_BROKER_CHILDREN
+    : isClient
+    ? PORTAL_CLIENT_CHILDREN
+    : [];
+  const visiblePortalChildren = portalChildren.filter((i) =>
+    hasPermission(i.permission),
+  );
+
   const [isSubmissionsExpanded, setIsSubmissionsExpanded] = useState(true);
   const [isAdminExpanded, setIsAdminExpanded] = useState(false);
+  const [isPortalExpanded, setIsPortalExpanded] = useState(true);
 
   return (
     <aside
@@ -188,6 +208,39 @@ export default function Sidebar({
             ) : (
               /* ═══ TOP-LEVEL MODE ═══ */
               <>
+                {/* v8 Phase 8: portal nav -- shown when the user is BROKER
+                    or CLIENT. Sits above carrier-side sections. */}
+                {isPortalUser && visiblePortalChildren.length > 0 && (
+                  <ul>
+                    <NavGroup
+                      icon={isBroker ? Briefcase : User}
+                      label={isBroker ? "Broker Portal" : "Client Portal"}
+                      isExpanded={isPortalExpanded}
+                      onToggle={() => setIsPortalExpanded(!isPortalExpanded)}
+                    >
+                      {visiblePortalChildren.map((item) => (
+                        <li key={item.name}>
+                          <NavItem
+                            icon={item.icon}
+                            label={item.name}
+                            isActive={
+                              pathname === item.href ||
+                              (item.href !== "/portal" &&
+                                !!pathname?.startsWith(item.href + "/"))
+                            }
+                            onClick={() => {
+                              clearSubmissionContext();
+                              setActiveMenu(item.name);
+                              onToggleOpen();
+                              router.push(item.href);
+                            }}
+                          />
+                        </li>
+                      ))}
+                    </NavGroup>
+                  </ul>
+                )}
+
                 {canViewSubmissions && (
                   <ul>
                     <NavGroup

@@ -5,13 +5,13 @@
  * optional page-actions ellipsis trigger. Reads everything it needs from
  * the store.
  *
- * Clicking the info icon next to the entity name opens KeyDetailsModal,
+ * Clicking the pulse dot next to the entity name opens KeyDetailsModal,
  * which surfaces status / dates / codes that used to live in the now-
  * deleted KeyDetailsBar.
  */
 
 import { useState } from "react";
-import { Info, MoreVertical, Paperclip } from "lucide-react";
+import { MoreVertical, Paperclip } from "lucide-react";
 
 import Modal from "@/components/base/modal";
 import { LabelValueList } from "@/components/base/content/primatives";
@@ -83,7 +83,10 @@ export default function TitleBar() {
                 aria-label="Submission key details"
                 className="text-generate-text-placeholder hover:text-generate-text-input"
               >
-                <Info className="generate-app-icon" />
+                <div className="relative flex size-3">
+                  <span className="absolute inline-flex h-full w-full rounded-full bg-generate-text-comment animate-ping"></span>
+                  <span className="relative inline-flex size-3 rounded-full bg-generate-dark-background"></span>
+                </div>
               </button>
             </span>
             <span className="font-light">/</span>
