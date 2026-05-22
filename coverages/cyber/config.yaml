@@ -1332,6 +1332,125 @@ cyber:
             floor: observed
             share: 0.5
             note: "Only {actual_share:.0%} of weight is at OBSERVED or above (target 50%)"
+    # v8 Phase 4 -- client portal remediation guidance. Drives /portal/actions.
+    # Effort tiers: LOW (<=30d, <=$10k), MEDIUM (<=90d, <=$100k), HIGH (>90d OR >$100k).
+    signal_remediation:
+      mfa_enabled:
+        headline: "Deploy MFA across all administrative accounts"
+        description: "Enable multi-factor authentication on email, admin consoles, VPN, and remote access. Most identity providers offer this free; phishing-resistant factors (FIDO2 / hardware keys) score best."
+        effort: LOW
+        typical_duration: "2-4 weeks"
+        typical_cost_usd: 5000
+        evidence_required: "MFA enforcement policy screenshot from identity provider, plus attestation that all admin accounts are enrolled"
+        references:
+          - "https://www.cisa.gov/MFA"
+      security_training:
+        headline: "Roll out annual security-awareness training with phishing simulation"
+        description: "Run a workforce-wide security training programme covering phishing, credential hygiene, and incident reporting. Quarterly phishing simulations with measured click-through rates."
+        effort: MEDIUM
+        typical_duration: "8-12 weeks"
+        typical_cost_usd: 25000
+        evidence_required: "Training programme overview, completion report (>=80% workforce in last 12 months), latest phishing simulation results"
+        references:
+          - "https://www.sans.org/security-awareness-training/"
+      incident_response_plan:
+        headline: "Establish a formal incident response plan with annual tabletop exercise"
+        description: "Document IR roles and contact tree, runbooks for top scenarios (ransomware, BEC, data loss), and exercise the plan at least annually via tabletop. Mature plans include retainer arrangements with external IR firm."
+        effort: HIGH
+        typical_duration: "16-24 weeks"
+        typical_cost_usd: 120000
+        evidence_required: "IR plan document (signed by leadership), most recent tabletop exercise after-action report, IR retainer contract if applicable"
+        references:
+          - "https://www.nist.gov/cyberframework"
+      edr_deployed:
+        headline: "Deploy endpoint detection and response (EDR) across managed devices"
+        description: "Roll out an EDR agent (CrowdStrike, SentinelOne, Defender for Endpoint, etc.) to all managed workstations and servers. >=95% coverage is the bar; agent must be tamper-resistant and report to a 24/7 SOC."
+        effort: MEDIUM
+        typical_duration: "12-16 weeks"
+        typical_cost_usd: 75000
+        evidence_required: "EDR coverage report (agents deployed / total endpoints), vendor selection, SOC monitoring contract"
+        references:
+          - "https://www.mitre.org/focus-areas/cybersecurity/d3fend"
+      immutable_backups:
+        headline: "Implement immutable, offline-tested backups"
+        description: "Keep at least one backup copy that cannot be modified by ransomware (object-lock, write-once tape, or air-gapped). Test restore quarterly. The 3-2-1-1-0 rule: 3 copies, 2 media, 1 offsite, 1 immutable, 0 recovery errors."
+        effort: MEDIUM
+        typical_duration: "10-14 weeks"
+        typical_cost_usd: 60000
+        evidence_required: "Backup architecture diagram showing immutability mechanism, most recent restore-test report"
+        references:
+          - "https://www.cisa.gov/stopransomware"
+      recent_incident:
+        headline: "Document remediation and lessons-learned from any incident in the past 36 months"
+        description: "If there was a material security incident, underwriters need to see what changed afterwards. Provide a post-incident review with: root cause, remediation actions taken, evidence those remediations are in place, and any independent assessment performed since."
+        effort: LOW
+        typical_duration: "2-3 weeks"
+        typical_cost_usd: 5000
+        evidence_required: "Post-incident review summary, list of remediation actions with completion dates, any post-incident independent assessment report"
+        references: []
+      tls_configuration:
+        headline: "Modernise TLS configuration on public-facing endpoints"
+        description: "Disable TLS 1.0 / 1.1, prefer TLS 1.3, use strong cipher suites, and ensure certificates are current and from a trusted CA. Aim for an A or A+ rating on standard scanners."
+        effort: LOW
+        typical_duration: "1-2 weeks"
+        typical_cost_usd: 3000
+        evidence_required: "Output from Qualys SSL Labs (or equivalent) showing grade A or above for primary domain"
+        references:
+          - "https://www.ssllabs.com/ssltest/"
+      security_headers:
+        headline: "Add modern security headers to all public web services"
+        description: "Implement HSTS (with preload), Content-Security-Policy, X-Frame-Options, X-Content-Type-Options, and Referrer-Policy on every customer-facing site. Reduces XSS, clickjacking, and protocol-downgrade risks."
+        effort: LOW
+        typical_duration: "1-2 weeks"
+        typical_cost_usd: 2000
+        evidence_required: "Security-headers scanner output (e.g. securityheaders.com) showing grade A or B"
+        references:
+          - "https://securityheaders.com/"
+      email_authentication:
+        headline: "Enforce SPF, DKIM, and DMARC for all sending domains"
+        description: "Publish SPF and DKIM records, then set DMARC to p=reject (not p=none). Quarantine policies are an improvement but reject is the target. This blocks the spoofing path used in most BEC fraud."
+        effort: LOW
+        typical_duration: "3-6 weeks"
+        typical_cost_usd: 4000
+        evidence_required: "DMARC record showing p=reject for all sending domains, DKIM signature visible on outbound mail"
+        references:
+          - "https://dmarc.org/"
+      dnssec_status:
+        headline: "Enable DNSSEC for primary domains"
+        description: "Sign DNS zones with DNSSEC. Protects against cache poisoning and DNS hijacking. Most registrars and managed DNS providers offer one-click enablement."
+        effort: LOW
+        typical_duration: "1 week"
+        typical_cost_usd: 1500
+        evidence_required: "DNSSEC validation passing on primary domain (e.g. via dnssec-analyzer.verisignlabs.com)"
+        references:
+          - "https://www.internetsociety.org/deploy360/dnssec/"
+      software_currency:
+        headline: "Establish a patch management programme with measurable SLAs"
+        description: "Document the patch policy (e.g. critical CVEs <14 days, high <30 days), instrument compliance reporting, and remediate end-of-life software that cannot be patched. Cloud workloads and edge appliances are often weakest."
+        effort: MEDIUM
+        typical_duration: "10-16 weeks"
+        typical_cost_usd: 45000
+        evidence_required: "Patch policy document, latest compliance report showing SLA adherence, plan for any remaining EOL components"
+        references:
+          - "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+      cve_exposure:
+        headline: "Remediate known-exploited and high-severity CVEs on public attack surface"
+        description: "Use external attack surface management to find exposed services with KEV-catalogued or CVSS 9+ vulnerabilities. Prioritise edge appliances (VPN, file transfer, ADC) -- these account for most ransomware initial access in recent years."
+        effort: MEDIUM
+        typical_duration: "8-12 weeks"
+        typical_cost_usd: 55000
+        evidence_required: "External attack surface scan results before/after remediation, KEV exposure dropping to zero"
+        references:
+          - "https://www.cisa.gov/known-exploited-vulnerabilities-catalog"
+      waf_presence:
+        headline: "Deploy a web application firewall in front of customer-facing applications"
+        description: "Put any internet-facing web app behind a managed WAF (Cloudflare, AWS WAF, Akamai, etc.) with managed rule sets enabled. Materially reduces opportunistic exploitation of OWASP Top 10 issues."
+        effort: LOW
+        typical_duration: "2-4 weeks"
+        typical_cost_usd: 8000
+        evidence_required: "WAF configuration showing managed rule sets active in front of customer-facing apps"
+        references:
+          - "https://owasp.org/www-project-top-ten/"
   cyber_sme:
     metadata:
       name: Cyber SME Automated Pricing Model

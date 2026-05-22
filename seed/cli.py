@@ -8,6 +8,7 @@ v5          Legacy seed_v5 content (via seed.v5).
 synthetic   Legacy synthetic_generator content (via seed.synthetic).
 reset       Placeholder (C4-interim). --confirm required.
 verify      Assert post-seed row counts against EXPECTED_MIN_COUNTS.
+demo-reset  v8 Phase 7: deterministic state for the client portal demo.
 """
 from __future__ import annotations
 
@@ -15,7 +16,7 @@ import argparse
 import sys
 from typing import List, Optional
 
-from . import bench, reset, synthetic, v5, verify
+from . import bench, demo_reset, reset, synthetic, v5, verify
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -38,6 +39,15 @@ def _build_parser() -> argparse.ArgumentParser:
     rst.add_argument("--confirm", action="store_true")
 
     sub.add_parser("verify", help="assert expected row counts")
+
+    dr = sub.add_parser(
+        "demo-reset",
+        help="v8 Phase 7: reset to the client portal demo Act 1 state",
+    )
+    dr.add_argument("--password", default=None,
+                    help="override DSI_DEMO_PASSWORD env var")
+    dr.add_argument("--rng-seed", type=int, default=None,
+                    help="override DSI_DEMO_RNG_SEED env var")
 
     return parser
 
@@ -69,6 +79,10 @@ def main(argv: Optional[List[str]] = None) -> int:
         return reset.run(confirm=args.confirm)
     if cmd == "verify":
         return verify.run()
+    if cmd == "demo-reset":
+        return demo_reset.run(
+            password=args.password, rng_seed=args.rng_seed,
+        )
     raise SystemExit(f"unknown command: {cmd}")
 
 

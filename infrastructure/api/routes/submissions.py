@@ -302,6 +302,38 @@ async def _persist_quote(
                                 model_version_id=mv.id, signals=signals_payload,
                             )
 
+                        # v8 Phase 2: peer cohort assignment. Best-effort --
+                        # entities missing NAICS / revenue silently opt out
+                        # (peer_cohort_* fields stay NULL on the MV row).
+                        try:
+                            from layers.cohort.service import (
+                                derive_cohort_key,
+                                cohort_id_for,
+                                normalize_entity_key,
+                                MissingCohortAttributesError,
+                            )
+                            from layers.cohort.queries import (
+                                assign_cohort_to_model_version,
+                            )
+
+                            key = derive_cohort_key(
+                                sub.submission_data or {}, sub.coverage,
+                            )
+                            await assign_cohort_to_model_version(
+                                session,
+                                model_version=mv,
+                                entity_key=normalize_entity_key(sub.entity_name or ""),
+                                cohort_id=cohort_id_for(key),
+                                composite_score=mv.final_composite_score or 0.0,
+                                naics_section=key.naics_section,
+                                revenue_band=key.revenue_band,
+                                coverage=sub.coverage,
+                            )
+                        except MissingCohortAttributesError:
+                            # Submission lacks NAICS or revenue; this is fine.
+                            # peer_cohort_* fields stay NULL on the MV.
+                            pass
+
                     if mv is None:
                         # Still no MV — fall through to in-memory cache.
                         _memory.quotes[quote_code] = quote_data

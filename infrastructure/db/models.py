@@ -64,9 +64,16 @@ class ReferralStatus(str, enum.Enum):
     """Referral review status."""
     PENDING = "pending"
     IN_REVIEW = "in_review"
+    AWAITING_BROKER = "awaiting_broker"  # v8 Phase 5: query raised, awaiting broker reply
     APPROVED = "approved"
     DECLINED = "declined"
     MODIFIED = "modified"
+
+
+class MessageDirection(str, enum.Enum):
+    """v8 Phase 5: who sent a referral message."""
+    UNDERWRITER_TO_BROKER = "u2b"
+    BROKER_TO_UNDERWRITER = "b2u"
 
 
 # =============================================================================
@@ -96,6 +103,7 @@ class Tenant(Base):
     users = relationship("User", back_populates="tenant", foreign_keys="User.tenant_id")
     roles = relationship("Role", back_populates="tenant", cascade="all, delete-orphan")
     sessions = relationship("UserSession", back_populates="tenant", cascade="all, delete-orphan")
+    brokers = relationship("Broker", back_populates="tenant", cascade="all, delete-orphan")
 
 
 class Role(Base):
@@ -140,6 +148,9 @@ class User(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="RESTRICT"), nullable=True, index=True)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="RESTRICT"), nullable=True)
 
+    # v8: broker identity for BROKER-role users -- nullable for all other roles
+    broker_id = Column(UUID(as_uuid=True), ForeignKey("brokers.id", ondelete="SET NULL"), nullable=True, index=True)
+
     # MFA
     mfa_secret = Column(String(255))  # Encrypted TOTP secret
     mfa_backup_codes = Column(JSONB)  # Encrypted list of single-use codes
@@ -161,6 +172,7 @@ class User(Base):
     tenant = relationship("Tenant", back_populates="users", foreign_keys=[tenant_id])
     role = relationship("Role", back_populates="users", foreign_keys=[role_id])
     sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan", foreign_keys="UserSession.user_id")
+    broker = relationship("Broker", back_populates="users", foreign_keys=[broker_id])
 
 
 class UserSession(Base):
@@ -251,11 +263,17 @@ class Submission(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+    # v8: broker that placed this submission, if any. Nullable -- direct
+    # carrier submissions have no broker. Populated for submissions routed
+    # through the client portal.
+    broker_id = Column(UUID(as_uuid=True), ForeignKey("brokers.id", ondelete="SET NULL"), nullable=True, index=True)
+
     # Relationships
     created_by_user = relationship("User", back_populates="submissions")
     quotes = relationship("Quote", back_populates="submission", cascade="all, delete-orphan")
     model_versions = relationship("ModelVersionRecord", back_populates="submission", cascade="all, delete-orphan")
     notes = relationship("SubmissionNote", back_populates="submission", cascade="all, delete-orphan", order_by="SubmissionNote.created_at")
+    broker = relationship("Broker", back_populates="submissions", foreign_keys=[broker_id])
 
     __table_args__ = (
         Index("ix_submissions_entity_coverage", "entity_name", "coverage"),
@@ -393,12 +411,23 @@ class Referral(Base):
     # endpoint reads this directly when present, avoiding re-generation.
     disclosure_packet = Column(JSONB, nullable=True)
 
+    # v8 Phase 5: redundant-with-status helper for queue queries.
+    # Set to "broker" while status == AWAITING_BROKER; cleared when
+    # the referral transitions back to IN_REVIEW.
+    awaiting_party = Column(String(16), nullable=True)
+
     # Audit
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     quote = relationship("Quote", back_populates="referrals")
+    messages = relationship(
+        "ReferralMessage",
+        back_populates="referral",
+        cascade="all, delete-orphan",
+        order_by="ReferralMessage.created_at",
+    )
 
 
 class ModelVersionRecord(Base):
@@ -453,6 +482,17 @@ class ModelVersionRecord(Base):
     composite_min_grade = Column(String(32), nullable=True)
     composite_weighted_mean_grade = Column(Float, nullable=True)
     composite_grade_distribution = Column(JSONB, default=dict)
+
+    # v8 Phase 2: peer cohort percentile rank. Populated at persistence
+    # time by layers/cohort/queries.py when the entity has both NAICS
+    # and revenue in its submission_data; otherwise all five stay NULL.
+    # peer_cohort_* prefix is intentional -- distinct from loss_cohort_*
+    # below which describes loss-similarity, not peer comparison.
+    peer_cohort_id = Column(String(64), nullable=True, index=True)
+    peer_cohort_size = Column(Integer, nullable=True)
+    peer_percentile_rank = Column(Float, nullable=True)
+    peer_cohort_mean_score = Column(Float, nullable=True)
+    peer_cohort_median_score = Column(Float, nullable=True)
 
     # Tier
     tier_overrides = Column(JSONB, default=list)
@@ -1693,4 +1733,119 @@ class EntityEvent(Base):
         Index("ix_entity_events_entity_received", "entity_id", "received_at"),
         Index("ix_entity_events_type_received", "event_type", "received_at"),
         Index("ix_entity_events_dispatched", "dispatched_at"),
+    )
+
+
+class Broker(Base):
+    """v8: insurance broker organisation.
+
+    A broker represents an intermediary (e.g. Marsh) that places business
+    on behalf of insured clients. Each broker is anchored in its own
+    tenant (the broker's organisation). BROKER-role users link to a
+    broker via `users.broker_id`. Submissions placed by a broker link via
+    `submissions.broker_id`.
+
+    Cross-tenant scoping: a broker's tenant_id points to the broker's own
+    organisation, but the submissions it references may live in any
+    client tenant. Visibility rules are enforced at the portal API layer
+    (see infrastructure/api/routes/portal/, v8 Phase 6).
+    """
+    __tablename__ = "brokers"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(64), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
+
+    # Relationships
+    tenant = relationship("Tenant", back_populates="brokers")
+    users = relationship("User", back_populates="broker", foreign_keys="User.broker_id")
+    submissions = relationship("Submission", back_populates="broker", foreign_keys="Submission.broker_id")
+
+
+class CohortMembership(Base):
+    """v8 Phase 2: denormalised peer cohort membership.
+
+    One row per (entity_key, coverage). The latest assessment of each
+    real-world entity is tracked here, keyed by `entity_key` (the
+    submission's entity_name normalised to lowercase + stripped). The
+    cohort percentile lookup query reads this table directly rather
+    than scanning model_versions -- much faster for the portal's
+    /peers endpoint.
+
+    Membership is upserted by layers/cohort/queries.py on every
+    successful model_version persistence where the submission carries
+    NAICS code and revenue. Submissions without those attributes do
+    not produce a membership row -- their model_versions also stay
+    NULL on the peer_cohort_* fields.
+    """
+    __tablename__ = "cohort_membership"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    entity_key = Column(String(255), nullable=False)
+    coverage = Column(String(64), nullable=False)
+    cohort_id = Column(String(64), nullable=False)
+    composite_score = Column(Float, nullable=False)
+    naics_section = Column(String(8), nullable=False)
+    revenue_band = Column(String(16), nullable=False)
+    model_version_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("model_versions.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    last_assessed_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        Index("uq_cohort_membership_entity_coverage", "entity_key", "coverage", unique=True),
+        Index("ix_cohort_membership_cohort", "cohort_id", "composite_score"),
+        Index("ix_cohort_membership_model_version", "model_version_id"),
+    )
+
+
+class ReferralMessage(Base):
+    """v8 Phase 5: one message in the broker-underwriter thread on a referral.
+
+    Direction is captured by `direction` ("u2b" = underwriter->broker
+    query; "b2u" = broker->underwriter reply). When a broker reply
+    carries a `signal_value_update`, the route handler triggers a
+    re-assessment and links the resulting Quote via `new_quote_id` for
+    auditability ("this reply produced that quote").
+
+    `request_signal_evidence` is populated on underwriter queries to
+    hint the broker UI which signal the carrier wants evidence for
+    (e.g. "mfa_enabled"). Optional on both directions.
+    """
+    __tablename__ = "referral_messages"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    referral_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("referrals.id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    direction = Column(String(4), nullable=False)  # "u2b" or "b2u"
+    author_user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    body = Column(Text, nullable=False)
+    signal_value_update = Column(JSONB, nullable=True)
+    triggered_reassessment = Column(Boolean, nullable=False, default=False)
+    new_quote_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("quotes.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    request_signal_evidence = Column(String(128), nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+
+    referral = relationship("Referral", back_populates="messages")
+
+    __table_args__ = (
+        Index("ix_referral_messages_referral", "referral_id", "created_at"),
+        Index("ix_referral_messages_quote", "new_quote_id"),
     )

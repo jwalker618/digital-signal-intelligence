@@ -29,10 +29,13 @@ class TestPermissionEnum:
 
 
 class TestDefaultRoles:
-    def test_admin_has_all_permissions(self):
+    def test_admin_has_all_carrier_permissions(self):
+        # v8: ADMIN is intentionally scoped to carrier permissions.
+        # Portal permissions (portal:*) belong to BROKER/CLIENT only --
+        # an admin acting as a broker or client would bypass v8 scoping.
         admin_perms = set(DEFAULT_ROLES["ADMIN"])
-        all_perms = set(Permission)
-        assert admin_perms == all_perms
+        carrier_perms = {p for p in Permission if not p.value.startswith("portal:")}
+        assert admin_perms == carrier_perms
 
     def test_underwriter_cannot_deploy_config(self):
         assert Permission.CONFIG_DEPLOY not in DEFAULT_ROLES["UNDERWRITER"]
