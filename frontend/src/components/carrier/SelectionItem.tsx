@@ -6,27 +6,27 @@ import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {  FileText, Printer, Settings2 } from "lucide-react";
 
-import SummaryTab from "@/components/submissions/content/summary/SummaryTab";
+import SummaryTab from "@/components/carrier/content/summary/SummaryTab";
 
 // Commercial
-import CommercialTermsTab from "@/components/submissions/content/commercialterms/CommercialTermsTab";
-import PremiumAssemblyTab from "@/components/submissions/content/commercialterms/PremiumAssemblyTab";
-import DistributionTab from "@/components/submissions/content/commercialterms/DistributionTab";
+import CommercialTermsTab from "@/components/carrier/content/commercialterms/CommercialTermsTab";
+import PremiumAssemblyTab from "@/components/carrier/content/commercialterms/PremiumAssemblyTab";
+import DistributionTab from "@/components/carrier/content/commercialterms/DistributionTab";
 
 // Risk Terms
-import DeductibleStructureTab from "@/components/submissions/content/riskterms/DeductibleStructureTab";
-import CoverageTermsTab from "@/components/submissions/content/riskterms/CoverageTermsTab";
-import SIRWaitingPeriodsTab from "@/components/submissions/content/riskterms/SIRWaitingPeriodsTab";
-import AggregateReinstatementTab from "@/components/submissions/content/riskterms/AggregateReinstatementTab";
+import DeductibleStructureTab from "@/components/carrier/content/riskterms/DeductibleStructureTab";
+import CoverageTermsTab from "@/components/carrier/content/riskterms/CoverageTermsTab";
+import SIRWaitingPeriodsTab from "@/components/carrier/content/riskterms/SIRWaitingPeriodsTab";
+import AggregateReinstatementTab from "@/components/carrier/content/riskterms/AggregateReinstatementTab";
 
 // Technical Analysis
-import PricingTab from "@/components/submissions/content/technicalanalysis/PricingTab";
-import RiskTab from "@/components/submissions/content/technicalanalysis/RiskTab";
-import LossTab from "@/components/submissions/content/technicalanalysis/LossTab";
-import ExposureTab from "@/components/submissions/content/technicalanalysis/ExposureTab";
-import ReferralTab from "@/components/submissions/content/technicalanalysis/ReferralTab";
-import ScenarioTab from "@/components/submissions/content/technicalanalysis/ScenarioTab";
-import ModelVersionsTab from "@/components/submissions/content/technicalanalysis/ModelVersionsTab";
+import PricingTab from "@/components/carrier/content/technicalanalysis/PricingTab";
+import RiskTab from "@/components/carrier/content/technicalanalysis/RiskTab";
+import LossTab from "@/components/carrier/content/technicalanalysis/LossTab";
+import ExposureTab from "@/components/carrier/content/technicalanalysis/ExposureTab";
+import ReferralTab from "@/components/carrier/content/technicalanalysis/ReferralTab";
+import ScenarioTab from "@/components/carrier/content/technicalanalysis/ScenarioTab";
+import ModelVersionsTab from "@/components/carrier/content/technicalanalysis/ModelVersionsTab";
 
 export default function SelectionItem() {
   const { 

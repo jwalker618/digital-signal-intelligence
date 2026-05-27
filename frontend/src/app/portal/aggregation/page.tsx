@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/portal/VerticalFilter";
+import VerticalFilter from "@/components/broker/VerticalFilter";
 import {
   CardGrid,
   StandardCard,

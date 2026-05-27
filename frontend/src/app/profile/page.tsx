@@ -13,7 +13,7 @@ import {
 
 import { useAuthStore } from "@/store/authStore";
 import { MFASetup } from "@/components/auth/MFASetup";
-import { NotificationPreferences } from "@/components/profile/NotificationPreferences";
+import { NotificationPreferences } from "@/components/shared/NotificationPreferences";
 import { passwordResetRequest } from "@/lib/authApi";
 
 export default function ProfilePage() {

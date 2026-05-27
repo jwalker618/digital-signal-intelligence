@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { useDsiStore } from "@/store/dsiStore";
-import SelectionTable from "@/components/submissions/SelectionTable";
-import SelectionItem from "@/components/submissions/SelectionItem";
+import SelectionTable from "@/components/carrier/SelectionTable";
+import SelectionItem from "@/components/carrier/SelectionItem";
 
 export default function Home() {
   const {
