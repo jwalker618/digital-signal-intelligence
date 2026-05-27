@@ -75,7 +75,7 @@ export const PORTAL_CLIENT_CHILDREN: AdminNavLeaf[] = [
   { name: "Overview",        icon: Gauge,           href: "/portal",                  permission: "portal:client:read" },
   { name: "Coverages",       icon: ShieldCheck,     href: "/portal/coverages",        permission: "portal:client:read" },
   { name: "Signal Drivers",  icon: ListChecks,      href: "/portal/drivers",          permission: "portal:client:read" },
-  { name: "Peer Comparison", icon: TrendingUpDown,  href: "/portal/peers",            permission: "portal:client:read" },
+  { name: "Industry Benchmarks", icon: TrendingUpDown,  href: "/portal/peers",         permission: "portal:client:read" },
   { name: "Action Plan",     icon: Lightbulb,       href: "/portal/actions",          permission: "portal:client:read" },
   { name: "Communications",  icon: MessagesSquare,  href: "/portal/communications",   permission: "portal:client:read" },
 ];

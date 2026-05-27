@@ -191,7 +191,14 @@ export const useDsiStore = create<DsiState>((set, get) => {
     // -----------------------------------------------------------------
     activeMenu: "",
     previousMenu: "",
-    setActiveMenu: (menu) => set({ activeMenu: menu }),
+    // v8.1: snapshot the previous menu so the title bar and sidebar
+    // "Back to {previousMenu}" labels render with content. Without this
+    // a user clicking from "Referral Pipeline" -> a submission saw
+    // "/ / SolarWinds / Summary" and "Back to ".
+    setActiveMenu: (menu) => set((s) => ({
+      activeMenu: menu,
+      previousMenu: s.activeMenu && s.activeMenu !== menu ? s.activeMenu : s.previousMenu,
+    })),
 
     hasPageActions: false,
     setHasPageActions: (hasPageActions) => set({ hasPageActions }),
@@ -366,6 +373,10 @@ export const useDsiStore = create<DsiState>((set, get) => {
           activeCommercial: commercialData,
           activeRisk: riskData,
           activeReferral: referralData,
+          // v8.1: capture previous top-level menu (e.g. "Referral Pipeline")
+          // so the breadcrumb + sidebar "Back to {previousMenu}" render
+          // correctly when the user enters submission drilldown.
+          previousMenu: get().activeMenu || get().previousMenu,
           activeMenu: "Summary",
         });
       });

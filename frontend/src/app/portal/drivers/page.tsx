@@ -91,27 +91,27 @@ export default function DriversPage() {
   const groups: ExpandableGroup<SignalImpact>[] = [
     {
       key: "drags",
-      title: `Drags (${drags.length}) — increasing your premium`,
+      title: `Opportunities (${drags.length}) — improving these would lower your premium`,
       items: drags,
       summary: [
         `${drags.length} signal${drags.length === 1 ? "" : "s"}`,
         formatCurrency(totalDrag, 0),
       ],
-      emptyMessage: "No drags on this quote.",
+      emptyMessage: "No opportunities identified yet — clean profile.",
     },
     {
       key: "strengths",
-      title: `Strengths (${strengths.length}) — reducing your premium`,
+      title: `Strengths (${strengths.length}) — already lowering your premium`,
       items: strengths,
       summary: [
         `${strengths.length} signal${strengths.length === 1 ? "" : "s"}`,
         formatCurrency(totalStrength, 0),
       ],
-      emptyMessage: "No strengths identified yet.",
+      emptyMessage: "Strengths haven't been identified on this quote yet.",
     },
     {
       key: "neutral",
-      title: `Neutral (${neutral.length}) — within +-2% deadband`,
+      title: `Neutral (${neutral.length}) — neither helping nor hurting today`,
       items: neutral,
       summary: [
         `${neutral.length} signal${neutral.length === 1 ? "" : "s"}`,
@@ -143,7 +143,7 @@ export default function DriversPage() {
               subtext={`${strengths.length} signal${strengths.length === 1 ? "" : "s"}`}
             />
             <KpiTile
-              label="Total drags"
+              label="Total opportunity"
               value={`+${formatCurrency(totalDrag, 0)}`}
               subtext={`${drags.length} signal${drags.length === 1 ? "" : "s"}`}
             />

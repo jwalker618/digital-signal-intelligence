@@ -51,6 +51,7 @@ import {
   postBrokerReply,
 } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { opportunityFromDrag, peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   ActionsResponse,
   PeersResponse,
@@ -139,8 +140,8 @@ export default function SubmissionDetailPage({
               lucideIcon={Gauge}
             />
             <KpiTile
-              label="Tier"
-              value={score.tier ?? "—"}
+              label="Status"
+              value={tierStatus(score.tier).label}
               lucideIcon={Layers}
             />
             <KpiTile
@@ -303,7 +304,7 @@ export function SignalDriversInline({ impact }: { impact: ScoreResponse }) {
   const groups: ExpandableGroup<SignalImpact>[] = [
     {
       key: "drags",
-      title: `Drags (${drags.length}) — increasing your premium`,
+      title: `Opportunities (${drags.length}) — improving these would lower your premium`,
       items: drags.slice(0, 8),
       summary: [
         `${drags.length} signal${drags.length === 1 ? "" : "s"}`,
@@ -311,11 +312,11 @@ export function SignalDriversInline({ impact }: { impact: ScoreResponse }) {
           drags.reduce((a, d) => a + Math.abs(d.premium_delta_usd), 0), 0,
         ),
       ],
-      emptyMessage: "No drags on this quote.",
+      emptyMessage: "No opportunities identified yet — clean profile.",
     },
     {
       key: "strengths",
-      title: `Strengths (${strengths.length}) — reducing your premium`,
+      title: `Strengths (${strengths.length}) — already lowering your premium`,
       items: strengths.slice(0, 8),
       summary: [
         `${strengths.length} signal${strengths.length === 1 ? "" : "s"}`,
@@ -348,8 +349,9 @@ export function SignalDriversInline({ impact }: { impact: ScoreResponse }) {
               : "text-generate-text-good font-bold"
           }
         >
-          {item.classification === "drag" ? "+" : "−"}
-          {formatCurrency(Math.abs(item.premium_delta_usd), 0)}
+          {item.classification === "drag"
+            ? opportunityFromDrag(item.premium_delta_usd).framing
+            : `Saving ${formatCurrency(Math.abs(item.premium_delta_usd), 0)}`}
         </span>,
       ]}
     />
