@@ -97,24 +97,29 @@ export interface DsiState {
   ) => Promise<void>;
 
   // -----------------------------------------------------------------
-  // Per-tab analytics caches
+  // Per-tab analytics caches. Each carries a `*Key` cache identifier
+  // so a coverage / version change correctly invalidates the cached
+  // data instead of returning stale numbers from a previous selection.
   // -----------------------------------------------------------------
   riskSignals: ApiList;
-  riskSignalsVersionCode: string | null;  // cache key
+  riskSignalsKey: string | null;
   fetchRiskSignals: (versionCode: string) => Promise<void>;
 
   lossCohortBenchmarks: ApiList;
   lossTrendDistribution: ApiList;
   lossScatterData: ApiList;
+  lossAnalyticsKey: string | null;
   fetchLossAnalytics: (coverage: string, daysFilter?: number) => Promise<void>;
 
   exposureBandBenchmarks: ApiList;
   exposureTierDistribution: ApiList;
   exposureScatterData: ApiList;
+  exposureAnalyticsKey: string | null;
   fetchExposureAnalytics: (coverage: string, daysFilter?: number) => Promise<void>;
 
   modelVersions: ApiList;
   auditLogs: ApiList;
+  modelVersionsKey: string | null;
   fetchHistory: (submissionCode: string) => Promise<void>;
 
   referralSignals: ApiList;
@@ -223,18 +228,21 @@ export const useDsiStore = create<DsiState>((set, get) => {
     activeReferral: null,
 
     riskSignals: [],
-    riskSignalsVersionCode: null,
+    riskSignalsKey: null,
 
     lossCohortBenchmarks: [],
     lossTrendDistribution: [],
     lossScatterData: [],
+    lossAnalyticsKey: null,
 
     exposureBandBenchmarks: [],
     exposureTierDistribution: [],
     exposureScatterData: [],
+    exposureAnalyticsKey: null,
 
     modelVersions: [],
     auditLogs: [],
+    modelVersionsKey: null,
 
     referralSignals: [],
 
@@ -276,14 +284,17 @@ export const useDsiStore = create<DsiState>((set, get) => {
         submissions: [],
         modelVersions: [],
         auditLogs: [],
+        modelVersionsKey: null,
         riskSignals: [],
-        riskSignalsVersionCode: null,
+        riskSignalsKey: null,
         lossCohortBenchmarks: [],
         lossTrendDistribution: [],
         lossScatterData: [],
+        lossAnalyticsKey: null,
         exposureBandBenchmarks: [],
         exposureTierDistribution: [],
         exposureScatterData: [],
+        exposureAnalyticsKey: null,
         referralSignals: [],
         hasPageActions: false,
         isPageActionsOpen: false,
@@ -311,17 +322,24 @@ export const useDsiStore = create<DsiState>((set, get) => {
 
     fetchCoreSubmissionDetail: async (row) => {
       await withLoading("submissionDetail", async () => {
-        // Clear cached tab data when switching submissions
+        // Clear cached tab data + cache keys when switching submissions
+        // so the per-tab fetches refresh against the new submission's
+        // coverage / version instead of returning stale data.
         set({
           error: null,
           lossCohortBenchmarks: [],
           lossTrendDistribution: [],
           lossScatterData: [],
+          lossAnalyticsKey: null,
           exposureBandBenchmarks: [],
           exposureTierDistribution: [],
           exposureScatterData: [],
+          exposureAnalyticsKey: null,
           modelVersions: [],
           auditLogs: [],
+          modelVersionsKey: null,
+          riskSignals: [],
+          riskSignalsKey: null,
         });
 
         const [subData, versionsData, quoteData, commercialData, riskData, referralData] =
@@ -371,25 +389,27 @@ export const useDsiStore = create<DsiState>((set, get) => {
     },
 
     // -----------------------------------------------------------------
-    // Risk signals
+    // Risk signals -- cached per versionCode
     // -----------------------------------------------------------------
     fetchRiskSignals: async (versionCode) => {
-      // Skip if already cached for this version
-      if (get().riskSignalsVersionCode === versionCode && get().riskSignals.length > 0) return;
+      if (get().riskSignalsKey === versionCode) return;
       await withLoading("riskSignals", async () => {
         const data = await safeJson<ApiList>(
           `${API_BASE}/api/v1/frontend/${versionCode}/signals`,
           [],
         );
-        set({ riskSignals: data, riskSignalsVersionCode: data.length > 0 ? versionCode : null });
+        set({ riskSignals: data, riskSignalsKey: versionCode });
       });
     },
 
     // -----------------------------------------------------------------
-    // Loss analytics
+    // Loss analytics -- cached per (coverage, daysFilter). Critical:
+    // a coverage change must invalidate the cache; the previous
+    // length-only check returned stale data from the prior coverage.
     // -----------------------------------------------------------------
     fetchLossAnalytics: async (coverage, daysFilter = 365) => {
-      if (get().lossCohortBenchmarks.length > 0) return;
+      const key = `${coverage}:${daysFilter}`;
+      if (get().lossAnalyticsKey === key) return;
       await withLoading("lossAnalytics", async () => {
         const isoDate = new Date(Date.now() - daysFilter * 86400_000).toISOString();
         const base = `${API_BASE}/api/v1/analytics/loss`;
@@ -403,15 +423,17 @@ export const useDsiStore = create<DsiState>((set, get) => {
           lossCohortBenchmarks: cohort,
           lossTrendDistribution: trend,
           lossScatterData: scatter,
+          lossAnalyticsKey: key,
         });
       });
     },
 
     // -----------------------------------------------------------------
-    // Exposure analytics
+    // Exposure analytics -- same coverage-aware cache as loss above.
     // -----------------------------------------------------------------
     fetchExposureAnalytics: async (coverage, daysFilter = 365) => {
-      if (get().exposureBandBenchmarks.length > 0) return;
+      const key = `${coverage}:${daysFilter}`;
+      if (get().exposureAnalyticsKey === key) return;
       await withLoading("exposureAnalytics", async () => {
         const isoDate = new Date(Date.now() - daysFilter * 86400_000).toISOString();
         const base = `${API_BASE}/api/v1/analytics/exposure`;
@@ -425,21 +447,27 @@ export const useDsiStore = create<DsiState>((set, get) => {
           exposureBandBenchmarks: band,
           exposureTierDistribution: tier,
           exposureScatterData: scatter,
+          exposureAnalyticsKey: key,
         });
       });
     },
 
     // -----------------------------------------------------------------
-    // Model-version history
+    // Model-version history -- cached per submissionCode so switching
+    // submissions correctly re-fetches.
     // -----------------------------------------------------------------
     fetchHistory: async (submissionCode) => {
-      if (get().modelVersions.length > 0) return;
+      if (get().modelVersionsKey === submissionCode) return;
       await withLoading("history", async () => {
         const data = await safeJson<ApiList>(
           `${API_BASE}/api/v1/modelversion/${submissionCode}/submissionshistory/all`,
           [],
         );
-        set({ modelVersions: Array.isArray(data) ? data : [], auditLogs: [] });
+        set({
+          modelVersions: Array.isArray(data) ? data : [],
+          auditLogs: [],
+          modelVersionsKey: submissionCode,
+        });
       });
     },
 

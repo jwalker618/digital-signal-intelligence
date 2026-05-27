@@ -7,13 +7,13 @@
 
 import { useDsiStore } from "@/store/dsiStore";
 import { formatNumber, formatText } from "@/lib/format";
-import { LabelValueList } from "@/components/base/content/primatives";
+import { LabelValueList, NoData } from "@/components/base/content/primatives";
 
 export default function CommercialSummary() {
   const { activeCommercial } = useDsiStore();
 
   if (!activeCommercial) {
-    return <p className="generate-comment-message">No commercial terms available</p>;
+    return <NoData message="No commercial terms available" />;
   }
 
   return (

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { User, Plus } from "lucide-react";
 import { useDsiStore } from "@/store/dsiStore";
 import { formatText } from "@/lib/format";
+import { NoData } from "@/components/base/content/primatives";
 
 interface StoredNote {
   note?: string;
@@ -50,7 +51,7 @@ export default function NotesPanel() {
       </div>
 
       {notes.length === 0 ? (
-        <p className="generate-comment-message mt-2">No notes recorded yet. Add one above.</p>
+        <NoData className="mt-2" message="No notes recorded yet. Add one above." />
       ) : (
         
         
