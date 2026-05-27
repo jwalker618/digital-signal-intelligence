@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 polish — /portal/communications
+// v8 Phase 8 polish — /communications
 //
 // Role-aware inbox. Both BROKER and CLIENT see the threads they have
 // visibility into:
@@ -142,7 +142,7 @@ export default function CommunicationsListPage() {
                   key={item.referral_code}
                   item={item}
                   role={data.role}
-                  onClick={() => router.push(`/portal/communications/${item.referral_code}`)}
+                  onClick={() => router.push(`/communications/${item.referral_code}`)}
                 />
               ))}
             </div>

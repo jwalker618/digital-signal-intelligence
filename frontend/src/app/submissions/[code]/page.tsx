@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 — /portal/submissions/[code]
+// v8 Phase 8 — /submissions/[code]
 //
 // Drill-down view for one submission. Sections:
 //   - SubmissionHeaderCard with score / tier / premium / percentile
@@ -42,6 +42,7 @@ import {
 } from "@/components/base/content/primatives";
 
 import { useAuthStore } from "@/store/authStore";
+import { homePathForRole } from "@/lib/portalPaths";
 import { useDsiStore } from "@/store/dsiStore";
 import {
   fetchSubmissionActions,
@@ -124,7 +125,7 @@ export default function SubmissionDetailPage({
           subtitle={`${detail.coverage} · ${detail.status}`}
           headerRight={
             <Link
-              href="/portal"
+              href={homePathForRole(userRole)}
               className="text-xs underline hover:text-generate-text-input"
             >
               ← Back
@@ -181,7 +182,7 @@ export default function SubmissionDetailPage({
           lucideIcon={ListChecks}
           headerRight={
             <Link
-              href="/portal/drivers"
+              href="/client/drivers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full driver detail <ArrowRight className="generate-app-icon" />
@@ -197,7 +198,7 @@ export default function SubmissionDetailPage({
           lucideIcon={TrendingUpDown}
           headerRight={
             <Link
-              href="/portal/peers"
+              href="/client/peers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full peer view <ArrowRight className="generate-app-icon" />
@@ -213,7 +214,7 @@ export default function SubmissionDetailPage({
           lucideIcon={Lightbulb}
           headerRight={
             <Link
-              href="/portal/actions"
+              href="/client/actions"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full plan <ArrowRight className="generate-app-icon" />

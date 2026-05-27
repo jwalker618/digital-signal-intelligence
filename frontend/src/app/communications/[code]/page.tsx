@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 polish — /portal/communications/[code]
+// v8 Phase 8 polish — /communications/[code]
 //
 // Full thread view for one referral with reply form (for brokers
 // when state is AWAITING_BROKER, or for clients when AWAITING_CLIENT).
@@ -94,7 +94,7 @@ export default function CommunicationThreadPage({
           lucideIcon={MessagesSquare}
           headerRight={
             <Link
-              href="/portal/communications"
+              href="/communications"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               <ArrowLeft className="generate-app-icon" /> All threads

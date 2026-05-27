@@ -162,7 +162,7 @@ export default function ClientOverviewPage() {
                 <PendingQueryRow
                   key={c.referral_code}
                   query={c}
-                  onClick={() => router.push(`/portal/communications/${c.referral_code}`)}
+                  onClick={() => router.push(`/communications/${c.referral_code}`)}
                 />
               ))}
               {comms.length > 4 && (

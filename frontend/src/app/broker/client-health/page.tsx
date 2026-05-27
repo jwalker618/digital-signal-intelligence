@@ -117,7 +117,7 @@ export default function ClientHealthPage() {
                 <QuietClientRow
                   key={c.entity_name}
                   client={c}
-                  onClick={() => router.push("/portal/communications")}
+                  onClick={() => router.push("/communications")}
                 />
               ))}
             </div>
@@ -138,7 +138,7 @@ export default function ClientHealthPage() {
               <ClientHealthCard
                 key={c.entity_name}
                 client={c}
-                onOpen={() => router.push("/portal/communications")}
+                onOpen={() => router.push("/communications")}
               />
             ))}
           </div>

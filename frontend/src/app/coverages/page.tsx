@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 polish — /portal/coverages
+// v8 Phase 8 polish — /coverages
 //
 // Role-aware policy roster, aggregated by coverage line. Each coverage
 // group shows aggregate KPIs (policy count, premium total, average
@@ -155,7 +155,7 @@ export default function CoveragesPage() {
             <PolicyTable
               policies={group.policies}
               showEntity={data.role === "BROKER"}
-              onRowClick={(code) => router.push(`/portal/submissions/${code}`)}
+              onRowClick={(code) => router.push(`/submissions/${code}`)}
             />
           </StandardCard>
         ))}
