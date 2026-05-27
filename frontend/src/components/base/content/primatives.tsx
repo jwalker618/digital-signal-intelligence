@@ -969,3 +969,27 @@ export const SubmissionStatusPill = ({
     </div>
   );
 };
+
+/** NO DATA---------------------------------------------------------------------------------------------- */
+
+/** GUIDANCE
+ * Use anywhere a panel needs to render "no data" copy with consistent
+ * styling. Replaces the scattered inline
+ *   <p className="generate-comment-message">No X available</p>
+ * pattern across summary sub-cards. LabelValueList already accepts an
+ * `emptyMessage` prop for the row-empty case; use NoData for panel-
+ * level empty states (e.g. when the underlying resource is absent).
+ *
+ * className: Extra classes appended (e.g. spacing overrides).
+ */
+export interface NoDataProps {
+  message?: React.ReactNode;
+  className?: string;
+}
+
+export const NoData = ({
+  message = "No data available.",
+  className = "",
+}: NoDataProps) => (
+  <p className={`generate-comment-message ${className}`.trim()}>{message}</p>
+);

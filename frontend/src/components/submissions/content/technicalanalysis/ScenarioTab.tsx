@@ -17,8 +17,10 @@ const deltaColor = (s: number, o: number) =>
 export default function ScenarioTab() {
   const {
     activeSubmission, activeVersion, activeQuote,
-    riskSignals, isFetchingRiskSignals, fetchRiskSignals
+    riskSignals, fetchRiskSignals,
   } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isFetchingRiskSignals = useDsiStore((s) => s.loading.riskSignals ?? false);
 
   const [signalOverrides, setSignalOverrides] = useState<Record<string, number>>({});
   const [lossModifierOverride, setLossModifierOverride] = useState<number | null>(null);

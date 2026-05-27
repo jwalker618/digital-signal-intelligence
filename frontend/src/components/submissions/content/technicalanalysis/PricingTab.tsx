@@ -12,7 +12,9 @@ import {
 } from "lucide-react";
 
 export default function PricingTab() {
-  const { activeSubmission, activeQuote, activeVersion, isSelectingLimit, selectLimitOption } = useDsiStore();
+  const { activeSubmission, activeQuote, activeVersion, selectLimitOption } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isSelectingLimit = useDsiStore((s) => s.loading.limitSelection ?? false);
 
   if (!activeSubmission || !activeVersion) {
     return (

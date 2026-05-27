@@ -10,7 +10,7 @@ import { formatNumber, formatText } from "@/lib/format";
 import { StatsGrid } from "@/components/base/content/primatives";
 
 export default function HeroMetricsGrid() {
-  const { activeQuote, activeVersion, activeCommercial } = useDsiStore() as any;
+  const { activeQuote, activeVersion, activeCommercial } = useDsiStore();
   if (!activeVersion) return null;
 
   return (

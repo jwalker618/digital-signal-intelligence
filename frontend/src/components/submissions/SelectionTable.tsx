@@ -5,7 +5,7 @@ import { CircleCheck, CircleX, Loader2, Filter, X } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
 import { useDsiStore } from "@/store/dsiStore";
-import { SubmissionStatusPill } from "@/components/base/content/primatives";
+import { NoData, SubmissionStatusPill } from "@/components/base/content/primatives";
 import { 
   formatText, formatCurrency,  formatNumber 
 } from "@/lib/format";
@@ -14,12 +14,13 @@ export default function SelectionTable({ type }: { type: "full" | "referral" }) 
   const {
     setPageQuickAction,
     submissions,
-    isLoading,
     daysFilter,
     setDaysFilter,
     fetchCoreSubmissionDetail,
-    updateDecision
+    updateDecision,
   } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isLoading = useDsiStore((s) => s.loading.submissions ?? false);
 
   // Column filter state
   const [clientFilter, setClientFilter] = useState("");
@@ -259,9 +260,9 @@ export default function SelectionTable({ type }: { type: "full" | "referral" }) 
           </table>
 
           {displayData.length === 0 && (
-            <div className="generate-comment-message">
-              {hasAnyFilter ? 'No submissions match the current filters.' : 'No submissions found.'}
-            </div>
+            <NoData
+              message={hasAnyFilter ? 'No submissions match the current filters.' : 'No submissions found.'}
+            />
           )}
         </div>
       </div>

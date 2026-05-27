@@ -11,7 +11,7 @@ import { KeyValueList } from "@/components/base/content/primatives";
 const HIDDEN_KEYS = new Set(["limit", "product_type"]);
 
 export default function SubmissionDataList() {
-  const { activeSubmission } = useDsiStore() as any;
+  const { activeSubmission } = useDsiStore();
 
   return (
     <KeyValueList

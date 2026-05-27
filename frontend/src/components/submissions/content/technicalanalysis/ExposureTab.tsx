@@ -25,9 +25,9 @@ export default function ExposureTab() {
     exposureBandBenchmarks,
     exposureTierDistribution,
     exposureScatterData,
-    isFetchingExposureAnalytics,
-    fetchExposureAnalytics
+    fetchExposureAnalytics,
   } = useDsiStore();
+  const isFetchingExposureAnalytics = useDsiStore((s) => s.loading.exposureAnalytics ?? false);
 
   useEffect(() => {
     if (activeSubmission?.coverage) {

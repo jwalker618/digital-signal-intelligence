@@ -94,7 +94,7 @@ function Pillar({
 /* ── Public component ─────────────────────────────────────────────────── */
 
 export default function ThreePillarAssessment() {
-  const { activeVersion } = useDsiStore() as any;
+  const { activeVersion } = useDsiStore();
   if (!activeVersion) return null;
 
   const riskGroup = getSortedItems(activeVersion.group_scores, "risk_weight");
