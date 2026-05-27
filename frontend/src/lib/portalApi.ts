@@ -11,6 +11,8 @@ import type {
   BrokerQueriesResponse,
   BrokerReplyRequest,
   BrokerReplyResponse,
+  CommunicationsListResponse,
+  CommunicationsThreadResponse,
   OverviewResponse,
   PeersResponse,
   ScoreResponse,
@@ -102,5 +104,21 @@ export function postBrokerReply(
 ): Promise<BrokerReplyResponse> {
   return postJson<BrokerReplyResponse, BrokerReplyRequest>(
     token, `/queries/${encodeURIComponent(referralCode)}/reply`, payload,
+  );
+}
+
+export function fetchCommunications(
+  token: string | null, openOnly = false,
+): Promise<CommunicationsListResponse> {
+  return getJson<CommunicationsListResponse>(
+    token, `/communications${openOnly ? "?open_only=true" : ""}`,
+  );
+}
+
+export function fetchCommunicationThread(
+  token: string | null, referralCode: string,
+): Promise<CommunicationsThreadResponse> {
+  return getJson<CommunicationsThreadResponse>(
+    token, `/communications/${encodeURIComponent(referralCode)}`,
   );
 }

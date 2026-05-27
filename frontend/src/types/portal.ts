@@ -194,6 +194,54 @@ export interface BrokerQueriesResponse {
 }
 
 // ----------------------------------------------------------------------------
+// Communications (list + thread)
+// ----------------------------------------------------------------------------
+
+export interface CommunicationItem {
+  referral_code: string;
+  submission_code: string;
+  entity_name: string;
+  coverage: string;
+  policy_label?: string | null;
+  status: string;
+  awaiting_party?: string | null;
+  last_message_at?: string | null;
+  last_message_direction?: string | null;
+  last_message_excerpt?: string | null;
+  request_signal_evidence?: string | null;
+  is_open: boolean;
+}
+
+export interface CommunicationsListResponse {
+  role: string;
+  items: CommunicationItem[];
+  open_count: number;
+}
+
+export interface CommunicationThreadMessage {
+  id: string;
+  direction: string;
+  body: string;
+  request_signal_evidence?: string | null;
+  signal_value_update?: Record<string, unknown> | null;
+  triggered_reassessment: boolean;
+  new_quote_id?: string | null;
+  created_at: string;
+}
+
+export interface CommunicationsThreadResponse {
+  referral_code: string;
+  submission_code: string;
+  entity_name: string;
+  coverage: string;
+  policy_label?: string | null;
+  status: string;
+  awaiting_party?: string | null;
+  reasons: string[];
+  messages: CommunicationThreadMessage[];
+}
+
+// ----------------------------------------------------------------------------
 // Broker reply payload
 // ----------------------------------------------------------------------------
 
