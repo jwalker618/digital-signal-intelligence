@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -37,6 +38,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchOverview } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   BrokerOverviewResponse,
   ClientBookEntry,
@@ -135,6 +137,8 @@ export default function CoveragesPage() {
           </div>
         </SubmissionHeaderCard>
 
+        <VerticalFilter />
+
         {groupedByCoverage.map((group) => (
           <StandardCard
             key={group.coverage}
@@ -220,9 +224,12 @@ function PolicyTable({
   const cols = showEntity
     ? "2fr 80px 80px 100px 1fr 1fr 40px"
     : "80px 80px 100px 1fr 1fr 40px";
+  // Broker columns show the carrier-internal tier number (brokers are
+  // multi-carrier and need the raw rank). Client columns show the
+  // translated status label only.
   const headers = showEntity
     ? ["Client", "Score", "Tier", "Percentile", "Premium", "Status", ""]
-    : ["Score", "Tier", "Percentile", "Premium", "Status", ""];
+    : ["Score", "Status", "Peer standing", "Premium", "State", ""];
 
   return (
     <div className="grid" style={{ gridTemplateColumns: cols }}>
@@ -249,12 +256,12 @@ function PolicyTable({
             {p.composite_score != null ? formatNumber(p.composite_score, 0) : "—"}
           </div>
           <div className="text-sm py-2 group-hover:text-generate-text-input">
-            {p.tier ?? "—"}
+            {showEntity ? (p.tier ?? "—") : tierStatus(p.tier).label}
           </div>
           <div className="text-sm py-2 group-hover:text-generate-text-input">
-            {p.peer_percentile_rank != null
-              ? `${formatNumber(p.peer_percentile_rank, 0)}th`
-              : "—"}
+            {showEntity
+              ? (p.peer_percentile_rank != null ? `${formatNumber(p.peer_percentile_rank, 0)}th` : "—")
+              : peerStandingPositive(p.peer_percentile_rank)}
           </div>
           <div className="text-sm py-2 group-hover:text-generate-text-input">
             {p.recommended_premium != null

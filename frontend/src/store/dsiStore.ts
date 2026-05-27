@@ -71,6 +71,12 @@ export interface DsiState {
   toggleCategory: (category: string) => void;
 
   // -----------------------------------------------------------------
+  // v8.2 — broker vertical filter (Marsh practice lens)
+  // -----------------------------------------------------------------
+  verticalFilter: string | null;
+  setVerticalFilter: (slug: string | null) => void;
+
+  // -----------------------------------------------------------------
   // Loading state (single source of truth). Consumers select keys:
   //   const isFetching = useDsiStore(s => s.loading.riskSignals);
   // -----------------------------------------------------------------
@@ -191,7 +197,14 @@ export const useDsiStore = create<DsiState>((set, get) => {
     // -----------------------------------------------------------------
     activeMenu: "",
     previousMenu: "",
-    setActiveMenu: (menu) => set({ activeMenu: menu }),
+    // v8.1: snapshot the previous menu so the title bar and sidebar
+    // "Back to {previousMenu}" labels render with content. Without this
+    // a user clicking from "Referral Pipeline" -> a submission saw
+    // "/ / SolarWinds / Summary" and "Back to ".
+    setActiveMenu: (menu) => set((s) => ({
+      activeMenu: menu,
+      previousMenu: s.activeMenu && s.activeMenu !== menu ? s.activeMenu : s.previousMenu,
+    })),
 
     hasPageActions: false,
     setHasPageActions: (hasPageActions) => set({ hasPageActions }),
@@ -215,6 +228,10 @@ export const useDsiStore = create<DsiState>((set, get) => {
         [category]: !state.expandedCategories[category],
       },
     })),
+
+    // v8.2 vertical filter -- null = no filter / show all.
+    verticalFilter: null,
+    setVerticalFilter: (slug) => set({ verticalFilter: slug }),
 
     loading: {},
     error: null,
@@ -301,6 +318,7 @@ export const useDsiStore = create<DsiState>((set, get) => {
         pageQuickAction: null,
         loading: {},
         error: null,
+        verticalFilter: null,
       });
     },
 
@@ -366,6 +384,10 @@ export const useDsiStore = create<DsiState>((set, get) => {
           activeCommercial: commercialData,
           activeRisk: riskData,
           activeReferral: referralData,
+          // v8.1: capture previous top-level menu (e.g. "Referral Pipeline")
+          // so the breadcrumb + sidebar "Back to {previousMenu}" render
+          // correctly when the user enters submission drilldown.
+          previousMenu: get().activeMenu || get().previousMenu,
           activeMenu: "Summary",
         });
       });

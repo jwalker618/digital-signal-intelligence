@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -59,6 +60,7 @@ import {
   fetchSubmissionScore,
 } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   BrokerOverviewResponse,
   ClientBookEntry,
@@ -191,8 +193,8 @@ function ClientOverview({
               columns={[
                 { label: "Primary line",      value: formatCoverageLabel(primary.coverage), align: "center" },
                 { label: "Signal score",      value: formatNumber(primary.composite_score ?? 0, 0), align: "center" },
-                { label: "Tier",              value: primary.tier ?? "—", align: "center" },
-                { label: "Peer percentile",   value: primary.peer_percentile_rank != null ? `${formatNumber(primary.peer_percentile_rank, 0)}th` : "—", align: "center" },
+                { label: "Status",            value: tierStatus(primary.tier).label, align: "center" },
+                { label: "Peer standing",     value: peerStandingPositive(primary.peer_percentile_rank).split(",")[0], align: "center" },
                 { label: "Active policies",   value: data.active_coverages.length, align: "center" },
                 { label: "Total premium",     value: formatCurrency(aggregates.totalPremium, 0), align: "center" },
               ]}
@@ -506,6 +508,8 @@ function BrokerOverview({
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <StandardCard
           title={`Book of Clients (${clients.length} policies)`}

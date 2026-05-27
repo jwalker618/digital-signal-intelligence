@@ -77,6 +77,23 @@ class ScoreResponse(BaseModel):
     base_premium: Optional[float] = None
     final_premium: Optional[float] = None
     impact_breakdown: Optional[ImpactBreakdown] = None
+    # v8.1: surface loss + exposure summary fields from model_versions so
+    # the client portal can render a holistic Risk Insights view without
+    # a separate fetch per pillar.
+    loss_propensity_score: Optional[float] = None
+    severity_propensity_score: Optional[float] = None
+    loss_propensity_band: Optional[str] = None
+    loss_trend_direction: Optional[str] = None
+    exposure_value: Optional[float] = None
+    exposure_band_label: Optional[str] = None
+    exposure_size_score: Optional[float] = None
+    exposure_complexity_score: Optional[float] = None
+    # v8.1: ROL recommendations so the Scenarios page can render
+    # "what if you raised limit to X?" with credible numbers.
+    rol_upper_limit: Optional[float] = None
+    rol_upper_premium: Optional[float] = None
+    rol_lower_limit: Optional[float] = None
+    rol_lower_premium: Optional[float] = None
 
 
 class PeersResponse(BaseModel):

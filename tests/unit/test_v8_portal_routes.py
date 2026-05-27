@@ -55,6 +55,21 @@ class TestRouterStructure:
             # v8 polish: role-aware communications
             "/communications",
             "/communications/{referral_code}",
+            # v8.1: profile, coverage requests, broker recommendations
+            "/profile",
+            "/coverage-requests",
+            "/recommendations",
+            "/recommendations/send",
+            # v8.2: broker intelligence -- carriers, market, book, aggregation
+            "/verticals",
+            "/carriers",
+            "/carriers/{slug}",
+            "/client-health",
+            "/placement/{submission_code}",
+            "/market/pulse",
+            "/market/lines/{line}",
+            "/book-health",
+            "/aggregation",
         }
         assert expected.issubset(paths)
 

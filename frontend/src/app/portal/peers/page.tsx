@@ -42,6 +42,7 @@ import {
   fetchSubmissionScore,
 } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { peerStandingPositive } from "@/lib/portalTone";
 import type {
   ClientOverviewResponse,
   PeersResponse,
@@ -59,7 +60,7 @@ export default function PeersPage() {
   const [entityName, setEntityName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setActiveMenu("Peer Comparison"); }, [setActiveMenu]);
+  useEffect(() => { setActiveMenu("Industry Benchmarks"); }, [setActiveMenu]);
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +107,7 @@ export default function PeersPage() {
 
         <SubmissionHeaderCard
           decision="approve"
-          title={`Peer Comparison — ${entityName ?? "Your entity"}`}
+          title={`Industry Benchmarks — ${entityName ?? "Your entity"}`}
           subtitle={`Cohort: ${peers.cohort_id ?? "unknown"} · ${peers.cohort_size ?? 0} peers`}
           lucideIcon={TrendingUpDown}
         >
@@ -116,7 +117,7 @@ export default function PeersPage() {
               { label: "Cohort average",  value: formatNumber(peers.cohort_mean_score ?? 0, 0), align: "center" },
               { label: "Cohort median",   value: formatNumber(peers.cohort_median_score ?? 0, 0), align: "center" },
               { label: "Percentile",      value: `${formatNumber(peers.peer_percentile_rank, 0)}th`, align: "center" },
-              { label: "Top-decile gap",  value: formatNumber(estimatedTopDecileScore(peers) - subjectScore, 0), align: "center" },
+              { label: "Headroom to top-decile",  value: formatNumber(estimatedTopDecileScore(peers) - subjectScore, 0), align: "center" },
             ]}
           />
         </SubmissionHeaderCard>
@@ -126,7 +127,7 @@ export default function PeersPage() {
         </StandardCard>
 
         <CardGrid cols="grid-cols-1 lg:grid-cols-2" className="gap-4">
-          <StandardCard title="Signals you're missing vs cohort" lucideIcon={Users}>
+          <StandardCard title="Practices best-in-class peers have in place" lucideIcon={Users}>
             <SignalDeltaList score={score} peers={peers} />
           </StandardCard>
 
@@ -194,21 +195,19 @@ function DistributionWithNarrative({
 }
 
 function narrative(peers: PeersResponse, subjectScore: number): string {
+  // Always-positive framing per v8.1 tone decision: describe the entity
+  // in terms of headroom / opportunity, never in terms of being "below"
+  // the cohort.
   const pct = peers.peer_percentile_rank ?? 0;
-  const mean = peers.cohort_mean_score ?? 0;
-  const delta = subjectScore - mean;
-  const sign = delta >= 0 ? "above" : "below";
-  const where =
-    pct >= 75 ? "in the top quartile" :
-    pct >= 50 ? "above the median" :
-    pct >= 25 ? "below the median" :
-    "in the bottom quartile";
+  const topPeer = estimatedTopDecileScore(peers);
+  const headroom = Math.max(0, topPeer - subjectScore);
+  const standing = peerStandingPositive(pct);
   return (
-    `You rank in the ${formatNumber(pct, 0)}th percentile of ${peers.cohort_size ?? 0} ` +
-    `peers in your cohort — ${where}. Your score of ${formatNumber(subjectScore, 0)} ` +
-    `is ${formatNumber(Math.abs(delta), 0)} points ${sign} the cohort average. ` +
-    `Top-decile peers in your cohort sit around ` +
-    `${formatNumber(estimatedTopDecileScore(peers), 0)}.`
+    `${standing}. Your score of ${formatNumber(subjectScore, 0)} sits across a cohort ` +
+    `of ${peers.cohort_size ?? 0} comparable insureds. Best-in-class peers in your ` +
+    `cohort score around ${formatNumber(topPeer, 0)} — that's roughly ` +
+    `${formatNumber(headroom, 0)} points of headroom you could close by adopting ` +
+    `the practices below.`
   );
 }
 
@@ -278,9 +277,9 @@ function SignalDeltaList({
   return (
     <div className="space-y-2 py-2">
       <p className="text-xs text-generate-text-placeholder mb-2">
-        Each row shows the proportion of your cohort with the signal in
-        place that you currently aren't capturing. Closing these gaps is
-        what moves you toward the top decile.
+        Each row shows the proportion of best-in-class peers that have the
+        practice in place. Adopting these brings you in line with the
+        top-decile profile in your cohort.
       </p>
       {rows.map(({ drag, peerShare }) => (
         <SignalDeltaRow key={drag.signal_key} drag={drag} peerShare={peerShare} />
@@ -430,7 +429,7 @@ function ThinCohortShell({
       <CardGrid cols="grid-cols-1">
         <SubmissionHeaderCard
           decision="approve"
-          title={`Peer Comparison — ${entityName ?? "Your entity"}`}
+          title={`Industry Benchmarks — ${entityName ?? "Your entity"}`}
           subtitle="Where you sit against similar peers in your cohort"
           lucideIcon={TrendingUpDown}
         />
