@@ -70,6 +70,14 @@ DEMO_RNG_SEED_DEFAULT = 42
 MARSH_TENANT_SLUG = "marsh-demo"
 MARSH_BROKER_SLUG = "marsh"
 
+
+# Each demo client has multiple coverages so the portal demonstrates
+# aggregation + drilldown across a real-feeling book of policies.
+# Each coverage entry below becomes one Submission + ModelVersion + Quote.
+#
+# `open_query` controls whether to pre-stage an underwriter MFA-style
+# question; queries are scattered across coverages and clients so the
+# Communications page has meaningful volume.
 DEMO_CLIENT_TENANTS = [
     {
         "slug": "acme-demo",
@@ -81,15 +89,67 @@ DEMO_CLIENT_TENANTS = [
         "naics_section": "51",
         "revenue": 180_000_000,
         "revenue_band": "50-250M",
-        # Acme is the demo's narrative anchor -- below cohort mean
-        # with MFA / training / IR gaps to remediate
-        "composite_score": 685.0,
-        "tier": 4,
-        "base_premium": 165_000.0,
-        "final_premium": 165_000.0,
-        "decision": DecisionType.REFER,
-        "open_referral": True,
-        "drag_modifier_signal_ids": ["mfa_enabled", "security_training", "incident_response_plan"],
+        "coverages": [
+            # CYBER -- the narrative anchor, REFER tier with MFA query.
+            {
+                "coverage": "cyber",
+                "configuration": "cyber_general",
+                "policy_label": "Cyber — Primary",
+                "limit": 10_000_000,
+                "composite_score": 685.0,
+                "tier": 4,
+                "base_premium": 165_000.0,
+                "decision": DecisionType.REFER,
+                "drag_modifier_signal_ids": [
+                    "mfa_enabled", "security_training", "incident_response_plan",
+                ],
+                "open_query": {
+                    "body": (
+                        "Please confirm MFA status across administrative accounts. "
+                        "If MFA is deployed, attach evidence (policy screenshot or "
+                        "IT attestation)."
+                    ),
+                    "signal": "mfa_enabled",
+                    "reasons": ["MFA absent on admin accounts"],
+                },
+            },
+            # PI -- professional indemnity, preferred terms.
+            {
+                "coverage": "pi",
+                "configuration": "pi_general",
+                "policy_label": "Professional Indemnity — Primary",
+                "limit": 5_000_000,
+                "composite_score": 762.0,
+                "tier": 2,
+                "base_premium": 88_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            # D&O -- directors and officers, standard.
+            {
+                "coverage": "do",
+                "configuration": "do_general",
+                "policy_label": "D&O Liability — Primary",
+                "limit": 15_000_000,
+                "composite_score": 718.0,
+                "tier": 3,
+                "base_premium": 134_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            # PROPERTY -- preferred.
+            {
+                "coverage": "property",
+                "configuration": "property_general",
+                "policy_label": "Property — All Risk",
+                "limit": 40_000_000,
+                "composite_score": 741.0,
+                "tier": 2,
+                "base_premium": 95_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+        ],
     },
     {
         "slug": "northwind-demo",
@@ -101,13 +161,62 @@ DEMO_CLIENT_TENANTS = [
         "naics_section": "62",
         "revenue": 95_000_000,
         "revenue_band": "50-250M",
-        "composite_score": 735.0,
-        "tier": 2,
-        "base_premium": 142_000.0,
-        "final_premium": 121_000.0,
-        "decision": DecisionType.APPROVE,
-        "open_referral": False,
-        "drag_modifier_signal_ids": [],
+        "coverages": [
+            {
+                "coverage": "cyber",
+                "configuration": "cyber_general",
+                "policy_label": "Cyber — Primary",
+                "limit": 5_000_000,
+                "composite_score": 735.0,
+                "tier": 2,
+                "base_premium": 121_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            # Medical professional liability -- an open query about staffing.
+            {
+                "coverage": "medprof",
+                "configuration": "medprof_hospital",
+                "policy_label": "Medical Professional Liability",
+                "limit": 10_000_000,
+                "composite_score": 689.0,
+                "tier": 3,
+                "base_premium": 220_000.0,
+                "decision": DecisionType.REFER,
+                "drag_modifier_signal_ids": ["clinical_governance"],
+                "open_query": {
+                    "body": (
+                        "Please share the most recent nurse-to-patient ratio "
+                        "report for the inpatient wards and confirm any open "
+                        "regulatory observations from the last 12 months."
+                    ),
+                    "signal": "clinical_governance",
+                    "reasons": ["Staffing ratio confirmation required"],
+                },
+            },
+            {
+                "coverage": "pi",
+                "configuration": "pi_general",
+                "policy_label": "Professional Indemnity",
+                "limit": 5_000_000,
+                "composite_score": 711.0,
+                "tier": 3,
+                "base_premium": 64_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            {
+                "coverage": "property",
+                "configuration": "property_general",
+                "policy_label": "Property — All Risk",
+                "limit": 25_000_000,
+                "composite_score": 728.0,
+                "tier": 2,
+                "base_premium": 72_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+        ],
     },
     {
         "slug": "pioneer-demo",
@@ -119,13 +228,73 @@ DEMO_CLIENT_TENANTS = [
         "naics_section": "31",
         "revenue": 320_000_000,
         "revenue_band": "250M-1B",
-        "composite_score": 712.0,
-        "tier": 3,
-        "base_premium": 220_000.0,
-        "final_premium": 218_000.0,
-        "decision": DecisionType.APPROVE,
-        "open_referral": False,
-        "drag_modifier_signal_ids": [],
+        "coverages": [
+            {
+                "coverage": "cyber",
+                "configuration": "cyber_general",
+                "policy_label": "Cyber — Primary",
+                "limit": 10_000_000,
+                "composite_score": 712.0,
+                "tier": 3,
+                "base_premium": 168_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            # General liability with loss-history query.
+            {
+                "coverage": "casualty",
+                "configuration": "casualty_gl",
+                "policy_label": "General Liability — Primary",
+                "limit": 5_000_000,
+                "composite_score": 671.0,
+                "tier": 4,
+                "base_premium": 240_000.0,
+                "decision": DecisionType.REFER,
+                "drag_modifier_signal_ids": ["loss_history", "safety_program"],
+                "open_query": {
+                    "body": (
+                        "We see two open GL claims from the last 36 months. "
+                        "Please share loss-control measures implemented since "
+                        "and any updated safety-programme attestation."
+                    ),
+                    "signal": "loss_history",
+                    "reasons": ["Open GL claims require remediation evidence"],
+                },
+            },
+            {
+                "coverage": "prodlib",
+                "configuration": "prodlib_consumer_goods",
+                "policy_label": "Product Liability",
+                "limit": 10_000_000,
+                "composite_score": 705.0,
+                "tier": 3,
+                "base_premium": 195_000.0,
+                "decision": DecisionType.APPROVE,
+                "drag_modifier_signal_ids": [],
+            },
+            # CAT-exposed property with hurricane-protection query.
+            {
+                "coverage": "property",
+                "configuration": "property_cat_exposed",
+                "policy_label": "Property — CAT Exposed (Gulf Coast)",
+                "limit": 55_000_000,
+                "composite_score": 654.0,
+                "tier": 4,
+                "base_premium": 410_000.0,
+                "decision": DecisionType.REFER,
+                "drag_modifier_signal_ids": ["wind_mitigation", "flood_proofing"],
+                "open_query": {
+                    "body": (
+                        "Gulf Coast site requires named-storm mitigation. "
+                        "Please share most recent wind-mitigation inspection, "
+                        "roof-cover age, and any flood-proofing in place at "
+                        "the warehouse footprint."
+                    ),
+                    "signal": "wind_mitigation",
+                    "reasons": ["CAT zone — mitigation evidence required"],
+                },
+            },
+        ],
     },
 ]
 
@@ -133,7 +302,9 @@ MARSH_USERS = [
     ("marsh.admin@demo.dsi", "Marsh Admin", "BROKER"),
 ]
 
-# Cohort pool target: 60 entities per cohort, distribution N(720, 50).
+# Cohort pool target: 60 entities per cohort (per coverage x naics x band)
+# for the cyber demo flow. Other coverages don't need cohort fodder for
+# the portal -- they degrade gracefully to "Insufficient peers" notes.
 COHORT_POOL_PER_BAND = 60
 COHORT_POOL_DISTRIBUTION_MEAN = 720.0
 COHORT_POOL_DISTRIBUTION_STDDEV = 50.0
@@ -379,10 +550,10 @@ def _build_drag_modifiers(
 
 
 def _seed_demo_submission(
-    db: Session, *, spec: dict, marsh_broker: Broker,
-    client_user: User, underwriter_user: User,
+    db: Session, *, client_spec: dict, coverage_spec: dict,
+    marsh_broker: Broker, client_user: User, underwriter_user: User,
 ) -> tuple[Submission, ModelVersionRecord, Quote, Optional[Referral]]:
-    """Create submission + model_version + quote + referral for one demo client.
+    """Create submission + model_version + quote + referral for one coverage.
 
     Hand-tuned to land at the configured composite_score / tier / premium
     so the demo storyboard reads consistently every time.
@@ -390,18 +561,27 @@ def _seed_demo_submission(
     from infrastructure.db.repositories import generate_id
 
     now = datetime.now(timezone.utc)
+    coverage = coverage_spec["coverage"]
+    configuration = coverage_spec["configuration"]
+    base_premium = float(coverage_spec["base_premium"])
+    tier = int(coverage_spec["tier"])
 
     submission = Submission(
         submission_code=generate_id("sub"),
-        entity_name=spec["entity_name"],
+        entity_name=client_spec["entity_name"],
         domain_hint=None,
         country_hint="US",
-        coverage="cyber",
-        configuration="cyber_general",
+        coverage=coverage,
+        configuration=configuration,
         status=SubmissionStatus.READY,
         submission_data={
-            "naics": spec["naics"],
-            "revenue": spec["revenue"],
+            "naics": client_spec["naics"],
+            "revenue": client_spec["revenue"],
+            # Surfaced on the client portal as the policy label for this
+            # submission. Not used by the workflow; carrier UI shows
+            # entity_name elsewhere.
+            "policy_label": coverage_spec.get("policy_label", coverage.capitalize()),
+            "limit": coverage_spec.get("limit"),
         },
         direct_query_responses={},
         broker_id=marsh_broker.id,
@@ -414,10 +594,13 @@ def _seed_demo_submission(
     db.flush()
 
     modifiers, post_modifier_premium = _build_drag_modifiers(
-        spec["drag_modifier_signal_ids"], spec["base_premium"],
+        coverage_spec.get("drag_modifier_signal_ids", []), base_premium,
     )
 
-    cohort_id = f"cyber:{spec['naics_section']}:{spec['revenue_band']}"
+    # Cohort id only meaningful for cyber demo path; other coverages
+    # still get a cohort_id stamped for symmetry, but peer stats won't
+    # render because the cohort pool only contains cyber entries.
+    cohort_id = f"{coverage}:{client_spec['naics_section']}:{client_spec['revenue_band']}"
 
     mv = ModelVersionRecord(
         version_code=generate_id("mv"),
@@ -426,38 +609,38 @@ def _seed_demo_submission(
         version_type="initial",
         is_latest=True,
         config_hash="demo",
-        coverage="cyber",
-        configuration_name="cyber_general",
-        pure_composite_score=spec["composite_score"],
-        final_composite_score=spec["composite_score"],
+        coverage=coverage,
+        configuration_name=configuration,
+        pure_composite_score=coverage_spec["composite_score"],
+        final_composite_score=coverage_spec["composite_score"],
         confidence=0.85,
         signal_coverage=0.95,
-        score_based_tier=spec["tier"],
-        final_tier=spec["tier"],
-        tier_label={2: "PREFERRED", 3: "STANDARD", 4: "REFER"}.get(spec["tier"], "STANDARD"),
-        base_premium=spec["base_premium"],
+        score_based_tier=tier,
+        final_tier=tier,
+        tier_label={1: "PREFERRED", 2: "PREFERRED", 3: "STANDARD", 4: "REFER", 5: "DECLINE"}.get(tier, "STANDARD"),
+        base_premium=base_premium,
         premium_after_modifiers=post_modifier_premium,
         final_premium=post_modifier_premium,
         modifiers_applied=modifiers,
-        decision=spec["decision"],
-        auto_approve=(spec["decision"] == DecisionType.APPROVE),
-        # v8 peer cohort fields
+        decision=coverage_spec["decision"],
+        auto_approve=(coverage_spec["decision"] == DecisionType.APPROVE),
+        # v8 peer cohort fields -- populated from the cohort pool below
         peer_cohort_id=cohort_id,
-        peer_cohort_size=COHORT_POOL_PER_BAND + 1,
-        # percentile will be set below once cohort membership is inserted
+        peer_cohort_size=None,
         created_at=now,
     )
     db.add(mv)
     db.flush()
 
-    # Cohort membership for this real entity
+    # Cohort membership for this real entity. Unique per (entity_key, coverage)
+    # so the same entity in multiple coverages produces one row each.
     membership = CohortMembership(
-        entity_key=spec["entity_name"].strip().lower(),
-        coverage="cyber",
+        entity_key=client_spec["entity_name"].strip().lower(),
+        coverage=coverage,
         cohort_id=cohort_id,
-        composite_score=spec["composite_score"],
-        naics_section=spec["naics_section"],
-        revenue_band=spec["revenue_band"],
+        composite_score=coverage_spec["composite_score"],
+        naics_section=client_spec["naics_section"],
+        revenue_band=client_spec["revenue_band"],
         model_version_id=mv.id,
     )
     db.add(membership)
@@ -475,7 +658,7 @@ def _seed_demo_submission(
         percentile_from_scores,
     )
 
-    pct = percentile_from_scores(cohort_scores, spec["composite_score"])
+    pct = percentile_from_scores(cohort_scores, coverage_spec["composite_score"])
     stats = cohort_stats_from_scores(cohort_id, cohort_scores)
     mv.peer_percentile_rank = pct
     mv.peer_cohort_size = len(cohort_scores)
@@ -490,7 +673,7 @@ def _seed_demo_submission(
         model_version_id=mv.id,
         status=QuoteStatus.READY,
         recommended_premium=post_modifier_premium,
-        recommended_limit=10_000_000,
+        recommended_limit=float(coverage_spec.get("limit", 10_000_000)),
         created_at=now,
         updated_at=now,
     )
@@ -498,13 +681,14 @@ def _seed_demo_submission(
     db.flush()
 
     referral: Optional[Referral] = None
-    if spec["open_referral"]:
+    open_query = coverage_spec.get("open_query")
+    if open_query is not None:
         referral = Referral(
             referral_code=generate_id("ref"),
             quote_id=quote.id,
             status=ReferralStatus.AWAITING_BROKER,
             awaiting_party="broker",
-            reasons=["MFA absent on admin accounts"],
+            reasons=open_query.get("reasons", ["Underwriter query pending"]),
             priority=3,
             created_at=now,
             updated_at=now,
@@ -512,17 +696,13 @@ def _seed_demo_submission(
         db.add(referral)
         db.flush()
 
-        # Pre-stage the underwriter -> broker MFA query
+        # Pre-stage the underwriter -> broker query
         query_msg = ReferralMessage(
             referral_id=referral.id,
             direction=MessageDirection.UNDERWRITER_TO_BROKER.value,
             author_user_id=underwriter_user.id,
-            body=(
-                "Please confirm MFA status across administrative accounts. "
-                "If MFA is deployed, attach evidence (policy screenshot or "
-                "IT attestation)."
-            ),
-            request_signal_evidence="mfa_enabled",
+            body=open_query["body"],
+            request_signal_evidence=open_query.get("signal"),
             created_at=now,
         )
         db.add(query_msg)
@@ -584,42 +764,52 @@ def reset_demo_state(db: Session, *, password: str, rng_seed: int) -> dict:
         "clients": [],
     }
 
-    for spec in DEMO_CLIENT_TENANTS:
-        logger.info("[demo-reset] seeding client %s", spec["entity_name"])
+    for client_spec in DEMO_CLIENT_TENANTS:
+        logger.info("[demo-reset] seeding client %s", client_spec["entity_name"])
         client_tenant = _ensure_tenant(
-            db, slug=spec["slug"], name=spec["name"],
+            db, slug=client_spec["slug"], name=client_spec["name"],
         )
         roles = _ensure_roles(db, client_tenant)
         client_user = _ensure_user(
             db,
-            email=spec["user_email"],
-            full_name=spec["user_full_name"],
+            email=client_spec["user_email"],
+            full_name=client_spec["user_full_name"],
             tenant=client_tenant,
             role=roles["CLIENT"],
             password=password,
         )
 
-        submission, mv, quote, referral = _seed_demo_submission(
-            db,
-            spec=spec,
-            marsh_broker=marsh_broker,
-            client_user=client_user,
-            underwriter_user=underwriter,
-        )
+        coverages_summary: list[dict] = []
+        for coverage_spec in client_spec.get("coverages", []):
+            submission, mv, quote, referral = _seed_demo_submission(
+                db,
+                client_spec=client_spec,
+                coverage_spec=coverage_spec,
+                marsh_broker=marsh_broker,
+                client_user=client_user,
+                underwriter_user=underwriter,
+            )
+            coverages_summary.append({
+                "coverage": coverage_spec["coverage"],
+                "policy_label": coverage_spec.get("policy_label"),
+                "submission_code": submission.submission_code,
+                "quote_code": quote.quote_code,
+                "composite_score": mv.final_composite_score,
+                "tier": mv.final_tier,
+                "peer_percentile_rank": mv.peer_percentile_rank,
+                "referral_code": referral.referral_code if referral else None,
+                "referral_state": referral.status.value if referral else None,
+            })
 
         summary["clients"].append({
-            "entity_name": spec["entity_name"],
-            "submission_code": submission.submission_code,
-            "quote_code": quote.quote_code,
-            "composite_score": mv.final_composite_score,
-            "tier": mv.final_tier,
-            "peer_percentile_rank": mv.peer_percentile_rank,
-            "referral_code": referral.referral_code if referral else None,
-            "referral_state": referral.status.value if referral else None,
+            "entity_name": client_spec["entity_name"],
+            "coverages": coverages_summary,
         })
 
     db.commit()
-    logger.info("[demo-reset] complete: %s", summary)
+    logger.info("[demo-reset] complete: %s clients, %s total policies",
+                len(summary["clients"]),
+                sum(len(c["coverages"]) for c in summary["clients"]))
     return summary
 
 
