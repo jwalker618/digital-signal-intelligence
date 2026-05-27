@@ -1,25 +1,30 @@
 "use client";
 
-// v8 Phase 8 — /portal/market (BROKER-only)
+// v8.2 Market Pulse — /portal/market
 //
-// Market conditions placeholder. Not all signals are backed by real
-// time-series data in v8 -- this view stitches together what we have
-// (own portfolio averages, cohort percentiles) into a market-flavoured
-// narrative that's plausible for the demo. Genuine market feeds are a
-// v8.1 follow-on.
+// Rebuilt from the v8.1 placeholder into a real intelligence surface:
+//   - Overall cycle position + climate pulse narrative
+//   - By-line dashboards (7 lines) with cycle / capacity / rate /
+//     loss-trend per line, expandable into per-line detail
+//   - Recent loss-event ticker shaping market direction
+//   - ESG overlay surfaced on every line
 
 import { useEffect, useState } from "react";
-
 import {
   AlertTriangle,
-  Briefcase,
-  ChartPie,
-  Gauge,
-  Lightbulb,
+  ArrowRight,
+  Building2,
+  CloudRain,
+  Flame,
+  Leaf,
   ShieldAlert,
-  TrendingUpDown,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Waves,
 } from "lucide-react";
 
+import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -30,58 +35,58 @@ import {
   InfoPanel,
   KpiTile,
   LabelValueList,
+  NoData,
   ScoreBar,
   StatsGrid,
 } from "@/components/base/content/primatives";
 
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
-import { fetchOverview } from "@/lib/portalApi";
-import { formatCurrency, formatNumber } from "@/lib/format";
-import type { BrokerOverviewResponse } from "@/types/portal";
+import {
+  fetchMarketLineDetail,
+  fetchMarketPulse,
+} from "@/lib/portalApi";
+import { formatNumber } from "@/lib/format";
+import type {
+  CarrierSummary,
+  LineDetailResponse,
+  LossEventEntry,
+  MarketLineSummary,
+  MarketPulseResponse,
+} from "@/types/portal";
 
 
-export default function PortalMarketPage() {
+export default function MarketPulsePage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<BrokerOverviewResponse | null>(null);
+  const [data, setData] = useState<MarketPulseResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [lineDetail, setLineDetail] = useState<LineDetailResponse | null>(null);
 
-  useEffect(() => { setActiveMenu("Market Conditions"); }, [setActiveMenu]);
+  useEffect(() => { setActiveMenu("Market Pulse"); }, [setActiveMenu]);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const resp = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (resp.role !== "BROKER") {
-          setError("Market view is broker-only.");
-          return;
-        }
-        setData(resp);
+        const resp = await fetchMarketPulse(accessToken);
+        if (!cancelled) setData(resp);
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
       }
     }
-    if (accessToken) load();
+    if (accessToken && userRole === "BROKER") load();
     return () => { cancelled = true; };
-  }, [accessToken]);
+  }, [accessToken, userRole]);
 
-  if (userRole !== "BROKER") {
-    return <Forbidden />;
-  }
+  if (userRole !== "BROKER") return <BrokerOnly />;
   if (error) return <ErrShell msg={error} />;
   if (!data) return <LoadShell />;
 
-  // Aggregate the broker's slice of the market for a credible narrative
-  const scoredClients = data.clients.filter((c) => c.composite_score != null);
-  const avgScore = scoredClients.length
-    ? scoredClients.reduce((a, c) => a + (c.composite_score ?? 0), 0) / scoredClients.length
-    : 0;
-  const totalPremium = data.clients.reduce((a, c) => a + (c.recommended_premium ?? 0), 0);
+  const hardening = data.lines.filter((l) => l.cycle_position === "Hardening").length;
+  const softening = data.lines.filter((l) => l.cycle_position === "Softening").length;
 
   return (
     <ViewCanvas>
@@ -89,156 +94,282 @@ export default function PortalMarketPage() {
 
         <SubmissionHeaderCard
           decision="approve"
-          title="Cyber Market Conditions"
-          subtitle="Reference signals across your book and the cohort universe"
-          lucideIcon={TrendingUpDown}
-          headerRight={
-            <span className="text-xs text-generate-text-placeholder">
-              Q2 2026 outlook
-            </span>
-          }
+          title="Market Pulse"
+          subtitle="By-line cycle position, capacity, loss trends, and the climate overlay shaping placement"
+          lucideIcon={TrendingUp}
         >
           <StatsGrid
             columns={[
-              { label: "Avg score (your book)", value: formatNumber(avgScore, 0), align: "center" },
-              { label: "Avg score (market)",    value: "720",                       align: "center" },
-              { label: "Premium pressure",      value: "+4% YoY",                   align: "center" },
-              { label: "Loss frequency",        value: "stable",                    align: "center" },
-              { label: "Demand signal",         value: "rising",                    align: "center" },
+              { label: "Cycle overall",   value: shortCycle(data.cycle_overall), align: "center" },
+              { label: "Lines hardening", value: hardening, align: "center" },
+              { label: "Lines softening", value: softening, align: "center" },
+              { label: "Lines watched",   value: data.lines.length, align: "center" },
+              { label: "Recent events",   value: data.recent_loss_events.length, align: "center" },
             ]}
           />
         </SubmissionHeaderCard>
 
-        <CardGrid cols="grid-cols-1 lg:grid-cols-2" className="gap-4">
-          <StandardCard title="Premium pressure by tier" lucideIcon={ChartPie}>
-            <PremiumPressure />
-          </StandardCard>
-
-          <StandardCard title="Top signal categories — market" lucideIcon={ShieldAlert}>
-            <TopSignalCategories />
-          </StandardCard>
-        </CardGrid>
-
-        <StandardCard title="Top loss drivers (last 90 days)" lucideIcon={ShieldAlert}>
-          <LabelValueList
-            variant="card"
-            rows={[
-              { label: "Ransomware via edge appliance",       value: <span className="text-generate-text-bad font-bold">+18%</span> },
-              { label: "Business-email compromise",            value: <span className="text-generate-text-bad font-bold">+11%</span> },
-              { label: "Cloud-config misconfiguration",        value: <span className="text-generate-text-bad font-bold">+9%</span> },
-              { label: "Insider data exfiltration",            value: <span className="text-generate-text-maybe font-bold">+3%</span> },
-              { label: "Supply-chain compromise",              value: <span className="text-generate-text-comment font-bold">flat</span> },
-              { label: "Phishing-driven credential theft",     value: <span className="text-generate-text-good font-bold">-6%</span> },
-            ]}
-          />
+        <StandardCard title="Climate Pulse — the active market force" lucideIcon={Leaf}>
+          <p className="text-sm py-2">{data.climate_pulse_summary}</p>
         </StandardCard>
 
-        <CardGrid cols="grid-cols-1 lg:grid-cols-2" className="gap-4">
-          <StandardCard title="Underwriting appetite" lucideIcon={Briefcase}>
-            <UnderwritingAppetite />
-          </StandardCard>
+        <StandardCard
+          title="By-line dashboards"
+          lucideIcon={Sparkles}
+          headerRight={
+            <span className="text-xs text-generate-text-placeholder">
+              Click a line for full carrier + loss-event detail
+            </span>
+          }
+        >
+          <CardGrid cols="grid-cols-1 md:grid-cols-2 xl:grid-cols-3" className="gap-3">
+            {data.lines.map((line) => (
+              <LineCard
+                key={line.slug}
+                line={line}
+                onClick={async () => {
+                  try {
+                    const d = await fetchMarketLineDetail(accessToken, line.slug);
+                    setLineDetail(d);
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : String(e));
+                  }
+                }}
+              />
+            ))}
+          </CardGrid>
+        </StandardCard>
 
-          <StandardCard title="Recommended talking points" lucideIcon={Lightbulb}>
-            <LabelValueList
-              variant="card"
-              rows={[
-                { label: "MFA on admin accounts",       value: <span className="text-generate-text-good">Universal expectation</span> },
-                { label: "EDR coverage threshold",      value: <span className="text-generate-text-good">≥95% endpoints</span> },
-                { label: "IR plan + tabletop in 12mo",  value: <span className="text-generate-text-good">Most carriers require</span> },
-                { label: "Backup immutability",         value: <span className="text-generate-text-good">Now table-stakes</span> },
-                { label: "Email auth (DMARC p=reject)", value: <span className="text-generate-text-good">Strong differentiator</span> },
-              ]}
-            />
-          </StandardCard>
-        </CardGrid>
+        <StandardCard
+          title="Recent loss events shaping market direction"
+          lucideIcon={ShieldAlert}
+          headerRight={
+            <span className="text-xs text-generate-text-placeholder">
+              Last 12 months
+            </span>
+          }
+        >
+          <LossEventList events={data.recent_loss_events} />
+        </StandardCard>
 
-        <InfoPanel label="Notes" aside="Indicative — v8.1 will integrate live market feeds">
-          <p className="text-xs text-generate-text-placeholder">
-            Figures combine your book aggregates with reference data from the
-            cohort universe (the synthetic peer pool used for percentile
-            comparison). For Q2 2026 we expect continued upward pressure on
-            cyber pricing for sub-tier-2 risks, driven primarily by ransomware
-            severity. Tier 1 / 2 risks with strong MFA, EDR, and IR programmes
-            should continue to see flat-to-favourable terms.
+        <InfoPanel label="Marsh Pulse — data freshness" aside="v8.2 demo">
+          <p className="text-xs">
+            Cycle / capacity / rate signals reflect synthesised
+            quarter-end-2026 market intelligence. Production wires
+            real-time Marsh Pulse Index data plus carrier conditional
+            commitments. ESG overlays are derived from public carrier
+            commitments and observable underwriting behaviour.
           </p>
         </InfoPanel>
 
       </CardGrid>
+
+      <LineDetailModal detail={lineDetail} onClose={() => setLineDetail(null)} />
     </ViewCanvas>
   );
 }
 
 
-function PremiumPressure() {
-  const rows = [
-    { label: "Tier 1 — Preferred",  delta: -2, color: "var(--color-generate-text-good)" },
-    { label: "Tier 2 — Preferred",  delta: 1,  color: "var(--color-generate-text-good)" },
-    { label: "Tier 3 — Standard",   delta: 5,  color: "var(--color-generate-text-maybe)" },
-    { label: "Tier 4 — Refer",      delta: 12, color: "var(--color-generate-text-bad)" },
-    { label: "Tier 5 — Decline",    delta: 22, color: "var(--color-generate-text-bad)" },
-  ];
-  const max = Math.max(...rows.map((r) => Math.abs(r.delta)));
+// ----------------------------------------------------------------------------
+// Line dashboard card
+// ----------------------------------------------------------------------------
+
+function LineCard({
+  line, onClick,
+}: {
+  line: MarketLineSummary;
+  onClick: () => void;
+}) {
+  const cycleTone =
+    line.cycle_position === "Hardening" ? "text-generate-text-bad"
+    : line.cycle_position === "Softening" ? "text-generate-text-good"
+    : "text-generate-text-comment";
+
+  const rateTone =
+    line.rate_change_yoy_pct > 5 ? "text-generate-text-bad"
+    : line.rate_change_yoy_pct < -3 ? "text-generate-text-good"
+    : "text-generate-text-placeholder";
+
+  const lossTone =
+    line.loss_trend.startsWith("Deteriorating") || line.loss_trend.startsWith("Worsening")
+      ? "text-generate-text-bad"
+    : line.loss_trend.startsWith("Improving") ? "text-generate-text-good"
+    : "text-generate-text-placeholder";
+
   return (
-    <div className="space-y-2">
-      {rows.map((r) => (
-        <div key={r.label} className="grid items-center gap-2" style={{ gridTemplateColumns: "1fr 1fr 60px" }}>
-          <span className="text-xs">{r.label}</span>
-          <div className="h-2 bg-generate-light-background rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full"
-              style={{ width: `${(Math.abs(r.delta) / max) * 100}%`, backgroundColor: r.color }}
-            />
+    <button
+      onClick={onClick}
+      className="
+        text-left
+        border border-generate-text-outline rounded-lg p-4
+        hover:border-generate-text-input
+        group transition-colors
+      "
+    >
+      <div className="flex items-baseline justify-between mb-3">
+        <span className="text-sm font-bold group-hover:text-generate-text-input">
+          {line.name}
+        </span>
+        <span className={`text-xs font-bold ${cycleTone}`}>
+          {line.cycle_position}
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+        <div>
+          <div className="text-generate-text-placeholder">Rate change YoY</div>
+          <div className={`text-lg font-bold ${rateTone}`}>
+            {line.rate_change_yoy_pct > 0 ? "+" : ""}
+            {formatNumber(line.rate_change_yoy_pct, 1)}%
           </div>
-          <span className="text-xs text-right font-bold" style={{ color: r.color }}>
-            {r.delta > 0 ? "+" : ""}{r.delta}%
-          </span>
+        </div>
+        <div>
+          <div className="text-generate-text-placeholder">Capacity</div>
+          <div className="text-lg font-bold">{line.capacity_state}</div>
+          <div className="text-[10px] text-generate-text-placeholder">
+            {line.capacity_trend}
+          </div>
+        </div>
+      </div>
+
+      <div className="text-xs mb-2">
+        <span className="text-generate-text-placeholder">Loss trend: </span>
+        <span className={`font-bold ${lossTone}`}>{line.loss_trend}</span>
+      </div>
+
+      <div className="border-t border-generate-text-outline pt-2 mt-2">
+        <div className="text-xs text-generate-text-placeholder mb-1 flex items-center gap-1">
+          <Leaf className="generate-app-icon" /> ESG overlay
+        </div>
+        <p className="text-xs">{line.esg_overlay}</p>
+      </div>
+
+      <div className="text-xs text-generate-text-placeholder mt-3 flex items-center justify-end gap-1 group-hover:text-generate-text-input">
+        Full detail <ArrowRight className="generate-app-icon" />
+      </div>
+    </button>
+  );
+}
+
+
+// ----------------------------------------------------------------------------
+// Loss event list
+// ----------------------------------------------------------------------------
+
+function LossEventList({ events }: { events: LossEventEntry[] }) {
+  if (events.length === 0) {
+    return <NoData message="No material loss events in the watch window." />;
+  }
+  return (
+    <div className="space-y-2 py-2">
+      {events.map((e, i) => (
+        <div
+          key={i}
+          className="border border-generate-text-outline rounded-md p-3 text-sm"
+        >
+          <div className="flex items-baseline justify-between mb-1">
+            <span className="font-bold">{e.headline}</span>
+            <span className="text-xs text-generate-text-placeholder">
+              {e.date} · {e.line}
+            </span>
+          </div>
+          <div className="text-xs text-generate-text-placeholder mb-1">
+            Industry-level loss: <span className="font-bold text-generate-text-input">${formatNumber(e.estimated_industry_loss_usd_bn, 1)}B</span>
+          </div>
+          <p className="text-xs italic">{e.implication}</p>
         </div>
       ))}
     </div>
   );
 }
 
-function TopSignalCategories() {
-  const rows = [
-    { label: "Identity & access (MFA, SSO)", weight: 92 },
-    { label: "Endpoint protection (EDR)",     weight: 88 },
-    { label: "Backup / recovery posture",     weight: 80 },
-    { label: "Incident response readiness",   weight: 76 },
-    { label: "Email security (SPF/DKIM/DMARC)", weight: 68 },
-    { label: "Network exposure / attack surface", weight: 62 },
-  ];
+
+// ----------------------------------------------------------------------------
+// Per-line detail modal
+// ----------------------------------------------------------------------------
+
+function LineDetailModal({
+  detail, onClose,
+}: {
+  detail: LineDetailResponse | null;
+  onClose: () => void;
+}) {
   return (
-    <div className="space-y-2">
-      {rows.map((r) => (
-        <div key={r.label} className="grid items-center gap-2" style={{ gridTemplateColumns: "2fr 1fr 40px" }}>
-          <span className="text-xs">{r.label}</span>
-          <ScoreBar value={r.weight} hideValue thresholds={[
-            { at: 50, color: "var(--color-generate-text-placeholder)" },
-            { at: 75, color: "var(--color-generate-text-comment)" },
-            { at: Infinity, color: "var(--color-generate-text-good)" },
-          ]} />
-          <span className="text-xs text-right font-bold">{r.weight}</span>
+    <Modal
+      isOpen={detail !== null}
+      onClose={onClose}
+      title={detail?.name ?? ""}
+      icon={Sparkles}
+    >
+      {detail && (
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <KpiTile label="Cycle" value={detail.cycle_position} />
+            <KpiTile
+              label="Rate YoY"
+              value={`${detail.rate_change_yoy_pct > 0 ? "+" : ""}${detail.rate_change_yoy_pct.toFixed(1)}%`}
+              variant="emphasis"
+            />
+            <KpiTile label="Capacity" value={detail.capacity_state} />
+          </div>
+
+          <InfoPanel label="Summary">
+            <p className="text-sm">{detail.summary}</p>
+          </InfoPanel>
+
+          <InfoPanel label="Key drivers">
+            <ul className="text-sm space-y-1 mt-1">
+              {detail.key_drivers.map((d, i) => (
+                <li key={i}>· {d}</li>
+              ))}
+            </ul>
+          </InfoPanel>
+
+          <InfoPanel label="ESG overlay" aside={
+            <Leaf className="generate-app-icon" />
+          }>
+            <p className="text-sm">{detail.esg_overlay}</p>
+          </InfoPanel>
+
+          <InfoPanel label="Top carriers for this line" aside={`${detail.top_carriers.length}`}>
+            <ul className="space-y-1 mt-1">
+              {detail.top_carriers.map((c) => (
+                <li key={c.slug} className="flex items-baseline justify-between text-sm">
+                  <span className="font-bold">{c.name}</span>
+                  <span className="text-xs text-generate-text-placeholder">
+                    {(c.win_rate * 100).toFixed(0)}% win · {c.typical_commission_pct.toFixed(1)}% cmsn
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </InfoPanel>
+
+          {detail.recent_loss_events.length > 0 && (
+            <InfoPanel label="Loss events affecting this line">
+              <ul className="space-y-2 mt-1">
+                {detail.recent_loss_events.map((e, i) => (
+                  <li key={i} className="text-xs">
+                    <span className="font-bold">{e.headline}</span>
+                    <span className="text-generate-text-placeholder ml-2">{e.date}</span>
+                    <div className="italic mt-0.5">{e.implication}</div>
+                  </li>
+                ))}
+              </ul>
+            </InfoPanel>
+          )}
         </div>
-      ))}
-    </div>
+      )}
+    </Modal>
   );
 }
 
-function UnderwritingAppetite() {
-  return (
-    <LabelValueList
-      variant="card"
-      rows={[
-        { label: "Tech / SaaS",          value: <span className="text-generate-text-good">Open</span> },
-        { label: "Healthcare provider",  value: <span className="text-generate-text-maybe">Selective</span> },
-        { label: "Healthcare PHI heavy", value: <span className="text-generate-text-bad">Constrained</span> },
-        { label: "Manufacturing",        value: <span className="text-generate-text-good">Open</span> },
-        { label: "Critical infra",       value: <span className="text-generate-text-maybe">Selective</span> },
-        { label: "Retail / e-commerce",  value: <span className="text-generate-text-good">Open</span> },
-        { label: "Cryptocurrency",       value: <span className="text-generate-text-bad">Restricted</span> },
-      ]}
-    />
-  );
+
+function shortCycle(cycle: string): string {
+  // The cycle string includes commentary; for the KPI strip we want just
+  // the headline movement.
+  if (cycle.includes("hardening")) return "Hardening";
+  if (cycle.includes("softening")) return "Softening";
+  return "Balanced";
 }
 
 
@@ -246,8 +377,8 @@ function LoadShell() {
   return (
     <ViewCanvas>
       <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TrendingUpDown}>
-          <p className="text-sm">Pulling market signals…</p>
+        <StandardCard title="Loading" lucideIcon={TrendingUp}>
+          <NoData message="Loading market pulse…" />
         </StandardCard>
       </CardGrid>
     </ViewCanvas>
@@ -259,19 +390,19 @@ function ErrShell({ msg }: { msg: string }) {
     <ViewCanvas>
       <CardGrid cols="grid-cols-1">
         <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
+          <NoData message={msg} />
         </StandardCard>
       </CardGrid>
     </ViewCanvas>
   );
 }
 
-function Forbidden() {
+function BrokerOnly() {
   return (
     <ViewCanvas>
       <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only page" lucideIcon={AlertTriangle}>
-          <p className="text-sm">This page is restricted to broker users.</p>
+        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
+          <NoData message="Market Pulse is for broker users only." />
         </StandardCard>
       </CardGrid>
     </ViewCanvas>
