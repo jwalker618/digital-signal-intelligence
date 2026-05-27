@@ -5,12 +5,20 @@
  * optional page-actions ellipsis trigger. Reads everything it needs from
  * the store.
  *
+ * Behaviour is context-aware (carrier vs portal) so chrome from one
+ * surface can't leak into the other:
+ *   - On carrier paths, the submission-drilldown breadcrumb renders
+ *     with the entity-info pulse dot.
+ *   - On portal paths, only the activeMenu label renders; no carrier
+ *     drilldown fragments, no entity-info dot.
+ *
  * Clicking the pulse dot next to the entity name opens KeyDetailsModal,
  * which surfaces status / dates / codes that used to live in the now-
  * deleted KeyDetailsBar.
  */
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { MoreVertical, Paperclip } from "lucide-react";
 
 import Modal from "@/components/base/modal";
@@ -20,6 +28,7 @@ import { useAuthStore } from "@/store/authStore";
 import { formatDate, formatText } from "@/lib/format";
 
 export default function TitleBar() {
+  const pathname = usePathname();
   const activeSubmission = useDsiStore((s) => s.activeSubmission);
   const activeQuote = useDsiStore((s) => s.activeQuote);
   const activeMenu = useDsiStore((s) => s.activeMenu);
@@ -27,6 +36,16 @@ export default function TitleBar() {
   const pageQuickAction = useDsiStore((s) => s.pageQuickAction);
   const hasPageActions = useDsiStore((s) => s.hasPageActions);
   const sessionWarning = useAuthStore((s) => s.sessionWarning);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
+
+  // Portal context: only render the portal-side breadcrumb (no carrier
+  // submission drilldown). Detected from pathname so /portal/* always
+  // shows portal chrome regardless of any stale dsiStore state.
+  const onPortalPath = !!pathname?.startsWith("/portal");
+  const portalRolePrefix =
+    userRole === "BROKER" ? "Broker Portal" :
+    userRole === "CLIENT" ? "Client Portal" :
+    "Portal";
 
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
@@ -68,30 +87,50 @@ export default function TitleBar() {
         }}
     >
       <h1 className="font-inter text-2xl tracking-wide flex items-center gap-4">
-        <span className="flex items-center gap-4">
-          <span className="font-light">/</span>
-          {activeSubmission ? previousMenu : activeMenu}
-        </span>
-
-        {activeSubmission && (
-          <span className="flex items-center gap-4">
-            <span className="font-light">/</span>
-            <span className="flex items-center gap-2">
-              <span className="font-bold">{sub?.entity_name}</span>
-              <button
-                onClick={() => setIsDetailsOpen(true)}
-                aria-label="Submission key details"
-                className="text-generate-text-placeholder hover:text-generate-text-input"
-              >
-                <div className="relative flex size-3">
-                  <span className="absolute inline-flex h-full w-full rounded-full bg-generate-text-comment animate-ping"></span>
-                  <span className="relative inline-flex size-3 rounded-full bg-generate-dark-background"></span>
-                </div>
-              </button>
+        {onPortalPath ? (
+          /* Portal breadcrumb: clean "/ <Portal context> / <Active Menu>"
+             with no carrier submission drilldown fragments. */
+          <>
+            <span className="flex items-center gap-4">
+              <span className="font-light">/</span>
+              <span>{portalRolePrefix}</span>
             </span>
-            <span className="font-light">/</span>
-            <span>{activeMenu}</span>
-          </span>
+            {activeMenu && (
+              <span className="flex items-center gap-4">
+                <span className="font-light">/</span>
+                <span className="font-bold">{activeMenu}</span>
+              </span>
+            )}
+          </>
+        ) : (
+          /* Carrier breadcrumb (legacy): handles submission drilldown. */
+          <>
+            <span className="flex items-center gap-4">
+              <span className="font-light">/</span>
+              {activeSubmission ? previousMenu : activeMenu}
+            </span>
+
+            {activeSubmission && (
+              <span className="flex items-center gap-4">
+                <span className="font-light">/</span>
+                <span className="flex items-center gap-2">
+                  <span className="font-bold">{sub?.entity_name}</span>
+                  <button
+                    onClick={() => setIsDetailsOpen(true)}
+                    aria-label="Submission key details"
+                    className="text-generate-text-placeholder hover:text-generate-text-input"
+                  >
+                    <div className="relative flex size-3">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-generate-text-comment animate-ping"></span>
+                      <span className="relative inline-flex size-3 rounded-full bg-generate-dark-background"></span>
+                    </div>
+                  </button>
+                </span>
+                <span className="font-light">/</span>
+                <span>{activeMenu}</span>
+              </span>
+            )}
+          </>
         )}
       </h1>
 

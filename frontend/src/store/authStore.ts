@@ -25,6 +25,7 @@ import {
   refresh as apiRefresh,
   ssoStart as apiSsoStart,
 } from "@/lib/authApi";
+import { useDsiStore } from "./dsiStore";
 
 interface AuthState {
   // --- persisted ---
@@ -103,6 +104,10 @@ export const useAuthStore = create<AuthState>()(
       },
 
       login: async (email, password) => {
+        // v8 polish: wipe any navigation state from a prior session so
+        // it can't leak into the new user's view (e.g. carrier
+        // activeSubmission appearing in a client-portal sidebar).
+        useDsiStore.getState().resetNavigation();
         set({ error: null });
         const resp = await apiLogin(email, password);
         set({
@@ -150,6 +155,9 @@ export const useAuthStore = create<AuthState>()(
             sessionExpiresAt: null,
             user: null,
           });
+          // v8 polish: refresh-failure means the session is dead, so
+          // navigation state is now meaningless.
+          useDsiStore.getState().resetNavigation();
           return false;
         }
       },
@@ -170,6 +178,9 @@ export const useAuthStore = create<AuthState>()(
           sessionExpiresAt: null,
           mfaChallengePending: false,
         });
+        // v8 polish: clear navigation state so a subsequent login
+        // starts from a clean slate.
+        useDsiStore.getState().resetNavigation();
       },
 
       setError: (msg) => set({ error: msg }),

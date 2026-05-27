@@ -8,6 +8,7 @@ import SelectionItem from "@/components/submissions/SelectionItem";
 export default function Home() {
   const {
     activeMenu,
+    setActiveMenu,
     activeSubmission,
     fetchSubmissions,
     isLoading
@@ -17,6 +18,13 @@ export default function Home() {
   useEffect(() => {
     fetchSubmissions();
   }, [fetchSubmissions]);
+
+  // v8 polish: the carrier home is the Referral Pipeline view by
+  // default. Set activeMenu so the title bar reads correctly on
+  // first mount (after dsiStore's empty default / a session reset).
+  useEffect(() => {
+    if (!activeMenu) setActiveMenu("Referral Pipeline");
+  }, [activeMenu, setActiveMenu]);
 
   // If we have an active submission, ALWAYS show the Workbench wrapper
   if (activeSubmission) {

@@ -22,6 +22,15 @@ const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
 const WARN_THRESHOLD_MS = 30 * 60 * 1000;
 const REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
 
+// v8 polish: roles that belong on the client portal route group only.
+// Anyone whose role is in this set is bounced to /portal if they land
+// on a non-portal authenticated path.
+const PORTAL_ONLY_ROLES = new Set(["BROKER", "CLIENT"]);
+
+function isPortalPath(p: string | null): boolean {
+  return !!p && p.startsWith("/portal");
+}
+
 export function SessionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -34,6 +43,7 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
   // Subscribe to the computed boolean, not the function reference, so the
   // guard re-runs its redirect effect whenever auth state actually changes.
   const isAuthed = useAuthStore((s) => s.isAuthenticated());
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
 
   const bootedRef = useRef(false);
 
@@ -44,16 +54,33 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
     void boot();
   }, [boot]);
 
-  // Auth gate
+  // Auth + role-vs-path gate
   useEffect(() => {
     if (isBooting) return;
     const isPublic = PUBLIC_PATHS.some((p) => pathname?.startsWith(p));
     if (isPublic) return;
+
     if (!isAuthed) {
       const next = encodeURIComponent(pathname ?? "/");
       router.replace(`/login?next=${next}`);
+      return;
     }
-  }, [isBooting, isAuthed, pathname, router]);
+
+    // v8 polish: enforce role <-> route group. A portal user that lands
+    // on a non-portal path (e.g. via URL bar) goes to /portal. A carrier
+    // user landing on /portal/* goes to /. This stops mismatches that
+    // confused the chrome (empty sidebar, leaked breadcrumbs) when a
+    // user had access to a path that wasn't built for their role.
+    if (userRole) {
+      const onPortal = isPortalPath(pathname);
+      const isPortalRole = PORTAL_ONLY_ROLES.has(userRole);
+      if (isPortalRole && !onPortal) {
+        router.replace("/portal");
+      } else if (!isPortalRole && onPortal) {
+        router.replace("/");
+      }
+    }
+  }, [isBooting, isAuthed, pathname, router, userRole]);
 
   // Expiry watchdog -- refresh/warn/redirect
   useEffect(() => {

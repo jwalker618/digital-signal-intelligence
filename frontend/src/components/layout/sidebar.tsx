@@ -151,8 +151,12 @@ export default function Sidebar({
           }}
         >
           <div className="px-generate-pad">
-            {activeSubmission ? (
-              /* ═══ DRILL-DOWN MODE ═══ */
+            {activeSubmission && !pathname?.startsWith("/portal") ? (
+              /* ═══ DRILL-DOWN MODE (carrier paths only) ═══
+                 Portal paths use top-level mode even when a portal
+                 page has a notion of "active submission" -- the
+                 carrier drill-down chrome (Back to Referrals, etc.)
+                 doesn't apply to the portal surface. */
               <>
                 
                 <button

@@ -85,12 +85,22 @@ export interface DsiState {
   expandedCategories: Record<string, boolean>;
   toggleCategory: (category: string) => void;
 
+  // v8 polish: session-boundary reset. Called by authStore on login,
+  // logout, and refresh-failure so navigation state from a previous
+  // session (e.g. activeSubmission from a carrier session) can't leak
+  // into a new portal session.
+  resetNavigation: () => void;
+
 }
 
 export const useDsiStore = create<DsiState>((set, get) => ({
-  activeMenu: "Referral Pipeline",
+  // v8 polish: empty defaults so the title bar shows a clean breadcrumb
+  // until the mounted page sets its own activeMenu. The carrier home
+  // page falls back to the Referral Pipeline view via its `default`
+  // switch case when activeMenu is empty.
+  activeMenu: "",
   setActiveMenu: (menu) => set({ activeMenu: menu }),
-  previousMenu: "Referral Pipeline",
+  previousMenu: "",
 
   // Title Bar Menu and Quick Actions
   hasPageActions: false,
@@ -165,6 +175,53 @@ export const useDsiStore = create<DsiState>((set, get) => ({
       activeReferral: null,
       activeCommercial: null,
       activeRisk: null,
+    });
+  },
+
+  /**
+   * v8 polish: session-boundary reset.
+   *
+   * Wipes every piece of navigation + cached request data so a new
+   * session can't see anything left over from the previous user. Note
+   * we deliberately leave `daysFilter` and `expandedCategories` alone
+   * because those are UI preferences, not session data.
+   */
+  resetNavigation: () => {
+    set({
+      activeMenu: "",          // pages set this on mount; default empty
+      previousMenu: "",
+      activeSubmission: null,
+      activeQuote: null,
+      activeVersion: null,
+      activeReferral: null,
+      activeCommercial: null,
+      activeRisk: null,
+      activeCategory: "Summary",
+      // Cached request data -- prevent stale lists from re-rendering
+      submissions: [],
+      modelVersions: [],
+      auditLogs: [],
+      riskSignals: [],
+      riskSignalsVersionCode: null,
+      lossCohortBenchmarks: [],
+      lossTrendDistribution: [],
+      lossScatterData: [],
+      exposureBandBenchmarks: [],
+      exposureTierDistribution: [],
+      exposureScatterData: [],
+      referralSignals: [],
+      // Title bar slots
+      hasPageActions: false,
+      isPageActionsOpen: false,
+      pageQuickAction: null,
+      // Spinner state
+      isLoading: false,
+      error: null,
+      isFetchingRiskSignals: false,
+      isFetchingLossAnalytics: false,
+      isFetchingExposureAnalytics: false,
+      isFetchingSignals: false,
+      isSelectingLimit: false,
     });
   },
 
