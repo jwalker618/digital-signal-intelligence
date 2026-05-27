@@ -128,6 +128,19 @@ export interface ScoreResponse {
   base_premium?: number | null;
   final_premium?: number | null;
   impact_breakdown?: ImpactBreakdown | null;
+  // v8.1: loss + exposure + ROL recommendations
+  loss_propensity_score?: number | null;
+  severity_propensity_score?: number | null;
+  loss_propensity_band?: string | null;
+  loss_trend_direction?: string | null;
+  exposure_value?: number | null;
+  exposure_band_label?: string | null;
+  exposure_size_score?: number | null;
+  exposure_complexity_score?: number | null;
+  rol_upper_limit?: number | null;
+  rol_upper_premium?: number | null;
+  rol_lower_limit?: number | null;
+  rol_lower_premium?: number | null;
 }
 
 export interface PeersResponse {
@@ -239,6 +252,65 @@ export interface CommunicationsThreadResponse {
   awaiting_party?: string | null;
   reasons: string[];
   messages: CommunicationThreadMessage[];
+}
+
+// ----------------------------------------------------------------------------
+// v8.1: profile, coverage requests, broker recommendations
+// ----------------------------------------------------------------------------
+
+export interface ClientProfileResponse {
+  entity_name: string;
+  broker_name?: string | null;
+  industry_code?: string | null;
+  industry_label?: string | null;
+  revenue_band?: string | null;
+  revenue?: number | null;
+  domain?: string | null;
+  country?: string | null;
+  naics_code?: string | null;
+  active_coverage_count: number;
+  coverage_lines: string[];
+  signal_categories_observed: string[];
+  signal_categories_pending: string[];
+}
+
+export interface CoverageRequestPayload {
+  coverage: string;
+  desired_limit?: number | null;
+  desired_effective_date?: string | null;
+  rationale?: string;
+}
+
+export interface CoverageRequestResponse {
+  request_code: string;
+  submission_code: string;
+  referral_code: string;
+  status: string;
+}
+
+export interface BookGapRecommendation {
+  client_entity_name: string;
+  coverage: string;
+  rationale: string;
+  estimated_premium_range_usd: [number, number];
+  industry_label?: string | null;
+}
+
+export interface BrokerRecommendationsResponse {
+  broker_name: string;
+  recommendations: BookGapRecommendation[];
+}
+
+export interface SendRecommendationPayload {
+  client_entity_name: string;
+  coverage: string;
+  message: string;
+}
+
+export interface SendRecommendationResponse {
+  submission_code: string;
+  referral_code: string;
+  status: string;
 }
 
 // ----------------------------------------------------------------------------

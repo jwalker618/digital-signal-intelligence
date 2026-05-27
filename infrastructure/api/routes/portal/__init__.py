@@ -10,12 +10,13 @@ aggregates them.
 """
 from fastapi import APIRouter
 
-from . import communications, overview, queries, submissions
+from . import communications, overview, profile_and_actions, queries, submissions
 
 router = APIRouter()
 router.include_router(overview.router)
 router.include_router(submissions.router)
 router.include_router(queries.router)
 router.include_router(communications.router)
+router.include_router(profile_and_actions.router)
 
 __all__ = ["router"]

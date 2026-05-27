@@ -95,6 +95,19 @@ async def submission_score(
         base_premium=mv.base_premium,
         final_premium=mv.final_premium,
         impact_breakdown=breakdown,
+        # v8.1: loss / exposure / ROL fields for Risk Insights + Scenarios
+        loss_propensity_score=mv.loss_propensity_score,
+        severity_propensity_score=mv.severity_propensity_score,
+        loss_propensity_band=mv.loss_propensity_band,
+        loss_trend_direction=mv.loss_trend_direction,
+        exposure_value=mv.exposure_value,
+        exposure_band_label=mv.exposure_band_label,
+        exposure_size_score=mv.exposure_size_score,
+        exposure_complexity_score=mv.exposure_complexity_score,
+        rol_upper_limit=mv.rol_upper_limit,
+        rol_upper_premium=mv.rol_upper_premium,
+        rol_lower_limit=mv.rol_lower_limit,
+        rol_lower_premium=mv.rol_lower_premium,
     )
 
 

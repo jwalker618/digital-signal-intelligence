@@ -14,8 +14,8 @@ import {
   ChartNoAxesGantt,  ChartPie,  Clock,  FileCheck,  FileStack,
   FileText,  FileX,  FlaskConical,  Gauge,  Globe,  History,
   Inbox,  Layers,  Lightbulb,  ListChecks, MessagesSquare,  Network,
-  RefreshCw,  Rows4,  Bot,  Scale,  ShieldCheck,  TrendingUpDown,
-  Users,  UserStar,
+  PlusCircle,  RefreshCw,  Rows4,  Bot,  Scale,  ShieldCheck,
+  TrendingUpDown,  Users,  UserCircle,  UserStar,
 } from "lucide-react";
 
 export interface NavLeaf {
@@ -61,23 +61,27 @@ export const ADMIN_CHILDREN: AdminNavLeaf[] = [
  * per-leaf permission gating.
  */
 
-/** Broker view: book + portfolio + coverages + communications + market. */
+/** Broker view: book + portfolio + coverages + comms + market + recommendations. */
 export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
   { name: "Book of Clients",   icon: Briefcase,       href: "/portal",                permission: "portal:broker:read" },
   { name: "Portfolio Metrics", icon: ChartPie,        href: "/portal/portfolio",      permission: "portal:broker:read" },
   { name: "Coverages",         icon: ShieldCheck,     href: "/portal/coverages",      permission: "portal:broker:read" },
+  { name: "Recommendations",   icon: Lightbulb,       href: "/portal/recommendations", permission: "portal:broker:read" },
   { name: "Communications",    icon: MessagesSquare,  href: "/portal/communications", permission: "portal:broker:reply" },
   { name: "Market Conditions", icon: TrendingUpDown,  href: "/portal/market",         permission: "portal:broker:read" },
 ];
 
-/** Client view: overview + coverages + insight pages + communications. */
+/** Client view: overview + profile + coverages + insight pages + scenarios + request + comms. */
 export const PORTAL_CLIENT_CHILDREN: AdminNavLeaf[] = [
-  { name: "Overview",        icon: Gauge,           href: "/portal",                  permission: "portal:client:read" },
-  { name: "Coverages",       icon: ShieldCheck,     href: "/portal/coverages",        permission: "portal:client:read" },
-  { name: "Signal Drivers",  icon: ListChecks,      href: "/portal/drivers",          permission: "portal:client:read" },
-  { name: "Industry Benchmarks", icon: TrendingUpDown,  href: "/portal/peers",         permission: "portal:client:read" },
-  { name: "Action Plan",     icon: Lightbulb,       href: "/portal/actions",          permission: "portal:client:read" },
-  { name: "Communications",  icon: MessagesSquare,  href: "/portal/communications",   permission: "portal:client:read" },
+  { name: "Overview",            icon: Gauge,           href: "/portal",                  permission: "portal:client:read" },
+  { name: "Your Profile",        icon: UserCircle,      href: "/portal/profile",          permission: "portal:client:read" },
+  { name: "Coverages",           icon: ShieldCheck,     href: "/portal/coverages",        permission: "portal:client:read" },
+  { name: "Risk Insights",       icon: ListChecks,      href: "/portal/drivers",          permission: "portal:client:read" },
+  { name: "Industry Benchmarks", icon: TrendingUpDown,  href: "/portal/peers",            permission: "portal:client:read" },
+  { name: "Scenarios",           icon: FlaskConical,    href: "/portal/scenarios",        permission: "portal:client:read" },
+  { name: "Action Plan",         icon: Lightbulb,       href: "/portal/actions",          permission: "portal:client:read" },
+  { name: "Request Coverage",    icon: PlusCircle,      href: "/portal/request",          permission: "portal:client:submit" },
+  { name: "Communications",      icon: MessagesSquare,  href: "/portal/communications",   permission: "portal:client:read" },
 ];
 
 /**

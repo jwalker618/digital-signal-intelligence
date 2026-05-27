@@ -12,7 +12,10 @@ import { useEffect, useState } from "react";
 import {
   AlertTriangle,
   ChartPie,
+  Globe,
+  Layers,
   ListChecks,
+  ShieldAlert,
   TrendingUpDown,
 } from "lucide-react";
 
@@ -25,6 +28,7 @@ import {
 import {
   ExpandableGroupTable,
   KpiTile,
+  LabelValueList,
   type ExpandableGroup,
 } from "@/components/base/content/primatives";
 
@@ -50,7 +54,7 @@ export default function DriversPage() {
   const [entityName, setEntityName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { setActiveMenu("Signal Drivers"); }, [setActiveMenu]);
+  useEffect(() => { setActiveMenu("Risk Insights"); }, [setActiveMenu]);
 
   useEffect(() => {
     let cancelled = false;
@@ -127,8 +131,8 @@ export default function DriversPage() {
 
         <SubmissionHeaderCard
           decision={netImpact > 0 ? "refer" : "approve"}
-          title={`Signal Drivers — ${entityName ?? "Your entity"}`}
-          subtitle="Each signal-driven modifier's effect on your final premium"
+          title={`Risk Insights — ${entityName ?? "Your entity"}`}
+          subtitle="Strengths & opportunities, plus your loss outlook and exposure profile"
           lucideIcon={ListChecks}
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-2">
@@ -155,8 +159,18 @@ export default function DriversPage() {
           </div>
         </SubmissionHeaderCard>
 
+        <CardGrid cols="grid-cols-1 lg:grid-cols-2" className="gap-4">
+          <StandardCard title="Loss outlook" lucideIcon={ShieldAlert}>
+            <LossOutlook score={score} />
+          </StandardCard>
+
+          <StandardCard title="Exposure profile" lucideIcon={Globe}>
+            <ExposureProfile score={score} />
+          </StandardCard>
+        </CardGrid>
+
         <StandardCard
-          title="All signal drivers"
+          title="Strengths & opportunities"
           lucideIcon={TrendingUpDown}
           headerRight={
             <span className="text-xs text-generate-text-placeholder">
@@ -220,5 +234,98 @@ function ErrShell({ msg }: { msg: string }) {
         </StandardCard>
       </CardGrid>
     </ViewCanvas>
+  );
+}
+
+
+// ----------------------------------------------------------------------------
+// Loss + Exposure summary cards (v8.1 Phase C)
+// ----------------------------------------------------------------------------
+
+function LossOutlook({ score }: { score: ScoreResponse }) {
+  const propensity = score.loss_propensity_score;
+  const band = score.loss_propensity_band;
+  const trend = score.loss_trend_direction;
+  const severityScore = score.severity_propensity_score;
+
+  const trendTone =
+    trend === "improving" ? "text-generate-text-good" :
+    trend === "deteriorating" ? "text-generate-text-bad" :
+    "text-generate-text-placeholder";
+
+  const bandLabel =
+    band === "very_low" ? "Very low" :
+    band === "low" ? "Low" :
+    band === "moderate" ? "Moderate" :
+    band === "elevated" ? "Elevated" :
+    band === "high" ? "High" :
+    band ?? "—";
+
+  if (propensity == null && band == null && trend == null) {
+    return (
+      <p className="text-sm py-2">
+        Loss data isn't available for this submission yet. As claims experience
+        accumulates and is reported, this section will populate.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3 py-2">
+      <LabelValueList
+        variant="card"
+        rows={[
+          { label: "Loss propensity band", value: <span className="font-bold">{bandLabel}</span> },
+          { label: "Frequency score", value: propensity != null ? formatNumber(propensity, 0) : "—" },
+          { label: "Severity score", value: severityScore != null ? formatNumber(severityScore, 0) : "—" },
+          {
+            label: "Trend direction",
+            value: <span className={`font-bold capitalize ${trendTone}`}>{trend ?? "—"}</span>,
+          },
+        ]}
+      />
+      <p className="text-xs text-generate-text-placeholder">
+        The loss outlook combines observed claims experience with forward-looking
+        signals from your industry and posture. It's reviewed at each renewal cycle.
+      </p>
+    </div>
+  );
+}
+
+function ExposureProfile({ score }: { score: ScoreResponse }) {
+  const value = score.exposure_value;
+  const band = score.exposure_band_label;
+  const size = score.exposure_size_score;
+  const complexity = score.exposure_complexity_score;
+
+  if (value == null && band == null && size == null && complexity == null) {
+    return (
+      <p className="text-sm py-2">
+        Exposure data isn't yet captured for this submission. Your broker can
+        help complete this once you confirm exposure inputs.
+      </p>
+    );
+  }
+
+  return (
+    <div className="space-y-3 py-2">
+      <LabelValueList
+        variant="card"
+        rows={[
+          { label: "Exposure band", value: <span className="font-bold">{band ?? "—"}</span> },
+          {
+            label: "Exposure value",
+            value: value != null ? formatCurrency(value, 0) : "—",
+          },
+          { label: "Size score", value: size != null ? formatNumber(size, 0) : "—" },
+          { label: "Complexity score", value: complexity != null ? formatNumber(complexity, 0) : "—" },
+        ]}
+      />
+      <p className="text-xs text-generate-text-placeholder">
+        Exposure measures the scale and complexity of your operations.
+        Higher values increase capacity needs; higher complexity affects
+        carrier appetite.
+      </p>
+    </div>
   );
 }

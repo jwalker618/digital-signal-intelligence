@@ -9,13 +9,19 @@ import { authorizedFetch } from "@/lib/authApi";
 import type {
   ActionsResponse,
   BrokerQueriesResponse,
+  BrokerRecommendationsResponse,
   BrokerReplyRequest,
   BrokerReplyResponse,
+  ClientProfileResponse,
   CommunicationsListResponse,
   CommunicationsThreadResponse,
+  CoverageRequestPayload,
+  CoverageRequestResponse,
   OverviewResponse,
   PeersResponse,
   ScoreResponse,
+  SendRecommendationPayload,
+  SendRecommendationResponse,
   SubmissionDetailResponse,
 } from "@/types/portal";
 
@@ -120,5 +126,35 @@ export function fetchCommunicationThread(
 ): Promise<CommunicationsThreadResponse> {
   return getJson<CommunicationsThreadResponse>(
     token, `/communications/${encodeURIComponent(referralCode)}`,
+  );
+}
+
+// ----------------------------------------------------------------------------
+// v8.1: profile, coverage requests, broker recommendations
+// ----------------------------------------------------------------------------
+
+export function fetchClientProfile(token: string | null): Promise<ClientProfileResponse> {
+  return getJson<ClientProfileResponse>(token, "/profile");
+}
+
+export function postCoverageRequest(
+  token: string | null, payload: CoverageRequestPayload,
+): Promise<CoverageRequestResponse> {
+  return postJson<CoverageRequestResponse, CoverageRequestPayload>(
+    token, "/coverage-requests", payload,
+  );
+}
+
+export function fetchBrokerRecommendations(
+  token: string | null,
+): Promise<BrokerRecommendationsResponse> {
+  return getJson<BrokerRecommendationsResponse>(token, "/recommendations");
+}
+
+export function postSendRecommendation(
+  token: string | null, payload: SendRecommendationPayload,
+): Promise<SendRecommendationResponse> {
+  return postJson<SendRecommendationResponse, SendRecommendationPayload>(
+    token, "/recommendations/send", payload,
   );
 }
