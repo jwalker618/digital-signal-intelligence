@@ -60,6 +60,16 @@ class TestRouterStructure:
             "/coverage-requests",
             "/recommendations",
             "/recommendations/send",
+            # v8.2: broker intelligence -- carriers, market, book, aggregation
+            "/verticals",
+            "/carriers",
+            "/carriers/{slug}",
+            "/client-health",
+            "/placement/{submission_code}",
+            "/market/pulse",
+            "/market/lines/{line}",
+            "/book-health",
+            "/aggregation",
         }
         assert expected.issubset(paths)
 
