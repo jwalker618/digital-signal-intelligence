@@ -17,19 +17,16 @@ import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
+import { homePathForRole, isPortalPath } from "@/lib/portalPaths";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
 const WARN_THRESHOLD_MS = 30 * 60 * 1000;
 const REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
 
-// v8 polish: roles that belong on the client portal route group only.
-// Anyone whose role is in this set is bounced to /portal if they land
-// on a non-portal authenticated path.
+// v8.2: roles that belong on the portal route trees only.
+// A portal-only user that lands on a non-portal path (e.g. /, /world-engine
+// via URL bar) is bounced to their persona home.
 const PORTAL_ONLY_ROLES = new Set(["BROKER", "CLIENT"]);
-
-function isPortalPath(p: string | null): boolean {
-  return !!p && p.startsWith("/portal");
-}
 
 export function SessionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -66,16 +63,16 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // v8 polish: enforce role <-> route group. A portal user that lands
-    // on a non-portal path (e.g. via URL bar) goes to /portal. A carrier
-    // user landing on /portal/* goes to /. This stops mismatches that
-    // confused the chrome (empty sidebar, leaked breadcrumbs) when a
-    // user had access to a path that wasn't built for their role.
+    // v8.2 cleanup: enforce role <-> route tree. A portal-only user that
+    // lands on a non-portal path goes to their persona home (/broker or
+    // /client). A carrier landing on a portal path goes to /. Stops the
+    // chrome mismatches (empty sidebar, leaked breadcrumbs) that happen
+    // when a user opens a path that isn't built for their role.
     if (userRole) {
       const onPortal = isPortalPath(pathname);
       const isPortalRole = PORTAL_ONLY_ROLES.has(userRole);
       if (isPortalRole && !onPortal) {
-        router.replace("/portal");
+        router.replace(homePathForRole(userRole));
       } else if (!isPortalRole && onPortal) {
         router.replace("/");
       }
