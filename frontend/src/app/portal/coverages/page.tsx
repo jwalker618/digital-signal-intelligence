@@ -7,7 +7,7 @@
 // score) over the underlying policies, then a row per policy that
 // links to the policy detail view.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -81,10 +81,7 @@ export default function CoveragesPage() {
       ? data.clients
       : data.active_coverages;
 
-  const groupedByCoverage = useMemo(
-    () => groupByCoverage(allPolicies),
-    [allPolicies],
-  );
+  const groupedByCoverage = groupByCoverage(allPolicies);
 
   const totalPolicies = allPolicies.length;
   const totalPremium = allPolicies.reduce(
