@@ -314,6 +314,190 @@ export interface SendRecommendationResponse {
 }
 
 // ----------------------------------------------------------------------------
+// v8.2 — broker intelligence
+// ----------------------------------------------------------------------------
+
+export interface VerticalSummary {
+  slug: string;
+  name: string;
+  icon: string;
+  summary: string;
+  priority_lines: string[];
+  client_count: number;
+  policy_count: number;
+  premium_total_usd: number;
+}
+
+export interface VerticalListResponse {
+  verticals: VerticalSummary[];
+}
+
+export type AppetiteStance = "leaning_in" | "neutral" | "selective" | "leaning_out";
+export type PricingPosition = "tight" | "median" | "light";
+export type EsgStance = "leader" | "progressive" | "neutral" | "restrictive";
+
+export interface CarrierSummary {
+  slug: string;
+  name: string;
+  type: string;
+  headquarters: string;
+  capacity_band: string;
+  typical_commission_pct: number;
+  pricing_position: PricingPosition;
+  esg_stance: EsgStance;
+  win_rate: number;
+  specialties: string[];
+  movement_note: string;
+  appetite_summary: Record<string, AppetiteStance>;
+}
+
+export interface CarrierRosterResponse {
+  carriers: CarrierSummary[];
+}
+
+export interface CarrierAppetiteEntry {
+  coverage: string;
+  stance: AppetiteStance;
+}
+
+export interface CarrierDetailResponse {
+  summary: CarrierSummary;
+  appetite: CarrierAppetiteEntry[];
+  esg_note: string;
+  movement_note: string;
+  your_hit_rate_pct: number;
+  your_premium_placed_usd: number;
+  your_recent_lines: string[];
+}
+
+export interface ClientHealthEntry {
+  entity_name: string;
+  vertical_slug?: string | null;
+  vertical_name?: string | null;
+  policy_count: number;
+  total_premium_usd: number;
+  engagement_score: number;
+  engagement_label: string;
+  months_since_last_message?: number | null;
+  avg_response_hours?: number | null;
+  open_query_count: number;
+  opportunity_flags: string[];
+  risk_flags: string[];
+  next_renewal_in_days?: number | null;
+}
+
+export interface ClientHealthResponse {
+  broker_name: string;
+  clients: ClientHealthEntry[];
+}
+
+export interface CarrierMatch {
+  slug: string;
+  name: string;
+  suitability_score: number;
+  appetite_stance: AppetiteStance;
+  predicted_premium_low: number;
+  predicted_premium_high: number;
+  typical_commission_pct: number;
+  pricing_position: PricingPosition;
+  esg_stance: EsgStance;
+  win_rate_pct: number;
+  rationale: string;
+}
+
+export interface PlacementStrategyResponse {
+  submission_code: string;
+  entity_name: string;
+  coverage: string;
+  carrier_matches: CarrierMatch[];
+  placement_note: string;
+}
+
+export interface MarketLineSummary {
+  slug: string;
+  name: string;
+  cycle_position: string;
+  rate_change_yoy_pct: number;
+  capacity_state: string;
+  capacity_trend: string;
+  loss_trend: string;
+  esg_overlay: string;
+}
+
+export interface LossEventEntry {
+  headline: string;
+  line: string;
+  date: string;
+  estimated_industry_loss_usd_bn: number;
+  implication: string;
+}
+
+export interface MarketPulseResponse {
+  lines: MarketLineSummary[];
+  recent_loss_events: LossEventEntry[];
+  climate_pulse_summary: string;
+  cycle_overall: string;
+}
+
+export interface LineDetailResponse {
+  slug: string;
+  name: string;
+  cycle_position: string;
+  rate_change_yoy_pct: number;
+  capacity_state: string;
+  capacity_trend: string;
+  loss_trend: string;
+  summary: string;
+  key_drivers: string[];
+  esg_overlay: string;
+  top_carriers: CarrierSummary[];
+  recent_loss_events: LossEventEntry[];
+}
+
+export interface BookHealthResponse {
+  broker_name: string;
+  client_count: number;
+  policy_count: number;
+  total_premium_usd: number;
+  total_estimated_commission_usd: number;
+  avg_lines_per_client: number;
+  avg_premium_per_client: number;
+  retention_rate_pct: number;
+  cross_sell_ratio_pct: number;
+  avg_tenure_months: number;
+  lines_concentration: Record<string, number>;
+  vertical_concentration: Record<string, number>;
+  commission_yield_pct: number;
+}
+
+export interface CatPerilExposure {
+  peril_slug: string;
+  peril_name: string;
+  exposed_policy_count: number;
+  exposed_premium_usd: number;
+  relative_severity: number;
+  most_exposed_verticals: string[];
+}
+
+export interface ConcentrationEntry {
+  dimension: string;
+  value: string;
+  share_pct: number;
+  count: number;
+  note?: string | null;
+}
+
+export interface AggregationResponse {
+  broker_name: string;
+  total_premium_usd: number;
+  industry_concentration: ConcentrationEntry[];
+  line_concentration: ConcentrationEntry[];
+  cat_peril_exposure: CatPerilExposure[];
+  diversification_score: number;
+  diversification_note: string;
+}
+
+// ----------------------------------------------------------------------------
 // Broker reply payload
 // ----------------------------------------------------------------------------
 

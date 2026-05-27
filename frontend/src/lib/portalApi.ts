@@ -8,21 +8,30 @@
 import { authorizedFetch } from "@/lib/authApi";
 import type {
   ActionsResponse,
+  AggregationResponse,
+  BookHealthResponse,
   BrokerQueriesResponse,
   BrokerRecommendationsResponse,
   BrokerReplyRequest,
   BrokerReplyResponse,
+  CarrierDetailResponse,
+  CarrierRosterResponse,
+  ClientHealthResponse,
   ClientProfileResponse,
   CommunicationsListResponse,
   CommunicationsThreadResponse,
   CoverageRequestPayload,
   CoverageRequestResponse,
+  LineDetailResponse,
+  MarketPulseResponse,
   OverviewResponse,
   PeersResponse,
+  PlacementStrategyResponse,
   ScoreResponse,
   SendRecommendationPayload,
   SendRecommendationResponse,
   SubmissionDetailResponse,
+  VerticalListResponse,
 } from "@/types/portal";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
@@ -157,4 +166,56 @@ export function postSendRecommendation(
   return postJson<SendRecommendationResponse, SendRecommendationPayload>(
     token, "/recommendations/send", payload,
   );
+}
+
+// ----------------------------------------------------------------------------
+// v8.2 broker intelligence
+// ----------------------------------------------------------------------------
+
+export function fetchVerticals(token: string | null): Promise<VerticalListResponse> {
+  return getJson<VerticalListResponse>(token, "/verticals");
+}
+
+export function fetchCarriers(token: string | null): Promise<CarrierRosterResponse> {
+  return getJson<CarrierRosterResponse>(token, "/carriers");
+}
+
+export function fetchCarrierDetail(
+  token: string | null, slug: string,
+): Promise<CarrierDetailResponse> {
+  return getJson<CarrierDetailResponse>(
+    token, `/carriers/${encodeURIComponent(slug)}`,
+  );
+}
+
+export function fetchClientHealth(token: string | null): Promise<ClientHealthResponse> {
+  return getJson<ClientHealthResponse>(token, "/client-health");
+}
+
+export function fetchPlacementStrategy(
+  token: string | null, submissionCode: string,
+): Promise<PlacementStrategyResponse> {
+  return getJson<PlacementStrategyResponse>(
+    token, `/placement/${encodeURIComponent(submissionCode)}`,
+  );
+}
+
+export function fetchMarketPulse(token: string | null): Promise<MarketPulseResponse> {
+  return getJson<MarketPulseResponse>(token, "/market/pulse");
+}
+
+export function fetchMarketLineDetail(
+  token: string | null, lineSlug: string,
+): Promise<LineDetailResponse> {
+  return getJson<LineDetailResponse>(
+    token, `/market/lines/${encodeURIComponent(lineSlug)}`,
+  );
+}
+
+export function fetchBookHealth(token: string | null): Promise<BookHealthResponse> {
+  return getJson<BookHealthResponse>(token, "/book-health");
+}
+
+export function fetchAggregation(token: string | null): Promise<AggregationResponse> {
+  return getJson<AggregationResponse>(token, "/aggregation");
 }

@@ -71,6 +71,12 @@ export interface DsiState {
   toggleCategory: (category: string) => void;
 
   // -----------------------------------------------------------------
+  // v8.2 — broker vertical filter (Marsh practice lens)
+  // -----------------------------------------------------------------
+  verticalFilter: string | null;
+  setVerticalFilter: (slug: string | null) => void;
+
+  // -----------------------------------------------------------------
   // Loading state (single source of truth). Consumers select keys:
   //   const isFetching = useDsiStore(s => s.loading.riskSignals);
   // -----------------------------------------------------------------
@@ -223,6 +229,10 @@ export const useDsiStore = create<DsiState>((set, get) => {
       },
     })),
 
+    // v8.2 vertical filter -- null = no filter / show all.
+    verticalFilter: null,
+    setVerticalFilter: (slug) => set({ verticalFilter: slug }),
+
     loading: {},
     error: null,
 
@@ -308,6 +318,7 @@ export const useDsiStore = create<DsiState>((set, get) => {
         pageQuickAction: null,
         loading: {},
         error: null,
+        verticalFilter: null,
       });
     },
 

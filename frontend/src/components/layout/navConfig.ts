@@ -12,10 +12,11 @@
 import {
   LucideIcon,  Activity,  Briefcase,  Building2,  Calculator,
   ChartNoAxesGantt,  ChartPie,  Clock,  FileCheck,  FileStack,
-  FileText,  FileX,  FlaskConical,  Gauge,  Globe,  History,
-  Inbox,  Layers,  Lightbulb,  ListChecks, MessagesSquare,  Network,
-  PlusCircle,  RefreshCw,  Rows4,  Bot,  Scale,  ShieldCheck,
-  TrendingUpDown,  Users,  UserCircle,  UserStar,
+  FileText,  FileX,  FlaskConical,  Gauge,  Globe,  HeartPulse,
+  History,  Inbox,  Layers,  Lightbulb,  ListChecks, MessagesSquare,
+  Network,  PlusCircle,  RefreshCw,  Rows4,  Bot,  Scale,
+  ShieldCheck,  Target as TargetIcon,  TrendingUpDown,  Users,
+  UserCircle,  UserStar,
 } from "lucide-react";
 
 export interface NavLeaf {
@@ -61,14 +62,23 @@ export const ADMIN_CHILDREN: AdminNavLeaf[] = [
  * per-leaf permission gating.
  */
 
-/** Broker view: book + portfolio + coverages + comms + market + recommendations. */
+/**
+ * Broker portal (v8.2): the broker intelligence platform Marsh
+ * recognises -- book, client health, carriers, placement, market
+ * pulse, recommendations, communications, risk aggregation, book
+ * health.
+ */
 export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
   { name: "Book of Clients",   icon: Briefcase,       href: "/portal",                permission: "portal:broker:read" },
-  { name: "Portfolio Metrics", icon: ChartPie,        href: "/portal/portfolio",      permission: "portal:broker:read" },
+  { name: "Client Health",     icon: HeartPulse,      href: "/portal/client-health",  permission: "portal:broker:read" },
   { name: "Coverages",         icon: ShieldCheck,     href: "/portal/coverages",      permission: "portal:broker:read" },
+  { name: "Placement Strategy", icon: TargetIcon,     href: "/portal/placement",      permission: "portal:broker:read" },
+  { name: "Carrier Intelligence", icon: Building2,    href: "/portal/carriers",       permission: "portal:broker:read" },
   { name: "Recommendations",   icon: Lightbulb,       href: "/portal/recommendations", permission: "portal:broker:read" },
   { name: "Communications",    icon: MessagesSquare,  href: "/portal/communications", permission: "portal:broker:reply" },
-  { name: "Market Conditions", icon: TrendingUpDown,  href: "/portal/market",         permission: "portal:broker:read" },
+  { name: "Market Pulse",      icon: TrendingUpDown,  href: "/portal/market",         permission: "portal:broker:read" },
+  { name: "Risk Aggregation",  icon: Network,         href: "/portal/aggregation",    permission: "portal:broker:read" },
+  { name: "Book Health",       icon: ChartPie,        href: "/portal/portfolio",      permission: "portal:broker:read" },
 ];
 
 /** Client view: overview + profile + coverages + insight pages + scenarios + request + comms. */
