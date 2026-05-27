@@ -59,23 +59,61 @@ class TestDemoStoryboardAlignment:
 
     def test_acme_is_demo_anchor(self):
         acme = next(t for t in DEMO_CLIENT_TENANTS if "Acme" in t["entity_name"])
-        # Acme is below cohort mean (~720), at REFER tier with MFA drags
-        assert acme["composite_score"] < 720.0
-        assert acme["tier"] == 4
-        assert acme["open_referral"] is True
-        assert "mfa_enabled" in acme["drag_modifier_signal_ids"]
+        cyber = next(c for c in acme["coverages"] if c["coverage"] == "cyber")
+        # Acme cyber is below cohort mean (~720), at REFER tier with MFA drag
+        assert cyber["composite_score"] < 720.0
+        assert cyber["tier"] == 4
+        assert cyber["open_query"]["signal"] == "mfa_enabled"
+        assert "mfa_enabled" in cyber["drag_modifier_signal_ids"]
 
-    def test_only_acme_has_open_referral(self):
-        open_count = sum(1 for t in DEMO_CLIENT_TENANTS if t["open_referral"])
-        assert open_count == 1
+    def test_each_client_has_multiple_coverages(self):
+        for t in DEMO_CLIENT_TENANTS:
+            assert len(t["coverages"]) >= 3, (
+                f"{t['entity_name']} should have >=3 coverages for the "
+                f"aggregation/drilldown narrative; has {len(t['coverages'])}"
+            )
 
-    def test_northwind_above_cohort_mean(self):
+    def test_open_queries_scattered_across_book(self):
+        # The Communications page needs multiple open queries across
+        # clients to feel populated. Confirm at least 3 open queries
+        # exist across the demo book.
+        open_queries = [
+            (t["entity_name"], cov["coverage"])
+            for t in DEMO_CLIENT_TENANTS
+            for cov in t["coverages"]
+            if cov.get("open_query") is not None
+        ]
+        assert len(open_queries) >= 3
+
+    def test_open_queries_have_required_fields(self):
+        for t in DEMO_CLIENT_TENANTS:
+            for cov in t["coverages"]:
+                q = cov.get("open_query")
+                if q is None:
+                    continue
+                assert "body" in q and q["body"].strip()
+                assert "signal" in q
+
+    def test_northwind_cyber_clean_state(self):
         nw = next(t for t in DEMO_CLIENT_TENANTS if "Northwind" in t["entity_name"])
-        assert nw["composite_score"] > 720.0  # above cohort mean -> looks clean
+        cyber = next(c for c in nw["coverages"] if c["coverage"] == "cyber")
+        # Cyber is the clean / preferred coverage for Northwind
+        assert cyber["composite_score"] > 720.0
+        assert cyber["tier"] <= 2
 
     def test_entity_keys_unique(self):
         keys = {t["entity_name"].strip().lower() for t in DEMO_CLIENT_TENANTS}
         assert len(keys) == len(DEMO_CLIENT_TENANTS)
+
+    def test_pioneer_has_cat_property(self):
+        # Pioneer has the CAT-exposed property policy that exercises
+        # the property_cat_exposed configuration -- demo richness.
+        p = next(t for t in DEMO_CLIENT_TENANTS if "Pioneer" in t["entity_name"])
+        cat = next(
+            (c for c in p["coverages"] if c["configuration"] == "property_cat_exposed"),
+            None,
+        )
+        assert cat is not None, "Pioneer should have a CAT property policy"
 
 
 class TestBuildDragModifiers:

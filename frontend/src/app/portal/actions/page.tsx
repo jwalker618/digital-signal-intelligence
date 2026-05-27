@@ -1,22 +1,23 @@
 "use client";
 
-// v8 Phase 8 — /portal/actions
+// v8 Phase 8 polish — /portal/actions
 //
-// Full action plan: leverage-sorted remediation actions for the
-// user's latest submission. Each card shows headline, description,
-// effort, duration, cost, expected premium reduction, and evidence
-// requirement.
+// Table-first action plan with a modal per row for the full detail
+// (description, references, evidence, leverage math). Matches the
+// carrier-side pattern of "summary table + click for richer modal".
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import {
   AlertTriangle,
   ChartPie,
+  ExternalLink,
   Gauge,
   Lightbulb,
   Zap,
 } from "lucide-react";
 
+import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -51,6 +52,7 @@ export default function ActionsPage() {
   const [actions, setActions] = useState<ActionsResponse | null>(null);
   const [entityName, setEntityName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<RemediationAction | null>(null);
 
   useEffect(() => { setActiveMenu("Action Plan"); }, [setActiveMenu]);
 
@@ -101,11 +103,11 @@ export default function ActionsPage() {
         >
           <StatsGrid
             columns={[
-              { label: "Actions",      value: plan.length, align: "center" },
-              { label: "Low effort",   value: lowEffort, align: "center" },
-              { label: "Medium",       value: mediumEffort, align: "center" },
-              { label: "High effort",  value: highEffort, align: "center" },
-              { label: "Total savings", value: formatCurrency(totalSavings, 0), align: "center" },
+              { label: "Actions",        value: plan.length, align: "center" },
+              { label: "Low effort",     value: lowEffort, align: "center" },
+              { label: "Medium",         value: mediumEffort, align: "center" },
+              { label: "High effort",    value: highEffort, align: "center" },
+              { label: "Total savings",  value: formatCurrency(totalSavings, 0), align: "center" },
             ]}
           />
         </SubmissionHeaderCard>
@@ -119,11 +121,20 @@ export default function ActionsPage() {
             </p>
           </StandardCard>
         ) : (
-          <CardGrid cols="grid-cols-1 lg:grid-cols-2" className="gap-4">
-            {plan.map((action, idx) => (
-              <ActionDetailCard key={action.signal_key} action={action} rank={idx + 1} />
-            ))}
-          </CardGrid>
+          <StandardCard
+            title={`Recommended actions (${plan.length})`}
+            lucideIcon={Zap}
+            headerRight={
+              <span className="text-xs text-generate-text-placeholder">
+                Click a row for detail
+              </span>
+            }
+          >
+            <ActionTable
+              actions={plan}
+              onSelect={(a) => setSelected(a)}
+            />
+          </StandardCard>
         )}
 
         {actions.remediation_plan.placeholder_count > 0 && (
@@ -135,23 +146,59 @@ export default function ActionsPage() {
           >
             <p className="text-xs">
               Some drag signals don't yet have specific remediation guidance
-              authored. Your broker may have additional context on the best
-              path forward for these.
+              authored. Your broker may have additional context.
             </p>
           </InfoPanel>
         )}
 
       </CardGrid>
+
+      <ActionDetailModal
+        action={selected}
+        onClose={() => setSelected(null)}
+      />
     </ViewCanvas>
   );
 }
 
 
-function ActionDetailCard({
-  action, rank,
+function ActionTable({
+  actions, onSelect,
 }: {
-  action: RemediationAction;
+  actions: RemediationAction[];
+  onSelect: (a: RemediationAction) => void;
+}) {
+  return (
+    <div
+      className="grid"
+      style={{ gridTemplateColumns: "40px 3fr 90px 120px 1fr 90px" }}
+    >
+      {["#", "Action", "Effort", "Est. savings", "Leverage", ""].map((h, i) => (
+        <div
+          key={i}
+          className="text-xs text-generate-text-placeholder border-b border-generate-text-outline pb-1.5 pt-1.5"
+        >
+          {h}
+        </div>
+      ))}
+      {actions.map((a, idx) => (
+        <ActionTableRow
+          key={a.signal_key}
+          rank={idx + 1}
+          action={a}
+          onClick={() => onSelect(a)}
+        />
+      ))}
+    </div>
+  );
+}
+
+function ActionTableRow({
+  rank, action, onClick,
+}: {
   rank: number;
+  action: RemediationAction;
+  onClick: () => void;
 }) {
   const effortColor =
     action.remediation.effort === "LOW"
@@ -159,26 +206,71 @@ function ActionDetailCard({
       : action.remediation.effort === "MEDIUM"
       ? "text-generate-text-maybe"
       : "text-generate-text-bad";
-
+  const placeholderMute = action.is_placeholder ? "opacity-60" : "";
   return (
-    <StandardCard
-      title={`${rank}. ${action.remediation.headline}`}
-      lucideIcon={Zap}
-      headerRight={
+    <div
+      onClick={onClick}
+      className={`contents cursor-pointer group ${placeholderMute}`}
+    >
+      <div className="text-sm py-3 font-bold text-generate-text-placeholder group-hover:text-generate-text-input">
+        {rank}
+      </div>
+      <div className="py-3 group-hover:text-generate-text-input">
+        <div className="text-sm font-bold">{action.remediation.headline}</div>
+        <div className="text-xs text-generate-text-placeholder mt-1">
+          {action.signal_label}
+          {action.is_placeholder && " · generic guidance"}
+        </div>
+      </div>
+      <div className="text-sm py-3 flex items-center">
         <span className={`text-xs font-bold ${effortColor}`}>
           {action.remediation.effort}
         </span>
-      }
-    >
-      <div className={`space-y-3 py-2 ${action.is_placeholder ? "opacity-60" : ""}`}>
-        <p className="text-sm">{action.remediation.description}</p>
+      </div>
+      <div className="text-sm py-3 group-hover:text-generate-text-input">
+        <span className="text-generate-text-good font-bold">
+          -{formatCurrency(Math.abs(action.estimated_premium_delta_usd), 0)}
+        </span>
+        <div className="text-xs text-generate-text-placeholder">
+          {formatNumber(Math.abs(action.estimated_premium_delta_pct) * 100, 1)}%
+        </div>
+      </div>
+      <div className="text-sm py-3 group-hover:text-generate-text-input">
+        {formatNumber(action.leverage, 0)}
+      </div>
+      <div className="text-sm py-3 flex items-center justify-end text-generate-text-placeholder group-hover:text-generate-text-input">
+        <span className="text-xs underline">Detail →</span>
+      </div>
+    </div>
+  );
+}
 
-        <LabelValueList
-          variant="card"
-          rows={[
-            {
-              label: "Estimated premium reduction",
-              value: (
+
+function ActionDetailModal({
+  action, onClose,
+}: {
+  action: RemediationAction | null;
+  onClose: () => void;
+}) {
+  return (
+    <Modal
+      isOpen={action !== null}
+      onClose={onClose}
+      title={action?.remediation.headline ?? ""}
+      icon={Zap}
+    >
+      {action && (
+        <div className="space-y-4">
+          <p className="text-sm">{action.remediation.description}</p>
+
+          <LabelValueList
+            variant="modal"
+            rows={[
+              { label: "Signal", value: action.signal_label },
+              { label: "Effort", value: action.remediation.effort },
+              { label: "Typical duration", value: action.remediation.typical_duration },
+              { label: "Approx. cost", value: formatCurrency(action.remediation.typical_cost_usd, 0) },
+              { label: "Estimated savings", value: (
                 <span className="text-generate-text-good font-bold">
                   -{formatCurrency(Math.abs(action.estimated_premium_delta_usd), 0)}
                   {" "}
@@ -186,40 +278,42 @@ function ActionDetailCard({
                     ({formatNumber(Math.abs(action.estimated_premium_delta_pct) * 100, 1)}%)
                   </span>
                 </span>
-              ),
-            },
-            { label: "Typical duration", value: action.remediation.typical_duration },
-            { label: "Approx. cost", value: formatCurrency(action.remediation.typical_cost_usd, 0) },
-            { label: "Leverage score", value: formatNumber(action.leverage, 0) },
-          ]}
-        />
+              )},
+              { label: "Leverage score", value: formatNumber(action.leverage, 0) },
+            ]}
+          />
 
-        <div className="pt-2 border-t border-generate-text-outline">
-          <span className="text-xs text-generate-text-placeholder">Evidence required</span>
-          <p className="text-xs mt-1">{action.remediation.evidence_required}</p>
-        </div>
-
-        {action.remediation.references.length > 0 && (
-          <div className="pt-2 border-t border-generate-text-outline">
-            <span className="text-xs text-generate-text-placeholder">References</span>
-            <ul className="mt-1 space-y-0.5">
-              {action.remediation.references.map((ref, i) => (
-                <li key={i} className="text-xs">
-                  <a
-                    href={ref}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline hover:text-generate-text-input"
-                  >
-                    {ref}
-                  </a>
-                </li>
-              ))}
-            </ul>
+          <div className="pt-3 border-t border-generate-text-outline">
+            <div className="text-xs text-generate-text-placeholder mb-1 uppercase tracking-wide">
+              Evidence required
+            </div>
+            <p className="text-sm">{action.remediation.evidence_required}</p>
           </div>
-        )}
-      </div>
-    </StandardCard>
+
+          {action.remediation.references.length > 0 && (
+            <div className="pt-3 border-t border-generate-text-outline">
+              <div className="text-xs text-generate-text-placeholder mb-1 uppercase tracking-wide">
+                References
+              </div>
+              <ul className="space-y-1">
+                {action.remediation.references.map((ref, i) => (
+                  <li key={i}>
+                    <a
+                      href={ref}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-sm flex items-center gap-1 underline hover:text-generate-text-input"
+                    >
+                      {ref} <ExternalLink className="generate-app-icon" />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+    </Modal>
   );
 }
 

@@ -13,9 +13,9 @@ import {
   LucideIcon,  Activity,  Briefcase,  Building2,  Calculator,
   ChartNoAxesGantt,  ChartPie,  Clock,  FileCheck,  FileStack,
   FileText,  FileX,  FlaskConical,  Gauge,  Globe,  History,
-  Inbox,  Layers,  Lightbulb,  ListChecks,  Network,
-  RefreshCw,  Rows4,  Bot,  Scale,  TrendingUpDown,  Users,
-  UserStar,
+  Inbox,  Layers,  Lightbulb,  ListChecks, MessagesSquare,  Network,
+  RefreshCw,  Rows4,  Bot,  Scale,  ShieldCheck,  TrendingUpDown,
+  Users,  UserStar,
 } from "lucide-react";
 
 export interface NavLeaf {
@@ -61,20 +61,37 @@ export const ADMIN_CHILDREN: AdminNavLeaf[] = [
  * per-leaf permission gating.
  */
 
-/** Broker view: book-of-clients + portfolio insight + queries inbox. */
+/** Broker view: book + portfolio + coverages + communications + market. */
 export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
   { name: "Book of Clients",   icon: Briefcase,       href: "/portal",                permission: "portal:broker:read" },
   { name: "Portfolio Metrics", icon: ChartPie,        href: "/portal/portfolio",      permission: "portal:broker:read" },
-  { name: "Open Queries",      icon: Inbox,           href: "/portal/queries",        permission: "portal:broker:reply" },
+  { name: "Coverages",         icon: ShieldCheck,     href: "/portal/coverages",      permission: "portal:broker:read" },
+  { name: "Communications",    icon: MessagesSquare,  href: "/portal/communications", permission: "portal:broker:reply" },
   { name: "Market Conditions", icon: TrendingUpDown,  href: "/portal/market",         permission: "portal:broker:read" },
 ];
 
-/** Client view: own coverages + drivers + peers + actions. */
+/** Client view: overview + coverages + insight pages + communications. */
 export const PORTAL_CLIENT_CHILDREN: AdminNavLeaf[] = [
   { name: "Overview",        icon: Gauge,           href: "/portal",                  permission: "portal:client:read" },
+  { name: "Coverages",       icon: ShieldCheck,     href: "/portal/coverages",        permission: "portal:client:read" },
   { name: "Signal Drivers",  icon: ListChecks,      href: "/portal/drivers",          permission: "portal:client:read" },
   { name: "Peer Comparison", icon: TrendingUpDown,  href: "/portal/peers",            permission: "portal:client:read" },
   { name: "Action Plan",     icon: Lightbulb,       href: "/portal/actions",          permission: "portal:client:read" },
+  { name: "Communications",  icon: MessagesSquare,  href: "/portal/communications",   permission: "portal:client:read" },
+];
+
+/**
+ * Portal drill-down: when a portal user opens a specific policy
+ * (/portal/submissions/{code}), the sidebar shows these tabs scoped
+ * to that policy. activeSubmission state from dsiStore drives the mode.
+ */
+export const PORTAL_POLICY_TABS: NavLeaf[] = [
+  { name: "Policy Summary",   icon: Gauge },
+  { name: "Signal Drivers",   icon: ListChecks },
+  { name: "Peer Comparison",  icon: TrendingUpDown },
+  { name: "Action Plan",      icon: Lightbulb },
+  { name: "Quote History",    icon: History },
+  { name: "Communications",   icon: MessagesSquare },
 ];
 
 /** Drill-down categories shown when a submission is active. */

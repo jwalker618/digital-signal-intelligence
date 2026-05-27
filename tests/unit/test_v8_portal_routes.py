@@ -41,7 +41,7 @@ class TestRouterStructure:
         assert portal_router is not None
         assert len(portal_router.routes) > 0
 
-    def test_eight_endpoints(self):
+    def test_all_endpoints_present(self):
         paths = {r.path for r in portal_router.routes}
         expected = {
             "/overview",
@@ -52,6 +52,9 @@ class TestRouterStructure:
             "/submissions/{submission_code}/actions",
             "/queries",
             "/queries/{referral_code}/reply",
+            # v8 polish: role-aware communications
+            "/communications",
+            "/communications/{referral_code}",
         }
         assert expected.issubset(paths)
 
