@@ -1,6 +1,6 @@
 "use client";
 
-// v8.1 Phase E — /portal/request
+// v8.1 Phase E — /client/request
 //
 // Lightweight "I'd like a quote for X" intent form. Submits to the
 // /portal/coverage-requests endpoint which creates a placeholder

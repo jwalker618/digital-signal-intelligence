@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Carrier Intelligence — /portal/carriers
+// v8.2 Carrier Intelligence — /broker/carriers
 //
 // Flagship broker page. Renders the full carrier universe with
 // appetite breadth, capacity, commission, pricing tightness, ESG

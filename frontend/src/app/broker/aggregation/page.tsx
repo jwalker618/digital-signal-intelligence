@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Risk Aggregation — /portal/aggregation
+// v8.2 Risk Aggregation — /broker/aggregation
 //
 // Sentrisk-flavoured book-level concentration analysis:
 //   - Industry + line concentration cards (top-share, count, share %)

@@ -1,6 +1,6 @@
 "use client";
 
-// v8.1 Phase B — /portal/profile
+// v8.1 Phase B — /client/profile
 //
 // "Who you are" surface for the client: identity, jurisdiction,
 // industry, signal census (what we observe / what we don't yet).

@@ -294,8 +294,8 @@ function PortalError({ message }: { message: string }) {
 
 
 // ----------------------------------------------------------------------------
-// Inline sections — used both here and on the dedicated /portal/drivers,
-// /portal/peers, /portal/actions pages.
+// Inline sections — used both here and on the dedicated /client/drivers,
+// /client/peers, /client/actions pages.
 // ----------------------------------------------------------------------------
 
 export function SignalDriversInline({ impact }: { impact: ScoreResponse }) {

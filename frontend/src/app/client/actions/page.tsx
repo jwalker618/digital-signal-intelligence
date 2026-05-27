@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 polish — /portal/actions
+// v8 Phase 8 polish — /client/actions
 //
 // Table-first action plan with a modal per row for the full detail
 // (description, references, evidence, leverage math). Matches the

@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 polish — /portal/peers
+// v8 Phase 8 polish — /client/peers
 //
 // Multi-section peer comparison view:
 //   1. Headline KPIs + percentile bar

@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Book Health — /portal/portfolio
+// v8.2 Book Health — /broker/book-health
 //
 // Rebuilt from the v8.1 portfolio metrics page into a richer broker-
 // health view: retention, lines-per-client, cross-sell, tenure,

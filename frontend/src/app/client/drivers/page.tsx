@@ -1,6 +1,6 @@
 "use client";
 
-// v8 Phase 8 — /portal/drivers (CLIENT-focused, BROKER can also view)
+// v8 Phase 8 — /client/drivers (CLIENT-focused, BROKER can also view)
 //
 // Deep-dive on positive and negative signal drivers for the user's
 // latest submission. Reuses the SignalDriversInline section pattern

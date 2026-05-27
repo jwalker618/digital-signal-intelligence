@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Client Health — /portal/client-health
+// v8.2 Client Health — /broker/client-health
 //
 // Beyond what clients tell you: engagement score, opportunity / risk
 // flags, renewal calendar, quiet-client alerts.

@@ -1,6 +1,6 @@
 "use client";
 
-// v8.1 Phase D — /portal/scenarios
+// v8.1 Phase D — /client/scenarios
 //
 // Four scenario types in one page:
 //   1. Signal what-ifs    -- close gap X -> score lifts to Y, premium -$Z

@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Placement Strategy — /portal/placement
+// v8.2 Placement Strategy — /broker/placement
 //
 // Two modes:
 //   - No submission selected: picker showing in-flight book; click a

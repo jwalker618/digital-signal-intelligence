@@ -1,6 +1,6 @@
 "use client";
 
-// v8.1 Phase F — /portal/recommendations (BROKER-only)
+// v8.1 Phase F — /broker/recommendations (BROKER-only)
 //
 // Rule-based coverage-gap analysis across the broker's book. Each
 // recommendation has a Send-to-client action that posts a new

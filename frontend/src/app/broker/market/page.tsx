@@ -1,6 +1,6 @@
 "use client";
 
-// v8.2 Market Pulse — /portal/market
+// v8.2 Market Pulse — /broker/market
 //
 // Rebuilt from the v8.1 placeholder into a real intelligence surface:
 //   - Overall cycle position + climate pulse narrative
