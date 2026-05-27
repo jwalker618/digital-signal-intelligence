@@ -11,7 +11,6 @@ export default function Home() {
     setActiveMenu,
     activeSubmission,
     fetchSubmissions,
-    isLoading
   } = useDsiStore();
 
   // CRITICAL: Fetch the pipeline data when the app loads

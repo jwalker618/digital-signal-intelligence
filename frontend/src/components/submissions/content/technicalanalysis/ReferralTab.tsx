@@ -20,12 +20,13 @@ export default function ReferralTab() {
     activeVersion,
     activeReferral,
     riskSignals,
-    isFetchingRiskSignals,
     fetchRiskSignals,
     submitSignalOverride,
     updateDecision,
-    navigateBack
+    navigateBack,
   } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isFetchingRiskSignals = useDsiStore((s) => s.loading.riskSignals ?? false);
 
   const [overrideModal, setOverrideModal] = useState<{ isOpen: boolean; signal: any } | null>(null);
   const [auditedValue, setAuditedValue] = useState<string>("");

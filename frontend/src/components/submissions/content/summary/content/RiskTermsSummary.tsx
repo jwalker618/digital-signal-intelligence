@@ -10,7 +10,7 @@ import { formatNumber, formatText } from "@/lib/format";
 import { LabelValueList } from "@/components/base/content/primatives";
 
 export default function RiskTermsSummary() {
-  const { activeRisk } = useDsiStore() as any;
+  const { activeRisk } = useDsiStore();
 
   if (!activeRisk) {
     return <p className="generate-comment-message">No risk terms available</p>;

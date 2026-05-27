@@ -27,9 +27,10 @@ export default function LossTab() {
     lossCohortBenchmarks,
     lossTrendDistribution,
     lossScatterData,
-    isFetchingLossAnalytics,
-    fetchLossAnalytics
+    fetchLossAnalytics,
   } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isFetchingLossAnalytics = useDsiStore((s) => s.loading.lossAnalytics ?? false);
 
   useEffect(() => {
     if (activeSubmission?.coverage) {

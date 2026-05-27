@@ -9,7 +9,7 @@ import { formatText } from "@/lib/format";
 import { KeyValueList } from "@/components/base/content/primatives";
 
 export default function DiscoveryOutputList() {
-  const { activeVersion } = useDsiStore() as any;
+  const { activeVersion } = useDsiStore();
 
   return (
     <KeyValueList

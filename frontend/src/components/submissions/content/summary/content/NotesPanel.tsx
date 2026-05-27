@@ -12,7 +12,7 @@ interface StoredNote {
 }
 
 export default function NotesPanel() {
-  const { activeVersion, addNote } = useDsiStore() as any;
+  const { activeVersion, addNote } = useDsiStore();
   const notes: Array<StoredNote | string> = activeVersion?.notes ?? [];
 
   const [newNoteText, setNewNoteText] = useState("");
@@ -77,7 +77,7 @@ export default function NotesPanel() {
 
 /** Caller helper — returns `Notes (N)` for use as the StandardCard title. */
 export function useNotesCountTitle(base = "Notes"): string {
-  const { activeVersion } = useDsiStore() as any;
+  const { activeVersion } = useDsiStore();
   const n = activeVersion?.notes?.length ?? 0;
   return `${base} (${n})`;
 }

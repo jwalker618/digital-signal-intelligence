@@ -10,7 +10,7 @@ import { formatNumber, formatText } from "@/lib/format";
 import { LabelValueList } from "@/components/base/content/primatives";
 
 export default function CommercialSummary() {
-  const { activeCommercial } = useDsiStore() as any;
+  const { activeCommercial } = useDsiStore();
 
   if (!activeCommercial) {
     return <p className="generate-comment-message">No commercial terms available</p>;

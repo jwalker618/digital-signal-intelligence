@@ -9,7 +9,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import { formatDate, formatText } from "@/lib/format";
 
 export default function DecisionStatusFields() {
-  const { activeQuote } = useDsiStore() as any;
+  const { activeQuote } = useDsiStore();
 
   if (!activeQuote) return null;
 

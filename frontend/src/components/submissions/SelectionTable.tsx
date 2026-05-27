@@ -14,12 +14,13 @@ export default function SelectionTable({ type }: { type: "full" | "referral" }) 
   const {
     setPageQuickAction,
     submissions,
-    isLoading,
     daysFilter,
     setDaysFilter,
     fetchCoreSubmissionDetail,
-    updateDecision
+    updateDecision,
   } = useDsiStore();
+  // v8 refactor: loading state consolidated into dsiStore.loading.{key}
+  const isLoading = useDsiStore((s) => s.loading.submissions ?? false);
 
   // Column filter state
   const [clientFilter, setClientFilter] = useState("");
