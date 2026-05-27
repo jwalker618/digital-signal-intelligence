@@ -26,6 +26,7 @@ import {
 
 import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -108,6 +109,8 @@ export default function MarketPulsePage() {
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <StandardCard title="Climate Pulse — the active market force" lucideIcon={Leaf}>
           <p className="text-sm py-2">{data.climate_pulse_summary}</p>

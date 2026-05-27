@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -132,6 +133,8 @@ export default function RecommendationsPage() {
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         {data.recommendations.length === 0 ? (
           <StandardCard title="No gaps detected" lucideIcon={CheckCircle2}>

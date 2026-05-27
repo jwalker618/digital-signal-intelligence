@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -121,6 +122,8 @@ export default function CommunicationsListPage() {
             />
           </div>
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <StandardCard
           title={`${showOpenOnly ? "Open" : "All"} threads (${items.length})`}

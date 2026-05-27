@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -507,6 +508,8 @@ function BrokerOverview({
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <StandardCard
           title={`Book of Clients (${clients.length} policies)`}

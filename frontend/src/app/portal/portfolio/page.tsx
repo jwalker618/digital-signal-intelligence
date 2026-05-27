@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -102,6 +103,8 @@ export default function BookHealthPage() {
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <CardGrid cols="grid-cols-1 lg:grid-cols-3" className="gap-4">
           <StandardCard title="Retention" lucideIcon={TrendingUp}>

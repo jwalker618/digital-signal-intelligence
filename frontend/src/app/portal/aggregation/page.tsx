@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -105,6 +106,8 @@ export default function AggregationPage() {
             ]}
           />
         </SubmissionHeaderCard>
+
+        <VerticalFilter />
 
         <StandardCard
           title="Diversification"
