@@ -5,10 +5,9 @@
 // Beyond what clients tell you: engagement score, opportunity / risk
 // flags, renewal calendar, quiet-client alerts.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle,
   ArrowRight,
   Calendar,
   HeartPulse,
@@ -36,8 +35,9 @@ import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchClientHealth } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import type { ClientHealthEntry, ClientHealthResponse } from "@/types/portal";
+import type { ClientHealthEntry } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ClientHealthPage() {
@@ -47,24 +47,12 @@ export default function ClientHealthPage() {
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
   const filter = useVerticalFilter();
 
-  const [data, setData] = useState<ClientHealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Client Health"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchClientHealth(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data, error, loading } = useRoleScopedFetch({
+    fetcher: () => fetchClientHealth(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
   const filtered = useMemo(() => {
     if (!data) return [];

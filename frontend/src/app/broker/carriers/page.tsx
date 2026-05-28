@@ -44,6 +44,7 @@ import type {
   PricingPosition,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 type SortField =
@@ -56,8 +57,6 @@ export default function CarriersPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [carriers, setCarriers] = useState<CarrierSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<CarrierDetailResponse | null>(null);
   const [sortField, setSortField] = useState<SortField>("win_rate");
   const [sortDesc, setSortDesc] = useState(true);
@@ -66,19 +65,11 @@ export default function CarriersPage() {
 
   useEffect(() => { setActiveMenu("Carrier Intelligence"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCarriers(accessToken);
-        if (!cancelled) setCarriers(resp.carriers);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data: roster, error } = useRoleScopedFetch({
+    fetcher: () => fetchCarriers(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
+  const carriers = roster?.carriers ?? null;
 
   const filtered = useMemo(() => {
     if (!carriers) return [];
@@ -173,11 +164,14 @@ export default function CarriersPage() {
               else { setSortField(field); setSortDesc(true); }
             }}
             onSelect={async (slug) => {
+              // Best-effort: a transient failure to open the detail
+              // modal leaves the user on the roster, where retrying
+              // is trivial. v8.3 wires this to the toast system.
               try {
                 const d = await fetchCarrierDetail(accessToken, slug);
                 setDetail(d);
-              } catch (e) {
-                setError(e instanceof Error ? e.message : String(e));
+              } catch {
+                /* noop */
               }
             }}
           />

@@ -7,7 +7,7 @@
 // from the submission detail page, but expands the lists and adds
 // premium math summaries.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 import {
   ChartPie,
@@ -42,46 +42,36 @@ import type {
   SignalImpact,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function DriversPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Risk Insights"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const overview = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (overview.role !== "CLIENT") {
-          setError("Driver detail is currently for client users.");
-          return;
-        }
-        const primary = (overview as ClientOverviewResponse).active_coverages[0];
-        if (!primary) {
-          setError("No active coverage to analyse yet.");
-          return;
-        }
-        setEntityName((overview as ClientOverviewResponse).entity_name);
-        const s = await fetchSubmissionScore(accessToken, primary.submission_code);
-        if (!cancelled) setScore(s);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const overview = await fetchOverview(accessToken);
+      if (overview.role !== "CLIENT") {
+        throw new Error("Driver detail is currently for client users.");
       }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+      const clientData = overview as ClientOverviewResponse;
+      const primary = clientData.active_coverages[0];
+      if (!primary) {
+        throw new Error("No active coverage to analyse yet.");
+      }
+      const score = await fetchSubmissionScore(accessToken, primary.submission_code);
+      return { score, entityName: clientData.entity_name };
+    },
+    enabled: !!accessToken,
+  });
 
   if (error) return <PageError message={error} />;
-  if (!score) return <PageLoading icon={ListChecks} message="Computing signal impact breakdown…" />;
+  if (!bundle) return <PageLoading icon={ListChecks} message="Computing signal impact breakdown…" />;
+
+  const { score, entityName } = bundle;
 
   const drags = score.impact_breakdown?.drags ?? [];
   const strengths = score.impact_breakdown?.strengths ?? [];

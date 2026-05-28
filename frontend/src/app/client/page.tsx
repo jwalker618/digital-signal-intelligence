@@ -7,7 +7,7 @@
 // page at its own persona URL; SessionGuard routes CLIENT users
 // here on login.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -47,11 +47,11 @@ import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   ClientCoverageEntry,
   ClientOverviewResponse,
-  CommunicationItem,
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ClientOverviewPage() {
@@ -60,55 +60,52 @@ export default function ClientOverviewPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<ClientOverviewResponse | null>(null);
-  const [comms, setComms] = useState<CommunicationItem[]>([]);
-  const [primaryScore, setPrimaryScore] = useState<ScoreResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Overview"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [resp, communicationsResp] = await Promise.all([
-          fetchOverview(accessToken),
-          fetchCommunications(accessToken, true),
-        ]);
-        if (cancelled) return;
-        if (resp.role !== "CLIENT") {
-          setError("The client overview is for client users only.");
-          return;
-        }
-        const clientData = resp as ClientOverviewResponse;
-        setData(clientData);
-        setComms(communicationsResp.items);
-
-        if (clientData.active_coverages.length > 0) {
-          const primary = clientData.active_coverages[0];
-          try {
-            const sc = await fetchSubmissionScore(accessToken, primary.submission_code);
-            if (!cancelled) setPrimaryScore(sc);
-          } catch {
-            // Best-effort: signal pulse degrades gracefully if this fails.
-          }
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [resp, communicationsResp] = await Promise.all([
+        fetchOverview(accessToken),
+        fetchCommunications(accessToken, true),
+      ]);
+      if (resp.role !== "CLIENT") {
+        throw new Error("The client overview is for client users only.");
       }
-    }
-    if (accessToken && userRole === "CLIENT") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      const clientData = resp as ClientOverviewResponse;
+
+      // Best-effort follow-up: hydrate the primary coverage's score
+      // breakdown for the Signal Pulse card. Failure here degrades
+      // gracefully -- the rest of the overview still renders.
+      let primaryScore: ScoreResponse | null = null;
+      if (clientData.active_coverages.length > 0) {
+        try {
+          primaryScore = await fetchSubmissionScore(
+            accessToken, clientData.active_coverages[0].submission_code,
+          );
+        } catch {
+          /* noop */
+        }
+      }
+
+      return {
+        data: clientData,
+        comms: communicationsResp.items,
+        primaryScore,
+      };
+    },
+    enabled: !!accessToken && userRole === "CLIENT",
+  });
 
   const aggregates = useMemo(
-    () => aggregateCoverages(data?.active_coverages ?? []),
-    [data?.active_coverages],
+    () => aggregateCoverages(bundle?.data.active_coverages ?? []),
+    [bundle?.data.active_coverages],
   );
 
   if (userRole !== "CLIENT") return <RoleGate expected="client" message="This view is for insured client users only." />;
   if (error) return <PageError message={error} />;
-  if (!data) return <PageLoading icon={Gauge} message="Fetching your overview…" />;
+  if (!bundle) return <PageLoading icon={Gauge} message="Fetching your overview…" />;
+
+  const { data, comms, primaryScore } = bundle;
 
   const primary = data.active_coverages[0] ?? null;
 

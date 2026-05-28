@@ -38,10 +38,10 @@ import {
 } from "@/lib/portalApi";
 import { homePathForRole } from "@/lib/portalPaths";
 import type {
-  CommunicationsThreadResponse,
   CommunicationThreadMessage,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function CommunicationsThreadView({
@@ -54,25 +54,13 @@ export default function CommunicationsThreadView({
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [thread, setThread] = useState<CommunicationsThreadResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => { setActiveMenu("Communications"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCommunicationThread(accessToken, code);
-        if (!cancelled) setThread(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken, code, reloadKey]);
+  const { data: thread, error, reload } = useRoleScopedFetch({
+    fetcher: () => fetchCommunicationThread(accessToken, code),
+    enabled: !!accessToken,
+    deps: [code],
+  });
 
   if (error) return <PageError message={error} />;
   if (!thread) return <PageLoading icon={MessagesSquare} message="Loading thread…" />;
@@ -148,7 +136,7 @@ export default function CommunicationsThreadView({
               referralCode={thread.referral_code}
               accessToken={accessToken}
               suggestedSignal={lastUWMessage?.request_signal_evidence ?? "mfa_enabled"}
-              onSubmitted={() => setReloadKey((k) => k + 1)}
+              onSubmitted={reload}
             />
           </StandardCard>
         )}

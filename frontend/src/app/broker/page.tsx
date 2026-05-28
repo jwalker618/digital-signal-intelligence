@@ -7,7 +7,7 @@
 // page at its own persona URL; SessionGuard routes BROKER users
 // here on login.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -39,10 +39,9 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import type {
   BrokerOverviewResponse,
   ClientBookEntry,
-  CommunicationItem,
-  OverviewResponse,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function BrokerOverviewPage() {
@@ -51,39 +50,30 @@ export default function BrokerOverviewPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<BrokerOverviewResponse | null>(null);
-  const [comms, setComms] = useState<CommunicationItem[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Book of Clients"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [resp, communicationsResp] = await Promise.all([
-          fetchOverview(accessToken),
-          fetchCommunications(accessToken, true),
-        ]);
-        if (cancelled) return;
-        if (resp.role !== "BROKER") {
-          setError("The Book of Clients view is for broker users only.");
-          return;
-        }
-        setData(resp as BrokerOverviewResponse);
-        setComms(communicationsResp.items);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [resp, communicationsResp] = await Promise.all([
+        fetchOverview(accessToken),
+        fetchCommunications(accessToken, true),
+      ]);
+      if (resp.role !== "BROKER") {
+        throw new Error("The Book of Clients view is for broker users only.");
       }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      return {
+        data: resp as BrokerOverviewResponse,
+        comms: communicationsResp.items,
+      };
+    },
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
   if (userRole !== "BROKER") return <RoleGate expected="broker" message="The Book of Clients view is for broker users only." />;
   if (error) return <PageError message={error} />;
-  if (!data) return <PageLoading icon={Gauge} message="Fetching your book…" />;
+  if (!bundle) return <PageLoading icon={Gauge} message="Fetching your book…" />;
 
+  const { data, comms } = bundle;
   const clients = data.clients;
   const scoredClients = clients.filter((c) => c.composite_score != null);
   const avgScore = scoredClients.length

@@ -46,9 +46,9 @@ import type {
   LineDetailResponse,
   LossEventEntry,
   MarketLineSummary,
-  MarketPulseResponse,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function MarketPulsePage() {
@@ -56,25 +56,14 @@ export default function MarketPulsePage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<MarketPulseResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [lineDetail, setLineDetail] = useState<LineDetailResponse | null>(null);
 
   useEffect(() => { setActiveMenu("Market Pulse"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchMarketPulse(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchMarketPulse(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
   if (userRole !== "BROKER") return <RoleGate expected="broker" message="Market Pulse is for broker users only." />;
   if (error) return <PageError message={error} />;
@@ -125,11 +114,14 @@ export default function MarketPulsePage() {
                 key={line.slug}
                 line={line}
                 onClick={async () => {
+                  // Best-effort modal open -- a transient failure
+                  // leaves the user on the page with the chip list
+                  // still intact. v8.3 wires this to toasts.
                   try {
                     const d = await fetchMarketLineDetail(accessToken, line.slug);
                     setLineDetail(d);
-                  } catch (e) {
-                    setError(e instanceof Error ? e.message : String(e));
+                  } catch {
+                    /* noop */
                   }
                 }}
               />

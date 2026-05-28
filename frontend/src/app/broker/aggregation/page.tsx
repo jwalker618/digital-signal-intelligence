@@ -37,11 +37,11 @@ import { useDsiStore } from "@/store/dsiStore";
 import { fetchAggregation } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type {
-  AggregationResponse,
   CatPerilExposure,
   ConcentrationEntry,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 const PERIL_ICONS: Record<string, typeof Cloud> = {
@@ -59,25 +59,14 @@ export default function AggregationPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<AggregationResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [selectedPeril, setSelectedPeril] = useState<string | null>(null);
 
   useEffect(() => { setActiveMenu("Risk Aggregation"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchAggregation(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchAggregation(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
   if (userRole !== "BROKER") return <RoleGate expected="broker" message="Risk Aggregation is for broker users only." />;
   if (error) return <PageError message={error} />;

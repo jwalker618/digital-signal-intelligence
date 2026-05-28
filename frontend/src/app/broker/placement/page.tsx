@@ -8,7 +8,7 @@
 //   - Submission selected: ranked carrier matches with predicted
 //     pricing, commission, ESG fit, win rate, rationale
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Briefcase,
   Building2,
@@ -45,6 +45,7 @@ import type {
   PlacementStrategyResponse,
 } from "@/types/portal";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function PlacementPage() {
@@ -53,49 +54,29 @@ export default function PlacementPage() {
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
   const filter = useVerticalFilter();
 
-  const [overview, setOverview] = useState<BrokerOverviewResponse | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [strategy, setStrategy] = useState<PlacementStrategyResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => { setActiveMenu("Placement Strategy"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (resp.role !== "BROKER") {
-          setError("Placement Strategy is for broker users only.");
-          return;
-        }
-        setOverview(resp as BrokerOverviewResponse);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: overview, error: overviewError } = useRoleScopedFetch({
+    fetcher: async () => {
+      const resp = await fetchOverview(accessToken);
+      if (resp.role !== "BROKER") {
+        throw new Error("Placement Strategy is for broker users only.");
       }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      return resp as BrokerOverviewResponse;
+    },
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadStrategy() {
-      if (!selected) { setStrategy(null); return; }
-      try {
-        const resp = await fetchPlacementStrategy(accessToken, selected);
-        if (!cancelled) setStrategy(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    loadStrategy();
-    return () => { cancelled = true; };
-  }, [accessToken, selected]);
+  const { data: strategy } = useRoleScopedFetch({
+    fetcher: () => fetchPlacementStrategy(accessToken, selected!),
+    enabled: !!accessToken && userRole === "BROKER" && selected != null,
+    deps: [selected],
+  });
 
   if (userRole !== "BROKER") return <RoleGate expected="broker" message="Placement Strategy is for broker users only." />;
-  if (error) return <PageError message={error} />;
+  if (overviewError) return <PageError message={overviewError} />;
   if (!overview) return <PageLoading icon={TargetIcon} message="Loading placement strategy…" />;
 
   const filteredClients = overview.clients.filter((c) => {

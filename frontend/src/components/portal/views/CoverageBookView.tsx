@@ -7,7 +7,7 @@
 // score) over the underlying policies, then a row per policy that
 // links to the policy detail view.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
@@ -37,13 +37,11 @@ import { formatCurrency, formatNumber } from "@/lib/format";
 import { homePathForRole } from "@/lib/portalPaths";
 import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
-  BrokerOverviewResponse,
   ClientBookEntry,
   ClientCoverageEntry,
-  ClientOverviewResponse,
-  OverviewResponse,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 type AnyPolicy = ClientBookEntry | ClientCoverageEntry;
@@ -57,24 +55,12 @@ export default function CoverageBookView() {
 
   const personaHome = homePathForRole(userRole);
 
-  const [data, setData] = useState<OverviewResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Coverages"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchOverview(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchOverview(accessToken),
+    enabled: !!accessToken,
+  });
 
   if (error) return <PageError message={error} />;
   if (!data) return <PageLoading icon={ShieldCheck} message="Loading coverages…" />;

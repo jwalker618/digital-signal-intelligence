@@ -36,52 +36,42 @@ import {
 } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type {
-  ActionsResponse,
   ClientOverviewResponse,
   RemediationAction,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ActionsPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [actions, setActions] = useState<ActionsResponse | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<RemediationAction | null>(null);
 
   useEffect(() => { setActiveMenu("Action Plan"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const overview = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (overview.role !== "CLIENT") {
-          setError("Action plan view is currently for client users.");
-          return;
-        }
-        const primary = (overview as ClientOverviewResponse).active_coverages[0];
-        if (!primary) {
-          setError("No active coverage to build actions for.");
-          return;
-        }
-        setEntityName((overview as ClientOverviewResponse).entity_name);
-        const a = await fetchSubmissionActions(accessToken, primary.submission_code);
-        if (!cancelled) setActions(a);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const overview = await fetchOverview(accessToken);
+      if (overview.role !== "CLIENT") {
+        throw new Error("Action plan view is currently for client users.");
       }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+      const clientData = overview as ClientOverviewResponse;
+      const primary = clientData.active_coverages[0];
+      if (!primary) {
+        throw new Error("No active coverage to build actions for.");
+      }
+      const actions = await fetchSubmissionActions(accessToken, primary.submission_code);
+      return { actions, entityName: clientData.entity_name };
+    },
+    enabled: !!accessToken,
+  });
 
   if (error) return <PageError message={error} />;
-  if (!actions) return <PageLoading icon={Lightbulb} message="Building your action plan…" />;
+  if (!bundle) return <PageLoading icon={Lightbulb} message="Building your action plan…" />;
+
+  const { actions, entityName } = bundle;
 
   const plan = actions.remediation_plan.actions;
   const totalSavings = plan.reduce((a, action) => a + Math.abs(action.estimated_premium_delta_usd), 0);

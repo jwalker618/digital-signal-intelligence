@@ -8,6 +8,7 @@
 //   CLIENT: queries on their own submissions
 
 import { useEffect, useState } from "react";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { useRouter } from "next/navigation";
 
 import {
@@ -32,7 +33,6 @@ import { fetchCommunications } from "@/lib/portalApi";
 import { homePathForRole } from "@/lib/portalPaths";
 import type {
   CommunicationItem,
-  CommunicationsListResponse,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
 
@@ -47,25 +47,14 @@ export default function CommunicationsListView() {
   // current persona's communications subtree. Same view, two URLs.
   const personaHome = homePathForRole(userRole);
 
-  const [data, setData] = useState<CommunicationsListResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [showOpenOnly, setShowOpenOnly] = useState(true);
 
   useEffect(() => { setActiveMenu("Communications"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCommunications(accessToken, false);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchCommunications(accessToken, false),
+    enabled: !!accessToken,
+  });
 
   if (error) return <PageError message={error} />;
   if (!data) return <PageLoading icon={MessagesSquare} message="Loading communications…" />;

@@ -60,6 +60,7 @@ import type {
   SubmissionDetailResponse,
 } from "@/types/portal";
 import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function SubmissionDetailView({
@@ -72,39 +73,28 @@ export default function SubmissionDetailView({
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [detail, setDetail] = useState<SubmissionDetailResponse | null>(null);
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [peers, setPeers] = useState<PeersResponse | null>(null);
-  const [actions, setActions] = useState<ActionsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => {
     setActiveMenu("Submission Detail");
   }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [d, s, p, a] = await Promise.all([
-          fetchSubmissionDetail(accessToken, code),
-          fetchSubmissionScore(accessToken, code),
-          fetchSubmissionPeers(accessToken, code),
-          fetchSubmissionActions(accessToken, code),
-        ]);
-        if (cancelled) return;
-        setDetail(d); setScore(s); setPeers(p); setActions(a);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken, code, reloadKey]);
+  const { data: bundle, error, reload } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [detail, score, peers, actions] = await Promise.all([
+        fetchSubmissionDetail(accessToken, code),
+        fetchSubmissionScore(accessToken, code),
+        fetchSubmissionPeers(accessToken, code),
+        fetchSubmissionActions(accessToken, code),
+      ]);
+      return { detail, score, peers, actions };
+    },
+    enabled: !!accessToken,
+    deps: [code],
+  });
 
   if (error) return <PageError message={error} />;
-  if (!detail || !score) return <PageLoading icon={Gauge} message="Fetching submission detail…" />;
+  if (!bundle) return <PageLoading icon={Gauge} message="Fetching submission detail…" />;
+
+  const { detail, score, peers, actions } = bundle;
 
   const decision = detail.referral?.status === "awaiting_broker"
     ? "refer"
@@ -253,7 +243,7 @@ export default function SubmissionDetailView({
               detail={detail}
               userRole={userRole}
               accessToken={accessToken}
-              onReplied={() => setReloadKey((k) => k + 1)}
+              onReplied={reload}
             />
           </StandardCard>
         )}
