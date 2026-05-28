@@ -38,7 +38,7 @@ import {
   ScoreBar,
   StatsGrid,
 } from "@/components/base/content/primatives";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
