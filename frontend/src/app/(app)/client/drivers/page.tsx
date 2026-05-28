@@ -3,22 +3,23 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, FileDown, TrendingDown, TrendingUp } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
+import { Button } from "@/components/ui/button";
+import { Eyebrow, NumDisplay, Body, Micro, Caption } from "@/components/ui/typography";
 import { Waterfall } from "@/components/charts/waterfall";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview, fetchSubmissionScore } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type {
+  ImpactBreakdown,
   OverviewResponse,
   ScoreResponse,
-  SignalImpact,
 } from "@/types/portal";
 
 export default function ClientDriversPage() {
@@ -36,7 +37,6 @@ function DriversInner() {
   const params = useSearchParams();
   const explicitCode = params.get("code");
 
-  // Always need /overview to know which coverages exist and pick a default.
   const overview = useRoleScopedFetch<OverviewResponse>({
     fetcher: () => fetchOverview(accessToken),
     enabled,
@@ -97,12 +97,16 @@ function NoCoverage({ entityName }: { entityName: string }) {
             >
               Coverages
             </Link>{" "}
-            to view its score build-up.
+            to view its premium build-up.
           </Body>
         </Card>
       </div>
     </>
   );
+}
+
+function sumDeltas(items: ImpactBreakdown["strengths"]): number {
+  return items.reduce((sum, s) => sum + s.premium_delta_usd, 0);
 }
 
 function DriversBody({
@@ -117,6 +121,10 @@ function DriversBody({
   activeCode: string;
 }) {
   const ib = score.impact_breakdown;
+  const basePremium = ib?.base_premium ?? score.base_premium ?? 0;
+  const finalPremium = ib?.final_premium ?? score.final_premium ?? 0;
+  const strengthsDelta = ib ? sumDeltas(ib.strengths) : 0;
+  const dragsDelta = ib ? sumDeltas(ib.drags) : 0;
 
   return (
     <>
@@ -125,62 +133,76 @@ function DriversBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header className="flex items-end justify-between gap-6">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* ────────── ROW 1 — title strip ────────── */}
+          <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <Eyebrow>Risk Insights</Eyebrow>
+              <Eyebrow>Risk insights</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                {score.coverage}
+                Your premium, broken down to the signal
               </h1>
-              <Body className="mt-2">
-                What's pushing your composite up or down — strengths captured
-                vs. signals still pending.
-              </Body>
             </div>
             <CoveragePicker
               all={allCoverages}
               activeCode={activeCode}
               baseHref="/client/drivers"
             />
-          </header>
+          </div>
 
-          {/* Headline metrics */}
-          <div className="grid gap-4 md:grid-cols-4">
+          {/* ────────── ROW 2 — 4 headline math cards ────────── */}
+          <div className="grid gap-3 md:grid-cols-4">
             <HeadlineCard
               variant="default"
               label="Base premium"
-              value={ib?.base_premium ?? score.base_premium}
+              valueText={basePremium > 0 ? formatCurrency(basePremium) : "—"}
+              caption="Industry × revenue × limit"
             />
             <HeadlineCard
               variant="pos"
-              label="Strengths captured"
-              value={ib ? ib.strengths.reduce((s, x) => s + x.premium_delta_usd, 0) : null}
-              countSuffix={ib ? `${ib.strengths.length} signals` : undefined}
+              label="Strengths"
+              valueText={
+                ib ? formatSigned(strengthsDelta) : "—"
+              }
+              caption={
+                ib
+                  ? `${ib.strengths.length} signal${ib.strengths.length === 1 ? "" : "s"} lowering your premium`
+                  : "Pending"
+              }
             />
             <HeadlineCard
               variant="spot"
-              label="Opportunity gap"
-              value={ib ? ib.drags.reduce((s, x) => s + x.premium_delta_usd, 0) : null}
-              countSuffix={ib ? `${ib.drags.length} signals` : undefined}
+              label="Opportunity"
+              valueText={ib ? formatSigned(dragsDelta) : "—"}
+              caption={
+                ib
+                  ? `${ib.drags.length} signal${ib.drags.length === 1 ? "" : "s"} to act on`
+                  : "Pending"
+              }
             />
             <HeadlineCard
               variant="info"
               label="Final premium"
-              value={ib?.final_premium ?? score.final_premium}
-              emphasis
+              valueText={finalPremium > 0 ? formatCurrency(finalPremium) : "—"}
+              caption="As quoted by your carrier"
             />
           </div>
 
-          {/* Waterfall */}
+          {/* ────────── ROW 3 — waterfall card ────────── */}
           {ib && (
             <Card pad="lg">
-              <header className="mb-4 flex items-center justify-between">
-                <Eyebrow>Premium waterfall</Eyebrow>
-                <Micro>
-                  Modifier {ib.total_modifier > 0 ? "+" : ""}
-                  {(ib.total_modifier * 100).toFixed(1)}%
-                </Micro>
-              </header>
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <div>
+                  <Eyebrow>Premium build-up</Eyebrow>
+                  <h3 className="mt-1.5 font-display text-[18px] font-semibold leading-tight text-ink">
+                    From base to bound — every signal accounted for
+                  </h3>
+                </div>
+                <div className="flex flex-wrap items-center gap-3.5">
+                  <LegendDot color="bg-pos" label="Strengths" />
+                  <LegendDot color="bg-spot" label="Opportunity" />
+                  <LegendDot color="bg-ink" label="Premium" />
+                </div>
+              </div>
               <Waterfall
                 items={[
                   {
@@ -189,18 +211,18 @@ function DriversBody({
                     value: ib.base_premium,
                     type: "base",
                   },
-                  {
-                    id: "strengths",
-                    label: "Strengths",
-                    value: ib.strengths.reduce((s, x) => s + x.premium_delta_usd, 0),
-                    type: "pos",
-                  },
-                  {
-                    id: "drags",
-                    label: "Drags",
-                    value: ib.drags.reduce((s, x) => s + x.premium_delta_usd, 0),
-                    type: "opp",
-                  },
+                  ...ib.strengths.slice(0, 4).map((s) => ({
+                    id: s.signal_key,
+                    label: s.signal_label,
+                    value: s.premium_delta_usd,
+                    type: "pos" as const,
+                  })),
+                  ...ib.drags.slice(0, 4).map((d) => ({
+                    id: d.signal_key,
+                    label: d.signal_label,
+                    value: d.premium_delta_usd,
+                    type: "opp" as const,
+                  })),
                   {
                     id: "final",
                     label: "Final",
@@ -208,173 +230,173 @@ function DriversBody({
                     type: "final",
                   },
                 ]}
+                height={240}
               />
             </Card>
           )}
 
-          {/* Signal lists */}
-          {ib && (
-            <div className="grid gap-5 md:grid-cols-2">
-              <SignalImpactList
-                title="What's helping"
-                accent="pos"
-                items={ib.strengths}
-                empty="No strengths captured yet — opportunities below."
-              />
-              <SignalImpactList
-                title="Opportunities"
-                accent="spot"
-                items={ib.drags}
-                empty="No drags — everything is captured. 🎉"
-              />
-            </div>
-          )}
-
-          {/* Loss + exposure quick stats */}
-          {(score.loss_propensity_score != null ||
-            score.exposure_value != null) && (
-            <Card pad="lg" className="space-y-3">
-              <Eyebrow>Loss + exposure</Eyebrow>
-              <div className="grid gap-2 md:grid-cols-2">
-                {score.loss_propensity_score != null && (
-                  <LabelRow
-                    label="Loss propensity"
-                    value={`${score.loss_propensity_score.toFixed(0)} ${score.loss_propensity_band ? `· ${score.loss_propensity_band}` : ""}`}
-                  />
-                )}
-                {score.severity_propensity_score != null && (
-                  <LabelRow
-                    label="Severity propensity"
-                    value={score.severity_propensity_score.toFixed(0)}
-                  />
-                )}
-                {score.exposure_value != null && (
-                  <LabelRow
-                    label="Exposure value"
-                    value={formatCurrency(score.exposure_value)}
-                  />
-                )}
-                {score.exposure_size_score != null && (
-                  <LabelRow
-                    label="Exposure size score"
-                    value={score.exposure_size_score.toFixed(0)}
-                  />
+          {/* ────────── ROW 4 — loss / exposure / next move ────────── */}
+          <div className="grid gap-4 md:grid-cols-3">
+            <Card variant="pos" pad="lg" className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <Eyebrow className="text-pos">Loss outlook</Eyebrow>
+                  <p className="mt-1 text-xl font-semibold text-pos">
+                    {score.loss_propensity_band ?? "—"}
+                  </p>
+                </div>
+                {score.loss_trend_direction && (
+                  <Chip variant="pos" size="sm">
+                    <TrendingDown size={11} /> {score.loss_trend_direction}
+                  </Chip>
                 )}
               </div>
+              <div className="mt-1 grid grid-cols-2 gap-3">
+                <StatLine
+                  label="Frequency"
+                  value={
+                    score.loss_propensity_score != null
+                      ? score.loss_propensity_score.toFixed(0)
+                      : "—"
+                  }
+                />
+                <StatLine
+                  label="Severity"
+                  value={
+                    score.severity_propensity_score != null
+                      ? score.severity_propensity_score.toFixed(0)
+                      : "—"
+                  }
+                />
+              </div>
             </Card>
-          )}
 
-          <Link
-            href={`/client/actions?code=${activeCode}`}
-            className="inline-flex items-center gap-2 self-start rounded-card border border-info bg-info-soft px-4 py-3 text-[13px] font-semibold text-info-deep transition hover:bg-info hover:text-white dark:text-info"
-          >
-            See action plan for these opportunities <ArrowRight size={14} />
-          </Link>
+            <Card variant="aux" pad="lg" className="flex flex-col gap-2">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <Eyebrow className="text-aux">Exposure</Eyebrow>
+                  <p className="mt-1 text-xl font-semibold text-aux">
+                    {score.exposure_value != null
+                      ? formatCurrency(score.exposure_value)
+                      : "—"}
+                  </p>
+                  {score.exposure_band_label && (
+                    <Caption className="mt-0.5 block">
+                      {score.exposure_band_label}
+                    </Caption>
+                  )}
+                </div>
+                <Chip variant="aux" size="sm">
+                  <TrendingUp size={11} /> Where you sit
+                </Chip>
+              </div>
+              {score.exposure_size_score != null && (
+                <StatLine
+                  label="Market scale"
+                  value={`${score.exposure_size_score.toFixed(0)} / 100`}
+                />
+              )}
+            </Card>
+
+            <Card variant="spot" pad="lg" className="flex flex-col gap-3">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <Eyebrow className="text-spot">Your next move</Eyebrow>
+                  <p className="mt-1 text-[20px] font-semibold leading-none text-spot-deep dark:text-spot">
+                    {ib && dragsDelta > 0
+                      ? `${formatSigned(-dragsDelta)} available`
+                      : "—"}
+                  </p>
+                </div>
+                {ib && (
+                  <Chip variant="spot" size="sm">
+                    {ib.drags.length} action{ib.drags.length === 1 ? "" : "s"}
+                  </Chip>
+                )}
+              </div>
+              <Caption>
+                The opportunity signals above are each linked to a concrete
+                remediation, prioritised by leverage (impact ÷ effort).
+              </Caption>
+              <div className="mt-auto flex gap-2">
+                <Link href={`/client/actions?code=${activeCode}`}>
+                  <Button variant="spot" size="sm">
+                    See action plan <ArrowRight size={13} />
+                  </Button>
+                </Link>
+                <Button variant="ghost" size="sm" disabled>
+                  <FileDown size={13} /> Export PDF
+                </Button>
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
+function formatSigned(value: number): string {
+  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  const abs = Math.abs(value);
+  return `${sign}${formatCurrency(abs)}`;
+}
+
 function HeadlineCard({
   variant,
   label,
-  value,
-  countSuffix,
-  emphasis,
+  valueText,
+  caption,
 }: {
   variant: "default" | "pos" | "spot" | "info";
   label: string;
-  value: number | null | undefined;
-  countSuffix?: string;
-  emphasis?: boolean;
+  valueText: string;
+  caption: string;
 }) {
+  const eyebrowTone =
+    variant === "pos"
+      ? "text-pos"
+      : variant === "spot"
+        ? "text-spot"
+        : variant === "info"
+          ? "text-info-deep dark:text-info"
+          : "";
+  const valueTone =
+    variant === "pos"
+      ? "text-pos"
+      : variant === "spot"
+        ? "text-spot-deep dark:text-spot"
+        : variant === "info"
+          ? "text-info-deep dark:text-info"
+          : "";
   return (
     <Card pad="md" variant={variant}>
-      <Micro
-        className={
-          variant === "info"
-            ? "text-info-deep dark:text-info"
-            : variant === "pos"
-              ? "text-pos"
-              : variant === "spot"
-                ? "text-spot-deep dark:text-spot"
-                : ""
-        }
-      >
-        {label}
-      </Micro>
-      <div className="mt-2">
-        {value != null ? (
-          <NumDisplay size={emphasis ? "lg" : "md"}>
-            {value > 0 ? "" : ""}
-            {formatCurrency(value)}
-          </NumDisplay>
-        ) : (
-          <Body className="italic">Pending</Body>
-        )}
-      </div>
-      {countSuffix && <Micro className="mt-1.5 block">{countSuffix}</Micro>}
+      <Eyebrow className={eyebrowTone}>{label}</Eyebrow>
+      <NumDisplay size="md" className={cn("mt-1.5 block", valueTone)}>
+        {valueText}
+      </NumDisplay>
+      <Caption className="mt-1 block">{caption}</Caption>
     </Card>
   );
 }
 
-function SignalImpactList({
-  title,
-  accent,
-  items,
-  empty,
-}: {
-  title: string;
-  accent: "pos" | "spot";
-  items: SignalImpact[];
-  empty: string;
-}) {
-  const sorted = [...items].sort(
-    (a, b) => Math.abs(b.premium_delta_usd) - Math.abs(a.premium_delta_usd),
-  );
+function LegendDot({ color, label }: { color: string; label: string }) {
   return (
-    <Card pad="lg" variant={accent}>
-      <header className="flex items-center justify-between">
-        <Eyebrow className={accent === "pos" ? "text-pos" : "text-spot-deep dark:text-spot"}>
-          {title}
-        </Eyebrow>
-        <Micro>{items.length} signals</Micro>
-      </header>
-      {items.length === 0 ? (
-        <Body className="mt-3 italic">{empty}</Body>
-      ) : (
-        <ul className="mt-3 space-y-2">
-          {sorted.slice(0, 8).map((s) => (
-            <li
-              key={s.signal_key}
-              className="flex items-baseline justify-between gap-3 border-b border-rule/40 pb-2 last:border-0 last:pb-0"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13.5px] font-medium text-ink">
-                  {s.signal_label}
-                </p>
-                <Micro className="block">
-                  {s.signal_source} · modifier{" "}
-                  {(s.combined_modifier * 100).toFixed(1)}%
-                </Micro>
-              </div>
-              <span
-                className={`shrink-0 text-[13px] font-semibold tabular-nums ${accent === "pos" ? "text-pos" : "text-spot"}`}
-              >
-                {s.premium_delta_usd > 0 ? "+" : ""}
-                {formatCurrency(s.premium_delta_usd)}
-              </span>
-            </li>
-          ))}
-          {items.length > 8 && (
-            <li>
-              <Micro>+{items.length - 8} more</Micro>
-            </li>
-          )}
-        </ul>
-      )}
-    </Card>
+    <span className="flex items-center gap-1.5 text-[11px] text-ink-mute">
+      <span className={cn("h-2.5 w-2.5 rounded-sm", color)} />
+      {label}
+    </span>
+  );
+}
+
+function StatLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <Micro>{label}</Micro>
+      <span className="text-[13px] font-semibold tabular-nums text-ink">
+        {value}
+      </span>
+    </div>
   );
 }
 

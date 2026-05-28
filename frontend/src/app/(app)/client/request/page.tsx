@@ -2,12 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { CheckCircle2, ChevronDown, ShieldPlus, Loader2 } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronDown,
+  Info,
+  Loader2,
+  Send,
+  UploadCloud,
+} from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, NumDisplay, Body, Micro, Caption } from "@/components/ui/typography";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview, postCoverageRequest } from "@/lib/portalApi";
@@ -32,6 +38,9 @@ const SUGGESTED_LINES = [
   "Employment Practices",
 ];
 
+const inputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface-elev px-3.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
+
 export default function ClientRequestPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
@@ -50,16 +59,10 @@ export default function ClientRequestPage() {
   if (!overview.data || overview.data.role !== "CLIENT")
     return <RoleGate expected="client" />;
 
-  const held = new Set(
-    overview.data.active_coverages.map((c) => c.coverage.toLowerCase()),
-  );
-  const gaps = SUGGESTED_LINES.filter((l) => !held.has(l.toLowerCase()));
-
   return (
     <RequestBody
       entityName={overview.data.entity_name}
       brokerName={overview.data.broker?.name ?? null}
-      gaps={gaps}
     />
   );
 }
@@ -67,11 +70,9 @@ export default function ClientRequestPage() {
 function RequestBody({
   entityName,
   brokerName,
-  gaps,
 }: {
   entityName: string;
   brokerName: string | null;
-  gaps: string[];
 }) {
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -125,9 +126,8 @@ function RequestBody({
                 Request {success.request_code} sent
               </h1>
               <Body className="mt-2">
-                {brokerName ? brokerName : "Your broker"} will pick this up and
-                draft a submission. You can track the conversation in
-                Communications.
+                {brokerName ?? "Your broker"} will pick this up and draft a
+                submission. You can track the conversation in Communications.
               </Body>
             </div>
             <div className="flex gap-3">
@@ -165,152 +165,183 @@ function RequestBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1024px] gap-6 lg:grid-cols-[1fr_320px]">
-          <Card pad="lg" className="space-y-5">
-            <header>
-              <Eyebrow>New request</Eyebrow>
-              <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-                Request coverage
-              </h1>
-              <Body className="mt-2">
-                We'll forward this to{" "}
-                <span className="font-semibold text-ink">
-                  {brokerName ?? "your broker"}
-                </span>
-                . You'll see their reply in Communications.
-              </Body>
-            </header>
+        <div className="mx-auto grid max-w-[1280px] gap-5">
+          <div>
+            <Eyebrow>Request coverage</Eyebrow>
+            <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
+              Tell your broker what you&apos;d like to explore
+            </h1>
+            <Body className="mt-2 max-w-[640px]">
+              No commitment, no obligation. Submitting this notifies your
+              broker — they&apos;ll review and reply in Communications, where
+              you can refine the request together before any formal submission
+              goes to market.
+            </Body>
+          </div>
 
-            <form className="space-y-5" onSubmit={onSubmit}>
-              <Field id="coverage" label="Coverage line" required>
-                <input
-                  id="coverage"
-                  type="text"
-                  required
-                  value={coverage}
-                  onChange={(e) => setCoverage(e.target.value)}
-                  list="suggested-lines"
-                  placeholder="e.g. Cyber, D&O, Property…"
-                  className={inputClass}
-                />
-                <datalist id="suggested-lines">
-                  {SUGGESTED_LINES.map((l) => (
-                    <option key={l} value={l} />
-                  ))}
-                </datalist>
-              </Field>
-
-              <div className="grid gap-5 md:grid-cols-2">
-                <Field id="limit" label="Desired limit (USD)">
-                  <input
-                    id="limit"
-                    type="number"
-                    inputMode="numeric"
-                    min={0}
-                    step={100_000}
-                    value={desiredLimit}
-                    onChange={(e) => setDesiredLimit(e.target.value)}
-                    placeholder="5,000,000"
-                    className={inputClass}
-                  />
+          <form
+            onSubmit={onSubmit}
+            className="grid gap-5 lg:grid-cols-[1.4fr_1fr]"
+          >
+            <Card pad="lg">
+              <div className="flex flex-col gap-5">
+                <Field label="Coverage line" required>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      value={coverage}
+                      onChange={(e) => setCoverage(e.target.value)}
+                      list="suggested-lines"
+                      placeholder="e.g. Cyber, D&O, Property…"
+                      className={cn(inputClass, "pr-10")}
+                    />
+                    <ChevronDown
+                      size={16}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-mute"
+                    />
+                    <datalist id="suggested-lines">
+                      {SUGGESTED_LINES.map((l) => (
+                        <option key={l} value={l} />
+                      ))}
+                    </datalist>
+                  </div>
                 </Field>
-                <Field id="effective" label="Effective date">
-                  <input
-                    id="effective"
-                    type="date"
-                    value={effectiveDate}
-                    onChange={(e) => setEffectiveDate(e.target.value)}
-                    className={inputClass}
-                  />
-                </Field>
-              </div>
 
-              <Field
-                id="rationale"
-                label="Rationale"
-                hint="What's driving this — new exposure, growth, peer benchmark, contractual requirement, etc."
-              >
-                <textarea
-                  id="rationale"
-                  rows={5}
-                  value={rationale}
-                  onChange={(e) => setRationale(e.target.value)}
-                  placeholder="Optional but speeds up your broker's response."
-                  className={cn(inputClass, "h-auto resize-y py-2.5 leading-[1.55]")}
-                />
-              </Field>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="rounded-btn border border-neg bg-neg-soft px-3 py-2 text-[13px] text-neg"
-                >
-                  {error}
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Desired limit" optional>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      step={100_000}
+                      value={desiredLimit}
+                      onChange={(e) => setDesiredLimit(e.target.value)}
+                      placeholder="$25,000,000"
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field label="Preferred effective date" optional>
+                    <input
+                      type="date"
+                      value={effectiveDate}
+                      onChange={(e) => setEffectiveDate(e.target.value)}
+                      className={inputClass}
+                    />
+                  </Field>
                 </div>
-              )}
 
-              <div className="flex items-center gap-3">
-                <Button type="submit" disabled={!canSubmit} size="lg">
-                  {submitting ? (
-                    <>
-                      <Loader2 size={15} className="animate-spin" />
-                      Submitting…
-                    </>
-                  ) : (
-                    <>
-                      <ShieldPlus size={15} />
-                      Send request
-                    </>
-                  )}
-                </Button>
-                <Micro>Posts to /portal/coverage-requests</Micro>
+                <Field label="Why are you exploring this?" optional>
+                  <textarea
+                    rows={5}
+                    value={rationale}
+                    onChange={(e) => setRationale(e.target.value)}
+                    placeholder="New manufacturing line, contractual requirement, peer benchmark…"
+                    className={cn(inputClass, "h-auto resize-y py-2.5 leading-[1.55]")}
+                  />
+                </Field>
+
+                <Field label="Attachments" optional>
+                  <div className="flex items-center gap-3 rounded-card border border-dashed border-rule-strong px-4 py-4 text-ink-soft">
+                    <UploadCloud size={20} />
+                    <span className="text-[13px]">
+                      Drop COPE summary, valuation reports, or anything else
+                      relevant here.
+                    </span>
+                  </div>
+                </Field>
+
+                {error && (
+                  <div
+                    role="alert"
+                    className="rounded-btn border border-neg bg-neg-soft px-3 py-2 text-[13px] text-neg"
+                  >
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between gap-3 border-t border-rule pt-4">
+                  <Caption>
+                    Your broker{brokerName ? ` (${brokerName})` : ""} will see
+                    this first.
+                  </Caption>
+                  <div className="flex gap-2">
+                    <Button type="button" variant="ghost" disabled>
+                      Save draft
+                    </Button>
+                    <Button type="submit" variant="spot" disabled={!canSubmit}>
+                      {submitting ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Submitting…
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} />
+                          Send to broker
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </form>
-          </Card>
-
-          <aside className="space-y-5">
-            <Card variant="info" pad="md">
-              <Eyebrow className="text-info-deep dark:text-info">
-                Cohort gaps
-              </Eyebrow>
-              {gaps.length === 0 ? (
-                <Body className="mt-2 italic">
-                  Your book already spans every line we typically see for your
-                  cohort.
-                </Body>
-              ) : (
-                <>
-                  <Body className="mt-1.5 text-ink">
-                    Lines your cohort typically holds that you don't:
-                  </Body>
-                  <ul className="mt-3 flex flex-wrap gap-1.5">
-                    {gaps.slice(0, 8).map((g) => (
-                      <li key={g}>
-                        <button
-                          type="button"
-                          onClick={() => setCoverage(g)}
-                          className="cursor-pointer"
-                        >
-                          <Chip variant="info" size="sm">
-                            + {g}
-                          </Chip>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
             </Card>
 
-            <Card pad="md">
-              <Eyebrow>What happens next</Eyebrow>
-              <ol className="mt-3 space-y-2 text-[13px] text-ink">
-                <Step n={1}>Your broker reviews and shapes the submission.</Step>
-                <Step n={2}>They market it; you'll see indicative quotes.</Step>
-                <Step n={3}>You bind or pass — terms appear in Coverages.</Step>
-              </ol>
-            </Card>
-          </aside>
+            <aside className="flex flex-col gap-3.5">
+              <Card variant="info" pad="lg">
+                <Eyebrow className="text-info-deep dark:text-info">
+                  What happens next
+                </Eyebrow>
+                <ol className="mt-3 flex flex-col gap-2.5">
+                  {[
+                    [
+                      "Your broker receives the request",
+                      "Reviews fit + appetite, may ask clarifying questions in Communications.",
+                    ],
+                    [
+                      "DSI estimates the cost",
+                      "Indicative range based on your cohort and current signals.",
+                    ],
+                    [
+                      "You decide whether to go to market",
+                      "Nothing leaves the building until you say so.",
+                    ],
+                  ].map(([title, body], i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span className="flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full bg-info text-[12px] font-bold text-white">
+                        {i + 1}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-ink">{title}</p>
+                        <Caption className="mt-0.5 block leading-relaxed">
+                          {body}
+                        </Caption>
+                      </div>
+                    </li>
+                  ))}
+                </ol>
+              </Card>
+
+              <Card pad="lg">
+                <Eyebrow>Indicative range</Eyebrow>
+                <div className="mt-2 flex items-baseline gap-2">
+                  <NumDisplay size="md">$70k</NumDisplay>
+                  <Caption>to</Caption>
+                  <NumDisplay size="md">$220k</NumDisplay>
+                </div>
+                <Caption className="mt-1 block">
+                  Pricing is set by your carrier at placement.
+                </Caption>
+                <div className="mt-3 flex items-start gap-2.5 rounded-card bg-surface-sunken px-3 py-2.5">
+                  <Info size={14} className="mt-0.5 shrink-0 text-ink-soft" />
+                  <Caption className="leading-relaxed">
+                    Final pricing depends on COPE detail, valuation, and broader
+                    signal context.
+                  </Caption>
+                </div>
+              </Card>
+            </aside>
+          </form>
         </div>
       </div>
     </>
@@ -318,45 +349,26 @@ function RequestBody({
 }
 
 function Field({
-  id,
   label,
-  hint,
   required,
+  optional,
   children,
 }: {
-  id: string;
   label: string;
-  hint?: string;
   required?: boolean;
+  optional?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div>
-      <label
-        htmlFor={id}
-        className="mb-1.5 flex items-baseline justify-between text-[12.5px] font-medium text-ink-soft"
-      >
-        <span>
-          {label}
-          {required && <span className="ml-1 text-spot">*</span>}
-        </span>
-        {hint && <span className="text-[11.5px] text-ink-mute">{hint}</span>}
+      <label className="mb-1.5 flex items-baseline gap-2">
+        <span className="text-[13px] font-semibold text-ink">{label}</span>
+        {required && (
+          <span className="text-[10px] font-semibold text-spot">required</span>
+        )}
+        {optional && <Micro className="text-[10px]">optional</Micro>}
       </label>
       {children}
     </div>
   );
 }
-
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
-  return (
-    <li className="flex items-start gap-2.5">
-      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-surface-sunken text-[11px] font-semibold text-ink-soft">
-        {n}
-      </span>
-      <span>{children}</span>
-    </li>
-  );
-}
-
-const inputClass =
-  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";

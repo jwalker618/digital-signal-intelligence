@@ -5,9 +5,9 @@ import { ChevronRight, ShieldCheck } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
-import { ScoreBar } from "@/components/ui/score-bar";
+import { Eyebrow, Body, Micro, Caption } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview } from "@/lib/portalApi";
@@ -47,14 +47,18 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
     (sum, c) => sum + (c.recommended_premium ?? 0),
     0,
   );
-  const meanScore =
-    coverages.length > 0
-      ? coverages.reduce((sum, c) => sum + (c.composite_score ?? 0), 0) /
-        coverages.length
-      : 0;
   const awaiting = coverages.filter(
     (c) => c.referral_state && /awaiting/i.test(c.referral_state),
   ).length;
+
+  const grouped = new Map<string, ClientCoverageEntry[]>();
+  for (const c of coverages) {
+    const arr = grouped.get(c.coverage) ?? [];
+    arr.push(c);
+    grouped.set(c.coverage, arr);
+  }
+  const groups = Array.from(grouped.entries());
+  const lineCount = groups.length;
 
   return (
     <>
@@ -63,61 +67,71 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
         entity={data.entity_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header className="flex items-end justify-between gap-6">
-            <div>
-              <Eyebrow>Active coverages</Eyebrow>
+        <div className="mx-auto grid max-w-[1400px] gap-5">
+          {/* ────────── ROW 1 — title + KPI strip ────────── */}
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-xl">
+              <Eyebrow>Coverages</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                {coverages.length} polic{coverages.length === 1 ? "y" : "ies"} in force
+                Your active book at a glance
               </h1>
+              <Body className="mt-2">
+                All policies currently in force, grouped by line. Status, peer
+                standing, and the next action are surfaced for each.
+              </Body>
             </div>
-            <Link href="/client/request">
-              <Button variant="primary">
-                <ShieldCheck size={15} />
-                Request coverage
-              </Button>
-            </Link>
-          </header>
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <SummaryTile label="Total premium" emphasis>
-              {formatCurrency(totalPremium)}
-            </SummaryTile>
-            <SummaryTile label="Mean composite score">
-              {meanScore > 0 ? meanScore.toFixed(0) : "—"}
-            </SummaryTile>
-            <SummaryTile label="Awaiting action" emphasis={awaiting > 0}>
-              {awaiting}
-            </SummaryTile>
+            <div className="flex flex-wrap items-start gap-7">
+              <KpiSnug label="Policies" value={coverages.length} />
+              <KpiSnug label="Lines" value={lineCount} />
+              <KpiSnug
+                label="Annual premium"
+                value={totalPremium > 0 ? formatCurrency(totalPremium) : "—"}
+              />
+              <KpiSnug
+                label="Awaiting you"
+                value={awaiting}
+                tone={awaiting > 0 ? "spot" : "default"}
+              />
+            </div>
           </div>
 
+          {/* ────────── ROW 2 — filter bar ────────── */}
+          <div className="flex items-center gap-2">
+            <Micro className="mr-1">Filter:</Micro>
+            <span className="inline-flex items-center gap-1.5 rounded-chip bg-ink px-2.5 py-1 text-[11.5px] font-medium text-canvas">
+              All lines
+            </span>
+            {groups.slice(0, 4).map(([line]) => (
+              <Chip key={line} variant="mute" size="md">
+                {line}
+              </Chip>
+            ))}
+            <div className="flex-1" />
+            <Caption>Sort: by premium</Caption>
+          </div>
+
+          {/* ────────── ROW 3 — per-line cards ────────── */}
           {coverages.length === 0 ? (
-            <Card pad="lg">
-              <Eyebrow>No active coverages</Eyebrow>
-              <Body className="mt-2">
-                Your broker hasn't placed any coverages on this portal yet.
-              </Body>
+            <Card pad="lg" className="flex items-center justify-between gap-4">
+              <div>
+                <Eyebrow>No active coverages</Eyebrow>
+                <Body className="mt-2">
+                  Your broker hasn&apos;t placed any coverages on this portal yet.
+                </Body>
+              </div>
+              <Link href="/client/request">
+                <Button variant="primary">
+                  <ShieldCheck size={15} />
+                  Request coverage
+                </Button>
+              </Link>
             </Card>
           ) : (
-            <Card pad="md" className="overflow-hidden p-0">
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken text-left">
-                    <ColHead width="w-[24%]">Coverage</ColHead>
-                    <ColHead width="w-[14%]">Score</ColHead>
-                    <ColHead width="w-[18%]">Position</ColHead>
-                    <ColHead width="w-[16%]">Premium</ColHead>
-                    <ColHead width="w-[20%]">Status</ColHead>
-                    <ColHead width="w-[8%]">{null}</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {coverages.map((c) => (
-                    <CoverageRow key={c.submission_code} entry={c} />
-                  ))}
-                </tbody>
-              </table>
-            </Card>
+            <div className="flex flex-col gap-3.5">
+              {groups.map(([line, policies]) => (
+                <LineGroupCard key={line} line={line} policies={policies} />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -125,109 +139,83 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
   );
 }
 
-function ColHead({
-  width,
-  children,
+function LineGroupCard({
+  line,
+  policies,
 }: {
-  width: string;
-  children: React.ReactNode;
+  line: string;
+  policies: ClientCoverageEntry[];
 }) {
-  return (
-    <th
-      className={`px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
+  const total = policies.reduce(
+    (sum, p) => sum + (p.recommended_premium ?? 0),
+    0,
   );
-}
-
-function CoverageRow({ entry }: { entry: ClientCoverageEntry }) {
-  const tone = tierStatus(entry.tier);
-  const chipTone = portalToneToTone(tone.tone);
-  const awaiting = entry.referral_state && /awaiting/i.test(entry.referral_state);
-
   return (
-    <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
-      <td className="px-4 py-3.5">
-        <Link
-          href={`/client/submissions/${entry.submission_code}`}
-          className="block"
-        >
-          <p className="font-semibold text-ink">{entry.coverage}</p>
-          <Micro className="mt-0.5 block font-mono">
-            {entry.submission_code}
-          </Micro>
-        </Link>
-      </td>
-      <td className="px-4 py-3.5">
-        {entry.composite_score != null ? (
-          <div className="space-y-1">
-            <span className="font-semibold tabular-nums text-ink">
-              {entry.composite_score.toFixed(0)}
-            </span>
-            <ScoreBar
-              value={entry.composite_score}
-              max={1000}
-              showValue={false}
-              thresholds={[
-                { at: 400, tone: "neg" },
-                { at: 650, tone: "warn" },
-                { at: 800, tone: "info" },
-                { at: 1000, tone: "pos" },
-              ]}
-            />
+    <Card pad="none" className="overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-rule bg-surface-elev px-5 py-3.5">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-card border border-rule bg-surface">
+            <ShieldCheck size={16} className="text-ink" />
           </div>
-        ) : (
-          <span className="text-ink-mute">—</span>
-        )}
-      </td>
-      <td className="px-4 py-3.5 text-ink-soft">
-        {peerStanding(entry.peer_percentile_rank)}
-      </td>
-      <td className="px-4 py-3.5">
-        <span className="font-semibold tabular-nums text-ink">
-          {entry.recommended_premium != null
-            ? formatCurrency(entry.recommended_premium)
-            : "—"}
-        </span>
-      </td>
-      <td className="px-4 py-3.5">
-        <div className="flex items-center gap-2">
-          <Chip variant={awaiting ? "spot" : chipTone} size="sm">
-            {awaiting
-              ? formatText(entry.referral_state, "capitalize")
-              : tone.label}
+          <h3 className="font-display text-[17px] font-semibold leading-none text-ink">
+            {line}
+          </h3>
+          <Chip variant="mute" size="sm">
+            {policies.length} polic{policies.length === 1 ? "y" : "ies"}
           </Chip>
         </div>
-      </td>
-      <td className="px-4 py-3.5 text-right">
-        <Link
-          href={`/client/submissions/${entry.submission_code}`}
-          className="inline-flex items-center text-ink-mute hover:text-ink"
-          aria-label={`Open ${entry.coverage} detail`}
-        >
-          <ChevronRight size={16} />
-        </Link>
-      </td>
-    </tr>
+        <Caption>
+          Total {total > 0 ? formatCurrency(total) : "—"}
+        </Caption>
+      </div>
+      {policies.map((p) => (
+        <PolicyRow key={p.submission_code} policy={p} />
+      ))}
+    </Card>
   );
 }
 
-function SummaryTile({
-  label,
-  children,
-  emphasis,
-}: {
-  label: string;
-  children: React.ReactNode;
-  emphasis?: boolean;
-}) {
+function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
+  const tone = tierStatus(policy.tier);
+  const chipTone = portalToneToTone(tone.tone);
+  const awaiting =
+    policy.referral_state && /awaiting/i.test(policy.referral_state);
+
   return (
-    <Card pad="md" variant={emphasis ? "info" : "default"}>
-      <Micro className="block">{label}</Micro>
-      <div className="mt-2">
-        <NumDisplay size={emphasis ? "lg" : "md"}>{children}</NumDisplay>
+    <Link
+      href={`/client/submissions/${policy.submission_code}`}
+      className="grid grid-cols-[1.4fr_1fr_0.9fr_1fr_24px] items-center gap-4 border-t border-rule px-5 py-4 transition hover:bg-surface-sunken/40"
+    >
+      <div className="min-w-0">
+        <p className="truncate text-[14px] font-semibold text-ink">
+          {policy.submission_code}
+        </p>
+        <Micro>{peerStanding(policy.peer_percentile_rank)}</Micro>
       </div>
-    </Card>
+      <div>
+        <Micro className="block">Signal score</Micro>
+        <p className="mt-0.5 text-[18px] font-semibold tabular-nums leading-none text-info">
+          {policy.composite_score != null
+            ? policy.composite_score.toFixed(0)
+            : "—"}
+        </p>
+      </div>
+      <div>
+        <Chip variant={awaiting ? "spot" : chipTone} size="sm">
+          {awaiting
+            ? formatText(policy.referral_state, "capitalize")
+            : tone.label}
+        </Chip>
+      </div>
+      <div className="text-right">
+        <Micro className="block">Premium</Micro>
+        <p className="mt-0.5 text-[16px] font-bold tabular-nums leading-none text-ink">
+          {policy.recommended_premium != null
+            ? `$${(policy.recommended_premium / 1000).toFixed(0)}k`
+            : "—"}
+        </p>
+      </div>
+      <ChevronRight size={18} className="text-ink-mute" />
+    </Link>
   );
 }
