@@ -38,13 +38,14 @@ import {
   fetchCommunicationThread,
   postBrokerReply,
 } from "@/lib/portalApi";
+import { homePathForRole } from "@/lib/portalPaths";
 import type {
   CommunicationsThreadResponse,
   CommunicationThreadMessage,
 } from "@/types/portal";
 
 
-export default function CommunicationThreadPage({
+export default function CommunicationsThreadView({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -94,7 +95,7 @@ export default function CommunicationThreadPage({
           lucideIcon={MessagesSquare}
           headerRight={
             <Link
-              href="/communications"
+              href={`${homePathForRole(userRole)}/communications`}
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               <ArrowLeft className="generate-app-icon" /> All threads

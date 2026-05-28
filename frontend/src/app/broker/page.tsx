@@ -145,7 +145,7 @@ export default function BrokerOverviewPage() {
                   <PendingQueryRow
                     key={c.referral_code}
                     query={c}
-                    onClick={() => router.push(`/communications/${c.referral_code}`)}
+                    onClick={() => router.push(`/broker/communications/${c.referral_code}`)}
                   />
                 ))}
               </div>
@@ -188,7 +188,7 @@ function BrokerBookTable({
       {clients.map((c) => (
         <div
           key={c.submission_code}
-          onClick={() => router.push(`/submissions/${c.submission_code}`)}
+          onClick={() => router.push(`/broker/submissions/${c.submission_code}`)}
           className="contents cursor-pointer group"
         >
           <div className="text-sm py-2 group-hover:text-generate-text-input group-hover:font-bold">

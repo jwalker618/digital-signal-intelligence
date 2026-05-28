@@ -63,7 +63,7 @@ import type {
 } from "@/types/portal";
 
 
-export default function SubmissionDetailPage({
+export default function SubmissionDetailView({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -176,50 +176,51 @@ export default function SubmissionDetailPage({
           </div>
         </SubmissionHeaderCard>
 
-        {/* Signal drivers ----------------------------------------- */}
+        {/* "Full X" deep-link cards: drivers / peers / actions are
+            client-only sub-pages, so we only surface the deep-link
+            chip when the viewer is a client. Brokers see the inline
+            content without the dead-end link. */}
         <StandardCard
           title="What's helping and hurting"
           lucideIcon={ListChecks}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/drivers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full driver detail <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <SignalDriversInline impact={score} />
         </StandardCard>
 
-        {/* Peer comparison ---------------------------------------- */}
         <StandardCard
           title="Peer comparison"
           lucideIcon={TrendingUpDown}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/peers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full peer view <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <PeerCardInline peers={peers} score={score} />
         </StandardCard>
 
-        {/* Actions ------------------------------------------------ */}
         <StandardCard
           title="Prioritised actions"
           lucideIcon={Lightbulb}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/actions"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full plan <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <ActionsInline actions={actions} />
         </StandardCard>

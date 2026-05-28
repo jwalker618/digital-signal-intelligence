@@ -71,11 +71,11 @@ export const ADMIN_CHILDREN: AdminNavLeaf[] = [
 export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
   { name: "Book of Clients",   icon: Briefcase,       href: "/broker",                 permission: "portal:broker:read" },
   { name: "Client Health",     icon: HeartPulse,      href: "/broker/client-health",   permission: "portal:broker:read" },
-  { name: "Coverages",         icon: ShieldCheck,     href: "/coverages",       permission: "portal:broker:read" },
+  { name: "Coverages",         icon: ShieldCheck,     href: "/broker/coverages",       permission: "portal:broker:read" },
   { name: "Placement Strategy", icon: TargetIcon,     href: "/broker/placement",       permission: "portal:broker:read" },
   { name: "Carrier Intelligence", icon: Building2,    href: "/broker/carriers",        permission: "portal:broker:read" },
   { name: "Recommendations",   icon: Lightbulb,       href: "/broker/recommendations", permission: "portal:broker:read" },
-  { name: "Communications",    icon: MessagesSquare,  href: "/communications",  permission: "portal:broker:reply" },
+  { name: "Communications",    icon: MessagesSquare,  href: "/broker/communications",  permission: "portal:broker:reply" },
   { name: "Market Pulse",      icon: TrendingUpDown,  href: "/broker/market",          permission: "portal:broker:read" },
   { name: "Risk Aggregation",  icon: Network,         href: "/broker/aggregation",     permission: "portal:broker:read" },
   { name: "Book Health",       icon: ChartPie,        href: "/broker/book-health",     permission: "portal:broker:read" },
@@ -85,13 +85,13 @@ export const PORTAL_BROKER_CHILDREN: AdminNavLeaf[] = [
 export const PORTAL_CLIENT_CHILDREN: AdminNavLeaf[] = [
   { name: "Overview",            icon: Gauge,           href: "/client",            permission: "portal:client:read" },
   { name: "Your Profile",        icon: UserCircle,      href: "/client/profile",    permission: "portal:client:read" },
-  { name: "Coverages",           icon: ShieldCheck,     href: "/coverages",       permission: "portal:client:read" },
+  { name: "Coverages",           icon: ShieldCheck,     href: "/client/coverages",       permission: "portal:client:read" },
   { name: "Risk Insights",       icon: ListChecks,      href: "/client/drivers",         permission: "portal:client:read" },
   { name: "Industry Benchmarks", icon: TrendingUpDown,  href: "/client/peers",           permission: "portal:client:read" },
   { name: "Scenarios",           icon: FlaskConical,    href: "/client/scenarios",       permission: "portal:client:read" },
   { name: "Action Plan",         icon: Lightbulb,       href: "/client/actions",         permission: "portal:client:read" },
   { name: "Request Coverage",    icon: PlusCircle,      href: "/client/request",         permission: "portal:client:submit" },
-  { name: "Communications",      icon: MessagesSquare,  href: "/communications",  permission: "portal:client:read" },
+  { name: "Communications",      icon: MessagesSquare,  href: "/client/communications",  permission: "portal:client:read" },
 ];
 
 /**

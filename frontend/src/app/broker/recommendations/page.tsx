@@ -185,7 +185,7 @@ export default function RecommendationsPage() {
           onClose={() => setActive(null)}
           onSent={() => {
             setActive(null);
-            router.push("/communications");
+            router.push("/broker/communications");
           }}
         />
       )}

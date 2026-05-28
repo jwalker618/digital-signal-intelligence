@@ -38,6 +38,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchOverview } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { homePathForRole } from "@/lib/portalPaths";
 import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   BrokerOverviewResponse,
@@ -51,10 +52,13 @@ import type {
 type AnyPolicy = ClientBookEntry | ClientCoverageEntry;
 
 
-export default function CoveragesPage() {
+export default function CoverageBookView() {
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
+
+  const personaHome = homePathForRole(userRole);
 
   const [data, setData] = useState<OverviewResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -155,7 +159,7 @@ export default function CoveragesPage() {
             <PolicyTable
               policies={group.policies}
               showEntity={data.role === "BROKER"}
-              onRowClick={(code) => router.push(`/submissions/${code}`)}
+              onRowClick={(code) => router.push(`${personaHome}/submissions/${code}`)}
             />
           </StandardCard>
         ))}

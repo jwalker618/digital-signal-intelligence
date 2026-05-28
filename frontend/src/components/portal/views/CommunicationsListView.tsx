@@ -31,16 +31,22 @@ import { KpiTile } from "@/components/base/content/primatives";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchCommunications } from "@/lib/portalApi";
+import { homePathForRole } from "@/lib/portalPaths";
 import type {
   CommunicationItem,
   CommunicationsListResponse,
 } from "@/types/portal";
 
 
-export default function CommunicationsListPage() {
+export default function CommunicationsListView() {
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
+
+  // Cross-page nav links inside this view need to point at the
+  // current persona's communications subtree. Same view, two URLs.
+  const personaHome = homePathForRole(userRole);
 
   const [data, setData] = useState<CommunicationsListResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -142,7 +148,7 @@ export default function CommunicationsListPage() {
                   key={item.referral_code}
                   item={item}
                   role={data.role}
-                  onClick={() => router.push(`/communications/${item.referral_code}`)}
+                  onClick={() => router.push(`${personaHome}/communications/${item.referral_code}`)}
                 />
               ))}
             </div>
