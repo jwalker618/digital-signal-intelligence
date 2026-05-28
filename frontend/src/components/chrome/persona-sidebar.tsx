@@ -12,10 +12,19 @@ import {
   type AdminNavLeaf,
 } from "@/components/layout/navConfig";
 
+export type PersonaKey = "client" | "broker" | "carrier" | "admin";
+
 interface PersonaSidebarProps {
-  nav: AdminNavLeaf[];
+  persona: PersonaKey;
   isActive?: (href: string, pathname: string) => boolean;
 }
+
+const PERSONA_NAV: Record<PersonaKey, AdminNavLeaf[]> = {
+  client: PORTAL_CLIENT_CHILDREN,
+  broker: PORTAL_BROKER_CHILDREN,
+  carrier: PORTAL_CARRIER_CHILDREN,
+  admin: ADMIN_CHILDREN,
+};
 
 const defaultIsActive = (href: string, pathname: string) => {
   if (href === pathname) return true;
@@ -36,10 +45,11 @@ const defaultIsActive = (href: string, pathname: string) => {
  * accent rail on its left, matching the reimagined design.
  */
 export function PersonaSidebar({
-  nav,
+  persona,
   isActive = defaultIsActive,
 }: PersonaSidebarProps) {
   const pathname = usePathname();
+  const nav = PERSONA_NAV[persona];
   return (
     <aside className="chrome-sidebar relative flex h-full w-[72px] shrink-0 flex-col items-center py-[18px]">
       <Link
@@ -86,10 +96,3 @@ export function PersonaSidebar({
   );
 }
 
-/** Convenience map — pick a persona's nav by key. */
-export const SIDEBAR_NAV = {
-  client: PORTAL_CLIENT_CHILDREN,
-  broker: PORTAL_BROKER_CHILDREN,
-  carrier: PORTAL_CARRIER_CHILDREN,
-  admin: ADMIN_CHILDREN,
-};
