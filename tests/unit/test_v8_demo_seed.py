@@ -19,6 +19,7 @@ from seed.demo_reset import (
     DEMO_RNG_SEED_DEFAULT,
     MARSH_BROKER_SLUG,
     MARSH_TENANT_SLUG,
+    SYNTHETIC_BROKER_BOOK,
     _enumerate_demo_cohorts,
     run_synthetic_assessment,
 )
@@ -248,21 +249,26 @@ class TestCohortFodderCoverage:
 
     def test_enumeration_includes_every_demo_coverage_pair(self):
         cohorts = _enumerate_demo_cohorts()
-        # Every (coverage, naics, band) the demo book hits should be
-        # there. Build the expected set from DEMO_CLIENT_TENANTS so the
-        # test stays in sync if anyone adds a new demo policy.
+        # Every (coverage, naics, band) the BROKER BOOK touches --
+        # both narrative anchors and synthetic book entries -- must be
+        # in the enumeration so cohort fodder seeding covers all of
+        # them. Build the expected set from both sources.
         expected: set[tuple[str, str, str]] = set()
         for t in DEMO_CLIENT_TENANTS:
             for cov in t["coverages"]:
                 expected.add(
                     (cov["coverage"], t["naics_section"], t["revenue_band"]),
                 )
+        for s in SYNTHETIC_BROKER_BOOK:
+            for cov in s["coverages"]:
+                expected.add(
+                    (cov["coverage"], s["naics_section"], s["revenue_band"]),
+                )
         assert set(cohorts) == expected
-        # Sanity: with 3 demo clients and 4 coverages each, we should
-        # be touching at least 8 distinct cohorts. (Some coverages
-        # collide across clients -- e.g. cyber x 50-250M x section 51
-        # is just one cohort even if multiple clients fall in it.)
-        assert len(cohorts) >= 8
+        # Sanity: with anchors + synthetic book the broker spans many
+        # cohorts. Expect at least 15 distinct (coverage, naics, band)
+        # combinations once the synthetic book lands.
+        assert len(cohorts) >= 15
 
     def test_distribution_covers_every_demo_coverage(self):
         # Every coverage that appears in the demo book must have an
@@ -307,6 +313,87 @@ class TestCohortFodderCoverage:
         # stable and analytics like "cohort mean" don't snap around
         # between seeds.
         assert COHORT_POOL_PER_BAND >= MIN_COHORT_SIZE * 3
+
+
+class TestSyntheticBrokerBook:
+    """v8.2 follow-up: the 3 narrative anchor clients (Acme, Northwind,
+    Pioneer) only span 3 of the 8 Marsh practice verticals. The
+    synthetic broker book fills out the rest so Risk Aggregation,
+    Book Health, and the vertical filter feel substantive."""
+
+    def test_synthetic_book_has_volume(self):
+        # 10+ additional clients gives the broker a 13-15 client
+        # book overall -- enough to span every Marsh vertical and to
+        # make book-level analytics non-trivial.
+        assert len(SYNTHETIC_BROKER_BOOK) >= 10
+
+    def test_synthetic_book_spans_missing_verticals(self):
+        # The 3 anchors are NAICS 51, 62, 31 (Tech, Healthcare,
+        # Manufacturing). Synthetic book must extend to at least
+        # 4 more verticals so all 8 Marsh practices are represented
+        # across the full broker book.
+        anchor_sections = {t["naics_section"] for t in DEMO_CLIENT_TENANTS}
+        synthetic_sections = {s["naics_section"] for s in SYNTHETIC_BROKER_BOOK}
+        new_sections = synthetic_sections - anchor_sections
+        assert len(new_sections) >= 4, (
+            f"Synthetic book should add at least 4 new NAICS sections "
+            f"beyond {anchor_sections}; got new={new_sections}"
+        )
+
+    def test_synthetic_book_covers_marsh_verticals(self):
+        # Each Marsh practice vertical has at least one client (between
+        # anchors + synthetic book).
+        all_sections = (
+            {t["naics_section"] for t in DEMO_CLIENT_TENANTS}
+            | {s["naics_section"] for s in SYNTHETIC_BROKER_BOOK}
+        )
+        # 8 Marsh verticals -> NAICS sections we should hit:
+        # 51 tech, 62 health, 31 manufacturing, 21/22 energy,
+        # 52 financial, 53/72 real estate, 23 construction,
+        # 61/92 public sector
+        expected_anchors = {"51", "62", "31"}     # tech/health/manufacturing
+        expected_extras = {"22", "52", "53", "72", "23", "61", "92"}
+        # Don't require ALL extras, but require at least 5 of them
+        # to drive the broker's vertical filter from sparse-to-full.
+        covered_extras = expected_extras & all_sections
+        assert expected_anchors.issubset(all_sections)
+        assert len(covered_extras) >= 5
+
+    def test_synthetic_entries_have_required_fields(self):
+        required_client = {"entity_name", "naics", "naics_section",
+                          "revenue", "revenue_band", "coverages"}
+        required_coverage = {"coverage", "configuration", "policy_label",
+                            "limit", "composite_score", "tier"}
+        for s in SYNTHETIC_BROKER_BOOK:
+            assert required_client.issubset(s.keys()), s["entity_name"]
+            assert len(s["coverages"]) >= 1
+            for cov in s["coverages"]:
+                assert required_coverage.issubset(cov.keys()), (
+                    s["entity_name"], cov.get("coverage"),
+                )
+
+    def test_synthetic_entries_unique_entity_names(self):
+        names = [s["entity_name"] for s in SYNTHETIC_BROKER_BOOK]
+        assert len(set(names)) == len(names)
+        # No collisions with narrative anchors either.
+        anchor_names = {t["entity_name"] for t in DEMO_CLIENT_TENANTS}
+        assert set(names).isdisjoint(anchor_names)
+
+    def test_synthetic_book_target_tiers_align_with_bands(self):
+        # Every synthetic coverage's composite_score must sit inside
+        # the production tier band that corresponds to its declared
+        # tier -- otherwise the pipeline will resolve to a different
+        # tier than the spec advertises.
+        band_for_tier = {1: (800, 1000), 2: (650, 799),
+                         3: (500, 649), 4: (350, 499), 5: (0, 349)}
+        for s in SYNTHETIC_BROKER_BOOK:
+            for cov in s["coverages"]:
+                lo, hi = band_for_tier[cov["tier"]]
+                assert lo <= cov["composite_score"] <= hi, (
+                    f"{s['entity_name']} {cov['coverage']} composite "
+                    f"{cov['composite_score']} not in T{cov['tier']} "
+                    f"band {lo}-{hi}"
+                )
 
 
 class TestCliRegistration:

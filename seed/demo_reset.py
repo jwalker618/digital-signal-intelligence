@@ -317,6 +317,212 @@ MARSH_USERS = [
     ("marsh.admin@demo.dsi", "Marsh Admin", "BROKER"),
 ]
 
+
+# ============================================================================
+# Synthetic broker book -- volume across verticals the 3 demo clients
+# don't cover, so Risk Aggregation, Book Health, and the Marsh practice
+# vertical filter feel substantive instead of three-client-sparse.
+# ============================================================================
+#
+# Each entry is a SYNTHETIC client (no tenant or user record -- just
+# submissions attached to marsh-demo's broker). They flow through the
+# same run_synthetic_assessment() chain as the 3 narrative anchors, so
+# their scores / tiers / premiums / modifiers all come out of
+# production code. They also contribute to cohort_membership so peer
+# percentile / cohort_mean populate across more cohorts than the demo
+# alone can reach.
+#
+# Vertical spread chosen to fill out the 5 Marsh practice verticals
+# the 3 narrative anchors don't cover: Energy & Power (NAICS 21/22),
+# Financial Institutions (52), Real Estate & Hospitality (53/72),
+# Construction (23), Public Sector & Education (61/92). Plus one
+# additional Technology entity to broaden the broker's tech book.
+
+SYNTHETIC_BROKER_BOOK: list[dict] = [
+    # ---------- Energy & Power ----------
+    {
+        "entity_name": "Vanguard Energy Holdings",
+        "naics": "2211", "naics_section": "22", "revenue": 480_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 80_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Coastal Renewable Power",
+        "naics": "2211", "naics_section": "22", "revenue": 145_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 35_000_000,
+             "composite_score": 740.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Financial Institutions ----------
+    {
+        "entity_name": "Meridian Capital Bank",
+        "naics": "5221", "naics_section": "52", "revenue": 1_400_000_000,
+        "revenue_band": "1B+",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 25_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do",       "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 30_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "pi",       "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Frontier Asset Management",
+        "naics": "5239", "naics_section": "52", "revenue": 420_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 20_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Apex Digital Lending",
+        "naics": "5222", "naics_section": "52", "revenue": 78_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Real Estate & Hospitality ----------
+    {
+        "entity_name": "Summit REIT",
+        "naics": "5311", "naics_section": "53", "revenue": 620_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 120_000_000,
+             "composite_score": 740.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 20_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Pinnacle Hospitality Group",
+        "naics": "7211", "naics_section": "72", "revenue": 380_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 75_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            # casualty_gl aggregates ~150 below target -- the hospitality
+            # peer naturally sits in T3 anyway, which reads fine in a
+            # GL-heavy book.
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Construction ----------
+    {
+        "entity_name": "Granite Construction Co",
+        "naics": "2362", "naics_section": "23", "revenue": 290_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — Builders Risk", "limit": 50_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Keystone Contractors",
+        "naics": "2381", "naics_section": "23", "revenue": 95_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            # casualty_gl aggregates well below target so the contractor
+            # peer lands in T3 -- typical for a SME contractor.
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 20_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Public Sector & Education ----------
+    {
+        "entity_name": "Northstar Municipal Authority",
+        "naics": "9211", "naics_section": "92", "revenue": 320_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 60_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "Public Officials Liability", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Crescent Public School District",
+        "naics": "6111", "naics_section": "61", "revenue": 110_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 30_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Additional Technology peer ----------
+    {
+        "entity_name": "Photon Analytics",
+        "naics": "5112", "naics_section": "51", "revenue": 65_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 870.0, "tier": 1, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 5_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+]
+
 # Cohort pool target: N synthetic peers per (coverage, naics, band) cohort
 # the demo touches. Sized to comfortably exceed MIN_COHORT_SIZE (10) so
 # percentile + mean + median all hydrate, and large enough that the
@@ -351,18 +557,20 @@ COHORT_DISTRIBUTION_DEFAULT: tuple[float, float] = (700.0, 50.0)
 
 
 def _enumerate_demo_cohorts() -> list[tuple[str, str, str]]:
-    """Every (coverage, naics_section, revenue_band) the demo book touches.
+    """Every (coverage, naics_section, revenue_band) the broker book
+    touches (demo clients + synthetic broker book).
 
-    Drives cohort fodder seeding -- every cohort a demo policy belongs
-    to gets ~COHORT_POOL_PER_BAND peers so peer percentile, mean, and
+    Drives cohort fodder seeding -- every cohort a policy belongs to
+    gets ~COHORT_POOL_PER_BAND peers so peer percentile, mean, and
     median all populate on the client + broker portals.
     """
     seen: set[tuple[str, str, str]] = set()
     for t in DEMO_CLIENT_TENANTS:
-        naics_section = t["naics_section"]
-        revenue_band = t["revenue_band"]
         for cov in t["coverages"]:
-            seen.add((cov["coverage"], naics_section, revenue_band))
+            seen.add((cov["coverage"], t["naics_section"], t["revenue_band"]))
+    for sc in SYNTHETIC_BROKER_BOOK:
+        for cov in sc["coverages"]:
+            seen.add((cov["coverage"], sc["naics_section"], sc["revenue_band"]))
     return sorted(seen)
 
 
@@ -397,9 +605,12 @@ def _wipe_existing_demo_state(db: Session) -> None:
         select(Tenant).where(Tenant.slug.in_(demo_slugs))
     ).scalars().all()
     if not tenants:
-        # Still drop any orphan cohort_pool rows
+        # Drop any orphan synthetic cohort rows.
         db.execute(delete(CohortMembership).where(
             CohortMembership.entity_key.like("cohort_pool_%")
+        ))
+        db.execute(delete(CohortMembership).where(
+            CohortMembership.entity_key.like("synthetic_%")
         ))
         return
 
@@ -436,6 +647,14 @@ def _wipe_existing_demo_state(db: Session) -> None:
     db.execute(
         delete(CohortMembership).where(
             CohortMembership.entity_key.like("cohort_pool_%")
+        )
+    )
+
+    # Synthetic broker book entries (additional clients beyond the 3
+    # narrative anchors, attached to marsh-demo for volume).
+    db.execute(
+        delete(CohortMembership).where(
+            CohortMembership.entity_key.like("synthetic_%")
         )
     )
 
@@ -1032,6 +1251,131 @@ def _seed_demo_submission(
     return submission, mv, quote, referral
 
 
+def _seed_synthetic_broker_client(
+    db: Session, *, client_spec: dict, marsh_broker: Broker,
+    marsh_admin_user: User, rng: random.Random,
+) -> int:
+    """Seed a SYNTHETIC client (no tenant or user record) into the
+    broker's book. Same production scoring chain as the 3 narrative
+    anchors -- just without the storyboard machinery (no open queries
+    by default, no broker-side referral threads).
+
+    Returns the number of submissions created (one per coverage).
+    """
+    from infrastructure.db.repositories import generate_id
+    now = datetime.now(timezone.utc)
+    created = 0
+
+    for coverage_spec in client_spec.get("coverages", []):
+        coverage = coverage_spec["coverage"]
+        configuration = coverage_spec["configuration"]
+        limit = int(coverage_spec.get("limit", 10_000_000))
+
+        submission = Submission(
+            submission_code=generate_id("sub"),
+            entity_name=client_spec["entity_name"],
+            domain_hint=None,
+            country_hint="US",
+            coverage=coverage,
+            configuration=configuration,
+            status=SubmissionStatus.READY,
+            submission_data={
+                "naics": client_spec["naics"],
+                "revenue": client_spec["revenue"],
+                "policy_label": coverage_spec.get(
+                    "policy_label", coverage.capitalize(),
+                ),
+                "limit": limit,
+            },
+            direct_query_responses={},
+            broker_id=marsh_broker.id,
+            created_by=marsh_admin_user.id,
+            created_at=now,
+            updated_at=now,
+            processing_completed_at=now,
+        )
+        db.add(submission)
+        db.flush()
+
+        result = run_synthetic_assessment(
+            coverage=coverage,
+            configuration=configuration,
+            target_composite=float(coverage_spec["composite_score"]),
+            drag_signal_ids=coverage_spec.get("drag_modifier_signal_ids", []),
+            direct_query_responses={},
+            naics_section=client_spec["naics_section"],
+            revenue_band=client_spec["revenue_band"],
+            naics=client_spec["naics"],
+            revenue=int(client_spec["revenue"]),
+            limit=limit,
+            rng=rng,
+        )
+
+        cohort_id = (
+            f"{coverage}:{client_spec['naics_section']}:{client_spec['revenue_band']}"
+        )
+
+        mv = ModelVersionRecord(
+            version_code=generate_id("mv"),
+            submission_id=submission.id,
+            version_number=1,
+            version_type="initial",
+            is_latest=True,
+            config_hash="demo",
+            coverage=coverage,
+            configuration_name=configuration,
+            pure_composite_score=result["composite"],
+            final_composite_score=result["composite"],
+            confidence=result["confidence"],
+            signal_coverage=result["signal_coverage"],
+            score_based_tier=result["score_based_tier"],
+            final_tier=result["final_tier"],
+            tier_label=result["tier_label"],
+            base_premium=result["base_premium"],
+            premium_after_modifiers=result["premium_after_modifiers"],
+            final_premium=result["final_premium"],
+            modifiers_applied=result["modifiers_applied"],
+            decision=result["decision"],
+            auto_approve=result["auto_approve"],
+            peer_cohort_id=cohort_id,
+            peer_cohort_size=None,
+            created_at=now,
+        )
+        db.add(mv)
+        db.flush()
+
+        # Cohort membership -- entity_key uses a synthetic_ prefix so
+        # the wipe routine can find them on next demo-reset.
+        membership = CohortMembership(
+            entity_key=f"synthetic_{client_spec['entity_name'].strip().lower().replace(' ', '_')}",
+            coverage=coverage,
+            cohort_id=cohort_id,
+            composite_score=result["composite"],
+            naics_section=client_spec["naics_section"],
+            revenue_band=client_spec["revenue_band"],
+            model_version_id=mv.id,
+        )
+        db.add(membership)
+        db.flush()
+
+        quote = Quote(
+            quote_code=generate_id("quo"),
+            submission_id=submission.id,
+            model_version_id=mv.id,
+            status=QuoteStatus.READY,
+            recommended_premium=result["final_premium"],
+            recommended_limit=float(limit),
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(quote)
+        db.flush()
+
+        created += 1
+
+    return created
+
+
 # ---------------------------------------------------------------------------
 # Top-level orchestration
 # ---------------------------------------------------------------------------
@@ -1128,10 +1472,42 @@ def reset_demo_state(db: Session, *, password: str, rng_seed: int) -> dict:
             "coverages": coverages_summary,
         })
 
+    # Synthetic broker book -- 12 additional clients spanning the
+    # Marsh practice verticals the 3 narrative anchors don't cover.
+    # Submissions attached to marsh-demo broker (created_by = marsh
+    # admin) so the broker's overview / Book Health / Risk
+    # Aggregation views span a realistic 15-client book.
+    marsh_admin_user = db.execute(
+        select(User).where(User.email == "marsh.admin@demo.dsi")
+    ).scalar_one()
+
+    synthetic_summary: list[dict] = []
+    synthetic_total = 0
+    for synth_spec in SYNTHETIC_BROKER_BOOK:
+        logger.info("[demo-reset] seeding synthetic broker client %s",
+                    synth_spec["entity_name"])
+        n = _seed_synthetic_broker_client(
+            db, client_spec=synth_spec, marsh_broker=marsh_broker,
+            marsh_admin_user=marsh_admin_user, rng=rng,
+        )
+        synthetic_summary.append({
+            "entity_name": synth_spec["entity_name"],
+            "naics_section": synth_spec["naics_section"],
+            "revenue_band": synth_spec["revenue_band"],
+            "submissions": n,
+        })
+        synthetic_total += n
+    summary["synthetic_book"] = synthetic_summary
+    summary["synthetic_book_submissions"] = synthetic_total
+
     db.commit()
-    logger.info("[demo-reset] complete: %s clients, %s total policies",
-                len(summary["clients"]),
-                sum(len(c["coverages"]) for c in summary["clients"]))
+    logger.info(
+        "[demo-reset] complete: %s narrative clients (%s policies) + "
+        "%s synthetic clients (%s policies)",
+        len(summary["clients"]),
+        sum(len(c["coverages"]) for c in summary["clients"]),
+        len(synthetic_summary), synthetic_total,
+    )
     return summary
 
 
