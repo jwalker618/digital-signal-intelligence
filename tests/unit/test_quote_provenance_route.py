@@ -58,7 +58,11 @@ class _StubAsyncDB:
 
 
 def _call(handler, *args, **kwargs):
-    return asyncio.get_event_loop().run_until_complete(handler(*args, **kwargs))
+    # Use asyncio.run() rather than asyncio.get_event_loop() -- the
+    # latter returns a stale (sometimes closed) loop after other tests
+    # in the same suite have created and torn down their own loops,
+    # which made these tests flaky depending on suite ordering.
+    return asyncio.run(handler(*args, **kwargs))
 
 
 def test_returns_404_when_quote_missing():
