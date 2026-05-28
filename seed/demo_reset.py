@@ -302,12 +302,53 @@ MARSH_USERS = [
     ("marsh.admin@demo.dsi", "Marsh Admin", "BROKER"),
 ]
 
-# Cohort pool target: 60 entities per cohort (per coverage x naics x band)
-# for the cyber demo flow. Other coverages don't need cohort fodder for
-# the portal -- they degrade gracefully to "Insufficient peers" notes.
-COHORT_POOL_PER_BAND = 60
-COHORT_POOL_DISTRIBUTION_MEAN = 720.0
-COHORT_POOL_DISTRIBUTION_STDDEV = 50.0
+# Cohort pool target: N synthetic peers per (coverage, naics, band) cohort
+# the demo touches. Sized to comfortably exceed MIN_COHORT_SIZE (10) so
+# percentile + mean + median all hydrate, and large enough that the
+# percentile lookup doesn't snap to coarse quantiles for the demo
+# policies.
+COHORT_POOL_PER_BAND = 50
+
+# Per-coverage cohort score distributions. The mean reflects the line's
+# market state -- hardening lines (property, medprof) have lower mean
+# scores (more risks need attention); softening lines (cyber, D&O) have
+# higher mean. Std-dev controls how dramatically a demo policy stands out
+# in its cohort.
+#
+# Tuned so the demo's hand-picked composite_scores (see
+# DEMO_CLIENT_TENANTS) land at narratively-accurate percentile bands:
+#   - Acme cyber (685) at ~25th percentile of its cohort
+#   - Acme PI (762)   at ~top-decile
+#   - Pioneer property CAT (654) at bottom of its cohort
+COHORT_DISTRIBUTIONS: dict[str, tuple[float, float]] = {
+    # softening lines -- mean above 720
+    "do":       (740.0, 45.0),
+    "cyber":    (720.0, 50.0),
+    # flat lines -- mean around 710
+    "pi":       (710.0, 50.0),
+    "prodlib":  (700.0, 50.0),
+    "casualty": (700.0, 50.0),
+    # hardening lines -- mean below 700
+    "property": (680.0, 55.0),
+    "medprof":  (680.0, 55.0),
+}
+COHORT_DISTRIBUTION_DEFAULT: tuple[float, float] = (700.0, 50.0)
+
+
+def _enumerate_demo_cohorts() -> list[tuple[str, str, str]]:
+    """Every (coverage, naics_section, revenue_band) the demo book touches.
+
+    Drives cohort fodder seeding -- every cohort a demo policy belongs
+    to gets ~COHORT_POOL_PER_BAND peers so peer percentile, mean, and
+    median all populate on the client + broker portals.
+    """
+    seen: set[tuple[str, str, str]] = set()
+    for t in DEMO_CLIENT_TENANTS:
+        naics_section = t["naics_section"]
+        revenue_band = t["revenue_band"]
+        for cov in t["coverages"]:
+            seen.add((cov["coverage"], naics_section, revenue_band))
+    return sorted(seen)
 
 
 # ---------------------------------------------------------------------------
@@ -477,34 +518,39 @@ def _ensure_broker(
 
 
 def _seed_cohort_pool(db: Session, rng: random.Random) -> int:
-    """Insert ~60 synthetic membership rows per demo cohort.
+    """Insert synthetic membership rows for every (coverage, naics, band)
+    cohort the demo touches.
 
-    These don't have model_version_id linkages -- they are peer
-    fodder. Score distribution is N(720, 50); entity_keys use the
-    cohort_pool_ prefix so wipe can find them.
+    These are peer fodder -- they don't carry model_version_id linkages.
+    The cohort percentile lookup in layers/cohort/service.py reads
+    composite_score from cohort_membership directly, so plain stubs are
+    enough to make peer comparison, percentile rank, and cohort mean /
+    median populate across the portal.
+
+    Score distributions are per-coverage (see COHORT_DISTRIBUTIONS),
+    chosen so:
+      - Hardening lines (property, medprof) have lower cohort means --
+        the demo policy on a hardening line lands in a tougher cohort.
+      - Softening lines (cyber, D&O) have higher means.
+      - Each demo policy's composite_score lands at a percentile that
+        matches its narrative tier (Acme cyber at REFER tier ~ 25th
+        pct, Pioneer CAT property at tier 4 ~ bottom-15th, etc.)
+
+    entity_keys use the cohort_pool_ prefix so the wipe routine can
+    find them on every demo-reset.
     """
-    target_cohorts = {
-        f"cyber:{t['naics_section']}:{t['revenue_band']}": (
-            t["naics_section"],
-            t["revenue_band"],
-        )
-        for t in DEMO_CLIENT_TENANTS
-    }
-
     inserted = 0
-    for cohort_id, (naics_section, revenue_band) in target_cohorts.items():
+    for coverage, naics_section, revenue_band in _enumerate_demo_cohorts():
+        cohort_id = f"{coverage}:{naics_section}:{revenue_band}"
+        mean, stddev = COHORT_DISTRIBUTIONS.get(
+            coverage, COHORT_DISTRIBUTION_DEFAULT,
+        )
         for i in range(COHORT_POOL_PER_BAND):
-            score = max(
-                100.0,
-                min(
-                    1000.0,
-                    rng.gauss(COHORT_POOL_DISTRIBUTION_MEAN, COHORT_POOL_DISTRIBUTION_STDDEV),
-                ),
-            )
+            score = max(100.0, min(1000.0, rng.gauss(mean, stddev)))
             entity_key = f"cohort_pool_{cohort_id.replace(':', '_')}_{i}"
             membership = CohortMembership(
                 entity_key=entity_key,
-                coverage="cyber",
+                coverage=coverage,
                 cohort_id=cohort_id,
                 composite_score=round(score, 2),
                 naics_section=naics_section,

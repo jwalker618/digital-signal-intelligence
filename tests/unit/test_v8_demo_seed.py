@@ -11,6 +11,8 @@ import pytest
 
 from seed import demo_reset
 from seed.demo_reset import (
+    COHORT_DISTRIBUTIONS,
+    COHORT_DISTRIBUTION_DEFAULT,
     COHORT_POOL_PER_BAND,
     DEMO_CLIENT_TENANTS,
     DEMO_PASSWORD_DEFAULT,
@@ -18,6 +20,7 @@ from seed.demo_reset import (
     MARSH_BROKER_SLUG,
     MARSH_TENANT_SLUG,
     _build_drag_modifiers,
+    _enumerate_demo_cohorts,
 )
 
 
@@ -155,6 +158,76 @@ class TestBuildDragModifiers:
         from layers.risk.impact_breakdown import DEADBAND_UPPER
         modifiers, _ = _build_drag_modifiers(["mfa_enabled"], base_premium=100_000)
         assert modifiers[0]["factor"] > DEADBAND_UPPER
+
+
+class TestCohortFodderCoverage:
+    """v8.2-cohort: the demo seeds peer fodder for every (coverage,
+    naics, band) the book touches -- not just cyber. Otherwise the
+    portal's peer percentile / cohort mean / 'how you compare to top
+    peers' analytics show 'Insufficient peers' on every non-cyber
+    coverage."""
+
+    def test_enumeration_includes_every_demo_coverage_pair(self):
+        cohorts = _enumerate_demo_cohorts()
+        # Every (coverage, naics, band) the demo book hits should be
+        # there. Build the expected set from DEMO_CLIENT_TENANTS so the
+        # test stays in sync if anyone adds a new demo policy.
+        expected: set[tuple[str, str, str]] = set()
+        for t in DEMO_CLIENT_TENANTS:
+            for cov in t["coverages"]:
+                expected.add(
+                    (cov["coverage"], t["naics_section"], t["revenue_band"]),
+                )
+        assert set(cohorts) == expected
+        # Sanity: with 3 demo clients and 4 coverages each, we should
+        # be touching at least 8 distinct cohorts. (Some coverages
+        # collide across clients -- e.g. cyber x 50-250M x section 51
+        # is just one cohort even if multiple clients fall in it.)
+        assert len(cohorts) >= 8
+
+    def test_distribution_covers_every_demo_coverage(self):
+        # Every coverage that appears in the demo book must have an
+        # explicit distribution entry. Falling back to the default mean
+        # for a demo coverage would break the narrative percentile
+        # bands.
+        demo_coverages = {
+            cov["coverage"]
+            for t in DEMO_CLIENT_TENANTS
+            for cov in t["coverages"]
+        }
+        for cov in demo_coverages:
+            assert cov in COHORT_DISTRIBUTIONS, (
+                f"Coverage {cov!r} appears in the demo but has no entry "
+                f"in COHORT_DISTRIBUTIONS; falling back to the default "
+                f"would compress narrative percentile bands."
+            )
+
+    def test_distributions_match_market_cycle_narrative(self):
+        # Market Pulse narrative: D&O + cyber softening (mean >720),
+        # property + medprof hardening (mean <700), pi/casualty/prodlib
+        # flat (mean ~700). Cohort distributions should mirror this so
+        # the demo reads internally consistent.
+        softening_mean_floor = 720.0
+        hardening_mean_ceiling = 700.0
+        # D&O is the most decisive softening line, cyber close behind
+        assert COHORT_DISTRIBUTIONS["do"][0] >= softening_mean_floor
+        assert COHORT_DISTRIBUTIONS["cyber"][0] >= softening_mean_floor
+        # Property + medprof hardening
+        assert COHORT_DISTRIBUTIONS["property"][0] <= hardening_mean_ceiling
+        assert COHORT_DISTRIBUTIONS["medprof"][0] <= hardening_mean_ceiling
+
+    def test_default_distribution_shape(self):
+        mean, stddev = COHORT_DISTRIBUTION_DEFAULT
+        # Default is a sensible flat-market neutral.
+        assert 680 <= mean <= 720
+        assert 30 <= stddev <= 80
+
+    def test_pool_size_provides_meaningful_analytics(self):
+        from layers.cohort.service import MIN_COHORT_SIZE
+        # Must comfortably exceed MIN_COHORT_SIZE so percentiles are
+        # stable and analytics like "cohort mean" don't snap around
+        # between seeds.
+        assert COHORT_POOL_PER_BAND >= MIN_COHORT_SIZE * 3
 
 
 class TestCliRegistration:
