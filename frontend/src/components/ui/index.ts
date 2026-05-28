@@ -8,3 +8,4 @@ export * from "./kpi-tile";
 export * from "./label-row";
 export * from "./avatar";
 export * from "./divider";
+export * from "./back-button";

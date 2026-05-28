@@ -210,6 +210,9 @@ function Row({ sub }: { sub: ApiRecord }) {
         <Micro className="mt-0.5 block font-mono">
           {sub.submission_code}
         </Micro>
+        {sub.broker_name && (
+          <Micro className="mt-0.5 block">via {sub.broker_name}</Micro>
+        )}
       </td>
       <td className="px-5 py-3 text-ink">{sub.coverage ?? "—"}</td>
       <td className="px-5 py-3">
@@ -255,6 +258,10 @@ function Row({ sub }: { sub: ApiRecord }) {
           <Chip variant="spot" size="sm">
             <AlertCircle size={10} />
             {formatText(sub.referral_state, "capitalize")}
+          </Chip>
+        ) : sub.submission_status ? (
+          <Chip variant="mute" size="sm">
+            {formatText(sub.submission_status, "capitalize")}
           </Chip>
         ) : sub.status ? (
           <Chip variant="mute" size="sm">

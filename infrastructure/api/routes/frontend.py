@@ -52,22 +52,27 @@ async def get_frontend_pipeline(
                     q.quote_code,
                     r.referral_code,
                     mv.version_code,
-             
+
                     s.entity_name,
                     COALESCE(s.coverage, '') || ' / ' || COALESCE(s.configuration, '') AS coverage_configuration,
                     s.created_at,
-                    q.status,
+                    CAST(q.status AS TEXT) AS status,
+                    CAST(s.status AS TEXT) AS submission_status,
                     q.recommended_premium,
                     q.recommended_limit,
+                    mv.final_premium,
                     mv.final_composite_score,
                     mv.final_tier,
                     mv.tier_label,
-                    mv.decision
-             
+                    mv.decision,
+                    CAST(r.status AS TEXT) AS referral_state,
+                    b.name AS broker_name
+
                 FROM submissions s
                     LEFT JOIN quotes q ON s.id = q.submission_id
                     LEFT JOIN referrals r on r.quote_id = q.id
                     LEFT JOIN model_versions mv ON mv.submission_id = s.id AND mv.id = q.model_version_id
+                    LEFT JOIN brokers b ON s.broker_id = b.id
                 WHERE mv.is_latest = true
                     AND (
                             CAST(s.status AS TEXT) ILIKE 'draft'

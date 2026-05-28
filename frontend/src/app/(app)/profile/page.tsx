@@ -9,6 +9,7 @@ import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
 import { Avatar } from "@/components/ui/avatar";
+import { BackButton } from "@/components/ui/back-button";
 import { PageLoading } from "@/components/base/pageStates";
 import { useAuthStore } from "@/store/authStore";
 
@@ -41,6 +42,7 @@ export default function ProfilePage() {
       <Topbar crumbs={["Account", "Your Profile"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-3xl gap-6">
+          <BackButton />
           <Card pad="lg" className="flex items-center gap-5">
             <Avatar initials={initials} size="lg" />
             <div className="flex-1">
