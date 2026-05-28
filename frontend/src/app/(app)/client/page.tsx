@@ -116,7 +116,7 @@ function OverviewBody({ data }: { data: ClientOverviewResponse }) {
           {/* ────────── ROW 3 — loss / exposure / coverage shape ────────── */}
           <div className="grid gap-4 lg:grid-cols-3">
             <LossOutlookCard />
-            <ExposureCard />
+            <ExposureCard hero={hero} />
             <CoverageShapeCard coverages={coverages} />
           </div>
 
@@ -162,15 +162,34 @@ function OverviewBody({ data }: { data: ClientOverviewResponse }) {
 
 function ScoreCard({ hero }: { hero?: ClientCoverageEntry }) {
   const score = hero?.composite_score ?? null;
-  const median = 714; // placeholder — peer median not in /overview payload
-  const prev = 706; // placeholder — prior quote score not in /overview payload
-  const history: ScorePoint[] = [
-    { label: "Q1", value: 692 },
-    { label: "Q2", value: 705 },
-    { label: "Q3", value: 712 },
-    { label: "prev", value: prev, marker: "prev" },
-    { label: "now", value: score ?? prev, marker: "now" },
-  ];
+  // Fall back to the original design literals when the backend hasn't
+  // populated the peer/prior fields (e.g. brand-new submission, thin
+  // cohort) so the card still reads cleanly instead of going blank.
+  const median = hero?.peer_cohort_median_score ?? 714;
+  const prev = hero?.previous_composite_score ?? 706;
+  const history: ScorePoint[] = useMemo(() => {
+    const real = hero?.score_history;
+    if (real && real.length > 0) {
+      // Map the backend's oldest -> newest list onto the spark trail.
+      // Mark the last point as "now" and the second-to-last as "prev"
+      // so the marker styling (used by ScoreHistory) lines up with the
+      // designed default.
+      const last = real.length - 1;
+      return real.map((p, i): ScorePoint => ({
+        label: `v${p.version_number}`,
+        value: p.composite_score,
+        marker:
+          i === last ? "now" : i === last - 1 ? "prev" : undefined,
+      }));
+    }
+    return [
+      { label: "Q1", value: 692 },
+      { label: "Q2", value: 705 },
+      { label: "Q3", value: 712 },
+      { label: "prev", value: prev, marker: "prev" },
+      { label: "now", value: score ?? prev, marker: "now" },
+    ];
+  }, [hero?.score_history, prev, score]);
   const vsMedian = score != null ? Math.round(score - median) : null;
   const vsPrev = score != null ? Math.round(score - prev) : null;
 
@@ -472,9 +491,15 @@ function PulseColumn({
 
 function CohortStandingCard({ hero }: { hero?: ClientCoverageEntry }) {
   const score = hero?.composite_score ?? 724;
-  const median = 714;
-  const topDecile = 784;
-  const range: [number, number] = [600, 880];
+  // Fall back to the designed default literals if the cohort is too
+  // thin to compute one of these stats (the backend returns null).
+  const median = hero?.peer_cohort_median_score ?? 714;
+  const topDecile = hero?.peer_cohort_top_decile ?? 784;
+  const range: [number, number] = [
+    hero?.peer_cohort_min ?? 600,
+    hero?.peer_cohort_max ?? 880,
+  ];
+  const peerCount = hero?.peer_cohort_size ?? 38;
   const vsMedian = Math.round(score - median);
   const toTopDecile = Math.max(0, Math.round(topDecile - score));
 
@@ -493,7 +518,7 @@ function CohortStandingCard({ hero }: { hero?: ClientCoverageEntry }) {
             </span>
           </h3>
         </div>
-        <Micro>38 peers</Micro>
+        <Micro>{peerCount} peers</Micro>
       </div>
       <div className="my-5 flex flex-1 items-center">
         <CohortBar
@@ -630,18 +655,55 @@ function CompareBar({
   );
 }
 
-function ExposureCard() {
-  // Placeholder values — exposure facts aren't on /overview.
-  const pinPct = 55; // mid-market
+function formatExposure(value: number): string {
+  // Compact $-figure for the exposure card (e.g. $118M, $1.2B). Falls
+  // back to the absolute dollar amount under $1M.
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000_000) {
+    return `$${(value / 1_000_000_000).toFixed(1)}B`;
+  }
+  if (abs >= 1_000_000) {
+    return `$${Math.round(value / 1_000_000)}M`;
+  }
+  if (abs >= 1_000) {
+    return `$${Math.round(value / 1_000)}k`;
+  }
+  return `$${Math.round(value)}`;
+}
+
+function ExposureCard({ hero }: { hero?: ClientCoverageEntry }) {
+  // Real backend values where available, fall back to the designed
+  // literals so the card still reads when the hero MV row is empty.
+  const exposureValue = hero?.exposure_value ?? null;
+  const exposurePrior = hero?.exposure_value_prior ?? null;
+  // exposure_size_score is 0-100; the pin position is a percentage on
+  // the Small <-> Large axis, so use it directly.
+  const pinPct = hero?.exposure_size_score ?? 55;
+  const yoyPct =
+    exposureValue != null && exposurePrior != null && exposurePrior !== 0
+      ? Math.round(((exposureValue - exposurePrior) / exposurePrior) * 100)
+      : null;
+  const yoyLabel =
+    yoyPct != null ? `${yoyPct >= 0 ? "+" : ""}${yoyPct}% YoY` : "+12% YoY";
+  const yoyPositive = yoyPct == null ? true : yoyPct >= 0;
+  const valueLabel = exposureValue != null
+    ? formatExposure(exposureValue)
+    : "$118M";
+  const bandLabel = hero?.exposure_band_label ?? null;
   return (
     <Card variant="aux" pad="lg" className="flex h-full flex-col gap-3">
       <div className="flex items-baseline justify-between">
         <div>
           <Eyebrow className="text-aux">Exposure</Eyebrow>
-          <p className="mt-1 text-xl font-semibold text-aux">$118M</p>
+          <p className="mt-1 text-xl font-semibold text-aux">{valueLabel}</p>
+          {bandLabel && (
+            <Caption className="mt-0.5">{bandLabel}</Caption>
+          )}
         </div>
-        <Chip variant="pos" size="sm">
-          <TrendingUp size={11} /> +12% YoY
+        <Chip variant={yoyPositive ? "pos" : "neg"} size="sm">
+          {yoyPositive ? <TrendingUp size={11} /> : <TrendingDown size={11} />}
+          {" "}
+          {yoyLabel}
         </Chip>
       </div>
       <div className="mt-1">

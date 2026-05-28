@@ -7,6 +7,7 @@ CLIENT view: own entity + active coverages.
 """
 from __future__ import annotations
 
+import statistics
 import uuid
 from typing import Optional
 
@@ -25,6 +26,7 @@ from infrastructure.db.models import (
     Submission,
     User,
 )
+from layers.cohort.queries import fetch_cohort_scores
 
 from .dependencies import get_user_record, require_portal_user
 from .schemas import (
@@ -33,6 +35,7 @@ from .schemas import (
     ClientBookEntry,
     ClientCoverageEntry,
     ClientOverviewResponse,
+    ScoreHistoryPoint,
 )
 
 router = APIRouter()
@@ -197,12 +200,75 @@ async def _build_book_entry(
     )
 
 
+# How many model_version rows to surface for the client overview
+# sparkline. Bounded so a long-lived submission doesn't bloat the
+# payload; the page only renders a small spark trail.
+_SCORE_HISTORY_LIMIT = 8
+
+
 async def _build_coverage_entry(
     submission: Submission, db: AsyncSession,
 ) -> ClientCoverageEntry:
     mv = await _latest_mv_for_submission(submission, db)
     quote = await _latest_quote_for_submission(submission, db)
     referral = await _open_referral_for_submission(submission, db)
+
+    # Phase B1: fetch a short history of MV rows so we can derive
+    # previous score, the score-history sparkline, and the prior
+    # exposure value (for YoY). One extra query per coverage; for the
+    # small N of coverages a client has this is fine.
+    history_q = await db.execute(
+        select(ModelVersionRecord)
+        .where(ModelVersionRecord.submission_id == submission.id)
+        .order_by(ModelVersionRecord.version_number.desc())
+        .limit(_SCORE_HISTORY_LIMIT)
+    )
+    history_desc = list(history_q.scalars().all())
+
+    previous_composite_score: Optional[float] = None
+    exposure_value_prior: Optional[float] = None
+    score_history: Optional[list[ScoreHistoryPoint]] = None
+    if len(history_desc) >= 2:
+        prior = history_desc[1]
+        previous_composite_score = prior.final_composite_score
+        exposure_value_prior = prior.exposure_value
+    if history_desc:
+        # Reverse to oldest -> newest for the sparkline. Drop rows with no
+        # composite score (very early scoring failures); the sparkline
+        # would skip them anyway.
+        ordered = list(reversed(history_desc))
+        score_history = [
+            ScoreHistoryPoint(
+                version_number=row.version_number,
+                composite_score=row.final_composite_score,
+                created_at=row.created_at,
+            )
+            for row in ordered
+            if row.final_composite_score is not None and row.created_at is not None
+        ] or None
+
+    # Cohort range stats: pull the cohort score list and derive min /
+    # max / p90 inline. cohort_stats_from_scores already exposes
+    # median/p25/p75 elsewhere, but the overview only needs the
+    # range + top decile and we already have the median on the MV row.
+    peer_cohort_top_decile: Optional[float] = None
+    peer_cohort_min: Optional[float] = None
+    peer_cohort_max: Optional[float] = None
+    if mv is not None and mv.peer_cohort_id:
+        scores = await fetch_cohort_scores(db, mv.peer_cohort_id)
+        if scores:
+            peer_cohort_min = float(min(scores))
+            peer_cohort_max = float(max(scores))
+            # quantiles(n=10) splits into deciles; the last cut is p90.
+            # statistics.quantiles requires at least 2 points.
+            if len(scores) >= 2:
+                try:
+                    peer_cohort_top_decile = float(
+                        statistics.quantiles(scores, n=10)[-1]
+                    )
+                except statistics.StatisticsError:
+                    peer_cohort_top_decile = None
+
     return ClientCoverageEntry(
         submission_code=submission.submission_code,
         coverage=submission.coverage,
@@ -212,4 +278,15 @@ async def _build_coverage_entry(
         recommended_premium=(quote.recommended_premium if quote else None),
         referral_state=(referral.status.value if referral else None),
         updated_at=submission.updated_at,
+        peer_cohort_median_score=(mv.peer_cohort_median_score if mv else None),
+        peer_cohort_size=(mv.peer_cohort_size if mv else None),
+        peer_cohort_top_decile=peer_cohort_top_decile,
+        peer_cohort_min=peer_cohort_min,
+        peer_cohort_max=peer_cohort_max,
+        previous_composite_score=previous_composite_score,
+        score_history=score_history,
+        exposure_value=(mv.exposure_value if mv else None),
+        exposure_band_label=(mv.exposure_band_label if mv else None),
+        exposure_size_score=(mv.exposure_size_score if mv else None),
+        exposure_value_prior=exposure_value_prior,
     )

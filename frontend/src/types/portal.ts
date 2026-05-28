@@ -89,6 +89,12 @@ export interface ClientBookEntry {
   updated_at?: string | null;
 }
 
+export interface ScoreHistoryPoint {
+  version_number: number;
+  composite_score: number;
+  created_at: string;
+}
+
 export interface ClientCoverageEntry {
   submission_code: string;
   coverage: string;
@@ -98,6 +104,18 @@ export interface ClientCoverageEntry {
   recommended_premium?: number | null;
   referral_state?: string | null;
   updated_at?: string | null;
+  // Phase B1: peer cohort + score history + exposure context.
+  peer_cohort_median_score?: number | null;
+  peer_cohort_size?: number | null;
+  peer_cohort_top_decile?: number | null;
+  peer_cohort_min?: number | null;
+  peer_cohort_max?: number | null;
+  previous_composite_score?: number | null;
+  score_history?: ScoreHistoryPoint[] | null;
+  exposure_value?: number | null;
+  exposure_band_label?: string | null;
+  exposure_size_score?: number | null;
+  exposure_value_prior?: number | null;
 }
 
 export interface BrokerOverviewResponse {

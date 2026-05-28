@@ -47,6 +47,17 @@ class BrokerOverviewResponse(BaseModel):
     open_queries_count: int = 0
 
 
+class ScoreHistoryPoint(BaseModel):
+    """One historical model_version score for the client overview sparkline.
+
+    Sorted oldest -> newest by the builder. Population is best-effort: a
+    submission's score history may be shorter than the requested window.
+    """
+    version_number: int
+    composite_score: float
+    created_at: datetime
+
+
 class ClientCoverageEntry(BaseModel):
     submission_code: str
     coverage: str
@@ -56,6 +67,21 @@ class ClientCoverageEntry(BaseModel):
     recommended_premium: Optional[float] = None
     referral_state: Optional[str] = None
     updated_at: Optional[datetime] = None
+    # Phase B1: peer cohort + score history + exposure context so the
+    # Client Summary page can render real values in place of the
+    # design-default placeholders. All optional -- absent when the latest
+    # MV row is missing or the cohort is too thin to summarise.
+    peer_cohort_median_score: Optional[float] = None
+    peer_cohort_size: Optional[int] = None
+    peer_cohort_top_decile: Optional[float] = None
+    peer_cohort_min: Optional[float] = None
+    peer_cohort_max: Optional[float] = None
+    previous_composite_score: Optional[float] = None
+    score_history: Optional[list[ScoreHistoryPoint]] = None
+    exposure_value: Optional[float] = None
+    exposure_band_label: Optional[str] = None
+    exposure_size_score: Optional[float] = None
+    exposure_value_prior: Optional[float] = None
 
 
 class ClientOverviewResponse(BaseModel):
