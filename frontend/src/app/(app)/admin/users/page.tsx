@@ -1,3 +1,4 @@
+// No direct design counterpart; adapted from reim_admin_a.jsx
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
@@ -5,25 +6,40 @@ import {
   CheckCircle2,
   KeyRound,
   Loader2,
-  Lock,
   Search,
   ShieldCheck,
   UserPlus,
+  UserX,
+  Users as UsersIcon,
   X,
 } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Button } from "@/components/ui/button";
-import { Avatar } from "@/components/ui/avatar";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import {
+  AdminTable,
+  Avatar,
+  Body,
+  Button,
+  Card,
+  Chip,
+  Eyebrow,
+  Micro,
+} from "@/components/ui";
+import type { AdminTableCol, AdminTableRow } from "@/components/ui";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { api } from "@/lib/api";
-import { formatDate, formatText } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import type { RoleRow, UserRow } from "@/types/admin";
+
+type UserFilter = "ALL" | "ACTIVE" | "LOCKED" | "INACTIVE";
+
+const USER_FILTERS: { value: UserFilter; label: string }[] = [
+  { value: "ALL", label: "All" },
+  { value: "ACTIVE", label: "Active" },
+  { value: "LOCKED", label: "Locked" },
+  { value: "INACTIVE", label: "Inactive" },
+];
 
 export default function AdminUsersPage() {
   return (
@@ -48,6 +64,7 @@ function UsersInner() {
   const [acting, setActing] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<UserFilter>("ALL");
 
   async function load() {
     setState("loading");
@@ -80,114 +97,178 @@ function UsersInner() {
 
   const filtered = useMemo(() => {
     if (!data) return [] as UserRow[];
-    if (!query) return data.users;
-    const q = query.toLowerCase();
-    return data.users.filter(
-      (u) =>
-        u.email.toLowerCase().includes(q) ||
-        (u.full_name ?? "").toLowerCase().includes(q) ||
-        (u.role_name ?? "").toLowerCase().includes(q),
-    );
-  }, [data, query]);
+    let rows = data.users;
+    if (filter === "ACTIVE")
+      rows = rows.filter((u) => u.is_active && !u.is_locked);
+    if (filter === "LOCKED") rows = rows.filter((u) => u.is_locked);
+    if (filter === "INACTIVE") rows = rows.filter((u) => !u.is_active);
+    if (query) {
+      const q = query.toLowerCase();
+      rows = rows.filter(
+        (u) =>
+          u.email.toLowerCase().includes(q) ||
+          (u.full_name ?? "").toLowerCase().includes(q) ||
+          (u.role_name ?? "").toLowerCase().includes(q),
+      );
+    }
+    return rows;
+  }, [data, filter, query]);
 
   if (state === "loading") return <PageLoading message="Loading users…" />;
   if (state === "error") return <PageError message={err ?? "Unknown error"} />;
   if (!data) return <PageLoading />;
 
-  const active = data.users.filter((u) => u.is_active && !u.is_locked).length;
-  const locked = data.users.filter((u) => u.is_locked).length;
-  const mfa = data.users.filter((u) => u.mfa_enabled).length;
+  const userCols: AdminTableCol[] = [
+    { key: "email", label: "Email", width: "2fr" },
+    { key: "name", label: "Name", width: "1.4fr" },
+    { key: "role", label: "Role", width: "1.4fr" },
+    { key: "mfa", label: "MFA", align: "center", width: "70px" },
+    { key: "status", label: "Status", width: "110px" },
+    { key: "lastLogin", label: "Last login", width: "1fr" },
+    { key: "actions", label: "", align: "right", width: "120px" },
+  ];
+
+  const userRows: AdminTableRow[] = filtered.map((u) => ({
+    email: <code className="text-[12px] text-ink">{u.email}</code>,
+    name: (
+      <div className="flex items-center gap-2">
+        <Avatar initials={initialsOf(u)} size="sm" />
+        <span className="font-semibold text-ink">
+          {u.full_name ?? u.email.split("@")[0]}
+        </span>
+      </div>
+    ),
+    role: (
+      <code className="font-mono text-[12px] text-ink-soft">
+        {u.role_name ?? "—"}
+      </code>
+    ),
+    mfa: u.mfa_enabled ? (
+      <span className="inline-flex items-center gap-1 text-[12px] text-pos">
+        <ShieldCheck size={11} /> on
+      </span>
+    ) : (
+      <span className="text-[12px] text-warn">off</span>
+    ),
+    status: <StatusChip user={u} />,
+    lastLogin: <Micro>{fmtRelative(u.last_login)}</Micro>,
+    actions:
+      u.is_active && !u.is_locked ? (
+        <button
+          type="button"
+          disabled={acting === u.id}
+          onClick={() => deactivate(u.id)}
+          className="inline-flex items-center gap-1.5 text-[12px] text-neg hover:underline disabled:opacity-50"
+        >
+          {acting === u.id ? (
+            <Loader2 size={11} className="animate-spin" />
+          ) : (
+            <UserX size={11} />
+          )}
+          Deactivate
+        </button>
+      ) : (
+        <Micro>—</Micro>
+      ),
+  }));
+
+  const roleCols: AdminTableCol[] = [
+    { key: "name", label: "Name", width: "1.6fr" },
+    { key: "description", label: "Description", width: "2.5fr" },
+    { key: "users", label: "Users", align: "right", width: "80px" },
+    { key: "perms", label: "Permissions", align: "right", width: "120px" },
+  ];
+
+  const roleRows: AdminTableRow[] = data.roles.map((r) => ({
+    name: (
+      <span className="font-mono text-[12px] font-bold uppercase text-ink">
+        {r.name}
+      </span>
+    ),
+    description: (
+      <span className="text-[12.5px] text-ink-soft">
+        {r.description ?? "—"}
+      </span>
+    ),
+    users: (
+      <span className="tabular-nums font-semibold text-ink">
+        {r.user_count}
+      </span>
+    ),
+    perms: (
+      <span className="tabular-nums text-ink-soft">
+        {r.permissions.length} perms
+      </span>
+    ),
+  }));
 
   return (
     <>
       <Topbar crumbs={["Admin", "Users & Roles"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
-              <Eyebrow>Identity</Eyebrow>
-              <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                Users & Roles
+              <Eyebrow>Users & roles</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
+                Identity + access
               </h1>
-              <Body className="mt-2">
-                {data.users.length} user{data.users.length === 1 ? "" : "s"} ·{" "}
-                {data.roles.length} role{data.roles.length === 1 ? "" : "s"}
+              <Body className="mt-1.5">
+                {data.users.length} user
+                {data.users.length === 1 ? "" : "s"} across {data.roles.length}{" "}
+                role{data.roles.length === 1 ? "" : "s"}. Manage invitations +
+                access from here.
               </Body>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
-                <Search size={15} className="text-ink-mute" />
-                <input
-                  type="search"
-                  placeholder="Name, email, or role…"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  className="h-10 w-64 border-0 bg-transparent text-[13.5px] text-ink placeholder:text-ink-mute focus:outline-none"
-                />
-              </div>
-              <Button onClick={() => setInviteOpen(true)}>
-                <UserPlus size={14} />
-                Invite
-              </Button>
-            </div>
+            <Button onClick={() => setInviteOpen(true)}>
+              <UserPlus size={14} />
+              Invite user
+            </Button>
           </header>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Stat label="Active" tone="pos">
-              {active}
-            </Stat>
-            <Stat label="Locked" tone={locked > 0 ? "neg" : undefined}>
-              {locked}
-            </Stat>
-            <Stat label="MFA enabled" tone="info" emphasis>
-              {mfa} / {data.users.length}
-            </Stat>
-          </div>
-
-          {/* Users table */}
-          <Card pad="md" className="overflow-hidden p-0">
-            <header className="flex items-center justify-between border-b border-rule px-5 py-3.5">
-              <Eyebrow>Users</Eyebrow>
-              <Micro>{filtered.length} shown</Micro>
-            </header>
-            <table className="w-full table-fixed text-[13px]">
-              <thead>
-                <tr className="border-b border-rule bg-surface-sunken text-left">
-                  <ColHead width="w-[30%]">User</ColHead>
-                  <ColHead width="w-[16%]">Role</ColHead>
-                  <ColHead width="w-[14%]">Status</ColHead>
-                  <ColHead width="w-[12%]">MFA</ColHead>
-                  <ColHead width="w-[16%]">Last login</ColHead>
-                  <ColHead width="w-[12%]">Actions</ColHead>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((u) => (
-                  <UserRowView
-                    key={u.id}
-                    user={u}
-                    isActing={acting === u.id}
-                    onDeactivate={() => deactivate(u.id)}
+          <Card
+            pad="none"
+            icon={UsersIcon}
+            header={`Users · ${filtered.length}`}
+            headerRight={
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 items-center gap-2 rounded-btn border border-rule-strong bg-surface px-2.5">
+                  <Search size={13} className="text-ink-mute" />
+                  <input
+                    type="search"
+                    placeholder="Name, email, role…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="w-44 border-0 bg-transparent text-[12.5px] text-ink placeholder:text-ink-mute focus:outline-none"
                   />
+                </div>
+                {USER_FILTERS.map((f) => (
+                  <FilterChip
+                    key={f.value}
+                    active={filter === f.value}
+                    onClick={() => setFilter(f.value)}
+                  >
+                    {f.label}
+                  </FilterChip>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            }
+          >
+            <AdminTable cols={userCols} rows={userRows} />
             {filtered.length === 0 && (
               <div className="px-5 py-8 text-center">
-                <Body className="italic">No users match "{query}".</Body>
+                <Body className="italic">No users match the filters.</Body>
               </div>
             )}
           </Card>
 
-          {/* Roles */}
-          <section>
-            <Eyebrow className="mb-3">Roles ({data.roles.length})</Eyebrow>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {data.roles.map((r) => (
-                <RoleCard key={r.id} role={r} />
-              ))}
-            </div>
-          </section>
+          <Card
+            pad="none"
+            icon={ShieldCheck}
+            header={`Roles · ${data.roles.length}`}
+          >
+            <AdminTable cols={roleCols} rows={roleRows} />
+          </Card>
         </div>
       </div>
 
@@ -205,131 +286,61 @@ function UsersInner() {
   );
 }
 
-function UserRowView({
-  user,
-  isActing,
-  onDeactivate,
-}: {
-  user: UserRow;
-  isActing: boolean;
-  onDeactivate: () => void;
-}) {
-  const initials =
-    (user.full_name ?? user.email)
+function StatusChip({ user }: { user: UserRow }) {
+  if (user.is_locked)
+    return (
+      <Chip size="sm" variant="neg">
+        Locked
+      </Chip>
+    );
+  if (!user.is_active)
+    return (
+      <Chip size="sm" variant="spot">
+        Inactive
+      </Chip>
+    );
+  return (
+    <Chip size="sm" variant="pos">
+      Active
+    </Chip>
+  );
+}
+
+function initialsOf(user: UserRow): string {
+  const src = user.full_name ?? user.email;
+  return (
+    src
       .split(/[@.\s_-]/)
       .filter(Boolean)
       .slice(0, 2)
       .map((p) => p[0] ?? "")
       .join("")
-      .toUpperCase() || "??";
-  return (
-    <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
-      <td className="px-5 py-3">
-        <div className="flex items-center gap-3">
-          <Avatar initials={initials} size="sm" />
-          <div className="min-w-0">
-            <p className="truncate font-medium text-ink">
-              {user.full_name ?? user.email}
-            </p>
-            {user.full_name && (
-              <Micro className="block truncate">{user.email}</Micro>
-            )}
-          </div>
-        </div>
-      </td>
-      <td className="px-5 py-3 text-ink-soft">{user.role_name ?? "—"}</td>
-      <td className="px-5 py-3">
-        {user.is_locked ? (
-          <Chip variant="neg" size="sm">
-            <Lock size={10} />
-            Locked
-          </Chip>
-        ) : user.is_active ? (
-          <Chip variant="pos" size="sm">
-            Active
-          </Chip>
-        ) : (
-          <Chip variant="mute" size="sm">
-            Inactive
-          </Chip>
-        )}
-      </td>
-      <td className="px-5 py-3">
-        {user.mfa_enabled ? (
-          <span className="inline-flex items-center gap-1 text-[12.5px] text-pos">
-            <ShieldCheck size={12} /> on
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1 text-[12.5px] text-ink-mute">
-            off
-          </span>
-        )}
-      </td>
-      <td className="px-5 py-3 text-ink-soft">
-        {fmtRelative(user.last_login)}
-      </td>
-      <td className="px-5 py-3">
-        {user.is_active && !user.is_locked && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            disabled={isActing}
-            onClick={onDeactivate}
-          >
-            {isActing ? (
-              <Loader2 size={12} className="animate-spin" />
-            ) : (
-              <Lock size={12} />
-            )}
-            Deactivate
-          </Button>
-        )}
-      </td>
-    </tr>
+      .toUpperCase() || "??"
   );
 }
 
-function RoleCard({ role }: { role: RoleRow }) {
+function FilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
   return (
-    <Card pad="md" className="space-y-3">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-[15px] font-semibold text-ink">{role.name}</h3>
-          {role.description && (
-            <Micro className="mt-0.5 block">{role.description}</Micro>
-          )}
-        </div>
-        {role.is_system && (
-          <Chip variant="info" size="sm">
-            System
-          </Chip>
-        )}
-      </header>
-      <div className="flex items-baseline justify-between text-[12.5px]">
-        <span className="text-ink-soft">Users</span>
-        <span className="font-semibold tabular-nums text-ink">
-          {role.user_count}
-        </span>
-      </div>
-      {role.permissions.length > 0 && (
-        <div className="space-y-1.5">
-          <Micro>Permissions ({role.permissions.length})</Micro>
-          <div className="flex flex-wrap gap-1">
-            {role.permissions.slice(0, 6).map((p) => (
-              <Chip key={p} variant="mute" size="sm">
-                {p}
-              </Chip>
-            ))}
-            {role.permissions.length > 6 && (
-              <Chip variant="mute" size="sm">
-                +{role.permissions.length - 6}
-              </Chip>
-            )}
-          </div>
-        </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-chip px-2.5 py-1 text-[11.5px] font-medium transition-colors",
+        active
+          ? "bg-ink text-canvas"
+          : "bg-surface-sunken text-ink-soft hover:bg-surface-elev",
       )}
-    </Card>
+    >
+      {children}
+    </button>
   );
 }
 
@@ -473,50 +484,5 @@ function Field({
       </label>
       {children}
     </div>
-  );
-}
-
-function Stat({
-  label,
-  tone,
-  emphasis,
-  children,
-}: {
-  label: string;
-  tone?: "pos" | "neg" | "info";
-  emphasis?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <Card pad="md" variant={emphasis ? "info" : "default"}>
-      <Micro
-        className={cn(
-          tone === "pos" && "text-pos",
-          tone === "neg" && "text-neg",
-          tone === "info" && emphasis && "text-info-deep dark:text-info",
-        )}
-      >
-        {label}
-      </Micro>
-      <div className="mt-2">
-        <NumDisplay size={emphasis ? "lg" : "md"}>{children}</NumDisplay>
-      </div>
-    </Card>
-  );
-}
-
-function ColHead({
-  width,
-  children,
-}: {
-  width: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
   );
 }
