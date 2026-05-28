@@ -59,15 +59,55 @@ class Permission(str, Enum):
 # Default role templates. Seeded by migration 012 (carrier roles) and
 # migration 030 (v8 portal roles), and re-applied by seed_v5.py.
 #
-# Carrier-side roles temporarily carry the full carrier permission set so
-# the whole application is exercisable without permission-gated UI hiding
-# features during development. Tailor these back role-by-role once the
-# product boundaries stabilise.
-#
-# Portal roles (BROKER, CLIENT) are intentionally scoped to portal:*
-# permissions only -- they must not see underwriter surfaces.
-_CARRIER_PERMISSIONS: list[Permission] = [
+# Scoping intent (kept in sync with alembic/versions/012_auth_foundation.py):
+#   - UNDERWRITER         can run assessments, raise referrals, view world engine.
+#                         Cannot read or change configs, cannot view portfolio.
+#   - SENIOR_UNDERWRITER  underwriter + config read + portfolio view.
+#   - ACTUARIAL           assessment access + config read/write + recalibration
+#                         view/approve + portfolio view.
+#   - ADMIN               every carrier permission, including config:deploy,
+#                         admin:* and portfolio:simulate. Intentionally NOT
+#                         a portal role -- admins acting as brokers would
+#                         bypass portal scoping.
+#   - READ_ONLY           strictly :read / :view permissions across the
+#                         carrier surface. No writes anywhere.
+#   - BROKER              broker portal scope only -- portal:broker:* plus
+#                         portal:client:read so the broker can see policies
+#                         on behalf of their clients.
+#   - CLIENT              client portal scope only.
+
+_ADMIN_PERMISSIONS: list[Permission] = [
     p for p in Permission if not p.value.startswith("portal:")
+]
+_UNDERWRITER_PERMISSIONS: list[Permission] = [
+    Permission.ASSESSMENT_READ,
+    Permission.ASSESSMENT_WRITE,
+    Permission.ASSESSMENT_REFER,
+    Permission.ENTITY_READ,
+    Permission.WORLD_ENGINE_VIEW,
+]
+_SENIOR_UNDERWRITER_PERMISSIONS: list[Permission] = _UNDERWRITER_PERMISSIONS + [
+    Permission.CONFIG_READ,
+    Permission.PORTFOLIO_VIEW,
+]
+_ACTUARIAL_PERMISSIONS: list[Permission] = [
+    Permission.ASSESSMENT_READ,
+    Permission.ASSESSMENT_WRITE,
+    Permission.ASSESSMENT_REFER,
+    Permission.ENTITY_READ,
+    Permission.CONFIG_READ,
+    Permission.CONFIG_WRITE,
+    Permission.RECALIBRATION_VIEW,
+    Permission.RECALIBRATION_APPROVE,
+    Permission.WORLD_ENGINE_VIEW,
+    Permission.PORTFOLIO_VIEW,
+]
+_READ_ONLY_PERMISSIONS: list[Permission] = [
+    Permission.ASSESSMENT_READ,
+    Permission.ENTITY_READ,
+    Permission.CONFIG_READ,
+    Permission.WORLD_ENGINE_VIEW,
+    Permission.PORTFOLIO_VIEW,
 ]
 _PORTAL_BROKER_PERMISSIONS: list[Permission] = [
     Permission.PORTAL_BROKER_READ,
@@ -79,13 +119,13 @@ _PORTAL_CLIENT_PERMISSIONS: list[Permission] = [
     Permission.PORTAL_CLIENT_SUBMIT,
 ]
 DEFAULT_ROLES: dict[str, list[Permission]] = {
-    "UNDERWRITER": list(_CARRIER_PERMISSIONS),
-    "SENIOR_UNDERWRITER": list(_CARRIER_PERMISSIONS),
-    "ACTUARIAL": list(_CARRIER_PERMISSIONS),
-    "ADMIN": list(_CARRIER_PERMISSIONS),
-    "READ_ONLY": list(_CARRIER_PERMISSIONS),
-    "BROKER": list(_PORTAL_BROKER_PERMISSIONS),
-    "CLIENT": list(_PORTAL_CLIENT_PERMISSIONS),
+    "UNDERWRITER":        list(_UNDERWRITER_PERMISSIONS),
+    "SENIOR_UNDERWRITER": list(_SENIOR_UNDERWRITER_PERMISSIONS),
+    "ACTUARIAL":          list(_ACTUARIAL_PERMISSIONS),
+    "ADMIN":              list(_ADMIN_PERMISSIONS),
+    "READ_ONLY":          list(_READ_ONLY_PERMISSIONS),
+    "BROKER":             list(_PORTAL_BROKER_PERMISSIONS),
+    "CLIENT":             list(_PORTAL_CLIENT_PERMISSIONS),
 }
 
 

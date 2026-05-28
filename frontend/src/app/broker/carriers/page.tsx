@@ -9,20 +9,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Building2,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
-  Globe,
   Leaf,
-  ShieldCheck,
-  Sparkles,
-  TrendingUpDown,
   Trophy,
-  X,
 } from "lucide-react";
-
 import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
@@ -38,7 +30,7 @@ import {
   ScoreBar,
   StatsGrid,
 } from "@/components/base/content/primatives";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
@@ -51,6 +43,8 @@ import type {
   EsgStance,
   PricingPosition,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 type SortField =
@@ -63,8 +57,6 @@ export default function CarriersPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [carriers, setCarriers] = useState<CarrierSummary[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<CarrierDetailResponse | null>(null);
   const [sortField, setSortField] = useState<SortField>("win_rate");
   const [sortDesc, setSortDesc] = useState(true);
@@ -73,19 +65,11 @@ export default function CarriersPage() {
 
   useEffect(() => { setActiveMenu("Carrier Intelligence"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCarriers(accessToken);
-        if (!cancelled) setCarriers(resp.carriers);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data: roster, error } = useRoleScopedFetch({
+    fetcher: () => fetchCarriers(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
+  const carriers = roster?.carriers ?? null;
 
   const filtered = useMemo(() => {
     if (!carriers) return [];
@@ -106,10 +90,10 @@ export default function CarriersPage() {
   }, [filtered, sortField, sortDesc]);
 
   if (userRole !== "BROKER") {
-    return <BrokerOnly />;
+    return <RoleGate expected="broker" message="Carrier Intelligence is for broker users only." />;
   }
-  if (error) return <ErrShell msg={error} />;
-  if (!carriers) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!carriers) return <PageLoading icon={Building2} message="Loading carrier intelligence…" />;
 
   // Roster KPIs
   const leadersCount = carriers.filter((c) => c.esg_stance === "leader").length;
@@ -180,11 +164,14 @@ export default function CarriersPage() {
               else { setSortField(field); setSortDesc(true); }
             }}
             onSelect={async (slug) => {
+              // Best-effort: a transient failure to open the detail
+              // modal leaves the user on the roster, where retrying
+              // is trivial. v8.3 wires this to the toast system.
               try {
                 const d = await fetchCarrierDetail(accessToken, slug);
                 setDetail(d);
-              } catch (e) {
-                setError(e instanceof Error ? e.message : String(e));
+              } catch {
+                /* noop */
               }
             }}
           />
@@ -525,39 +512,3 @@ function CarrierDetailModal({
 // ----------------------------------------------------------------------------
 // Shells
 // ----------------------------------------------------------------------------
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Building2}>
-          <NoData message="Loading carrier intelligence…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Carrier Intelligence is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}

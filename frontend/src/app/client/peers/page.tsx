@@ -9,7 +9,7 @@
 //      this entity is missing (derived from drag signals)
 //   4. Scenario modeller: what happens if you remediate signal X
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
   AlertTriangle,
@@ -49,51 +49,40 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function PeersPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [peers, setPeers] = useState<PeersResponse | null>(null);
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [entityName, setEntityName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Industry Benchmarks"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const overview = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (overview.role !== "CLIENT") {
-          setError("Peer comparison view is currently for client users.");
-          return;
-        }
-        const primary = (overview as ClientOverviewResponse).active_coverages[0];
-        if (!primary) {
-          setError("No active coverage to compare yet.");
-          return;
-        }
-        setEntityName((overview as ClientOverviewResponse).entity_name);
-        const [p, s] = await Promise.all([
-          fetchSubmissionPeers(accessToken, primary.submission_code),
-          fetchSubmissionScore(accessToken, primary.submission_code),
-        ]);
-        if (cancelled) return;
-        setPeers(p); setScore(s);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const overview = await fetchOverview(accessToken);
+      if (overview.role !== "CLIENT") {
+        throw new Error("Peer comparison view is currently for client users.");
       }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+      const clientData = overview as ClientOverviewResponse;
+      const primary = clientData.active_coverages[0];
+      if (!primary) {
+        throw new Error("No active coverage to compare yet.");
+      }
+      const [peers, score] = await Promise.all([
+        fetchSubmissionPeers(accessToken, primary.submission_code),
+        fetchSubmissionScore(accessToken, primary.submission_code),
+      ]);
+      return { peers, score, entityName: clientData.entity_name };
+    },
+    enabled: !!accessToken,
+  });
 
-  if (error) return <ErrShell msg={error} />;
-  if (!peers || !score) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!bundle) return <PageLoading icon={TrendingUpDown} message="Building peer comparison…" />;
+
+  const { peers, score, entityName } = bundle;
 
   if (peers.peer_percentile_rank == null) {
     return <ThinCohortShell entityName={entityName} note={peers.note} />;
@@ -437,30 +426,6 @@ function ThinCohortShell({
           <p className="text-sm">
             {note ?? "Not enough peer data to compute a percentile yet."}
           </p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TrendingUpDown}>
-          <p className="text-sm">Building peer comparison…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
         </StandardCard>
       </CardGrid>
     </ViewCanvas>

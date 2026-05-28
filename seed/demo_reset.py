@@ -75,9 +75,39 @@ MARSH_BROKER_SLUG = "marsh"
 # aggregation + drilldown across a real-feeling book of policies.
 # Each coverage entry below becomes one Submission + ModelVersion + Quote.
 #
-# `open_query` controls whether to pre-stage an underwriter MFA-style
-# question; queries are scattered across coverages and clients so the
-# Communications page has meaningful volume.
+# Schema per coverage:
+#   coverage / configuration  -- production config key (must resolve via
+#                                infrastructure.models.compiler.get_config)
+#   policy_label / limit      -- portal-facing label + limit
+#   composite_score           -- TARGET composite the synthetic signal
+#                                generator aims for. Chosen so the
+#                                production-scored result lands in the
+#                                tier band that produces the desired
+#                                tier (see tier_bands -> 800-1000=T1,
+#                                650-799=T2, 500-649=T3, 350-499=T4).
+#                                The actual stored composite may drift
+#                                by ~10 points around the target due
+#                                to the production scorer's weighting.
+#   tier                      -- expected production tier; asserted in
+#                                tests, used for narrative reference.
+#   drag_modifier_signal_ids  -- signals scored LOW in the synthetic
+#                                input so they drive real signal_modifier
+#                                drags through the production scorer.
+#                                These show up in impact_breakdown
+#                                drags on the Signal Pulse card.
+#   open_query                -- pre-staged underwriter query; when
+#                                present, direct_query_responses[signal]
+#                                is set to False, so the production
+#                                query_evaluator produces a real
+#                                query_modifier drag and (for cyber
+#                                MFA) the configured tier override.
+#
+# All numeric fields downstream (base_premium, premium_after_modifiers,
+# final_premium, decision, modifiers_applied, peer_percentile) are
+# COMPUTED by the production pipeline -- not stored on the spec.
+# The seed records them on the ModelVersion exactly as the pipeline
+# returns them so cohort analytics, Signal Pulse, and impact breakdown
+# all flow through real DSI logic.
 DEMO_CLIENT_TENANTS = [
     {
         "slug": "acme-demo",
@@ -91,15 +121,17 @@ DEMO_CLIENT_TENANTS = [
         "revenue_band": "50-250M",
         "coverages": [
             # CYBER -- the narrative anchor, REFER tier with MFA query.
+            # Composite target 425 sits in the production T4 band
+            # (350-499). The open MFA query also fires the cyber_general
+            # config's mfa_enabled query_condition (override=4) so the
+            # tier override path is exercised end-to-end.
             {
                 "coverage": "cyber",
                 "configuration": "cyber_general",
                 "policy_label": "Cyber — Primary",
                 "limit": 10_000_000,
-                "composite_score": 685.0,
+                "composite_score": 425.0,
                 "tier": 4,
-                "base_premium": 165_000.0,
-                "decision": DecisionType.REFER,
                 "drag_modifier_signal_ids": [
                     "mfa_enabled", "security_training", "incident_response_plan",
                 ],
@@ -113,40 +145,34 @@ DEMO_CLIENT_TENANTS = [
                     "reasons": ["MFA absent on admin accounts"],
                 },
             },
-            # PI -- professional indemnity, preferred terms.
+            # PI -- professional indemnity, preferred terms. T2 band 650-799.
             {
                 "coverage": "pi",
                 "configuration": "pi_general",
                 "policy_label": "Professional Indemnity — Primary",
                 "limit": 5_000_000,
-                "composite_score": 762.0,
+                "composite_score": 750.0,
                 "tier": 2,
-                "base_premium": 88_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
-            # D&O -- directors and officers, standard.
+            # D&O -- directors and officers, standard (T3 band 500-649).
             {
                 "coverage": "do",
                 "configuration": "do_general",
                 "policy_label": "D&O Liability — Primary",
                 "limit": 15_000_000,
-                "composite_score": 718.0,
+                "composite_score": 580.0,
                 "tier": 3,
-                "base_premium": 134_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
-            # PROPERTY -- preferred.
+            # PROPERTY -- preferred (T2 band).
             {
                 "coverage": "property",
                 "configuration": "property_general",
                 "policy_label": "Property — All Risk",
                 "limit": 40_000_000,
-                "composite_score": 741.0,
+                "composite_score": 740.0,
                 "tier": 2,
-                "base_premium": 95_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
         ],
@@ -162,27 +188,24 @@ DEMO_CLIENT_TENANTS = [
         "revenue": 95_000_000,
         "revenue_band": "50-250M",
         "coverages": [
+            # Cyber preferred T2 -- clean profile for the healthcare anchor.
             {
                 "coverage": "cyber",
                 "configuration": "cyber_general",
                 "policy_label": "Cyber — Primary",
                 "limit": 5_000_000,
-                "composite_score": 735.0,
+                "composite_score": 730.0,
                 "tier": 2,
-                "base_premium": 121_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
-            # Medical professional liability -- an open query about staffing.
+            # Medical professional liability -- T3 with staffing query.
             {
                 "coverage": "medprof",
                 "configuration": "medprof_hospital",
                 "policy_label": "Medical Professional Liability",
                 "limit": 10_000_000,
-                "composite_score": 689.0,
+                "composite_score": 580.0,
                 "tier": 3,
-                "base_premium": 220_000.0,
-                "decision": DecisionType.REFER,
                 "drag_modifier_signal_ids": ["clinical_governance"],
                 "open_query": {
                     "body": (
@@ -194,26 +217,24 @@ DEMO_CLIENT_TENANTS = [
                     "reasons": ["Staffing ratio confirmation required"],
                 },
             },
+            # PI T3 -- moderate score reflecting the elevated tier.
             {
                 "coverage": "pi",
                 "configuration": "pi_general",
                 "policy_label": "Professional Indemnity",
                 "limit": 5_000_000,
-                "composite_score": 711.0,
+                "composite_score": 580.0,
                 "tier": 3,
-                "base_premium": 64_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
+            # Property T2 -- non-CAT, preferred.
             {
                 "coverage": "property",
                 "configuration": "property_general",
                 "policy_label": "Property — All Risk",
                 "limit": 25_000_000,
-                "composite_score": 728.0,
+                "composite_score": 730.0,
                 "tier": 2,
-                "base_premium": 72_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
         ],
@@ -229,27 +250,24 @@ DEMO_CLIENT_TENANTS = [
         "revenue": 320_000_000,
         "revenue_band": "250M-1B",
         "coverages": [
+            # Cyber T3 -- the manufacturing peer is in elevated band.
             {
                 "coverage": "cyber",
                 "configuration": "cyber_general",
                 "policy_label": "Cyber — Primary",
                 "limit": 10_000_000,
-                "composite_score": 712.0,
+                "composite_score": 580.0,
                 "tier": 3,
-                "base_premium": 168_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
-            # General liability with loss-history query.
+            # General liability T4 with loss-history query.
             {
                 "coverage": "casualty",
                 "configuration": "casualty_gl",
                 "policy_label": "General Liability — Primary",
                 "limit": 5_000_000,
-                "composite_score": 671.0,
+                "composite_score": 425.0,
                 "tier": 4,
-                "base_premium": 240_000.0,
-                "decision": DecisionType.REFER,
                 "drag_modifier_signal_ids": ["loss_history", "safety_program"],
                 "open_query": {
                     "body": (
@@ -261,27 +279,24 @@ DEMO_CLIENT_TENANTS = [
                     "reasons": ["Open GL claims require remediation evidence"],
                 },
             },
+            # Product liability T3.
             {
                 "coverage": "prodlib",
                 "configuration": "prodlib_consumer_goods",
                 "policy_label": "Product Liability",
                 "limit": 10_000_000,
-                "composite_score": 705.0,
+                "composite_score": 580.0,
                 "tier": 3,
-                "base_premium": 195_000.0,
-                "decision": DecisionType.APPROVE,
                 "drag_modifier_signal_ids": [],
             },
-            # CAT-exposed property with hurricane-protection query.
+            # CAT-exposed property T4 with hurricane-protection query.
             {
                 "coverage": "property",
                 "configuration": "property_cat_exposed",
                 "policy_label": "Property — CAT Exposed (Gulf Coast)",
                 "limit": 55_000_000,
-                "composite_score": 654.0,
+                "composite_score": 425.0,
                 "tier": 4,
-                "base_premium": 410_000.0,
-                "decision": DecisionType.REFER,
                 "drag_modifier_signal_ids": ["wind_mitigation", "flood_proofing"],
                 "open_query": {
                     "body": (
@@ -302,12 +317,261 @@ MARSH_USERS = [
     ("marsh.admin@demo.dsi", "Marsh Admin", "BROKER"),
 ]
 
-# Cohort pool target: 60 entities per cohort (per coverage x naics x band)
-# for the cyber demo flow. Other coverages don't need cohort fodder for
-# the portal -- they degrade gracefully to "Insufficient peers" notes.
-COHORT_POOL_PER_BAND = 60
-COHORT_POOL_DISTRIBUTION_MEAN = 720.0
-COHORT_POOL_DISTRIBUTION_STDDEV = 50.0
+
+# ============================================================================
+# Synthetic broker book -- volume across verticals the 3 demo clients
+# don't cover, so Risk Aggregation, Book Health, and the Marsh practice
+# vertical filter feel substantive instead of three-client-sparse.
+# ============================================================================
+#
+# Each entry is a SYNTHETIC client (no tenant or user record -- just
+# submissions attached to marsh-demo's broker). They flow through the
+# same run_synthetic_assessment() chain as the 3 narrative anchors, so
+# their scores / tiers / premiums / modifiers all come out of
+# production code. They also contribute to cohort_membership so peer
+# percentile / cohort_mean populate across more cohorts than the demo
+# alone can reach.
+#
+# Vertical spread chosen to fill out the 5 Marsh practice verticals
+# the 3 narrative anchors don't cover: Energy & Power (NAICS 21/22),
+# Financial Institutions (52), Real Estate & Hospitality (53/72),
+# Construction (23), Public Sector & Education (61/92). Plus one
+# additional Technology entity to broaden the broker's tech book.
+
+SYNTHETIC_BROKER_BOOK: list[dict] = [
+    # ---------- Energy & Power ----------
+    {
+        "entity_name": "Vanguard Energy Holdings",
+        "naics": "2211", "naics_section": "22", "revenue": 480_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 80_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Coastal Renewable Power",
+        "naics": "2211", "naics_section": "22", "revenue": 145_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 35_000_000,
+             "composite_score": 740.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Financial Institutions ----------
+    {
+        "entity_name": "Meridian Capital Bank",
+        "naics": "5221", "naics_section": "52", "revenue": 1_400_000_000,
+        "revenue_band": "1B+",
+        "coverages": [
+            {"coverage": "cyber",    "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 25_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do",       "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 30_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "pi",       "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Frontier Asset Management",
+        "naics": "5239", "naics_section": "52", "revenue": 420_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 20_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Apex Digital Lending",
+        "naics": "5222", "naics_section": "52", "revenue": 78_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Real Estate & Hospitality ----------
+    {
+        "entity_name": "Summit REIT",
+        "naics": "5311", "naics_section": "53", "revenue": 620_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 120_000_000,
+             "composite_score": 740.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 20_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Pinnacle Hospitality Group",
+        "naics": "7211", "naics_section": "72", "revenue": 380_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 75_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            # casualty_gl aggregates ~150 below target -- the hospitality
+            # peer naturally sits in T3 anyway, which reads fine in a
+            # GL-heavy book.
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Construction ----------
+    {
+        "entity_name": "Granite Construction Co",
+        "naics": "2362", "naics_section": "23", "revenue": 290_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 10_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — Builders Risk", "limit": 50_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Keystone Contractors",
+        "naics": "2381", "naics_section": "23", "revenue": 95_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            # casualty_gl aggregates well below target so the contractor
+            # peer lands in T3 -- typical for a SME contractor.
+            {"coverage": "casualty", "configuration": "casualty_gl",
+             "policy_label": "General Liability", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 20_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Public Sector & Education ----------
+    {
+        "entity_name": "Northstar Municipal Authority",
+        "naics": "9211", "naics_section": "92", "revenue": 320_000_000,
+        "revenue_band": "250M-1B",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 15_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 60_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "Public Officials Liability", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    {
+        "entity_name": "Crescent Public School District",
+        "naics": "6111", "naics_section": "61", "revenue": 110_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 5_000_000,
+             "composite_score": 580.0, "tier": 3, "drag_modifier_signal_ids": []},
+            {"coverage": "property", "configuration": "property_general",
+             "policy_label": "Property — All Risk", "limit": 30_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+    # ---------- Additional Technology peer ----------
+    {
+        "entity_name": "Photon Analytics",
+        "naics": "5112", "naics_section": "51", "revenue": 65_000_000,
+        "revenue_band": "50-250M",
+        "coverages": [
+            {"coverage": "cyber", "configuration": "cyber_general",
+             "policy_label": "Cyber — Primary", "limit": 10_000_000,
+             "composite_score": 870.0, "tier": 1, "drag_modifier_signal_ids": []},
+            {"coverage": "pi", "configuration": "pi_general",
+             "policy_label": "Professional Indemnity", "limit": 5_000_000,
+             "composite_score": 750.0, "tier": 2, "drag_modifier_signal_ids": []},
+            {"coverage": "do", "configuration": "do_general",
+             "policy_label": "D&O Liability", "limit": 10_000_000,
+             "composite_score": 730.0, "tier": 2, "drag_modifier_signal_ids": []},
+        ],
+    },
+]
+
+# Cohort pool target: N synthetic peers per (coverage, naics, band) cohort
+# the demo touches. Sized to comfortably exceed MIN_COHORT_SIZE (10) so
+# percentile + mean + median all hydrate, and large enough that the
+# percentile lookup doesn't snap to coarse quantiles for the demo
+# policies.
+COHORT_POOL_PER_BAND = 50
+
+# Per-coverage cohort score distributions. The mean reflects the line's
+# market state -- hardening lines (property, medprof) have lower mean
+# scores (more risks need attention); softening lines (cyber, D&O) have
+# higher mean. Std-dev controls how dramatically a demo policy stands out
+# in its cohort.
+#
+# Tuned so the demo's hand-picked composite_scores (see
+# DEMO_CLIENT_TENANTS) land at narratively-accurate percentile bands:
+#   - Acme cyber (685) at ~25th percentile of its cohort
+#   - Acme PI (762)   at ~top-decile
+#   - Pioneer property CAT (654) at bottom of its cohort
+COHORT_DISTRIBUTIONS: dict[str, tuple[float, float]] = {
+    # softening lines -- mean above 720
+    "do":       (740.0, 45.0),
+    "cyber":    (720.0, 50.0),
+    # flat lines -- mean around 710
+    "pi":       (710.0, 50.0),
+    "prodlib":  (700.0, 50.0),
+    "casualty": (700.0, 50.0),
+    # hardening lines -- mean below 700
+    "property": (680.0, 55.0),
+    "medprof":  (680.0, 55.0),
+}
+COHORT_DISTRIBUTION_DEFAULT: tuple[float, float] = (700.0, 50.0)
+
+
+def _enumerate_demo_cohorts() -> list[tuple[str, str, str]]:
+    """Every (coverage, naics_section, revenue_band) the broker book
+    touches (demo clients + synthetic broker book).
+
+    Drives cohort fodder seeding -- every cohort a policy belongs to
+    gets ~COHORT_POOL_PER_BAND peers so peer percentile, mean, and
+    median all populate on the client + broker portals.
+    """
+    seen: set[tuple[str, str, str]] = set()
+    for t in DEMO_CLIENT_TENANTS:
+        for cov in t["coverages"]:
+            seen.add((cov["coverage"], t["naics_section"], t["revenue_band"]))
+    for sc in SYNTHETIC_BROKER_BOOK:
+        for cov in sc["coverages"]:
+            seen.add((cov["coverage"], sc["naics_section"], sc["revenue_band"]))
+    return sorted(seen)
 
 
 # ---------------------------------------------------------------------------
@@ -341,9 +605,12 @@ def _wipe_existing_demo_state(db: Session) -> None:
         select(Tenant).where(Tenant.slug.in_(demo_slugs))
     ).scalars().all()
     if not tenants:
-        # Still drop any orphan cohort_pool rows
+        # Drop any orphan synthetic cohort rows.
         db.execute(delete(CohortMembership).where(
             CohortMembership.entity_key.like("cohort_pool_%")
+        ))
+        db.execute(delete(CohortMembership).where(
+            CohortMembership.entity_key.like("synthetic_%")
         ))
         return
 
@@ -380,6 +647,14 @@ def _wipe_existing_demo_state(db: Session) -> None:
     db.execute(
         delete(CohortMembership).where(
             CohortMembership.entity_key.like("cohort_pool_%")
+        )
+    )
+
+    # Synthetic broker book entries (additional clients beyond the 3
+    # narrative anchors, attached to marsh-demo for volume).
+    db.execute(
+        delete(CohortMembership).where(
+            CohortMembership.entity_key.like("synthetic_%")
         )
     )
 
@@ -477,34 +752,39 @@ def _ensure_broker(
 
 
 def _seed_cohort_pool(db: Session, rng: random.Random) -> int:
-    """Insert ~60 synthetic membership rows per demo cohort.
+    """Insert synthetic membership rows for every (coverage, naics, band)
+    cohort the demo touches.
 
-    These don't have model_version_id linkages -- they are peer
-    fodder. Score distribution is N(720, 50); entity_keys use the
-    cohort_pool_ prefix so wipe can find them.
+    These are peer fodder -- they don't carry model_version_id linkages.
+    The cohort percentile lookup in layers/cohort/service.py reads
+    composite_score from cohort_membership directly, so plain stubs are
+    enough to make peer comparison, percentile rank, and cohort mean /
+    median populate across the portal.
+
+    Score distributions are per-coverage (see COHORT_DISTRIBUTIONS),
+    chosen so:
+      - Hardening lines (property, medprof) have lower cohort means --
+        the demo policy on a hardening line lands in a tougher cohort.
+      - Softening lines (cyber, D&O) have higher means.
+      - Each demo policy's composite_score lands at a percentile that
+        matches its narrative tier (Acme cyber at REFER tier ~ 25th
+        pct, Pioneer CAT property at tier 4 ~ bottom-15th, etc.)
+
+    entity_keys use the cohort_pool_ prefix so the wipe routine can
+    find them on every demo-reset.
     """
-    target_cohorts = {
-        f"cyber:{t['naics_section']}:{t['revenue_band']}": (
-            t["naics_section"],
-            t["revenue_band"],
-        )
-        for t in DEMO_CLIENT_TENANTS
-    }
-
     inserted = 0
-    for cohort_id, (naics_section, revenue_band) in target_cohorts.items():
+    for coverage, naics_section, revenue_band in _enumerate_demo_cohorts():
+        cohort_id = f"{coverage}:{naics_section}:{revenue_band}"
+        mean, stddev = COHORT_DISTRIBUTIONS.get(
+            coverage, COHORT_DISTRIBUTION_DEFAULT,
+        )
         for i in range(COHORT_POOL_PER_BAND):
-            score = max(
-                100.0,
-                min(
-                    1000.0,
-                    rng.gauss(COHORT_POOL_DISTRIBUTION_MEAN, COHORT_POOL_DISTRIBUTION_STDDEV),
-                ),
-            )
+            score = max(100.0, min(1000.0, rng.gauss(mean, stddev)))
             entity_key = f"cohort_pool_{cohort_id.replace(':', '_')}_{i}"
             membership = CohortMembership(
                 entity_key=entity_key,
-                coverage="cyber",
+                coverage=coverage,
                 cohort_id=cohort_id,
                 composite_score=round(score, 2),
                 naics_section=naics_section,
@@ -518,53 +798,308 @@ def _seed_cohort_pool(db: Session, rng: random.Random) -> int:
 
 
 # ---------------------------------------------------------------------------
-# Demo submissions
+# Production scoring pipeline
 # ---------------------------------------------------------------------------
+#
+# Demo submissions flow through the same scoring + pricing chain as a
+# real submission via the API: build synthetic SignalOutput +
+# CategoricalOutput inputs targeted at the desired tier band, then run
+# the production ModelScorer + QueryEvaluator + ModelPricer to compute
+# the final composite, tier, decision, premium, and impact_breakdown.
+#
+# Inputs that we still set deterministically per demo coverage:
+#   - composite_score (TARGET) -- drives the default signal score and
+#     is the average value the synthetic SignalOutputs aggregate to
+#   - drag_modifier_signal_ids -- specific signals scored low (15.0)
+#     so the scorer produces real impact_breakdown drag entries
+#   - open_query[signal] -- if present, the matching direct_query_response
+#     is set to False so the query_evaluator produces a real query
+#     modifier (and on cyber_general, the mfa_enabled query_condition
+#     triggers a tier override)
+#
+# Outputs that come from the production pipeline (NOT hardcoded):
+#   - actual composite, final_tier, tier_label
+#   - signal_modifiers + query_modifiers (Signal Pulse drivers)
+#   - base_premium, premium_after_modifiers, final_premium
+#   - decision (APPROVE / REFER / DECLINE from the tier band action)
+
+from dataclasses import asdict
+from typing import Any
+
+from infrastructure.models.compiler import get_config as _get_compiled_config
+from layers.risk.pricer import ModelPricer
+from layers.risk.query_evaluator import QueryEvaluator
+from layers.risk.scorer import ModelScorer
+from layers.risk.types import (
+    CategoricalOutput,
+    SignalOutput,
+    utcnow as _types_utcnow,
+)
+
+# Module-level singletons -- production code holds these once and
+# reuses across calls.
+_scorer = ModelScorer()
+_pricer = ModelPricer()
+_query_evaluator = QueryEvaluator()
+
+# Score injected into "drag" signal slots. Sits comfortably below the
+# 35 floor that most cyber/property conditions trigger on.
+_DRAG_SIGNAL_SCORE = 15.0
 
 
-def _build_drag_modifiers(
-    drag_signal_ids: list[str], base_premium: float,
-) -> tuple[list[dict], float]:
-    """Construct modifier audit rows that produce realistic drags.
+def _build_signal_outputs_for_target(
+    config: Any,
+    target_composite: float,
+    drag_signal_ids: list[str],
+    rng: random.Random,
+) -> list[SignalOutput]:
+    """Synthetic SignalOutput list biased toward a target composite.
 
-    Each drag signal contributes a 1.08x factor. Returns a list of
-    AppliedModifier-shaped dicts ready for JSONB serialisation, plus
-    the final premium after all modifiers.
+    Most signals get a jittered score equal to target_composite / 10
+    (config scoring is on 0-100 per signal, aggregated to 0-1000
+    composite). Signals named in drag_signal_ids get a forced low
+    score so they fire as drags through the scorer's signal-condition
+    evaluator.
     """
-    current = base_premium
-    modifiers: list[dict] = []
-    for sig_id in drag_signal_ids:
-        factor = 1.08
-        before = current
-        after = current * factor
-        modifiers.append({
-            "source": "direct_query",
-            "source_id": sig_id,
-            "name": f"Direct query drag: {sig_id}",
-            "factor": factor,
-            "premium_before": round(before, 2),
-            "premium_after": round(after, 2),
-        })
-        current = after
-    return modifiers, round(current, 2)
+    default_per_signal = max(5.0, min(95.0, target_composite / 10.0))
+    drags = set(drag_signal_ids)
+
+    outputs: list[SignalOutput] = []
+    for sd in config.signal_registry:
+        if not sd.three_layer_assessment:
+            continue
+        tla = sd.three_layer_assessment
+        if sd.id in drags:
+            raw = _DRAG_SIGNAL_SCORE
+        else:
+            raw = max(5.0, min(95.0, rng.gauss(default_per_signal, 5.0)))
+        weight = tla.risk.weight if tla.risk else 0.0
+        outputs.append(SignalOutput(
+            signal_id=sd.id,
+            signal_name=sd.id.replace("_", " ").title(),
+            group_id=tla.group_id,
+            raw_score=raw,
+            confidence=round(rng.uniform(0.78, 0.95), 2),
+            weighted_score=raw * weight,
+            weight=weight,
+            data_sources=["seed"],
+            extracted_at=_types_utcnow(),
+            execution_time_ms=round(rng.uniform(60, 240), 1),
+        ))
+    return outputs
+
+
+def _build_categorical_outputs(
+    config: Any, naics_section: str, revenue_band: str,
+) -> list[CategoricalOutput]:
+    """Categorical inputs the production pricer needs (industry, size,
+    geography). Pulled from the demo client's metadata so production
+    industry / size factors fire correctly."""
+    industry_for_naics = {
+        "51": "TECHNOLOGY",
+        "62": "HEALTHCARE",
+        "31": "MANUFACTURING", "32": "MANUFACTURING", "33": "MANUFACTURING",
+        "21": "ENERGY", "22": "ENERGY",
+        "52": "FINANCIAL_SERVICES",
+        "53": "REAL_ESTATE",
+        "23": "CONSTRUCTION",
+    }
+    size_for_revenue_band = {
+        "0-10M":   "MICRO",
+        "10-50M":  "SMALL",
+        "50-250M": "MEDIUM",
+        "250M-1B": "LARGE",
+        "1B+":     "ENTERPRISE",
+    }
+    metadata = {
+        "industry_classification": industry_for_naics.get(naics_section, "OTHER"),
+        "size_band":                size_for_revenue_band.get(revenue_band, "MEDIUM"),
+        "geography":                "US",
+    }
+    outputs: list[CategoricalOutput] = []
+    for sd in config.signal_registry:
+        if not sd.categories:
+            continue
+        cat_def = sd.categories
+        cat_group = next(
+            (cg for cg in config.groups.categories if cg.id == cat_def.group_id),
+            None,
+        )
+        default_cat = cat_group.default_cat if cat_group else "OTHER"
+        group_name = cat_group.label if cat_group else cat_def.group_id
+
+        # Decide which category value applies. metadata.X is the source
+        # field for the three categorical groups we care about; fall
+        # back to default for anything else.
+        selected = None
+        if cat_def.source:
+            selected = metadata.get(cat_def.source.replace("metadata.", ""))
+        if selected is None:
+            selected = metadata.get(cat_def.group_id)
+        if selected is None:
+            selected = default_cat
+
+        # Find modifier from features
+        modifier = 1.0
+        label = selected
+        for feat in cat_def.features:
+            if feat.cat == selected:
+                modifier = feat.applied if feat.applied is not None else 1.0
+                label = feat.label or selected
+                break
+        else:
+            # No matching feature: try default_cat
+            for feat in cat_def.features:
+                if feat.cat == default_cat:
+                    modifier = feat.applied if feat.applied is not None else 1.0
+                    label = feat.label or default_cat
+                    selected = default_cat
+                    break
+
+        outputs.append(CategoricalOutput(
+            group_id=cat_def.group_id,
+            group_name=group_name,
+            category=selected,
+            label=label,
+            modifier=modifier,
+            confidence=0.92,
+            extracted_at=_types_utcnow(),
+        ))
+    return outputs
+
+
+def _modifier_to_dict(m: Any) -> dict:
+    """AppliedModifier dataclasses + plain dicts both flow through here."""
+    if isinstance(m, dict):
+        return m
+    try:
+        return asdict(m)
+    except TypeError:
+        # Pydantic / non-dataclass fallback
+        return dict(m) if hasattr(m, "__iter__") else {"raw": str(m)}
+
+
+def run_synthetic_assessment(
+    *,
+    coverage: str,
+    configuration: str,
+    target_composite: float,
+    drag_signal_ids: list[str],
+    direct_query_responses: dict[str, bool],
+    naics_section: str,
+    revenue_band: str,
+    naics: str,
+    revenue: int,
+    limit: int,
+    rng: random.Random,
+) -> dict[str, Any]:
+    """Run the production scoring + pricing chain for a synthetic
+    submission and return everything needed to populate a
+    ModelVersionRecord.
+
+    Determinism: with a fixed rng seed the output is stable across
+    runs. Production tier-band rules govern the resulting tier and
+    decision.
+    """
+    config = _get_compiled_config(coverage, configuration)
+
+    signal_outputs = _build_signal_outputs_for_target(
+        config, target_composite, drag_signal_ids, rng,
+    )
+    categorical_outputs = _build_categorical_outputs(
+        config, naics_section, revenue_band,
+    )
+
+    composite, group_scores, confidence, signal_coverage = (
+        _scorer.calculate_composite(signal_outputs=signal_outputs, config=config)
+    )
+    (signal_conditions, signal_tier_overrides, signal_referrals,
+     signal_notes, signal_modifiers) = _scorer.evaluate_signal_conditions(
+        signal_outputs=signal_outputs, group_scores=group_scores, config=config,
+    )
+
+    query_result = _query_evaluator.evaluate_queries(
+        responses=direct_query_responses, config=config,
+    )
+
+    all_modifiers = signal_modifiers + query_result.modifiers
+
+    submission_data = {
+        "naics": naics, "revenue": revenue, "limit": limit,
+    }
+    pricing = _pricer.price_submission(
+        pure_composite_score=composite,
+        signal_tier_overrides=signal_tier_overrides,
+        query_tier_overrides=query_result.tier_overrides,
+        query_modifiers=all_modifiers,
+        categorical_outputs=categorical_outputs,
+        submission_data=submission_data,
+        config=config,
+    )
+
+    final_tier = pricing.final_tier
+    tier_band = config.get_tier_band(final_tier)
+    action = (
+        tier_band.interpretation.action.value
+        if tier_band and tier_band.interpretation
+        else "APPROVE"
+    )
+    if action == "DECLINE":
+        decision = DecisionType.DECLINE
+    elif action == "REFER" or signal_referrals or query_result.referrals:
+        decision = DecisionType.REFER
+    else:
+        decision = DecisionType.APPROVE
+
+    return {
+        "composite": composite,
+        "confidence": confidence,
+        "signal_coverage": signal_coverage,
+        "score_based_tier": pricing.score_based_tier
+            if hasattr(pricing, "score_based_tier")
+            else config.get_tier_for_score(composite),
+        "final_tier": final_tier,
+        "tier_label": tier_band.label if tier_band else "STANDARD",
+        "base_premium": pricing.base_premium,
+        "premium_after_modifiers": pricing.premium_after_modifiers,
+        "final_premium": pricing.final_premium,
+        "modifiers_applied": [_modifier_to_dict(m) for m in pricing.modifiers_applied],
+        "decision": decision,
+        "auto_approve": decision == DecisionType.APPROVE,
+        "group_scores": dict(group_scores or {}),
+        "signal_referrals": list(signal_referrals or []),
+        "query_referrals": list(query_result.referrals or []),
+    }
 
 
 def _seed_demo_submission(
     db: Session, *, client_spec: dict, coverage_spec: dict,
     marsh_broker: Broker, client_user: User, underwriter_user: User,
+    rng: random.Random,
 ) -> tuple[Submission, ModelVersionRecord, Quote, Optional[Referral]]:
-    """Create submission + model_version + quote + referral for one coverage.
+    """Create submission + model_version + quote + referral for one
+    coverage, scored through the production pipeline.
 
-    Hand-tuned to land at the configured composite_score / tier / premium
-    so the demo storyboard reads consistently every time.
+    The coverage_spec carries TARGETS (composite_score, tier,
+    drag_modifier_signal_ids, open_query). The pipeline produces the
+    actual composite, tier, modifiers, premium, and decision. Demo
+    storyboard stability comes from deterministic RNG (DEMO_RNG_SEED).
     """
     from infrastructure.db.repositories import generate_id
 
     now = datetime.now(timezone.utc)
     coverage = coverage_spec["coverage"]
     configuration = coverage_spec["configuration"]
-    base_premium = float(coverage_spec["base_premium"])
-    tier = int(coverage_spec["tier"])
+    limit = int(coverage_spec.get("limit", 10_000_000))
+
+    # If there's an open underwriter query for a specific signal, set
+    # the matching direct_query_response to False so the production
+    # query_evaluator produces a real query modifier (and on cyber the
+    # mfa_enabled query_condition triggers a tier override).
+    open_query = coverage_spec.get("open_query")
+    direct_query_responses: dict[str, bool] = {}
+    if open_query is not None and open_query.get("signal"):
+        direct_query_responses[open_query["signal"]] = False
 
     submission = Submission(
         submission_code=generate_id("sub"),
@@ -577,13 +1112,10 @@ def _seed_demo_submission(
         submission_data={
             "naics": client_spec["naics"],
             "revenue": client_spec["revenue"],
-            # Surfaced on the client portal as the policy label for this
-            # submission. Not used by the workflow; carrier UI shows
-            # entity_name elsewhere.
             "policy_label": coverage_spec.get("policy_label", coverage.capitalize()),
-            "limit": coverage_spec.get("limit"),
+            "limit": limit,
         },
-        direct_query_responses={},
+        direct_query_responses=direct_query_responses,
         broker_id=marsh_broker.id,
         created_by=client_user.id,
         created_at=now,
@@ -593,13 +1125,21 @@ def _seed_demo_submission(
     db.add(submission)
     db.flush()
 
-    modifiers, post_modifier_premium = _build_drag_modifiers(
-        coverage_spec.get("drag_modifier_signal_ids", []), base_premium,
+    # ----- production scoring + pricing -----
+    result = run_synthetic_assessment(
+        coverage=coverage,
+        configuration=configuration,
+        target_composite=float(coverage_spec["composite_score"]),
+        drag_signal_ids=coverage_spec.get("drag_modifier_signal_ids", []),
+        direct_query_responses=direct_query_responses,
+        naics_section=client_spec["naics_section"],
+        revenue_band=client_spec["revenue_band"],
+        naics=client_spec["naics"],
+        revenue=int(client_spec["revenue"]),
+        limit=limit,
+        rng=rng,
     )
 
-    # Cohort id only meaningful for cyber demo path; other coverages
-    # still get a cohort_id stamped for symmetry, but peer stats won't
-    # render because the cohort pool only contains cyber entries.
     cohort_id = f"{coverage}:{client_spec['naics_section']}:{client_spec['revenue_band']}"
 
     mv = ModelVersionRecord(
@@ -611,20 +1151,19 @@ def _seed_demo_submission(
         config_hash="demo",
         coverage=coverage,
         configuration_name=configuration,
-        pure_composite_score=coverage_spec["composite_score"],
-        final_composite_score=coverage_spec["composite_score"],
-        confidence=0.85,
-        signal_coverage=0.95,
-        score_based_tier=tier,
-        final_tier=tier,
-        tier_label={1: "PREFERRED", 2: "PREFERRED", 3: "STANDARD", 4: "REFER", 5: "DECLINE"}.get(tier, "STANDARD"),
-        base_premium=base_premium,
-        premium_after_modifiers=post_modifier_premium,
-        final_premium=post_modifier_premium,
-        modifiers_applied=modifiers,
-        decision=coverage_spec["decision"],
-        auto_approve=(coverage_spec["decision"] == DecisionType.APPROVE),
-        # v8 peer cohort fields -- populated from the cohort pool below
+        pure_composite_score=result["composite"],
+        final_composite_score=result["composite"],
+        confidence=result["confidence"],
+        signal_coverage=result["signal_coverage"],
+        score_based_tier=result["score_based_tier"],
+        final_tier=result["final_tier"],
+        tier_label=result["tier_label"],
+        base_premium=result["base_premium"],
+        premium_after_modifiers=result["premium_after_modifiers"],
+        final_premium=result["final_premium"],
+        modifiers_applied=result["modifiers_applied"],
+        decision=result["decision"],
+        auto_approve=result["auto_approve"],
         peer_cohort_id=cohort_id,
         peer_cohort_size=None,
         created_at=now,
@@ -632,13 +1171,15 @@ def _seed_demo_submission(
     db.add(mv)
     db.flush()
 
-    # Cohort membership for this real entity. Unique per (entity_key, coverage)
-    # so the same entity in multiple coverages produces one row each.
+    # Cohort membership for this real entity. The composite is now the
+    # PRODUCTION-COMPUTED value, not a hardcoded one -- so the entity's
+    # position in its peer cohort reflects how the scorer actually
+    # rated it.
     membership = CohortMembership(
         entity_key=client_spec["entity_name"].strip().lower(),
         coverage=coverage,
         cohort_id=cohort_id,
-        composite_score=coverage_spec["composite_score"],
+        composite_score=result["composite"],
         naics_section=client_spec["naics_section"],
         revenue_band=client_spec["revenue_band"],
         model_version_id=mv.id,
@@ -646,8 +1187,7 @@ def _seed_demo_submission(
     db.add(membership)
     db.flush()
 
-    # Compute and persist percentile on MV after the entity's membership
-    # row is in place so the cohort includes itself.
+    # Cohort stats include this entity itself.
     cohort_scores = db.execute(
         select(CohortMembership.composite_score).where(
             CohortMembership.cohort_id == cohort_id
@@ -658,7 +1198,7 @@ def _seed_demo_submission(
         percentile_from_scores,
     )
 
-    pct = percentile_from_scores(cohort_scores, coverage_spec["composite_score"])
+    pct = percentile_from_scores(cohort_scores, result["composite"])
     stats = cohort_stats_from_scores(cohort_id, cohort_scores)
     mv.peer_percentile_rank = pct
     mv.peer_cohort_size = len(cohort_scores)
@@ -672,8 +1212,8 @@ def _seed_demo_submission(
         submission_id=submission.id,
         model_version_id=mv.id,
         status=QuoteStatus.READY,
-        recommended_premium=post_modifier_premium,
-        recommended_limit=float(coverage_spec.get("limit", 10_000_000)),
+        recommended_premium=result["final_premium"],
+        recommended_limit=float(limit),
         created_at=now,
         updated_at=now,
     )
@@ -709,6 +1249,131 @@ def _seed_demo_submission(
         db.flush()
 
     return submission, mv, quote, referral
+
+
+def _seed_synthetic_broker_client(
+    db: Session, *, client_spec: dict, marsh_broker: Broker,
+    marsh_admin_user: User, rng: random.Random,
+) -> int:
+    """Seed a SYNTHETIC client (no tenant or user record) into the
+    broker's book. Same production scoring chain as the 3 narrative
+    anchors -- just without the storyboard machinery (no open queries
+    by default, no broker-side referral threads).
+
+    Returns the number of submissions created (one per coverage).
+    """
+    from infrastructure.db.repositories import generate_id
+    now = datetime.now(timezone.utc)
+    created = 0
+
+    for coverage_spec in client_spec.get("coverages", []):
+        coverage = coverage_spec["coverage"]
+        configuration = coverage_spec["configuration"]
+        limit = int(coverage_spec.get("limit", 10_000_000))
+
+        submission = Submission(
+            submission_code=generate_id("sub"),
+            entity_name=client_spec["entity_name"],
+            domain_hint=None,
+            country_hint="US",
+            coverage=coverage,
+            configuration=configuration,
+            status=SubmissionStatus.READY,
+            submission_data={
+                "naics": client_spec["naics"],
+                "revenue": client_spec["revenue"],
+                "policy_label": coverage_spec.get(
+                    "policy_label", coverage.capitalize(),
+                ),
+                "limit": limit,
+            },
+            direct_query_responses={},
+            broker_id=marsh_broker.id,
+            created_by=marsh_admin_user.id,
+            created_at=now,
+            updated_at=now,
+            processing_completed_at=now,
+        )
+        db.add(submission)
+        db.flush()
+
+        result = run_synthetic_assessment(
+            coverage=coverage,
+            configuration=configuration,
+            target_composite=float(coverage_spec["composite_score"]),
+            drag_signal_ids=coverage_spec.get("drag_modifier_signal_ids", []),
+            direct_query_responses={},
+            naics_section=client_spec["naics_section"],
+            revenue_band=client_spec["revenue_band"],
+            naics=client_spec["naics"],
+            revenue=int(client_spec["revenue"]),
+            limit=limit,
+            rng=rng,
+        )
+
+        cohort_id = (
+            f"{coverage}:{client_spec['naics_section']}:{client_spec['revenue_band']}"
+        )
+
+        mv = ModelVersionRecord(
+            version_code=generate_id("mv"),
+            submission_id=submission.id,
+            version_number=1,
+            version_type="initial",
+            is_latest=True,
+            config_hash="demo",
+            coverage=coverage,
+            configuration_name=configuration,
+            pure_composite_score=result["composite"],
+            final_composite_score=result["composite"],
+            confidence=result["confidence"],
+            signal_coverage=result["signal_coverage"],
+            score_based_tier=result["score_based_tier"],
+            final_tier=result["final_tier"],
+            tier_label=result["tier_label"],
+            base_premium=result["base_premium"],
+            premium_after_modifiers=result["premium_after_modifiers"],
+            final_premium=result["final_premium"],
+            modifiers_applied=result["modifiers_applied"],
+            decision=result["decision"],
+            auto_approve=result["auto_approve"],
+            peer_cohort_id=cohort_id,
+            peer_cohort_size=None,
+            created_at=now,
+        )
+        db.add(mv)
+        db.flush()
+
+        # Cohort membership -- entity_key uses a synthetic_ prefix so
+        # the wipe routine can find them on next demo-reset.
+        membership = CohortMembership(
+            entity_key=f"synthetic_{client_spec['entity_name'].strip().lower().replace(' ', '_')}",
+            coverage=coverage,
+            cohort_id=cohort_id,
+            composite_score=result["composite"],
+            naics_section=client_spec["naics_section"],
+            revenue_band=client_spec["revenue_band"],
+            model_version_id=mv.id,
+        )
+        db.add(membership)
+        db.flush()
+
+        quote = Quote(
+            quote_code=generate_id("quo"),
+            submission_id=submission.id,
+            model_version_id=mv.id,
+            status=QuoteStatus.READY,
+            recommended_premium=result["final_premium"],
+            recommended_limit=float(limit),
+            created_at=now,
+            updated_at=now,
+        )
+        db.add(quote)
+        db.flush()
+
+        created += 1
+
+    return created
 
 
 # ---------------------------------------------------------------------------
@@ -788,6 +1453,7 @@ def reset_demo_state(db: Session, *, password: str, rng_seed: int) -> dict:
                 marsh_broker=marsh_broker,
                 client_user=client_user,
                 underwriter_user=underwriter,
+                rng=rng,
             )
             coverages_summary.append({
                 "coverage": coverage_spec["coverage"],
@@ -806,10 +1472,42 @@ def reset_demo_state(db: Session, *, password: str, rng_seed: int) -> dict:
             "coverages": coverages_summary,
         })
 
+    # Synthetic broker book -- 12 additional clients spanning the
+    # Marsh practice verticals the 3 narrative anchors don't cover.
+    # Submissions attached to marsh-demo broker (created_by = marsh
+    # admin) so the broker's overview / Book Health / Risk
+    # Aggregation views span a realistic 15-client book.
+    marsh_admin_user = db.execute(
+        select(User).where(User.email == "marsh.admin@demo.dsi")
+    ).scalar_one()
+
+    synthetic_summary: list[dict] = []
+    synthetic_total = 0
+    for synth_spec in SYNTHETIC_BROKER_BOOK:
+        logger.info("[demo-reset] seeding synthetic broker client %s",
+                    synth_spec["entity_name"])
+        n = _seed_synthetic_broker_client(
+            db, client_spec=synth_spec, marsh_broker=marsh_broker,
+            marsh_admin_user=marsh_admin_user, rng=rng,
+        )
+        synthetic_summary.append({
+            "entity_name": synth_spec["entity_name"],
+            "naics_section": synth_spec["naics_section"],
+            "revenue_band": synth_spec["revenue_band"],
+            "submissions": n,
+        })
+        synthetic_total += n
+    summary["synthetic_book"] = synthetic_summary
+    summary["synthetic_book_submissions"] = synthetic_total
+
     db.commit()
-    logger.info("[demo-reset] complete: %s clients, %s total policies",
-                len(summary["clients"]),
-                sum(len(c["coverages"]) for c in summary["clients"]))
+    logger.info(
+        "[demo-reset] complete: %s narrative clients (%s policies) + "
+        "%s synthetic clients (%s policies)",
+        len(summary["clients"]),
+        sum(len(c["coverages"]) for c in summary["clients"]),
+        len(synthetic_summary), synthetic_total,
+    )
     return summary
 
 

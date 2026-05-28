@@ -9,7 +9,6 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Building2,
@@ -19,7 +18,6 @@ import {
   Send,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -38,13 +36,15 @@ import {
   fetchCommunicationThread,
   postBrokerReply,
 } from "@/lib/portalApi";
+import { homePathForRole } from "@/lib/portalPaths";
 import type {
-  CommunicationsThreadResponse,
   CommunicationThreadMessage,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
-export default function CommunicationThreadPage({
+export default function CommunicationsThreadView({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -54,28 +54,16 @@ export default function CommunicationThreadPage({
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [thread, setThread] = useState<CommunicationsThreadResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => { setActiveMenu("Communications"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCommunicationThread(accessToken, code);
-        if (!cancelled) setThread(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken, code, reloadKey]);
+  const { data: thread, error, reload } = useRoleScopedFetch({
+    fetcher: () => fetchCommunicationThread(accessToken, code),
+    enabled: !!accessToken,
+    deps: [code],
+  });
 
-  if (error) return <ErrShell msg={error} />;
-  if (!thread) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!thread) return <PageLoading icon={MessagesSquare} message="Loading thread…" />;
 
   const isBroker = userRole === "BROKER";
   const canReply = isBroker && thread.awaiting_party === "broker";
@@ -94,7 +82,7 @@ export default function CommunicationThreadPage({
           lucideIcon={MessagesSquare}
           headerRight={
             <Link
-              href="/communications"
+              href={`${homePathForRole(userRole)}/communications`}
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               <ArrowLeft className="generate-app-icon" /> All threads
@@ -148,7 +136,7 @@ export default function CommunicationThreadPage({
               referralCode={thread.referral_code}
               accessToken={accessToken}
               suggestedSignal={lastUWMessage?.request_signal_evidence ?? "mfa_enabled"}
-              onSubmitted={() => setReloadKey((k) => k + 1)}
+              onSubmitted={reload}
             />
           </StandardCard>
         )}
@@ -352,30 +340,5 @@ function BrokerReplyForm({
         <ArrowRight className="generate-app-icon" />
       </button>
     </form>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={MessagesSquare}>
-          <p className="text-sm">Loading thread…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

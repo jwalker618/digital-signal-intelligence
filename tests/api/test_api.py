@@ -327,19 +327,21 @@ class TestAuthentication:
 
         token = create_access_token(
             user_id="user_123",
-            username="testuser",
+            tenant_id="tenant_456",
+            email="testuser@example.com",
             permissions=["submit", "quote"],
         )
 
         assert token is not None
         assert "." in token  # JWT format
 
-        # Decode and verify
+        # Decode and verify -- decode_token returns a TokenPayload model
         payload = decode_token(token)
         assert payload is not None
-        assert payload["sub"] == "user_123"
-        assert payload["username"] == "testuser"
-        assert "submit" in payload["permissions"]
+        assert payload.sub == "user_123"
+        assert payload.tenant_id == "tenant_456"
+        assert payload.email == "testuser@example.com"
+        assert "submit" in payload.permissions
 
     def test_validate_api_key(self):
         """Should validate API keys."""

@@ -5,19 +5,16 @@
 // Beyond what clients tell you: engagement score, opportunity / risk
 // flags, renewal calendar, quiet-client alerts.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import {
-  AlertTriangle,
   ArrowRight,
   Calendar,
-  CircleDot,
   HeartPulse,
   TrendingDown,
   TrendingUp,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -32,13 +29,15 @@ import {
   ScoreBar,
   StatsGrid,
 } from "@/components/base/content/primatives";
-import VerticalFilter, { useVerticalFilter } from "@/components/broker/VerticalFilter";
+import VerticalFilter, { useVerticalFilter } from "@/components/portal/VerticalFilter";
 
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchClientHealth } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import type { ClientHealthEntry, ClientHealthResponse } from "@/types/portal";
+import type { ClientHealthEntry } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ClientHealthPage() {
@@ -48,33 +47,21 @@ export default function ClientHealthPage() {
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
   const filter = useVerticalFilter();
 
-  const [data, setData] = useState<ClientHealthResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Client Health"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchClientHealth(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data, error, loading } = useRoleScopedFetch({
+    fetcher: () => fetchClientHealth(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
   const filtered = useMemo(() => {
     if (!data) return [];
     return data.clients.filter((c) => filter.matches(c.vertical_slug));
   }, [data, filter]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Client Health is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={HeartPulse} message="Loading client health…" />;
 
   const strong = filtered.filter((c) => c.engagement_score >= 80).length;
   const quiet = filtered.filter((c) => c.engagement_score < 40).length;
@@ -117,7 +104,7 @@ export default function ClientHealthPage() {
                 <QuietClientRow
                   key={c.entity_name}
                   client={c}
-                  onClick={() => router.push("/communications")}
+                  onClick={() => router.push("/broker/communications")}
                 />
               ))}
             </div>
@@ -138,7 +125,7 @@ export default function ClientHealthPage() {
               <ClientHealthCard
                 key={c.entity_name}
                 client={c}
-                onOpen={() => router.push("/communications")}
+                onOpen={() => router.push("/broker/communications")}
               />
             ))}
           </div>
@@ -311,42 +298,5 @@ function QuietClientRow({
       </div>
       <ArrowRight className="generate-app-icon" />
     </button>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={HeartPulse}>
-          <NoData message="Loading client health…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Client Health is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

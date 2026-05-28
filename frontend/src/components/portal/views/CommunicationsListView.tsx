@@ -8,19 +8,18 @@
 //   CLIENT: queries on their own submissions
 
 import { useEffect, useState } from "react";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowRight,
   CircleDot,
   ListChecks,
   MessageSquare,
   MessagesSquare,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -31,39 +30,34 @@ import { KpiTile } from "@/components/base/content/primatives";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchCommunications } from "@/lib/portalApi";
+import { homePathForRole } from "@/lib/portalPaths";
 import type {
   CommunicationItem,
-  CommunicationsListResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
-export default function CommunicationsListPage() {
+export default function CommunicationsListView() {
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<CommunicationsListResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  // Cross-page nav links inside this view need to point at the
+  // current persona's communications subtree. Same view, two URLs.
+  const personaHome = homePathForRole(userRole);
+
   const [showOpenOnly, setShowOpenOnly] = useState(true);
 
   useEffect(() => { setActiveMenu("Communications"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchCommunications(accessToken, false);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchCommunications(accessToken, false),
+    enabled: !!accessToken,
+  });
 
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={MessagesSquare} message="Loading communications…" />;
 
   const items = showOpenOnly ? data.items.filter((i) => i.is_open) : data.items;
 
@@ -142,7 +136,7 @@ export default function CommunicationsListPage() {
                   key={item.referral_code}
                   item={item}
                   role={data.role}
-                  onClick={() => router.push(`/communications/${item.referral_code}`)}
+                  onClick={() => router.push(`${personaHome}/communications/${item.referral_code}`)}
                 />
               ))}
             </div>
@@ -231,29 +225,4 @@ function formatRelative(iso: string): string {
   } catch {
     return "—";
   }
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={MessagesSquare}>
-          <p className="text-sm">Loading communications…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
 }

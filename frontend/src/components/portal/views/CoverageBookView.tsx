@@ -7,22 +7,18 @@
 // score) over the underlying policies, then a row per policy that
 // links to the policy detail view.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowRight,
-  Briefcase,
   ChartPie,
-  Gauge,
   Layers,
   ShieldCheck,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -38,45 +34,36 @@ import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchOverview } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
+import { homePathForRole } from "@/lib/portalPaths";
 import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
-  BrokerOverviewResponse,
   ClientBookEntry,
   ClientCoverageEntry,
-  ClientOverviewResponse,
-  OverviewResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 type AnyPolicy = ClientBookEntry | ClientCoverageEntry;
 
 
-export default function CoveragesPage() {
+export default function CoverageBookView() {
   const router = useRouter();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<OverviewResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const personaHome = homePathForRole(userRole);
 
   useEffect(() => { setActiveMenu("Coverages"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchOverview(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchOverview(accessToken),
+    enabled: !!accessToken,
+  });
 
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={ShieldCheck} message="Loading coverages…" />;
 
   const allPolicies: AnyPolicy[] =
     data.role === "BROKER"
@@ -155,7 +142,7 @@ export default function CoveragesPage() {
             <PolicyTable
               policies={group.policies}
               showEntity={data.role === "BROKER"}
-              onRowClick={(code) => router.push(`/submissions/${code}`)}
+              onRowClick={(code) => router.push(`${personaHome}/submissions/${code}`)}
             />
           </StandardCard>
         ))}
@@ -283,30 +270,5 @@ function PolicyTable({
         </div>
       ))}
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={ShieldCheck}>
-          <p className="text-sm">Loading coverages…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

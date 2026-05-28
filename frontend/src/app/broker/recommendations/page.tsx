@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -185,7 +185,7 @@ export default function RecommendationsPage() {
           onClose={() => setActive(null)}
           onSent={() => {
             setActive(null);
-            router.push("/communications");
+            router.push("/broker/communications");
           }}
         />
       )}

@@ -8,9 +8,8 @@
 // Aggregation" page goes deeper on peril exposure; this one is the
 // business health view.
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
-  AlertTriangle,
   ChartPie,
   HeartPulse,
   Layers,
@@ -18,9 +17,8 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -39,10 +37,9 @@ import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
 import { fetchBookHealth, fetchVerticals } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
-import type {
-  BookHealthResponse,
-  VerticalSummary,
-} from "@/types/portal";
+import type { VerticalSummary } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function BookHealthPage() {
@@ -50,37 +47,26 @@ export default function BookHealthPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<BookHealthResponse | null>(null);
-  const [verticals, setVerticals] = useState<VerticalSummary[]>([]);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Book Health"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [book, verts] = await Promise.all([
-          fetchBookHealth(accessToken),
-          fetchVerticals(accessToken),
-        ]);
-        if (cancelled) return;
-        setData(book);
-        setVerticals(verts.verticals);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [book, verts] = await Promise.all([
+        fetchBookHealth(accessToken),
+        fetchVerticals(accessToken),
+      ]);
+      return { book, verticals: verts.verticals };
+    },
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Book Health is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!bundle) return <PageLoading icon={HeartPulse} message="Loading book health…" />;
 
+  const data = bundle.book;
   const verticalLookup: Record<string, VerticalSummary> = Object.fromEntries(
-    verticals.map((v) => [v.slug, v]),
+    bundle.verticals.map((v) => [v.slug, v]),
   );
 
   return (
@@ -311,42 +297,5 @@ function LineBreakdown({
         );
       })}
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={HeartPulse}>
-          <NoData message="Loading book health…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Book Health is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

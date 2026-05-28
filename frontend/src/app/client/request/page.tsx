@@ -124,7 +124,7 @@ export default function RequestCoveragePage() {
               />
               <div className="flex gap-3 pt-2">
                 <button
-                  onClick={() => router.push("/communications")}
+                  onClick={() => router.push("/client/communications")}
                   className="
                     bg-generate-dark-background text-generate-text-input
                     rounded-md px-4 py-2 text-sm font-bold

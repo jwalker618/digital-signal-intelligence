@@ -7,11 +7,10 @@
 // page at its own persona URL; SessionGuard routes CLIENT users
 // here on login.
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowDown,
   ArrowUp,
   ChartPie,
@@ -23,7 +22,6 @@ import {
   UserStar,
   Zap,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -49,10 +47,11 @@ import { peerStandingPositive, tierStatus } from "@/lib/portalTone";
 import type {
   ClientCoverageEntry,
   ClientOverviewResponse,
-  CommunicationItem,
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ClientOverviewPage() {
@@ -61,55 +60,52 @@ export default function ClientOverviewPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<ClientOverviewResponse | null>(null);
-  const [comms, setComms] = useState<CommunicationItem[]>([]);
-  const [primaryScore, setPrimaryScore] = useState<ScoreResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Overview"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [resp, communicationsResp] = await Promise.all([
-          fetchOverview(accessToken),
-          fetchCommunications(accessToken, true),
-        ]);
-        if (cancelled) return;
-        if (resp.role !== "CLIENT") {
-          setError("The client overview is for client users only.");
-          return;
-        }
-        const clientData = resp as ClientOverviewResponse;
-        setData(clientData);
-        setComms(communicationsResp.items);
-
-        if (clientData.active_coverages.length > 0) {
-          const primary = clientData.active_coverages[0];
-          try {
-            const sc = await fetchSubmissionScore(accessToken, primary.submission_code);
-            if (!cancelled) setPrimaryScore(sc);
-          } catch {
-            // Best-effort: signal pulse degrades gracefully if this fails.
-          }
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [resp, communicationsResp] = await Promise.all([
+        fetchOverview(accessToken),
+        fetchCommunications(accessToken, true),
+      ]);
+      if (resp.role !== "CLIENT") {
+        throw new Error("The client overview is for client users only.");
       }
-    }
-    if (accessToken && userRole === "CLIENT") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      const clientData = resp as ClientOverviewResponse;
+
+      // Best-effort follow-up: hydrate the primary coverage's score
+      // breakdown for the Signal Pulse card. Failure here degrades
+      // gracefully -- the rest of the overview still renders.
+      let primaryScore: ScoreResponse | null = null;
+      if (clientData.active_coverages.length > 0) {
+        try {
+          primaryScore = await fetchSubmissionScore(
+            accessToken, clientData.active_coverages[0].submission_code,
+          );
+        } catch {
+          /* noop */
+        }
+      }
+
+      return {
+        data: clientData,
+        comms: communicationsResp.items,
+        primaryScore,
+      };
+    },
+    enabled: !!accessToken && userRole === "CLIENT",
+  });
 
   const aggregates = useMemo(
-    () => aggregateCoverages(data?.active_coverages ?? []),
-    [data?.active_coverages],
+    () => aggregateCoverages(bundle?.data.active_coverages ?? []),
+    [bundle?.data.active_coverages],
   );
 
-  if (userRole !== "CLIENT") return <ClientOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "CLIENT") return <RoleGate expected="client" message="This view is for insured client users only." />;
+  if (error) return <PageError message={error} />;
+  if (!bundle) return <PageLoading icon={Gauge} message="Fetching your overview…" />;
+
+  const { data, comms, primaryScore } = bundle;
 
   const primary = data.active_coverages[0] ?? null;
 
@@ -162,7 +158,7 @@ export default function ClientOverviewPage() {
                 <PendingQueryRow
                   key={c.referral_code}
                   query={c}
-                  onClick={() => router.push(`/communications/${c.referral_code}`)}
+                  onClick={() => router.push(`/client/communications/${c.referral_code}`)}
                 />
               ))}
               {comms.length > 4 && (
@@ -375,41 +371,4 @@ function aggregateCoverages(coverages: ClientCoverageEntry[]) {
     highestTier: tiers.length ? Math.min(...tiers) : null,
     lowestTier: tiers.length ? Math.max(...tiers) : null,
   };
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Gauge}>
-          <p className="text-sm">Fetching your overview…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ClientOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Insured-only" lucideIcon={AlertTriangle}>
-          <p className="text-sm">This view is for insured client users only.</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
 }

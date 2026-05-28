@@ -17,7 +17,6 @@ import {
   ArrowRight,
   ChartPie,
   Gauge,
-  Inbox,
   Layers,
   Lightbulb,
   ListChecks,
@@ -25,7 +24,6 @@ import {
   TrendingUpDown,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -61,9 +59,11 @@ import type {
   SignalImpact,
   SubmissionDetailResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
-export default function SubmissionDetailPage({
+export default function SubmissionDetailView({
   params,
 }: {
   params: Promise<{ code: string }>;
@@ -73,39 +73,28 @@ export default function SubmissionDetailPage({
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [detail, setDetail] = useState<SubmissionDetailResponse | null>(null);
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [peers, setPeers] = useState<PeersResponse | null>(null);
-  const [actions, setActions] = useState<ActionsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
-
   useEffect(() => {
     setActiveMenu("Submission Detail");
   }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [d, s, p, a] = await Promise.all([
-          fetchSubmissionDetail(accessToken, code),
-          fetchSubmissionScore(accessToken, code),
-          fetchSubmissionPeers(accessToken, code),
-          fetchSubmissionActions(accessToken, code),
-        ]);
-        if (cancelled) return;
-        setDetail(d); setScore(s); setPeers(p); setActions(a);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken) load();
-    return () => { cancelled = true; };
-  }, [accessToken, code, reloadKey]);
+  const { data: bundle, error, reload } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [detail, score, peers, actions] = await Promise.all([
+        fetchSubmissionDetail(accessToken, code),
+        fetchSubmissionScore(accessToken, code),
+        fetchSubmissionPeers(accessToken, code),
+        fetchSubmissionActions(accessToken, code),
+      ]);
+      return { detail, score, peers, actions };
+    },
+    enabled: !!accessToken,
+    deps: [code],
+  });
 
-  if (error) return <PortalError message={error} />;
-  if (!detail || !score) return <PortalLoading />;
+  if (error) return <PageError message={error} />;
+  if (!bundle) return <PageLoading icon={Gauge} message="Fetching submission detail…" />;
+
+  const { detail, score, peers, actions } = bundle;
 
   const decision = detail.referral?.status === "awaiting_broker"
     ? "refer"
@@ -176,50 +165,51 @@ export default function SubmissionDetailPage({
           </div>
         </SubmissionHeaderCard>
 
-        {/* Signal drivers ----------------------------------------- */}
+        {/* "Full X" deep-link cards: drivers / peers / actions are
+            client-only sub-pages, so we only surface the deep-link
+            chip when the viewer is a client. Brokers see the inline
+            content without the dead-end link. */}
         <StandardCard
           title="What's helping and hurting"
           lucideIcon={ListChecks}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/drivers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full driver detail <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <SignalDriversInline impact={score} />
         </StandardCard>
 
-        {/* Peer comparison ---------------------------------------- */}
         <StandardCard
           title="Peer comparison"
           lucideIcon={TrendingUpDown}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/peers"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full peer view <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <PeerCardInline peers={peers} score={score} />
         </StandardCard>
 
-        {/* Actions ------------------------------------------------ */}
         <StandardCard
           title="Prioritised actions"
           lucideIcon={Lightbulb}
-          headerRight={
+          headerRight={userRole === "CLIENT" ? (
             <Link
               href="/client/actions"
               className="text-xs underline hover:text-generate-text-input flex items-center gap-1"
             >
               Full plan <ArrowRight className="generate-app-icon" />
             </Link>
-          }
+          ) : undefined}
         >
           <ActionsInline actions={actions} />
         </StandardCard>
@@ -253,7 +243,7 @@ export default function SubmissionDetailPage({
               detail={detail}
               userRole={userRole}
               accessToken={accessToken}
-              onReplied={() => setReloadKey((k) => k + 1)}
+              onReplied={reload}
             />
           </StandardCard>
         )}
@@ -267,32 +257,6 @@ export default function SubmissionDetailPage({
 // ----------------------------------------------------------------------------
 // Loading / error
 // ----------------------------------------------------------------------------
-
-function PortalLoading() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Gauge}>
-          <p className="text-sm">Fetching submission detail…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function PortalError({ message }: { message: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={Gauge}>
-          <p className="text-sm text-generate-text-bad">{message}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-
 // ----------------------------------------------------------------------------
 // Inline sections — used both here and on the dedicated /client/drivers,
 // /client/peers, /client/actions pages.

@@ -8,22 +8,15 @@
 //   3. Add-coverage what-ifs -- add D&O at your profile -> premium ~$X (heuristic by NAICS/revenue)
 //   4. Restructure what-ifs -- split property into primary + excess -> premium ~$X (heuristic for demo)
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 
 import {
-  AlertTriangle,
-  ArrowRight,
   ChartPie,
   FlaskConical,
-  Gauge,
   Layers,
-  Lightbulb,
   ListChecks,
   Plus,
-  ShieldCheck,
-  TrendingUpDown,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -53,6 +46,8 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function ScenariosPage() {
@@ -60,48 +55,39 @@ export default function ScenariosPage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [profile, setProfile] = useState<ClientProfileResponse | null>(null);
-  const [overview, setOverview] = useState<ClientOverviewResponse | null>(null);
-  const [score, setScore] = useState<ScoreResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
   useEffect(() => { setActiveMenu("Scenarios"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const [overviewResp, profileResp] = await Promise.all([
-          fetchOverview(accessToken),
-          fetchClientProfile(accessToken),
-        ]);
-        if (cancelled) return;
-        if (overviewResp.role !== "CLIENT") {
-          setError("The Scenarios view is for client users only.");
-          return;
-        }
-        const clientOverview = overviewResp as ClientOverviewResponse;
-        setOverview(clientOverview);
-        setProfile(profileResp);
-
-        const primary = clientOverview.active_coverages[0];
-        if (primary) {
-          const s = await fetchSubmissionScore(accessToken, primary.submission_code);
-          if (!cancelled) setScore(s);
-        }
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: bundle, error } = useRoleScopedFetch({
+    fetcher: async () => {
+      const [overviewResp, profileResp] = await Promise.all([
+        fetchOverview(accessToken),
+        fetchClientProfile(accessToken),
+      ]);
+      if (overviewResp.role !== "CLIENT") {
+        throw new Error("The Scenarios view is for client users only.");
       }
-    }
-    if (accessToken && userRole === "CLIENT") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      const clientOverview = overviewResp as ClientOverviewResponse;
+      let score: ScoreResponse | null = null;
+      const primary = clientOverview.active_coverages[0];
+      if (primary) {
+        try {
+          score = await fetchSubmissionScore(accessToken, primary.submission_code);
+        } catch {
+          /* best-effort; scenarios still render without the score */
+        }
+      }
+      return { overview: clientOverview, profile: profileResp, score };
+    },
+    enabled: !!accessToken && userRole === "CLIENT",
+  });
 
   if (userRole !== "CLIENT") {
-    return <Forbidden />;
+    return <RoleGate expected="client" message="The Scenarios view is for client users only." />;
   }
-  if (error) return <ErrShell msg={error} />;
-  if (!overview || !profile) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!bundle) return <PageLoading icon={FlaskConical} message="Building scenarios…" />;
+
+  const { overview, profile, score } = bundle;
 
   const primary = overview.active_coverages[0] ?? null;
   const carriedCoverages = new Set(overview.active_coverages.map((c) => c.coverage));
@@ -485,43 +471,3 @@ function RestructureWhatIfs({
   );
 }
 
-
-// ----------------------------------------------------------------------------
-// Loading / error / forbidden shells
-// ----------------------------------------------------------------------------
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={FlaskConical}>
-          <NoData message="Building scenarios…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function Forbidden() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Client-only" lucideIcon={AlertTriangle}>
-          <NoData message="The Scenarios view is for client users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}

@@ -17,16 +17,13 @@ import { usePathname, useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 import { useAuthStore } from "@/store/authStore";
-import { homePathForRole, isPortalPath } from "@/lib/portalPaths";
+import {
+  homePathForRole, isBrokerPath, isCarrierPath, isClientPath,
+} from "@/lib/portalPaths";
 
 const PUBLIC_PATHS = ["/login", "/reset-password", "/sso/callback"];
 const WARN_THRESHOLD_MS = 30 * 60 * 1000;
 const REFRESH_THRESHOLD_MS = 2 * 60 * 1000;
-
-// v8.2: roles that belong on the portal route trees only.
-// A portal-only user that lands on a non-portal path (e.g. /, /world-engine
-// via URL bar) is bounced to their persona home.
-const PORTAL_ONLY_ROLES = new Set(["BROKER", "CLIENT"]);
 
 export function SessionGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -63,18 +60,28 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // v8.2 cleanup: enforce role <-> route tree. A portal-only user that
-    // lands on a non-portal path goes to their persona home (/broker or
-    // /client). A carrier landing on a portal path goes to /. Stops the
-    // chrome mismatches (empty sidebar, leaked breadcrumbs) that happen
-    // when a user opens a path that isn't built for their role.
+    // Enforce role <-> persona URL tree. Every authenticated user gets
+    // bounced to their persona home if they land on a different
+    // persona's tree (or on / itself, which has no UI of its own).
+    // Stops chrome mismatches (wrong sidebar, leaked breadcrumbs) that
+    // happen when a user opens a path their role doesn't own.
     if (userRole) {
-      const onPortal = isPortalPath(pathname);
-      const isPortalRole = PORTAL_ONLY_ROLES.has(userRole);
-      if (isPortalRole && !onPortal) {
-        router.replace(homePathForRole(userRole));
-      } else if (!isPortalRole && onPortal) {
-        router.replace("/");
+      const home = homePathForRole(userRole);
+      const onOwnTree =
+        (home === "/carrier" && isCarrierPath(pathname)) ||
+        (home === "/broker"  && isBrokerPath(pathname))  ||
+        (home === "/client"  && isClientPath(pathname));
+
+      // Admin tree + the user-account /profile + /login are persona-
+      // agnostic; don't bounce off them.
+      const personaAgnostic =
+        !!pathname && (
+          pathname === "/profile" || pathname.startsWith("/profile/") ||
+          pathname.startsWith("/admin")
+        );
+
+      if (!onOwnTree && !personaAgnostic) {
+        router.replace(home);
       }
     }
   }, [isBooting, isAuthed, pathname, router, userRole]);

@@ -11,22 +11,15 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle,
   ArrowRight,
-  Building2,
-  CloudRain,
-  Flame,
   Leaf,
   ShieldAlert,
   Sparkles,
-  TrendingDown,
   TrendingUp,
-  Waves,
 } from "lucide-react";
-
 import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
-import VerticalFilter from "@/components/broker/VerticalFilter";
+import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
   CardGrid,
   StandardCard,
@@ -53,8 +46,9 @@ import type {
   LineDetailResponse,
   LossEventEntry,
   MarketLineSummary,
-  MarketPulseResponse,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function MarketPulsePage() {
@@ -62,29 +56,18 @@ export default function MarketPulsePage() {
   const userRole = useAuthStore((s) => s.user?.role ?? null);
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
 
-  const [data, setData] = useState<MarketPulseResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [lineDetail, setLineDetail] = useState<LineDetailResponse | null>(null);
 
   useEffect(() => { setActiveMenu("Market Pulse"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchMarketPulse(accessToken);
-        if (!cancelled) setData(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+  const { data, error } = useRoleScopedFetch({
+    fetcher: () => fetchMarketPulse(accessToken),
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Market Pulse is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={TrendingUp} message="Loading market pulse…" />;
 
   const hardening = data.lines.filter((l) => l.cycle_position === "Hardening").length;
   const softening = data.lines.filter((l) => l.cycle_position === "Softening").length;
@@ -131,11 +114,14 @@ export default function MarketPulsePage() {
                 key={line.slug}
                 line={line}
                 onClick={async () => {
+                  // Best-effort modal open -- a transient failure
+                  // leaves the user on the page with the chip list
+                  // still intact. v8.3 wires this to toasts.
                   try {
                     const d = await fetchMarketLineDetail(accessToken, line.slug);
                     setLineDetail(d);
-                  } catch (e) {
-                    setError(e instanceof Error ? e.message : String(e));
+                  } catch {
+                    /* noop */
                   }
                 }}
               />
@@ -373,41 +359,4 @@ function shortCycle(cycle: string): string {
   if (cycle.includes("hardening")) return "Hardening";
   if (cycle.includes("softening")) return "Softening";
   return "Balanced";
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TrendingUp}>
-          <NoData message="Loading market pulse…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Market Pulse is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
 }

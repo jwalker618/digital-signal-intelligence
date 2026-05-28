@@ -269,7 +269,7 @@ export default function Sidebar({
                               clearSubmissionContext();
                               setActiveMenu(item.name);
                               onToggleOpen();
-                              router.push("/");
+                              router.push("/carrier");
                             }}
                           />
                         </li>
@@ -283,12 +283,12 @@ export default function Sidebar({
                     <NavItem
                       icon={Orbit}
                       label="World Engine"
-                      isActive={!!pathname?.startsWith("/world-engine")}
+                      isActive={!!pathname?.startsWith("/carrier/world-engine")}
                       onClick={() => {
                         clearSubmissionContext();
                         setActiveMenu("World Engine");
                         onToggleOpen();
-                        router.push("/world-engine");
+                        router.push("/carrier/world-engine");
                       }}
                     />
                   </div>

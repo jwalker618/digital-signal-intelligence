@@ -8,16 +8,13 @@
 //   - Submission selected: ranked carrier matches with predicted
 //     pricing, commission, ESG fit, win rate, rationale
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  AlertTriangle,
-  ArrowRight,
   Briefcase,
   Building2,
   Leaf,
   Target as TargetIcon,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -32,7 +29,7 @@ import {
   ScoreBar,
   StatsGrid,
 } from "@/components/base/content/primatives";
-import VerticalFilter, { useVerticalFilter } from "@/components/broker/VerticalFilter";
+import VerticalFilter, { useVerticalFilter } from "@/components/portal/VerticalFilter";
 
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore } from "@/store/dsiStore";
@@ -47,6 +44,8 @@ import type {
   ClientBookEntry,
   PlacementStrategyResponse,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
+import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 
 
 export default function PlacementPage() {
@@ -55,50 +54,30 @@ export default function PlacementPage() {
   const setActiveMenu = useDsiStore((s) => s.setActiveMenu);
   const filter = useVerticalFilter();
 
-  const [overview, setOverview] = useState<BrokerOverviewResponse | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-  const [strategy, setStrategy] = useState<PlacementStrategyResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => { setActiveMenu("Placement Strategy"); }, [setActiveMenu]);
 
-  useEffect(() => {
-    let cancelled = false;
-    async function load() {
-      try {
-        const resp = await fetchOverview(accessToken);
-        if (cancelled) return;
-        if (resp.role !== "BROKER") {
-          setError("Placement Strategy is for broker users only.");
-          return;
-        }
-        setOverview(resp as BrokerOverviewResponse);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
+  const { data: overview, error: overviewError } = useRoleScopedFetch({
+    fetcher: async () => {
+      const resp = await fetchOverview(accessToken);
+      if (resp.role !== "BROKER") {
+        throw new Error("Placement Strategy is for broker users only.");
       }
-    }
-    if (accessToken && userRole === "BROKER") load();
-    return () => { cancelled = true; };
-  }, [accessToken, userRole]);
+      return resp as BrokerOverviewResponse;
+    },
+    enabled: !!accessToken && userRole === "BROKER",
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-    async function loadStrategy() {
-      if (!selected) { setStrategy(null); return; }
-      try {
-        const resp = await fetchPlacementStrategy(accessToken, selected);
-        if (!cancelled) setStrategy(resp);
-      } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    }
-    loadStrategy();
-    return () => { cancelled = true; };
-  }, [accessToken, selected]);
+  const { data: strategy } = useRoleScopedFetch({
+    fetcher: () => fetchPlacementStrategy(accessToken, selected!),
+    enabled: !!accessToken && userRole === "BROKER" && selected != null,
+    deps: [selected],
+  });
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!overview) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Placement Strategy is for broker users only." />;
+  if (overviewError) return <PageError message={overviewError} />;
+  if (!overview) return <PageLoading icon={TargetIcon} message="Loading placement strategy…" />;
 
   const filteredClients = overview.clients.filter((c) => {
     // Map vertical via the back-end's vertical_slug; the broker overview
@@ -323,42 +302,5 @@ function CarrierMatchCard({
         </div>
       </div>
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TargetIcon}>
-          <NoData message="Loading placement strategy…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Placement Strategy is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }
