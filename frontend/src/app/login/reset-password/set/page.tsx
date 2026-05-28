@@ -3,24 +3,53 @@
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FormEvent, useMemo, useState } from "react";
-import { ArrowLeft, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, Body } from "@/components/ui/typography";
 import { passwordResetConfirm } from "@/lib/authApi";
 import { cn } from "@/lib/utils";
 
-interface PolicyCheck {
+const authInputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
+
+interface Strength {
+  score: number;
   label: string;
-  ok: boolean;
+  tone: "neg" | "warn" | "pos";
 }
 
-function checkPolicy(pw: string): PolicyCheck[] {
-  return [
-    { label: "At least 12 characters", ok: pw.length >= 12 },
-    { label: "Contains a number", ok: /\d/.test(pw) },
-    { label: "Contains upper & lower case", ok: /[a-z]/.test(pw) && /[A-Z]/.test(pw) },
-    { label: "Contains a symbol", ok: /[^A-Za-z0-9]/.test(pw) },
-  ];
+function scorePassword(pw: string): Strength {
+  let score = 0;
+  if (pw.length >= 8) score += 1;
+  if (pw.length >= 12) score += 1;
+  if (/\d/.test(pw)) score += 1;
+  if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pw)) score += 1;
+  let label = "Too short";
+  let tone: "neg" | "warn" | "pos" = "neg";
+  if (score >= 5) {
+    label = "Strong";
+    tone = "pos";
+  } else if (score >= 4) {
+    label = "Good";
+    tone = "pos";
+  } else if (score >= 2) {
+    label = "Fair";
+    tone = "warn";
+  } else if (pw.length > 0) {
+    label = "Weak";
+    tone = "neg";
+  }
+  return { score, label, tone };
+}
+
+function meetsPolicy(pw: string): boolean {
+  return (
+    pw.length >= 12 &&
+    /\d/.test(pw) &&
+    /[a-z]/.test(pw) &&
+    /[A-Z]/.test(pw) &&
+    /[^A-Za-z0-9]/.test(pw)
+  );
 }
 
 export default function ResetSetPage() {
@@ -32,12 +61,12 @@ export default function ResetSetPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const checks = useMemo(() => checkPolicy(pw), [pw]);
-  const allOk = checks.every((c) => c.ok) && pw === pw2 && pw.length > 0;
+  const strength = useMemo(() => scorePassword(pw), [pw]);
+  const valid = meetsPolicy(pw) && pw === pw2 && pw.length > 0;
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!allOk || submitting) return;
+    if (!valid || submitting) return;
     setError(null);
     setSubmitting(true);
     try {
@@ -50,50 +79,40 @@ export default function ResetSetPage() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <Eyebrow>Reset password</Eyebrow>
-        <h1 className="mt-2 font-display text-[28px] font-semibold leading-none text-ink">
+    <div>
+      <header className="mb-7">
+        <Eyebrow className="text-info">Reset password</Eyebrow>
+        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
           Choose a new password
         </h1>
-        <Body className="mt-2">
-          Pick something you haven't used before. We'll sign you in after you
-          set it.
+        <Body className="mt-2 leading-[1.55]">
+          Pick something at least 12 characters with a mix of upper/lower
+          case, a digit, and a symbol.
         </Body>
       </header>
 
-      <form className="space-y-5" onSubmit={onSubmit}>
-        <PasswordField id="pw" label="New password" value={pw} onChange={setPw} />
-        <PasswordField id="pw2" label="Confirm password" value={pw2} onChange={setPw2} />
+      <form className="space-y-3.5" onSubmit={onSubmit}>
+        <PasswordField
+          id="pw"
+          label="New password"
+          value={pw}
+          onChange={setPw}
+        />
 
-        <ul className="space-y-1.5">
-          {checks.map((c) => (
-            <li
-              key={c.label}
-              className={cn(
-                "flex items-center gap-2 text-[12.5px]",
-                c.ok ? "text-pos" : "text-ink-soft",
-              )}
-            >
-              <Check
-                size={14}
-                className={c.ok ? "opacity-100" : "opacity-30"}
-              />
-              {c.label}
-            </li>
-          ))}
-          {pw.length > 0 && (
-            <li
-              className={cn(
-                "flex items-center gap-2 text-[12.5px]",
-                pw === pw2 ? "text-pos" : "text-ink-soft",
-              )}
-            >
-              <Check size={14} className={pw === pw2 ? "opacity-100" : "opacity-30"} />
-              Passwords match
-            </li>
-          )}
-        </ul>
+        <StrengthMeter strength={strength} hasInput={pw.length > 0} />
+
+        <PasswordField
+          id="pw2"
+          label="Confirm password"
+          value={pw2}
+          onChange={setPw2}
+        />
+
+        {pw.length > 0 && pw2.length > 0 && pw !== pw2 && (
+          <p className="text-[12px] font-medium text-neg">
+            Passwords don&apos;t match.
+          </p>
+        )}
 
         {error && (
           <div
@@ -108,22 +127,20 @@ export default function ResetSetPage() {
           type="submit"
           size="lg"
           className="w-full"
-          disabled={submitting || !allOk}
+          disabled={submitting || !valid}
         >
-          {submitting ? "Updating…" : "Update password"}
+          {submitting ? "Updating…" : "Set new password"}
         </Button>
       </form>
 
-      <Micro className="block text-center">
-        Reset link will expire when this page is updated.
-      </Micro>
-
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-info hover:underline"
-      >
-        <ArrowLeft size={14} /> Back to sign in
-      </Link>
+      <div className="mt-[22px] border-t border-rule pt-[18px]">
+        <Link
+          href="/login"
+          className="text-[13px] font-medium text-ink-soft hover:text-ink"
+        >
+          ← Back to sign in
+        </Link>
+      </div>
     </div>
   );
 }
@@ -140,10 +157,10 @@ function PasswordField({
   onChange: (v: string) => void;
 }) {
   return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 block text-[12.5px] font-medium text-ink-soft">
+    <label htmlFor={id} className="block">
+      <span className="mb-1.5 block text-[12px] font-medium text-ink-soft">
         {label}
-      </label>
+      </span>
       <input
         id={id}
         type="password"
@@ -151,8 +168,55 @@ function PasswordField({
         required
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
+        className={cn(
+          authInputClass,
+          value ? "font-mono tracking-[0.2em]" : null,
+        )}
       />
+    </label>
+  );
+}
+
+function StrengthMeter({
+  strength,
+  hasInput,
+}: {
+  strength: Strength;
+  hasInput: boolean;
+}) {
+  const barColor =
+    strength.tone === "neg"
+      ? "bg-neg"
+      : strength.tone === "warn"
+        ? "bg-warn"
+        : "bg-pos";
+  const labelColor =
+    strength.tone === "neg"
+      ? "text-neg"
+      : strength.tone === "warn"
+        ? "text-warn"
+        : "text-pos";
+  return (
+    <div className="flex items-center gap-2.5 -mt-1">
+      <div className="flex flex-1 gap-[3px]">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            className={cn(
+              "h-1 flex-1 rounded-sm",
+              i < strength.score ? barColor : "bg-rule",
+            )}
+          />
+        ))}
+      </div>
+      <span
+        className={cn(
+          "text-[11px] font-semibold",
+          hasInput ? labelColor : "text-ink-mute",
+        )}
+      >
+        {hasInput ? strength.label : "—"}
+      </span>
     </div>
   );
 }

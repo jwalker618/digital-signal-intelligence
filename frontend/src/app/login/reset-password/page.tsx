@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { ArrowLeft, MailCheck } from "lucide-react";
+import { Mail, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, Body } from "@/components/ui/typography";
 import { passwordResetRequest } from "@/lib/authApi";
+
+const authInputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
 
 export default function ResetRequestPage() {
   const [email, setEmail] = useState("");
@@ -18,7 +21,6 @@ export default function ResetRequestPage() {
     setSubmitting(true);
     try {
       await passwordResetRequest(email);
-      // Always show success — don't leak whether the address exists.
       setSent(true);
     } finally {
       setSubmitting(false);
@@ -27,48 +29,53 @@ export default function ResetRequestPage() {
 
   if (sent) {
     return (
-      <div className="space-y-5">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-info-soft text-info">
+      <div>
+        <header className="mb-7">
+          <Eyebrow className="text-info">Reset password</Eyebrow>
+          <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+            Check your inbox
+          </h1>
+          <Body className="mt-2 leading-[1.55]">
+            If an account exists for{" "}
+            <strong className="text-ink">{email}</strong>, a one-time reset
+            link is on its way. The link expires in 30 minutes.
+          </Body>
+        </header>
+
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-info-soft text-info">
           <MailCheck size={22} />
         </div>
-        <h1 className="font-display text-[24px] font-semibold leading-none text-ink">
-          Check your inbox
-        </h1>
-        <Body>
-          If an account exists for <strong className="text-ink">{email}</strong>,
-          you'll receive a reset link shortly. The link expires in 30 minutes.
-        </Body>
-        <Link
-          href="/login"
-          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-info hover:underline"
-        >
-          <ArrowLeft size={14} /> Back to sign in
-        </Link>
+
+        <div className="mt-[22px] border-t border-rule pt-[18px]">
+          <Link
+            href="/login"
+            className="text-[13px] font-medium text-ink-soft hover:text-ink"
+          >
+            ← Back to sign in
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <Eyebrow>Reset password</Eyebrow>
-        <h1 className="mt-2 font-display text-[28px] font-semibold leading-none text-ink">
-          We'll email a reset link
+    <div>
+      <header className="mb-7">
+        <Eyebrow className="text-info">Reset password</Eyebrow>
+        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+          Get a reset link
         </h1>
-        <Body className="mt-2">
-          Enter the email you use to sign in. We won't confirm whether the
-          address is registered.
+        <Body className="mt-2 leading-[1.55]">
+          Enter the email you sign in with. We&apos;ll send a one-time link
+          that expires in 30 minutes.
         </Body>
       </header>
 
-      <form className="space-y-5" onSubmit={onSubmit}>
-        <div>
-          <label
-            htmlFor="email"
-            className="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
-          >
-            Email
-          </label>
+      <form className="space-y-3.5" onSubmit={onSubmit}>
+        <label htmlFor="email" className="block">
+          <span className="mb-1.5 block text-[12px] font-medium text-ink-soft">
+            Work email
+          </span>
           <input
             id="email"
             type="email"
@@ -76,21 +83,25 @@ export default function ResetRequestPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
+            placeholder="you@company.com"
+            className={authInputClass}
           />
-        </div>
+        </label>
 
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          {submitting ? "Sending…" : "Email me a reset link"}
+          <Mail size={14} />
+          {submitting ? "Sending…" : "Send reset link"}
         </Button>
       </form>
 
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-info hover:underline"
-      >
-        <ArrowLeft size={14} /> Back to sign in
-      </Link>
+      <div className="mt-[22px] border-t border-rule pt-[18px]">
+        <Link
+          href="/login"
+          className="text-[13px] font-medium text-ink-soft hover:text-ink"
+        >
+          ← Back to sign in
+        </Link>
+      </div>
     </div>
   );
 }

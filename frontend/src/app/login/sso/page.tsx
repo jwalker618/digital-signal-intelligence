@@ -2,10 +2,13 @@
 
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body } from "@/components/ui/typography";
+import { Eyebrow, Body, Caption } from "@/components/ui/typography";
 import { useAuthStore } from "@/store/authStore";
+
+const authInputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
 
 export default function SSOPage() {
   const loginSSO = useAuthStore((s) => s.loginSSO);
@@ -20,7 +23,6 @@ export default function SSOPage() {
     setSubmitting(true);
     try {
       await loginSSO(tenant.trim().toLowerCase());
-      // The store handles the redirect to the IdP's authorize URL.
     } catch (err) {
       setError(err instanceof Error ? err.message : "SSO start failed.");
       setSubmitting(false);
@@ -28,35 +30,45 @@ export default function SSOPage() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <Eyebrow>Single sign-on</Eyebrow>
-        <h1 className="mt-2 font-display text-[28px] font-semibold leading-none text-ink">
-          Continue with SSO
+    <div>
+      <header className="mb-7">
+        <Eyebrow className="text-info">Welcome</Eyebrow>
+        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+          Sign in via SSO
         </h1>
-        <Body className="mt-2">
-          Enter your organization's tenant identifier to sign in via SAML / OIDC.
+        <Body className="mt-2 leading-[1.55]">
+          Enter your organisation&apos;s tenant identifier. We&apos;ll bounce
+          you to your identity provider to finish signing in.
         </Body>
       </header>
 
-      <form className="space-y-5" onSubmit={onSubmit}>
-        <div>
-          <label
-            htmlFor="tenant"
-            className="mb-1.5 block text-[12.5px] font-medium text-ink-soft"
-          >
+      <div className="mb-[22px] grid grid-cols-2 gap-1 rounded-[10px] bg-surface-sunken p-1">
+        <Link
+          href="/login"
+          className="flex items-center justify-center rounded-lg px-3 py-2 text-[13px] font-semibold text-ink-soft hover:text-ink"
+        >
+          Email + password
+        </Link>
+        <div className="flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-[13px] font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+          SSO
+        </div>
+      </div>
+
+      <form className="space-y-3.5" onSubmit={onSubmit}>
+        <label htmlFor="tenant" className="block">
+          <span className="mb-1.5 block text-[12px] font-medium text-ink-soft">
             Tenant identifier
-          </label>
+          </span>
           <input
             id="tenant"
             type="text"
             required
             value={tenant}
             onChange={(e) => setTenant(e.target.value)}
-            placeholder="e.g. marsh-northeast"
-            className="block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
+            placeholder="e.g. your company domain"
+            className={authInputClass}
           />
-        </div>
+        </label>
 
         {error && (
           <div
@@ -68,16 +80,18 @@ export default function SSOPage() {
         )}
 
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          {submitting ? "Redirecting…" : "Continue"}
+          <KeyRound size={14} />
+          {submitting ? "Redirecting…" : "Continue with SSO"}
         </Button>
       </form>
 
-      <Link
-        href="/login"
-        className="inline-flex items-center gap-1.5 text-[13px] font-medium text-info hover:underline"
-      >
-        <ArrowLeft size={14} /> Back to sign in
-      </Link>
+      <div className="mt-[22px] border-t border-rule pt-[18px]">
+        <Caption className="leading-[1.5]">
+          You&apos;ll be redirected to your identity provider (Okta, Azure
+          AD, Google Workspace, etc.). MFA is enforced by your tenant&apos;s
+          policy.
+        </Caption>
+      </div>
     </div>
   );
 }
