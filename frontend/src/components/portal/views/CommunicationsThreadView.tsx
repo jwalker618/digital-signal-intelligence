@@ -9,7 +9,6 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 
 import {
-  AlertTriangle,
   ArrowLeft,
   ArrowRight,
   Building2,
@@ -19,7 +18,6 @@ import {
   Send,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -43,6 +41,7 @@ import type {
   CommunicationsThreadResponse,
   CommunicationThreadMessage,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function CommunicationsThreadView({
@@ -75,8 +74,8 @@ export default function CommunicationsThreadView({
     return () => { cancelled = true; };
   }, [accessToken, code, reloadKey]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!thread) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!thread) return <PageLoading icon={MessagesSquare} message="Loading thread…" />;
 
   const isBroker = userRole === "BROKER";
   const canReply = isBroker && thread.awaiting_party === "broker";
@@ -353,30 +352,5 @@ function BrokerReplyForm({
         <ArrowRight className="generate-app-icon" />
       </button>
     </form>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={MessagesSquare}>
-          <p className="text-sm">Loading thread…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

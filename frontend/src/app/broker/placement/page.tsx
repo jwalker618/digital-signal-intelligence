@@ -10,14 +10,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
-  ArrowRight,
   Briefcase,
   Building2,
   Leaf,
   Target as TargetIcon,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -47,6 +44,7 @@ import type {
   ClientBookEntry,
   PlacementStrategyResponse,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 export default function PlacementPage() {
@@ -96,9 +94,9 @@ export default function PlacementPage() {
     return () => { cancelled = true; };
   }, [accessToken, selected]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!overview) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Placement Strategy is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!overview) return <PageLoading icon={TargetIcon} message="Loading placement strategy…" />;
 
   const filteredClients = overview.clients.filter((c) => {
     // Map vertical via the back-end's vertical_slug; the broker overview
@@ -323,42 +321,5 @@ function CarrierMatchCard({
         </div>
       </div>
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TargetIcon}>
-          <NoData message="Loading placement strategy…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Placement Strategy is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

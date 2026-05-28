@@ -9,14 +9,11 @@
 import { useEffect, useMemo, useState } from "react";
 
 import {
-  AlertTriangle,
-  ChartPie,
   ExternalLink,
   Gauge,
   Lightbulb,
   Zap,
 } from "lucide-react";
-
 import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
@@ -43,6 +40,7 @@ import type {
   ClientOverviewResponse,
   RemediationAction,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function ActionsPage() {
@@ -82,8 +80,8 @@ export default function ActionsPage() {
     return () => { cancelled = true; };
   }, [accessToken]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!actions) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!actions) return <PageLoading icon={Lightbulb} message="Building your action plan…" />;
 
   const plan = actions.remediation_plan.actions;
   const totalSavings = plan.reduce((a, action) => a + Math.abs(action.estimated_premium_delta_usd), 0);
@@ -314,30 +312,5 @@ function ActionDetailModal({
         </div>
       )}
     </Modal>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Lightbulb}>
-          <p className="text-sm">Building your action plan…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

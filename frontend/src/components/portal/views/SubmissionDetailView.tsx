@@ -17,7 +17,6 @@ import {
   ArrowRight,
   ChartPie,
   Gauge,
-  Inbox,
   Layers,
   Lightbulb,
   ListChecks,
@@ -25,7 +24,6 @@ import {
   TrendingUpDown,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -61,6 +59,7 @@ import type {
   SignalImpact,
   SubmissionDetailResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function SubmissionDetailView({
@@ -104,8 +103,8 @@ export default function SubmissionDetailView({
     return () => { cancelled = true; };
   }, [accessToken, code, reloadKey]);
 
-  if (error) return <PortalError message={error} />;
-  if (!detail || !score) return <PortalLoading />;
+  if (error) return <PageError message={error} />;
+  if (!detail || !score) return <PageLoading icon={Gauge} message="Fetching submission detail…" />;
 
   const decision = detail.referral?.status === "awaiting_broker"
     ? "refer"
@@ -268,32 +267,6 @@ export default function SubmissionDetailView({
 // ----------------------------------------------------------------------------
 // Loading / error
 // ----------------------------------------------------------------------------
-
-function PortalLoading() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Gauge}>
-          <p className="text-sm">Fetching submission detail…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function PortalError({ message }: { message: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={Gauge}>
-          <p className="text-sm text-generate-text-bad">{message}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-
 // ----------------------------------------------------------------------------
 // Inline sections — used both here and on the dedicated /client/drivers,
 // /client/peers, /client/actions pages.

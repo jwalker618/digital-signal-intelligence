@@ -11,14 +11,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowRight,
   CircleDot,
   ListChecks,
   MessageSquare,
   MessagesSquare,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
@@ -36,6 +34,7 @@ import type {
   CommunicationItem,
   CommunicationsListResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function CommunicationsListView() {
@@ -68,8 +67,8 @@ export default function CommunicationsListView() {
     return () => { cancelled = true; };
   }, [accessToken]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={MessagesSquare} message="Loading communications…" />;
 
   const items = showOpenOnly ? data.items.filter((i) => i.is_open) : data.items;
 
@@ -237,29 +236,4 @@ function formatRelative(iso: string): string {
   } catch {
     return "—";
   }
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={MessagesSquare}>
-          <p className="text-sm">Loading communications…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
 }

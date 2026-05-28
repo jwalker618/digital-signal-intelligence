@@ -9,7 +9,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle,
   Cloud,
   CloudOff,
   Flame,
@@ -18,7 +17,6 @@ import {
   Activity,
   Layers,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
@@ -43,6 +41,7 @@ import type {
   CatPerilExposure,
   ConcentrationEntry,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 const PERIL_ICONS: Record<string, typeof Cloud> = {
@@ -80,9 +79,9 @@ export default function AggregationPage() {
     return () => { cancelled = true; };
   }, [accessToken, userRole]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Risk Aggregation is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={Network} message="Loading risk aggregation…" />;
 
   const activePeril = data.cat_peril_exposure.find((p) => p.peril_slug === selectedPeril);
 
@@ -320,42 +319,5 @@ function PerilNarrative({
         Severity rating: {(exposure.relative_severity * 100).toFixed(0)}% of book at meaningful exposure.
       </p>
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Network}>
-          <NoData message="Loading risk aggregation…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Risk Aggregation is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

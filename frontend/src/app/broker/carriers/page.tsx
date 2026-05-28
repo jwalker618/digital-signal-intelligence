@@ -9,20 +9,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Building2,
   ChevronDown,
   ChevronUp,
-  ExternalLink,
-  Globe,
   Leaf,
-  ShieldCheck,
-  Sparkles,
-  TrendingUpDown,
   Trophy,
-  X,
 } from "lucide-react";
-
 import Modal from "@/components/base/modal";
 import ViewCanvas from "@/components/ViewCanvas";
 import {
@@ -51,6 +43,7 @@ import type {
   EsgStance,
   PricingPosition,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 type SortField =
@@ -106,10 +99,10 @@ export default function CarriersPage() {
   }, [filtered, sortField, sortDesc]);
 
   if (userRole !== "BROKER") {
-    return <BrokerOnly />;
+    return <RoleGate expected="broker" message="Carrier Intelligence is for broker users only." />;
   }
-  if (error) return <ErrShell msg={error} />;
-  if (!carriers) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!carriers) return <PageLoading icon={Building2} message="Loading carrier intelligence…" />;
 
   // Roster KPIs
   const leadersCount = carriers.filter((c) => c.esg_stance === "leader").length;
@@ -525,39 +518,3 @@ function CarrierDetailModal({
 // ----------------------------------------------------------------------------
 // Shells
 // ----------------------------------------------------------------------------
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Building2}>
-          <NoData message="Loading carrier intelligence…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Carrier Intelligence is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}

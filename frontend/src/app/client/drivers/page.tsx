@@ -10,15 +10,12 @@
 import { useEffect, useState } from "react";
 
 import {
-  AlertTriangle,
   ChartPie,
   Globe,
-  Layers,
   ListChecks,
   ShieldAlert,
   TrendingUpDown,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -44,6 +41,7 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function DriversPage() {
@@ -82,8 +80,8 @@ export default function DriversPage() {
     return () => { cancelled = true; };
   }, [accessToken]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!score) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!score) return <PageLoading icon={ListChecks} message="Computing signal impact breakdown…" />;
 
   const drags = score.impact_breakdown?.drags ?? [];
   const strengths = score.impact_breakdown?.strengths ?? [];
@@ -211,33 +209,6 @@ export default function DriversPage() {
     </ViewCanvas>
   );
 }
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={ListChecks}>
-          <p className="text-sm">Computing signal impact breakdown…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-
 // ----------------------------------------------------------------------------
 // Loss + Exposure summary cards (v8.1 Phase C)
 // ----------------------------------------------------------------------------

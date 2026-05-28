@@ -11,7 +11,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowDown,
   ArrowUp,
   ChartPie,
@@ -23,7 +22,6 @@ import {
   UserStar,
   Zap,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -53,6 +51,7 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 export default function ClientOverviewPage() {
@@ -107,9 +106,9 @@ export default function ClientOverviewPage() {
     [data?.active_coverages],
   );
 
-  if (userRole !== "CLIENT") return <ClientOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "CLIENT") return <RoleGate expected="client" message="This view is for insured client users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={Gauge} message="Fetching your overview…" />;
 
   const primary = data.active_coverages[0] ?? null;
 
@@ -375,41 +374,4 @@ function aggregateCoverages(coverages: ClientCoverageEntry[]) {
     highestTier: tiers.length ? Math.min(...tiers) : null,
     lowestTier: tiers.length ? Math.max(...tiers) : null,
   };
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Gauge}>
-          <p className="text-sm">Fetching your overview…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ClientOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Insured-only" lucideIcon={AlertTriangle}>
-          <p className="text-sm">This view is for insured client users only.</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
 }

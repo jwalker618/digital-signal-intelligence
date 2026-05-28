@@ -49,6 +49,7 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function PeersPage() {
@@ -92,8 +93,8 @@ export default function PeersPage() {
     return () => { cancelled = true; };
   }, [accessToken]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!peers || !score) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!peers || !score) return <PageLoading icon={TrendingUpDown} message="Building peer comparison…" />;
 
   if (peers.peer_percentile_rank == null) {
     return <ThinCohortShell entityName={entityName} note={peers.note} />;
@@ -437,30 +438,6 @@ function ThinCohortShell({
           <p className="text-sm">
             {note ?? "Not enough peer data to compute a percentile yet."}
           </p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={TrendingUpDown}>
-          <p className="text-sm">Building peer comparison…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
         </StandardCard>
       </CardGrid>
     </ViewCanvas>

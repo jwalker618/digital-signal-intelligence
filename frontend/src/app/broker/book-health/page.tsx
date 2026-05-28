@@ -10,7 +10,6 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle,
   ChartPie,
   HeartPulse,
   Layers,
@@ -18,7 +17,6 @@ import {
   TrendingUp,
   Users,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
@@ -43,6 +41,7 @@ import type {
   BookHealthResponse,
   VerticalSummary,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 export default function BookHealthPage() {
@@ -75,9 +74,9 @@ export default function BookHealthPage() {
     return () => { cancelled = true; };
   }, [accessToken, userRole]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Book Health is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={HeartPulse} message="Loading book health…" />;
 
   const verticalLookup: Record<string, VerticalSummary> = Object.fromEntries(
     verticals.map((v) => [v.slug, v]),
@@ -311,42 +310,5 @@ function LineBreakdown({
         );
       })}
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={HeartPulse}>
-          <NoData message="Loading book health…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Book Health is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

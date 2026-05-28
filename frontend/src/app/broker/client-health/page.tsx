@@ -11,13 +11,11 @@ import {
   AlertTriangle,
   ArrowRight,
   Calendar,
-  CircleDot,
   HeartPulse,
   TrendingDown,
   TrendingUp,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -39,6 +37,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import { fetchClientHealth } from "@/lib/portalApi";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import type { ClientHealthEntry, ClientHealthResponse } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 export default function ClientHealthPage() {
@@ -72,9 +71,9 @@ export default function ClientHealthPage() {
     return data.clients.filter((c) => filter.matches(c.vertical_slug));
   }, [data, filter]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="Client Health is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={HeartPulse} message="Loading client health…" />;
 
   const strong = filtered.filter((c) => c.engagement_score >= 80).length;
   const quiet = filtered.filter((c) => c.engagement_score < 40).length;
@@ -311,42 +310,5 @@ function QuietClientRow({
       </div>
       <ArrowRight className="generate-app-icon" />
     </button>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={HeartPulse}>
-          <NoData message="Loading client health…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <NoData message="Client Health is for broker users only." />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

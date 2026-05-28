@@ -11,16 +11,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   ArrowRight,
-  Briefcase,
   ChartPie,
-  Gauge,
   Layers,
   ShieldCheck,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
@@ -47,6 +43,7 @@ import type {
   ClientOverviewResponse,
   OverviewResponse,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 type AnyPolicy = ClientBookEntry | ClientCoverageEntry;
@@ -79,8 +76,8 @@ export default function CoverageBookView() {
     return () => { cancelled = true; };
   }, [accessToken]);
 
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={ShieldCheck} message="Loading coverages…" />;
 
   const allPolicies: AnyPolicy[] =
     data.role === "BROKER"
@@ -287,30 +284,5 @@ function PolicyTable({
         </div>
       ))}
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={ShieldCheck}>
-          <p className="text-sm">Loading coverages…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }

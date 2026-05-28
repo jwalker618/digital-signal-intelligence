@@ -12,18 +12,12 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   AlertTriangle,
-  ArrowRight,
   ChartPie,
   FlaskConical,
-  Gauge,
   Layers,
-  Lightbulb,
   ListChecks,
   Plus,
-  ShieldCheck,
-  TrendingUpDown,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import {
   CardGrid,
@@ -53,6 +47,7 @@ import type {
   ScoreResponse,
   SignalImpact,
 } from "@/types/portal";
+import { PageLoading, PageError } from "@/components/base/pageStates";
 
 
 export default function ScenariosPage() {
@@ -100,8 +95,8 @@ export default function ScenariosPage() {
   if (userRole !== "CLIENT") {
     return <Forbidden />;
   }
-  if (error) return <ErrShell msg={error} />;
-  if (!overview || !profile) return <LoadShell />;
+  if (error) return <PageError message={error} />;
+  if (!overview || !profile) return <PageLoading icon={FlaskConical} message="Building scenarios…" />;
 
   const primary = overview.active_coverages[0] ?? null;
   const carriedCoverages = new Set(overview.active_coverages.map((c) => c.coverage));
@@ -489,31 +484,6 @@ function RestructureWhatIfs({
 // ----------------------------------------------------------------------------
 // Loading / error / forbidden shells
 // ----------------------------------------------------------------------------
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={FlaskConical}>
-          <NoData message="Building scenarios…" />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <NoData message={msg} />
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
 function Forbidden() {
   return (
     <ViewCanvas>

@@ -11,13 +11,11 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import {
-  AlertTriangle,
   Briefcase,
   Gauge,
   Layers,
   UserStar,
 } from "lucide-react";
-
 import ViewCanvas from "@/components/ViewCanvas";
 import VerticalFilter from "@/components/portal/VerticalFilter";
 import {
@@ -44,6 +42,7 @@ import type {
   CommunicationItem,
   OverviewResponse,
 } from "@/types/portal";
+import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 
 
 export default function BrokerOverviewPage() {
@@ -81,9 +80,9 @@ export default function BrokerOverviewPage() {
     return () => { cancelled = true; };
   }, [accessToken, userRole]);
 
-  if (userRole !== "BROKER") return <BrokerOnly />;
-  if (error) return <ErrShell msg={error} />;
-  if (!data) return <LoadShell />;
+  if (userRole !== "BROKER") return <RoleGate expected="broker" message="The Book of Clients view is for broker users only." />;
+  if (error) return <PageError message={error} />;
+  if (!data) return <PageLoading icon={Gauge} message="Fetching your book…" />;
 
   const clients = data.clients;
   const scoredClients = clients.filter((c) => c.composite_score != null);
@@ -263,42 +262,5 @@ function TierMix({ clients }: { clients: ClientBookEntry[] }) {
         );
       })}
     </div>
-  );
-}
-
-
-function LoadShell() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Loading" lucideIcon={Gauge}>
-          <p className="text-sm">Fetching your book…</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function ErrShell({ msg }: { msg: string }) {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Unable to load" lucideIcon={AlertTriangle}>
-          <p className="text-sm text-generate-text-bad">{msg}</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
-  );
-}
-
-function BrokerOnly() {
-  return (
-    <ViewCanvas>
-      <CardGrid cols="grid-cols-1">
-        <StandardCard title="Broker-only" lucideIcon={AlertTriangle}>
-          <p className="text-sm">The Book of Clients view is for broker users only.</p>
-        </StandardCard>
-      </CardGrid>
-    </ViewCanvas>
   );
 }
