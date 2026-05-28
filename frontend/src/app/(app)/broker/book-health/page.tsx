@@ -1,14 +1,22 @@
 "use client";
 
-import { ChartPie } from "lucide-react";
+import { ChartPie, Info, Layers, TrendingUp } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import {
+  Body,
+  Card,
+  Caption,
+  Eyebrow,
+  KpiSnug,
+  Micro,
+  NumDisplay,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchBookHealth } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatPercent } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { BookHealthResponse } from "@/types/portal";
 
 export default function BrokerBookHealthPage() {
@@ -31,13 +39,19 @@ export default function BrokerBookHealthPage() {
   return <HealthBody data={data} />;
 }
 
+interface BreakdownRow {
+  name: string;
+  share: number;
+}
+
 function HealthBody({ data }: { data: BookHealthResponse }) {
-  const lines = Object.entries(data.lines_concentration).sort(
-    (a, b) => b[1] - a[1],
-  );
-  const verticals = Object.entries(data.vertical_concentration).sort(
-    (a, b) => b[1] - a[1],
-  );
+  const lines: BreakdownRow[] = Object.entries(data.lines_concentration)
+    .map(([name, share]) => ({ name, share }))
+    .sort((a, b) => b.share - a.share);
+  const verticals: BreakdownRow[] = Object.entries(data.vertical_concentration)
+    .map(([name, share]) => ({ name, share }))
+    .sort((a, b) => b.share - a.share);
+  const tenureYears = (data.avg_tenure_months / 12).toFixed(1);
 
   return (
     <>
@@ -46,82 +60,119 @@ function HealthBody({ data }: { data: BookHealthResponse }) {
         entity={data.broker_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header>
-            <Eyebrow>Operational</Eyebrow>
-            <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-              Book Health
-            </h1>
-            <Body className="mt-2">
-              Premium, commission yield, retention, cross-sell — the metrics
-              that move the practice.
-            </Body>
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* Title + KPIs */}
+          <header className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>Book health</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                Retention, depth, profitability
+              </h1>
+              <Body className="mt-1.5">
+                The business view of your book — beyond risk into the relationship and economics.
+              </Body>
+            </div>
+            <div className="flex flex-wrap gap-7">
+              <KpiSnug label="Clients" value={data.client_count} />
+              <KpiSnug label="Policies" value={data.policy_count} />
+              <KpiSnug
+                label="Total premium"
+                value={formatCurrency(data.total_premium_usd)}
+              />
+              <KpiSnug
+                label="Est. commission"
+                value={formatCurrency(data.total_estimated_commission_usd)}
+                tone="pos"
+              />
+              <KpiSnug
+                label="Cmsn yield"
+                value={`${data.commission_yield_pct.toFixed(1)}%`}
+              />
+            </div>
           </header>
 
-          {/* Hero stats */}
+          {/* Three feature cards */}
           <div className="grid gap-4 md:grid-cols-3">
-            <Stat
-              variant="info"
-              label="Premium under management"
-              value={formatCurrency(data.total_premium_usd)}
-              emphasis
+            <FeatureCard
+              icon={<TrendingUp size={18} />}
+              iconTone="pos"
+              eyebrow="Retention"
+              primary={`${data.retention_rate_pct.toFixed(1)}%`}
+              primaryLabel="Annual retention rate"
+              primaryTone="pos"
+              bar={{ value: data.retention_rate_pct, min: 70, max: 100, tone: "pos" }}
+              rows={[
+                [
+                  "Average tenure",
+                  `${data.avg_tenure_months} mo`,
+                  `~${tenureYears} yrs`,
+                ],
+                [
+                  "Cross-sell ratio",
+                  `${data.cross_sell_ratio_pct.toFixed(0)}%`,
+                  "Share holding 3+ lines",
+                ],
+              ]}
+              footer="Indicative — production wires actual renewal history."
             />
-            <Stat
-              variant="pos"
-              label="Estimated commission"
-              value={formatCurrency(data.total_estimated_commission_usd)}
-              caption={`${formatPercent(data.commission_yield_pct / 100, 1)} yield`}
-              emphasis
+            <FeatureCard
+              icon={<Layers size={18} />}
+              iconTone="info"
+              eyebrow="Depth of relationship"
+              primary={data.avg_lines_per_client.toFixed(2)}
+              primaryLabel="Avg lines per client"
+              primaryTone="info"
+              rows={[
+                [
+                  "Cross-sell (≥3 lines)",
+                  `${data.cross_sell_ratio_pct.toFixed(0)}%`,
+                  "Share holding 3+ lines",
+                ],
+                [
+                  "Avg premium / client",
+                  formatCurrency(data.avg_premium_per_client),
+                  "Book-weighted average",
+                ],
+              ]}
+              footer="Anchor clients carry multi-line relationships across the book."
             />
-            <Stat
-              variant="default"
-              label="Clients"
-              value={`${data.client_count}`}
-              caption={`${data.policy_count} policies · ${data.avg_lines_per_client.toFixed(1)} lines / client`}
-              emphasis
+            <FeatureCard
+              icon={<ChartPie size={18} />}
+              iconTone="warn"
+              eyebrow="Profitability"
+              primary={`${data.commission_yield_pct.toFixed(1)}%`}
+              primaryLabel="Commission yield"
+              primaryTone="default"
+              rows={[
+                [
+                  "Est. annual commission",
+                  formatCurrency(data.total_estimated_commission_usd),
+                  "Book-weighted",
+                ],
+                [
+                  "Avg premium / client",
+                  formatCurrency(data.avg_premium_per_client),
+                  "Per-client mean",
+                ],
+              ]}
+              footer="Production wires actual broker remuneration including contingents and overrides."
             />
           </div>
 
-          {/* Operational ratios */}
-          <Card pad="lg" className="grid gap-6 md:grid-cols-4">
-            <Ratio
-              label="Retention"
-              value={formatPercent(data.retention_rate_pct / 100, 0)}
-              tone={data.retention_rate_pct >= 85 ? "pos" : data.retention_rate_pct >= 70 ? "info" : "warn"}
-            />
-            <Ratio
-              label="Cross-sell ratio"
-              value={formatPercent(data.cross_sell_ratio_pct / 100, 0)}
-              tone={data.cross_sell_ratio_pct >= 50 ? "pos" : "info"}
-            />
-            <Ratio
-              label="Avg tenure"
-              value={`${data.avg_tenure_months}mo`}
-              tone="info"
-            />
-            <Ratio
-              label="Avg premium / client"
-              value={formatCurrency(data.avg_premium_per_client)}
-              tone="info"
-            />
-          </Card>
+          {/* Breakdowns */}
+          <div className="grid gap-4 lg:grid-cols-2">
+            <BreakdownCard title="Premium by vertical" rows={verticals} />
+            <BreakdownCard title="Premium by coverage line" rows={lines} />
+          </div>
 
-          {/* Concentration */}
-          <div className="grid gap-5 lg:grid-cols-2">
-            <Card pad="md" className="space-y-3">
-              <header className="flex items-center gap-2">
-                <ChartPie size={15} className="text-ink-mute" />
-                <Eyebrow>Lines mix</Eyebrow>
-              </header>
-              <DistributionList items={lines} />
-            </Card>
-            <Card pad="md" className="space-y-3">
-              <header className="flex items-center gap-2">
-                <ChartPie size={15} className="text-ink-mute" />
-                <Eyebrow>Vertical mix</Eyebrow>
-              </header>
-              <DistributionList items={verticals} />
-            </Card>
+          {/* Footer note */}
+          <div className="flex items-start gap-3 rounded-card border border-rule bg-surface-sunken px-4 py-3">
+            <Info size={15} className="mt-0.5 shrink-0 text-ink-soft" />
+            <Caption className="leading-relaxed">
+              Retention and tenure are illustrative for the demo; commission yield and per-line /
+              per-vertical breakdowns are computed live from the placed book. See Risk Aggregation
+              for peril-level concentration narratives.
+            </Caption>
           </div>
         </div>
       </div>
@@ -129,93 +180,139 @@ function HealthBody({ data }: { data: BookHealthResponse }) {
   );
 }
 
-function Stat({
-  variant,
-  label,
-  value,
-  caption,
-  emphasis,
-}: {
-  variant: "info" | "pos" | "default";
-  label: string;
-  value: string;
-  caption?: string;
-  emphasis?: boolean;
-}) {
+type Tone = "pos" | "info" | "warn" | "default";
+
+function toneText(t: Tone): string {
+  return t === "pos"
+    ? "text-pos"
+    : t === "info"
+      ? "text-info"
+      : t === "warn"
+        ? "text-warn"
+        : "text-ink";
+}
+
+function toneBg(t: Tone): string {
+  return t === "pos"
+    ? "bg-pos"
+    : t === "info"
+      ? "bg-info"
+      : t === "warn"
+        ? "bg-warn"
+        : "bg-ink";
+}
+
+function toneSoftBg(t: Tone): string {
+  return t === "pos"
+    ? "bg-pos-soft"
+    : t === "info"
+      ? "bg-info-soft"
+      : t === "warn"
+        ? "bg-warn-soft"
+        : "bg-surface-sunken";
+}
+
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  iconTone: Tone;
+  eyebrow: string;
+  primary: string;
+  primaryLabel: string;
+  primaryTone: Tone;
+  bar?: { value: number; min: number; max: number; tone: Tone };
+  rows: Array<[string, string, string]>;
+  footer: string;
+}
+
+function FeatureCard({
+  icon,
+  iconTone,
+  eyebrow,
+  primary,
+  primaryLabel,
+  primaryTone,
+  bar,
+  rows,
+  footer,
+}: FeatureCardProps) {
   return (
-    <Card pad="lg" variant={variant}>
-      <Eyebrow
-        className={
-          variant === "info"
-            ? "text-info-deep dark:text-info"
-            : variant === "pos"
-              ? "text-pos"
-              : ""
-        }
-      >
-        {label}
-      </Eyebrow>
-      <NumDisplay size={emphasis ? "xl" : "lg"} className="mt-2 block">
-        {value}
-      </NumDisplay>
-      {caption && <Micro className="mt-1 block">{caption}</Micro>}
+    <Card pad="lg" className="flex flex-col gap-3.5">
+      <div className="flex items-center gap-3">
+        <div
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-md",
+            toneSoftBg(iconTone),
+            toneText(iconTone),
+          )}
+        >
+          {icon}
+        </div>
+        <Eyebrow>{eyebrow}</Eyebrow>
+      </div>
+      <div>
+        <NumDisplay
+          size="xl"
+          className={cn("block leading-none", toneText(primaryTone))}
+        >
+          {primary}
+        </NumDisplay>
+        <Caption className="mt-1 block">{primaryLabel}</Caption>
+      </div>
+      {bar && (
+        <div className="h-1 overflow-hidden rounded-full bg-rule">
+          <div
+            className={cn("h-full", toneBg(bar.tone))}
+            style={{
+              width: `${Math.max(0, Math.min(100, ((bar.value - bar.min) / (bar.max - bar.min)) * 100))}%`,
+            }}
+          />
+        </div>
+      )}
+      <div className="flex flex-col gap-2 border-t border-rule pt-3">
+        {rows.map(([label, value, sub], i) => (
+          <div key={i} className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[12.5px] font-medium text-ink">{label}</div>
+              <Micro className="mt-0.5 block">{sub}</Micro>
+            </div>
+            <div className="text-[14px] font-bold tabular-nums text-ink">{value}</div>
+          </div>
+        ))}
+      </div>
+      <Caption className="text-[11.5px]">{footer}</Caption>
     </Card>
   );
 }
 
-function Ratio({
-  label,
-  value,
-  tone,
+function BreakdownCard({
+  title,
+  rows,
 }: {
-  label: string;
-  value: string;
-  tone: "pos" | "info" | "warn" | "neg";
+  title: string;
+  rows: BreakdownRow[];
 }) {
+  const max = Math.max(...rows.map((r) => r.share), 0.0001);
   return (
-    <div>
-      <Micro className="block">{label}</Micro>
-      <p
-        className={`mt-1 font-display text-[24px] font-semibold leading-none tabular-nums ${
-          tone === "pos"
-            ? "text-pos"
-            : tone === "info"
-              ? "text-info"
-              : tone === "warn"
-                ? "text-warn"
-                : "text-neg"
-        }`}
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function DistributionList({
-  items,
-}: {
-  items: [string, number][];
-}) {
-  const top = items.slice(0, 8);
-  return (
-    <ul className="space-y-2">
-      {top.map(([name, share]) => (
-        <li key={name}>
-          <div className="flex items-baseline justify-between text-[13px]">
-            <span className="truncate font-medium text-ink">{name}</span>
-            <span className="font-semibold tabular-nums text-ink">
-              {formatPercent(share, 1)}
-            </span>
-          </div>
-          <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
-            <div
-              className="h-full bg-info"
-              style={{ width: `${Math.min(100, share * 100)}%` }}
-            />
-          </div>
-        </li>
-      ))}
-    </ul>
+    <Card pad="lg">
+      <h3 className="mb-4 text-[16px] font-semibold text-ink">{title}</h3>
+      <ul className="flex flex-col gap-2.5">
+        {rows.slice(0, 8).map((r) => (
+          <li key={r.name}>
+            <div className="mb-1 flex items-baseline justify-between text-[13px]">
+              <span className="truncate font-semibold text-ink">{r.name}</span>
+              <span className="font-semibold tabular-nums text-ink">
+                {formatPercent(r.share, 1)}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+              <div
+                className="h-full bg-info"
+                style={{ width: `${(r.share / max) * 100}%` }}
+              />
+            </div>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

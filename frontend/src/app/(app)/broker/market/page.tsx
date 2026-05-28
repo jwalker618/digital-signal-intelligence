@@ -1,15 +1,21 @@
 "use client";
 
-import { AlertOctagon, ArrowDownRight, ArrowUpRight, Cloud, Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import {
+  Body,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  KpiSnug,
+  Micro,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchMarketPulse } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
-import { formatDate, formatText, formatPercent } from "@/lib/format";
+import { formatDate, formatText } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type {
   LossEventEntry,
@@ -37,53 +43,104 @@ export default function BrokerMarketPage() {
   return <PulseBody data={data} />;
 }
 
+function isHardening(c: string): boolean {
+  return /hard/i.test(c);
+}
+
+function isSoftening(c: string): boolean {
+  return /soft/i.test(c);
+}
+
+function cycleTone(c: string): "warn" | "pos" | "info" {
+  if (isHardening(c)) return "warn";
+  if (isSoftening(c)) return "pos";
+  return "info";
+}
+
 function PulseBody({ data }: { data: MarketPulseResponse }) {
+  const hardening = data.lines.filter((l) => isHardening(l.cycle_position)).length;
+  const softening = data.lines.filter((l) => isSoftening(l.cycle_position)).length;
+  const overallTone = cycleTone(data.cycle_overall);
+
   return (
     <>
       <Topbar crumbs={["Broker Portal", "Market Pulse"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header>
-            <Eyebrow>Markets</Eyebrow>
-            <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-              Market Pulse
-            </h1>
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* Title + KPIs */}
+          <header className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>Market pulse</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                By-line market intelligence
+              </h1>
+              <Body className="mt-1.5">
+                Cycle position, capacity, loss trends, and the climate overlay shaping placement
+                decisions.
+              </Body>
+            </div>
+            <div className="flex flex-wrap gap-7">
+              <KpiSnug
+                label="Cycle overall"
+                value={formatText(data.cycle_overall, "capitalize")}
+                tone={overallTone}
+              />
+              <KpiSnug label="Hardening" value={hardening} tone="warn" />
+              <KpiSnug label="Softening" value={softening} tone="pos" />
+              <KpiSnug label="Lines watched" value={data.lines.length} />
+            </div>
           </header>
 
-          {/* Hero: cycle */}
-          <Card variant="info" pad="lg" className="space-y-3">
-            <Eyebrow className="text-info-deep dark:text-info">Cycle</Eyebrow>
-            <p className="font-display text-[22px] font-semibold leading-snug text-ink">
-              {data.cycle_overall}
-            </p>
-            {data.climate_pulse_summary && (
-              <div className="flex items-start gap-2 border-t border-info/30 pt-3">
-                <Cloud size={15} className="mt-0.5 shrink-0 text-info" />
-                <Body className="text-ink">{data.climate_pulse_summary}</Body>
+          {/* Climate pulse */}
+          {data.climate_pulse_summary && (
+            <Card variant="pos" pad="lg">
+              <div className="grid items-start gap-4 md:grid-cols-[40px_1fr]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-md bg-pos-soft text-pos">
+                  <Leaf size={20} />
+                </div>
+                <div>
+                  <Eyebrow className="text-pos">
+                    Climate pulse — the active market force
+                  </Eyebrow>
+                  <Body className="mt-2 text-[14px] leading-relaxed text-ink">
+                    {data.climate_pulse_summary}
+                  </Body>
+                </div>
               </div>
-            )}
-          </Card>
+            </Card>
+          )}
 
-          {/* Line cards */}
+          {/* By-line dashboards */}
           <section>
-            <Eyebrow className="mb-3">By line</Eyebrow>
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="mb-2.5 flex items-baseline justify-between">
+              <h2 className="text-[17px] font-semibold text-ink">By-line dashboards</h2>
+              <Caption>Click a line for full carrier and loss-event detail</Caption>
+            </div>
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
               {data.lines.map((line) => (
                 <LineCard key={line.slug} line={line} />
               ))}
             </div>
           </section>
 
-          {/* Recent loss events */}
+          {/* Loss events */}
           {data.recent_loss_events.length > 0 && (
-            <section>
-              <Eyebrow className="mb-3">Recent industry losses</Eyebrow>
-              <div className="space-y-3">
+            <Card pad="lg">
+              <div className="mb-3 flex items-baseline justify-between">
+                <div>
+                  <Eyebrow>Recent loss events</Eyebrow>
+                  <h2 className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">
+                    Events shaping market direction
+                  </h2>
+                </div>
+                <Caption>Last 12 months</Caption>
+              </div>
+              <div className="flex flex-col gap-2.5">
                 {data.recent_loss_events.map((e, i) => (
                   <LossEventRow key={i} event={e} />
                 ))}
               </div>
-            </section>
+            </Card>
           )}
         </div>
       </div>
@@ -92,111 +149,87 @@ function PulseBody({ data }: { data: MarketPulseResponse }) {
 }
 
 function LineCard({ line }: { line: MarketLineSummary }) {
-  const tone =
-    line.cycle_position === "soft"
-      ? "pos"
-      : line.cycle_position === "hard"
-        ? "neg"
-        : line.cycle_position === "stable"
-          ? "info"
-          : "warn";
+  const tone = cycleTone(line.cycle_position);
+  const borderClass =
+    tone === "warn" ? "border-t-warn" : tone === "pos" ? "border-t-pos" : "border-t-info";
+  const cycleChipTone = tone;
+  const rateColor =
+    line.rate_change_yoy_pct > 5
+      ? "text-warn"
+      : line.rate_change_yoy_pct < -3
+        ? "text-pos"
+        : "text-ink-soft";
+  const lossColor = /deter|worsen/i.test(line.loss_trend)
+    ? "text-neg"
+    : /improv/i.test(line.loss_trend)
+      ? "text-pos"
+      : "text-ink-soft";
+
   return (
-    <Card pad="md" className="space-y-3">
-      <header className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="text-[16px] font-semibold text-ink">{line.name}</h3>
-          <Micro className="mt-0.5 block">{line.slug}</Micro>
-        </div>
-        <Chip variant={tone} size="sm">
+    <Card pad="md" className={cn("border-t-[3px]", borderClass)}>
+      <div className="mb-3 flex items-baseline justify-between">
+        <span className="text-[14px] font-bold text-ink">{line.name}</span>
+        <Chip variant={cycleChipTone} size="sm">
           {formatText(line.cycle_position, "capitalize")}
         </Chip>
-      </header>
-
-      <div className="flex items-baseline gap-2">
-        <span
-          className={cn(
-            "font-display text-[22px] font-semibold tabular-nums",
-            line.rate_change_yoy_pct >= 0 ? "text-neg" : "text-pos",
-          )}
-        >
-          {line.rate_change_yoy_pct >= 0 ? "+" : ""}
-          {line.rate_change_yoy_pct.toFixed(1)}%
+      </div>
+      <div className="mb-2.5 grid grid-cols-2 gap-2">
+        <div>
+          <Micro className="block">Rate YoY</Micro>
+          <div className={cn("text-[20px] font-semibold tabular-nums", rateColor)}>
+            {line.rate_change_yoy_pct > 0 ? "+" : ""}
+            {line.rate_change_yoy_pct.toFixed(1)}%
+          </div>
+        </div>
+        <div>
+          <Micro className="block">Capacity</Micro>
+          <div className="text-[14px] font-semibold text-ink">
+            {formatText(line.capacity_state, "capitalize")}
+          </div>
+          <Micro className="block">
+            {formatText(line.capacity_trend, "capitalize")}
+          </Micro>
+        </div>
+      </div>
+      <div className="mb-2.5 text-[12px]">
+        <Micro>Loss trend: </Micro>
+        <span className={cn("font-semibold", lossColor)}>
+          {formatText(line.loss_trend, "capitalize")}
         </span>
-        <Micro>rate YoY</Micro>
       </div>
-
-      <div className="grid grid-cols-2 gap-3 border-t border-rule pt-3 text-[12.5px]">
-        <Stat
-          label="Capacity"
-          value={`${formatText(line.capacity_state, "capitalize")} · ${formatText(line.capacity_trend, "capitalize")}`}
-        />
-        <Stat
-          label="Loss trend"
-          value={formatText(line.loss_trend, "capitalize")}
-          icon={
-            /down|easing|improv/i.test(line.loss_trend) ? (
-              <ArrowDownRight size={12} className="text-pos" />
-            ) : /up|rising|worsen/i.test(line.loss_trend) ? (
-              <ArrowUpRight size={12} className="text-neg" />
-            ) : null
-          }
-        />
-        {line.esg_overlay && (
-          <Stat
-            label="ESG"
-            value={line.esg_overlay}
-            icon={<Leaf size={12} className="text-pos" />}
-          />
-        )}
-      </div>
+      {line.esg_overlay && (
+        <div className="border-t border-rule pt-2.5">
+          <Micro className="mb-1 flex items-center gap-1">
+            <Leaf size={11} /> ESG overlay
+          </Micro>
+          <Caption className="text-[11.5px] leading-snug">{line.esg_overlay}</Caption>
+        </div>
+      )}
     </Card>
   );
 }
 
 function LossEventRow({ event }: { event: LossEventEntry }) {
   return (
-    <Card pad="md" className="grid gap-3 md:grid-cols-[1.4fr_120px_1fr]">
+    <div className="grid items-start gap-4 rounded-card border border-rule bg-surface-elev px-3.5 py-3 sm:grid-cols-[90px_1fr_auto]">
       <div>
-        <div className="flex items-start gap-2">
-          <AlertOctagon size={15} className="mt-0.5 shrink-0 text-neg" />
-          <h3 className="text-[14.5px] font-semibold text-ink">
-            {event.headline}
-          </h3>
-        </div>
-        <Micro className="mt-1 block">
-          {event.line} · {formatDate(event.date)}
-        </Micro>
+        <Chip variant="mute" size="sm">
+          {event.line}
+        </Chip>
+        <Micro className="mt-1 block">{formatDate(event.date)}</Micro>
       </div>
       <div>
-        <Micro>Est. industry loss</Micro>
-        <p className="font-semibold tabular-nums text-ink">
+        <div className="text-[13.5px] font-semibold text-ink">{event.headline}</div>
+        <Caption className="mt-1 block italic leading-snug">
+          {event.implication}
+        </Caption>
+      </div>
+      <div className="text-right">
+        <Micro className="block">industry loss</Micro>
+        <span className="text-[16px] font-bold tabular-nums text-neg">
           ${event.estimated_industry_loss_usd_bn.toFixed(1)}B
-        </p>
+        </span>
       </div>
-      <div>
-        <Micro>Implication</Micro>
-        <Body className="text-[13px]">{event.implication}</Body>
-      </div>
-    </Card>
-  );
-}
-
-function Stat({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <div>
-      <Micro className="block">{label}</Micro>
-      <p className="flex items-center gap-1 font-semibold text-ink">
-        {icon}
-        {value}
-      </p>
     </div>
   );
 }

@@ -2,21 +2,27 @@
 
 import Link from "next/link";
 import { Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { Building2, Leaf, Target, TrendingDown } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Leaf } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { ScoreBar } from "@/components/ui/score-bar";
+import {
+  Body,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  Micro,
+  NumDisplay,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview, fetchPlacementStrategy } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
-import { formatCurrency, formatPercent, formatText } from "@/lib/format";
+import { formatCurrency, formatText } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type {
-  AppetiteStance,
   CarrierMatch,
+  ClientBookEntry,
   OverviewResponse,
   PlacementStrategyResponse,
 } from "@/types/portal";
@@ -42,10 +48,19 @@ function PlacementInner() {
     deps: [accessToken],
   });
 
+  const inFlight =
+    overview.data?.role === "BROKER"
+      ? overview.data.clients.filter(
+          (c) =>
+            /review|awaiting/i.test(c.status ?? "") ||
+            /awaiting/i.test(c.referral_state ?? ""),
+        )
+      : [];
+
   const code =
     explicitCode ??
     (overview.data?.role === "BROKER"
-      ? overview.data.clients[0]?.submission_code
+      ? (inFlight[0]?.submission_code ?? overview.data.clients[0]?.submission_code)
       : undefined);
 
   const placement = useRoleScopedFetch<PlacementStrategyResponse>({
@@ -69,10 +84,7 @@ function PlacementInner() {
             <Eyebrow>No submission selected</Eyebrow>
             <Body className="mt-2">
               Open one from{" "}
-              <Link
-                href="/broker"
-                className="font-semibold text-info hover:underline"
-              >
+              <Link href="/broker" className="font-semibold text-info hover:underline">
                 the book
               </Link>{" "}
               to see carrier-fit strategy.
@@ -89,10 +101,7 @@ function PlacementInner() {
   return (
     <PlacementBody
       data={placement.data}
-      allSubmissions={overview.data.clients.map((c) => ({
-        code: c.submission_code,
-        label: `${c.entity_name} · ${c.coverage}`,
-      }))}
+      inFlight={inFlight}
       activeCode={code}
     />
   );
@@ -100,16 +109,19 @@ function PlacementInner() {
 
 function PlacementBody({
   data,
-  allSubmissions,
+  inFlight,
   activeCode,
 }: {
   data: PlacementStrategyResponse;
-  allSubmissions: { code: string; label: string }[];
+  inFlight: ClientBookEntry[];
   activeCode: string;
 }) {
   const ranked = [...data.carrier_matches].sort(
     (a, b) => b.suitability_score - a.suitability_score,
   );
+  const lead = ranked[0];
+  const others = ranked.slice(1);
+  const selected = inFlight.find((c) => c.submission_code === activeCode);
 
   return (
     <>
@@ -121,171 +133,226 @@ function PlacementBody({
         ]}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header className="flex items-end justify-between gap-6">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Placement</Eyebrow>
-              <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                {data.entity_name} · {data.coverage}
+              <Eyebrow>Placement strategy</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                Ranked carrier matches for in-flight risks
               </h1>
-              <Body className="mt-2">
-                Carrier fit ranked by suitability — appetite, pricing position,
-                and your placement history.
+              <Body className="mt-1.5">
+                For each policy, score every carrier in the universe by appetite, ESG fit,
+                pricing position, and historical win rate.
               </Body>
             </div>
-            <SubmissionPicker
-              all={allSubmissions}
-              activeCode={activeCode}
-              baseHref="/broker/placement"
-            />
+            <Chip variant="info" size="md">
+              Composite scoring v8.2
+            </Chip>
           </header>
 
-          {data.placement_note && (
-            <Card variant="info" pad="lg">
-              <Eyebrow className="text-info-deep dark:text-info">
-                Placement note
-              </Eyebrow>
-              <Body className="mt-2 text-ink">{data.placement_note}</Body>
+          <div className="grid gap-4 md:grid-cols-[280px_1fr]">
+            {/* Policy picker */}
+            <Card pad="md" className="flex flex-col gap-2.5">
+              <Eyebrow>In-flight ({inFlight.length})</Eyebrow>
+              {inFlight.length === 0 && (
+                <Caption className="italic">No in-flight submissions.</Caption>
+              )}
+              {inFlight.map((p) => (
+                <PolicyPickerRow
+                  key={p.submission_code}
+                  entry={p}
+                  active={p.submission_code === activeCode}
+                />
+              ))}
+              <Caption className="mt-2 border-t border-rule pt-2.5">
+                Click a policy to recompute ranked matches.
+              </Caption>
             </Card>
-          )}
 
-          <section className="space-y-3">
-            <Eyebrow>Ranked carriers ({ranked.length})</Eyebrow>
-            {ranked.map((c) => (
-              <CarrierMatchCard key={c.slug} match={c} />
-            ))}
-          </section>
+            {/* Strategy detail */}
+            <div className="flex flex-col gap-3.5">
+              {/* Active submission */}
+              <Card variant="info" pad="lg">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <Eyebrow className="text-info-deep dark:text-info">
+                      Active submission
+                    </Eyebrow>
+                    <h2 className="mt-1.5 font-display text-[22px] font-semibold leading-snug text-ink">
+                      {data.entity_name} — {data.coverage}
+                    </h2>
+                    {selected && (
+                      <Caption className="mt-1 block">
+                        {selected.recommended_premium != null
+                          ? `Current quote ${formatCurrency(selected.recommended_premium)}`
+                          : "No current quote"}
+                      </Caption>
+                    )}
+                  </div>
+                </div>
+                {data.placement_note && (
+                  <Body className="mt-3 text-ink">{data.placement_note}</Body>
+                )}
+              </Card>
+
+              {/* Lead recommendation */}
+              {lead && <CarrierMatchCard match={lead} lead />}
+
+              {/* Other matches */}
+              {others.length > 0 && (
+                <div className="flex flex-col gap-2.5">
+                  <Eyebrow>Other matches</Eyebrow>
+                  {others.map((m) => (
+                    <CarrierMatchCard key={m.slug} match={m} />
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-function CarrierMatchCard({ match }: { match: CarrierMatch }) {
-  const apTone =
-    match.appetite_stance === "leaning_in"
-      ? "pos"
-      : match.appetite_stance === "leaning_out"
-        ? "neg"
-        : match.appetite_stance === "selective"
-          ? "warn"
-          : "mute";
-
+function PolicyPickerRow({
+  entry,
+  active,
+}: {
+  entry: ClientBookEntry;
+  active: boolean;
+}) {
+  const router = useRouter();
   return (
-    <Card pad="md" className="grid gap-4 md:grid-cols-[2fr_1fr_1fr_1fr]">
-      <div>
-        <div className="flex items-center gap-2">
-          <Building2 size={15} className="text-ink-mute" />
-          <h3 className="text-[16px] font-semibold text-ink">{match.name}</h3>
-        </div>
-        <div className="mt-2 flex items-baseline gap-3">
-          <span className="font-display text-[22px] font-semibold tabular-nums text-info">
-            {match.suitability_score.toFixed(0)}
-          </span>
-          <Micro>suitability</Micro>
-        </div>
-        <ScoreBar
-          value={match.suitability_score}
-          max={100}
-          className="mt-2 max-w-[280px]"
-          showValue={false}
-          thresholds={[
-            { at: 40, tone: "neg" },
-            { at: 60, tone: "warn" },
-            { at: 80, tone: "info" },
-            { at: 100, tone: "pos" },
-          ]}
-        />
-        <Body className="mt-3 text-[12.5px]">{match.rationale}</Body>
-      </div>
-
-      <div>
-        <Micro>Predicted premium</Micro>
-        <p className="mt-1 text-[14px] font-semibold tabular-nums text-ink">
-          {formatCurrency(match.predicted_premium_low)} –{" "}
-          {formatCurrency(match.predicted_premium_high)}
-        </p>
-        <Micro className="mt-2 block">Commission</Micro>
-        <p className="text-[14px] font-semibold tabular-nums text-ink">
-          {formatPercent(match.typical_commission_pct / 100, 1)}
-        </p>
-      </div>
-
-      <div className="space-y-1.5">
-        <Micro>Appetite</Micro>
-        <Chip variant={apTone} size="sm">
-          {formatText(match.appetite_stance.replace("_", " "), "capitalize")}
+    <button
+      type="button"
+      onClick={() => router.push(`/broker/placement?code=${entry.submission_code}`)}
+      className={cn(
+        "rounded-card border px-3 py-2.5 text-left transition",
+        active
+          ? "border-spot bg-spot-soft"
+          : "border-rule bg-surface-elev hover:bg-surface-sunken",
+      )}
+    >
+      <div className="text-[13px] font-semibold text-ink">{entry.entity_name}</div>
+      <Micro className="mt-0.5 block">
+        {entry.coverage}
+        {entry.recommended_premium != null && (
+          <> · {formatCurrency(entry.recommended_premium)} current</>
+        )}
+      </Micro>
+      {entry.status && (
+        <Chip variant={active ? "spot" : "mute"} size="sm" className="mt-1.5">
+          {formatText(entry.status, "capitalize")}
         </Chip>
-        <Micro className="mt-2 block">Pricing</Micro>
-        <Chip
-          variant={
-            match.pricing_position === "light"
-              ? "pos"
-              : match.pricing_position === "tight"
-                ? "neg"
-                : "info"
-          }
-          size="sm"
-        >
-          {match.pricing_position === "light" ? (
-            <TrendingDown size={11} />
-          ) : null}
-          {formatText(match.pricing_position, "capitalize")}
-        </Chip>
-      </div>
-
-      <div>
-        <Micro>Your win rate</Micro>
-        <p className="text-[16px] font-semibold tabular-nums text-ink">
-          {match.win_rate_pct.toFixed(0)}%
-        </p>
-        <Micro className="mt-2 block">ESG</Micro>
-        <span className="flex items-center gap-1 text-[13px] font-semibold text-ink">
-          <Leaf
-            size={11}
-            className={
-              match.esg_stance === "leader"
-                ? "text-pos"
-                : match.esg_stance === "progressive"
-                  ? "text-info"
-                  : match.esg_stance === "restrictive"
-                    ? "text-neg"
-                    : "text-ink-mute"
-            }
-          />
-          {formatText(match.esg_stance, "capitalize")}
-        </span>
-      </div>
-    </Card>
+      )}
+    </button>
   );
 }
 
-function SubmissionPicker({
-  all,
-  activeCode,
-  baseHref,
+function CarrierMatchCard({
+  match,
+  lead,
 }: {
-  all: { code: string; label: string }[];
-  activeCode: string;
-  baseHref: string;
+  match: CarrierMatch;
+  lead?: boolean;
 }) {
-  if (all.length <= 1) return null;
+  const stanceColor =
+    match.appetite_stance === "leaning_in"
+      ? "text-pos"
+      : match.appetite_stance === "neutral"
+        ? "text-info"
+        : match.appetite_stance === "selective"
+          ? "text-warn"
+          : "text-neg";
+  const stanceBorder =
+    match.appetite_stance === "leaning_in"
+      ? "border-pos"
+      : match.appetite_stance === "neutral"
+        ? "border-info"
+        : match.appetite_stance === "selective"
+          ? "border-warn"
+          : "border-neg";
+  const esgColor =
+    match.esg_stance === "leader"
+      ? "text-pos"
+      : match.esg_stance === "progressive"
+        ? "text-info"
+        : match.esg_stance === "restrictive"
+          ? "text-warn"
+          : "text-ink-soft";
   return (
-    <label className="flex items-center gap-2 text-[12.5px]">
-      <span className="text-ink-mute">Submission:</span>
-      <select
-        value={activeCode}
-        onChange={(e) => {
-          window.location.href = `${baseHref}?code=${e.target.value}`;
-        }}
-        className="rounded-btn border border-rule-strong bg-surface px-3 py-1.5 text-[13px] font-medium text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-      >
-        {all.map((c) => (
-          <option key={c.code} value={c.code}>
-            {c.label}
-          </option>
-        ))}
-      </select>
-    </label>
+    <Card
+      pad={lead ? "lg" : "md"}
+      className={cn(lead ? "border-l-4 border-l-info" : undefined)}
+    >
+      <div className="grid items-center gap-4 md:grid-cols-[2fr_110px_160px]">
+        <div>
+          <div className="mb-1.5 flex flex-wrap items-baseline gap-2.5">
+            {lead && (
+              <Chip variant="info" size="sm">
+                LEAD
+              </Chip>
+            )}
+            <span className={cn("font-bold text-ink", lead ? "text-[18px]" : "text-[15px]")}>
+              {match.name}
+            </span>
+            <span
+              className={cn(
+                "rounded-chip border bg-surface px-2 py-0.5 text-[11px] font-semibold capitalize",
+                stanceColor,
+                stanceBorder,
+              )}
+            >
+              {match.appetite_stance.replace("_", " ")}
+            </span>
+            <span
+              className={cn(
+                "flex items-center gap-1 text-[11px] font-semibold capitalize",
+                esgColor,
+              )}
+            >
+              <Leaf size={11} /> ESG {match.esg_stance}
+            </span>
+          </div>
+          <Caption className={cn("leading-snug", lead ? "text-[13.5px]" : "text-[12.5px]")}>
+            {match.rationale}
+          </Caption>
+        </div>
+        <div>
+          <Micro className="block">Suitability</Micro>
+          <NumDisplay
+            size={lead ? "lg" : "md"}
+            className="mt-0.5 block text-info"
+          >
+            {match.suitability_score.toFixed(0)}
+          </NumDisplay>
+          <div className="mt-1 h-1 overflow-hidden rounded-full bg-rule">
+            <div
+              className="h-full bg-info"
+              style={{
+                width: `${Math.max(0, Math.min(100, match.suitability_score))}%`,
+              }}
+            />
+          </div>
+        </div>
+        <div className="text-right">
+          <Micro className="block">Predicted premium</Micro>
+          <div
+            className={cn(
+              "mt-0.5 font-bold tabular-nums",
+              lead ? "text-[15px]" : "text-[13px]",
+            )}
+          >
+            {formatCurrency(match.predicted_premium_low)} –{" "}
+            {formatCurrency(match.predicted_premium_high)}
+          </div>
+          <Micro className="mt-1 block">
+            Cmsn {match.typical_commission_pct.toFixed(1)}% · Win{" "}
+            {match.win_rate_pct.toFixed(0)}%
+          </Micro>
+        </div>
+      </div>
+    </Card>
   );
 }

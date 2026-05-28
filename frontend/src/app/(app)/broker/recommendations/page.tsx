@@ -1,11 +1,18 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { CheckCircle2, Lightbulb, Loader2, Send, X } from "lucide-react";
+import { Briefcase, CheckCircle2, Info, Loader2, Send, X } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import {
+  Body,
+  Button,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  KpiSnug,
+  Micro,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import {
@@ -48,21 +55,20 @@ function RecsBody({
   onSent: () => void;
 }) {
   const recs = data.recommendations;
-  const totalLow = recs.reduce(
-    (sum, r) => sum + r.estimated_premium_range_usd[0],
-    0,
-  );
-  const totalHigh = recs.reduce(
-    (sum, r) => sum + r.estimated_premium_range_usd[1],
-    0,
-  );
-
   const grouped = new Map<string, BookGapRecommendation[]>();
   for (const r of recs) {
     const list = grouped.get(r.client_entity_name) ?? [];
     list.push(r);
     grouped.set(r.client_entity_name, list);
   }
+
+  const totalGaps = recs.length;
+  const clientsTouched = grouped.size;
+  const totalPotential = recs.reduce(
+    (s, r) =>
+      s + (r.estimated_premium_range_usd[0] + r.estimated_premium_range_usd[1]) / 2,
+    0,
+  );
 
   return (
     <>
@@ -71,67 +77,57 @@ function RecsBody({
         entity={data.broker_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header>
-            <Eyebrow>Cross-sell</Eyebrow>
-            <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-              Recommendations
-            </h1>
-            <Body className="mt-2">
-              Coverage lines your clients are likely under-protected on,
-              ranked by industry-fit. Send each as a draft to start a
-              conversation.
-            </Body>
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* Title + KPIs */}
+          <header className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>Recommendations</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                Coverage gaps across your book
+              </h1>
+              <Body className="mt-1.5 max-w-[640px]">
+                Industry-by-coverage rule analysis. Each gap is a credible upsell opportunity —
+                review the rationale, then send the prompt to the client when you&apos;re ready.
+              </Body>
+            </div>
+            <div className="flex flex-wrap gap-7">
+              <KpiSnug label="Gaps identified" value={totalGaps} tone="spot" />
+              <KpiSnug label="Clients touched" value={clientsTouched} />
+              <KpiSnug
+                label="Indicative new premium"
+                value={formatCurrency(totalPotential)}
+                tone="pos"
+              />
+            </div>
           </header>
 
-          <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
-            <Stat label="Recommendations">{recs.length}</Stat>
-            <Stat label="Affected clients">{grouped.size}</Stat>
-            <Stat label="Potential premium" emphasis>
-              {recs.length === 0
-                ? "—"
-                : `${formatCurrency(totalLow)} – ${formatCurrency(totalHigh)}`}
-            </Stat>
-          </Card>
+          {/* Info bar */}
+          <div className="flex items-center gap-3 rounded-card border border-rule bg-surface-sunken px-4 py-3">
+            <Info size={15} className="shrink-0 text-ink-soft" />
+            <Caption className="leading-snug">
+              Rules: tech firms → cyber + PI + D&amp;O; healthcare → +MedProf; manufacturers → +
+              Product Liability + Casualty; pharma → +Clinical Trials. We flag where a client is
+              missing one of these by-industry defaults.
+            </Caption>
+          </div>
 
           {grouped.size === 0 ? (
             <Card pad="lg" className="text-center">
               <Body className="italic">
-                Your book is fully covered relative to peer norms. No gaps to
-                recommend.
+                Your book is fully covered relative to peer norms. No gaps to recommend.
               </Body>
             </Card>
           ) : (
-            <div className="space-y-5">
+            <div className="flex flex-col gap-3.5">
               {[...grouped.entries()]
                 .sort((a, b) => a[0].localeCompare(b[0]))
-                .map(([entityName, list]) => (
-                  <Card key={entityName} pad="md" className="space-y-3">
-                    <header className="flex items-baseline justify-between">
-                      <div>
-                        <h2 className="text-[16px] font-semibold text-ink">
-                          {entityName}
-                        </h2>
-                        {list[0]?.industry_label && (
-                          <Micro className="block">
-                            {list[0].industry_label}
-                          </Micro>
-                        )}
-                      </div>
-                      <Micro>
-                        {list.length} gap{list.length === 1 ? "" : "s"}
-                      </Micro>
-                    </header>
-                    <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                      {list.map((r, i) => (
-                        <RecCard
-                          key={`${r.client_entity_name}-${i}`}
-                          rec={r}
-                          onSent={onSent}
-                        />
-                      ))}
-                    </div>
-                  </Card>
+                .map(([entity, items]) => (
+                  <ClientGapCard
+                    key={entity}
+                    entity={entity}
+                    items={items}
+                    onSent={onSent}
+                  />
                 ))}
             </div>
           )}
@@ -141,7 +137,42 @@ function RecsBody({
   );
 }
 
-function RecCard({
+function ClientGapCard({
+  entity,
+  items,
+  onSent,
+}: {
+  entity: string;
+  items: BookGapRecommendation[];
+  onSent: () => void;
+}) {
+  const industry = items[0]?.industry_label;
+  return (
+    <Card pad="none" className="overflow-hidden">
+      <header className="flex items-center justify-between border-b border-rule bg-surface-elev px-5 py-3">
+        <div className="flex items-center gap-3">
+          <div className="flex h-8 w-8 items-center justify-center rounded-md border border-rule bg-surface">
+            <Briefcase size={15} className="text-ink-soft" />
+          </div>
+          <div>
+            <div className="text-[15px] font-bold text-ink">{entity}</div>
+            {industry && <Micro className="block">{industry}</Micro>}
+          </div>
+        </div>
+        <Chip variant="spot" size="sm">
+          {items.length} gap{items.length === 1 ? "" : "s"}
+        </Chip>
+      </header>
+      <div>
+        {items.map((r, i) => (
+          <GapRow key={`${r.client_entity_name}-${r.coverage}-${i}`} rec={r} onSent={onSent} />
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+function GapRow({
   rec,
   onSent,
 }: {
@@ -151,35 +182,24 @@ function RecCard({
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Card pad="md" variant="default" className="space-y-3">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <Eyebrow>{rec.coverage}</Eyebrow>
-            <p className="mt-1 text-[14.5px] font-semibold text-ink">
-              {rec.coverage}
-            </p>
-          </div>
-          <Lightbulb size={16} className="shrink-0 text-spot" />
+      <div className="grid items-center gap-4 border-t border-rule px-5 py-4 first:border-t-0 md:grid-cols-[1.4fr_1.4fr_1fr_auto]">
+        <div>
+          <div className="text-[14px] font-bold text-ink">{rec.coverage}</div>
+          <Micro className="mt-1 block">Industry default</Micro>
         </div>
-        <Body className="text-[13px]">{rec.rationale}</Body>
-        <div className="flex items-baseline justify-between border-t border-rule pt-3">
-          <span className="text-[12.5px] text-ink-soft">Est. premium</span>
-          <span className="text-[13px] font-semibold tabular-nums text-ink">
+        <Caption className="text-[12.5px] leading-snug">{rec.rationale}</Caption>
+        <div className="text-right">
+          <Micro className="block">Indicative range</Micro>
+          <span className="font-bold tabular-nums text-ink">
             {formatCurrency(rec.estimated_premium_range_usd[0])} –{" "}
             {formatCurrency(rec.estimated_premium_range_usd[1])}
           </span>
         </div>
-        <Button
-          type="button"
-          variant="spot"
-          size="sm"
-          className="w-full"
-          onClick={() => setOpen(true)}
-        >
+        <Button variant="spot" size="sm" onClick={() => setOpen(true)}>
           <Send size={13} />
-          Draft & send
+          Send to client
         </Button>
-      </Card>
+      </div>
       {open && (
         <SendModal
           rec={rec}
@@ -208,14 +228,14 @@ function SendModal({
     `Hi ${rec.client_entity_name.split(" ")[0]} team,\n\nBased on what we're seeing across your cohort, ${rec.coverage} stands out as a likely gap for you — ${rec.rationale.toLowerCase()} Indicative premium is in the ${formatCurrency(rec.estimated_premium_range_usd[0])}–${formatCurrency(rec.estimated_premium_range_usd[1])} range.\n\nHappy to talk if it's worth exploring.\n\n— Your broker`,
   );
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     if (submitting) return;
     setSubmitting(true);
-    setError(null);
+    setErr(null);
     try {
       await postSendRecommendation(accessToken, {
         client_entity_name: rec.client_entity_name,
@@ -224,8 +244,8 @@ function SendModal({
       });
       setSuccess(true);
       setTimeout(onSent, 1200);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't send.");
+    } catch (e2) {
+      setErr(e2 instanceof Error ? e2.message : "Couldn't send.");
     } finally {
       setSubmitting(false);
     }
@@ -259,7 +279,7 @@ function SendModal({
             <div className="flex items-center gap-3 rounded-card border border-pos bg-pos-soft px-4 py-3 text-pos">
               <CheckCircle2 size={18} />
               <span className="text-[13.5px] font-medium">
-                Sent. They'll see it in their inbox.
+                Sent. They&apos;ll see it in their inbox.
               </span>
             </div>
           ) : (
@@ -270,9 +290,9 @@ function SendModal({
                 rows={9}
                 className="block w-full resize-y rounded-btn border border-rule-strong bg-surface px-3 py-2.5 text-[13.5px] leading-[1.55] text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
               />
-              {error && (
+              {err && (
                 <div className="rounded-btn border border-neg bg-neg-soft px-3 py-2 text-[13px] text-neg">
-                  {error}
+                  {err}
                 </div>
               )}
               <div className="flex items-center justify-end gap-2">
@@ -305,29 +325,3 @@ function SendModal({
     </div>
   );
 }
-
-function Stat({
-  label,
-  emphasis,
-  children,
-}: {
-  label: string;
-  emphasis?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <Micro className="block">{label}</Micro>
-      <div
-        className={
-          emphasis
-            ? "mt-1 font-display text-[22px] font-semibold tabular-nums text-ink"
-            : "mt-1 font-display text-[28px] font-semibold tabular-nums text-ink"
-        }
-      >
-        {children}
-      </div>
-    </div>
-  );
-}
-
