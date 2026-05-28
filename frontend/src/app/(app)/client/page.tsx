@@ -242,9 +242,11 @@ function PremiumCard({
       <NumDisplay size="xl" className="mt-2">
         {total > 0 ? formatCurrency(total) : "—"}
       </NumDisplay>
-      <Caption className="mt-1">
-        Across {count} active polic{count === 1 ? "y" : "ies"}
-      </Caption>
+      {count > 0 && (
+        <Caption className="mt-1">
+          Across {count} active polic{count === 1 ? "y" : "ies"}
+        </Caption>
+      )}
       <div className="mt-auto pt-4">
         {slices.length > 0 ? (
           <PremiumBreakdown slices={slices} maxVisible={4} />
@@ -283,6 +285,10 @@ function AwaitingCard({ items }: { items: AwaitingItem[] }) {
   const next = items[(idx + 1) % items.length]!;
   const canBack = idx > 0;
   const canFwd = idx < items.length - 1;
+  // The "Next →" footer wraps to item 0, but the forward arrow above is
+  // disabled on the last item. Hide the preview on the last item so the
+  // affordance matches the arrow's enabled state.
+  const showNextPreview = items.length > 1 && canFwd;
 
   return (
     <Card variant="spot" pad="lg" className="flex flex-col gap-3">
@@ -335,10 +341,10 @@ function AwaitingCard({ items }: { items: AwaitingItem[] }) {
         </Link>
         <Button variant="ghost">Snooze</Button>
       </div>
-      {items.length > 1 && (
+      {showNextPreview && (
         <button
           type="button"
-          onClick={() => setIdx((idx + 1) % items.length)}
+          onClick={() => setIdx(idx + 1)}
           className="mt-1 flex items-center gap-2 border-t border-dashed border-spot pt-2.5 text-left text-[12px] text-spot-deep dark:text-spot"
         >
           <span className="opacity-70">Next →</span>

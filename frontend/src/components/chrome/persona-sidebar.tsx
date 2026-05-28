@@ -240,7 +240,9 @@ export function PersonaSidebar({
               aria-expanded={expanded}
               className="mb-[18px] flex h-9 w-9 items-center justify-center rounded-lg text-white/55 hover:text-white"
             >
-              {pinned ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
+              {/* Panel is rendered, so it's open from the user's POV — always
+                  show the "close" affordance regardless of pinned state. */}
+              <PanelLeftClose size={20} />
             </button>
             <Link
               href={nav[0]?.href ?? "/"}

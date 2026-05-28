@@ -49,9 +49,14 @@ const padToBody: Record<NonNullable<VariantProps<typeof cardVariants>["pad"]>, s
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof cardVariants> {
-  /** Optional header strip title. Renders the header when any of title / icon / headerRight is provided. */
-  title?: string;
-  /** Optional lucide icon shown to the left of the title. */
+  /**
+   * Optional header strip title. Renders the header when any of header /
+   * icon / headerRight is provided. Named `header` (not `title`) to avoid
+   * shadowing the standard HTML `title` tooltip attribute that
+   * React.HTMLAttributes already advertises.
+   */
+  header?: string;
+  /** Optional lucide icon shown to the left of the header label. */
   icon?: LucideIcon;
   /** Optional node aligned to the right of the header strip. */
   headerRight?: React.ReactNode;
@@ -61,13 +66,13 @@ export function Card({
   className,
   variant,
   pad,
-  title,
+  header,
   icon: IconCmp,
   headerRight,
   children,
   ...rest
 }: CardProps) {
-  const hasHeader = !!(title || IconCmp || headerRight);
+  const hasHeader = !!(header || IconCmp || headerRight);
 
   if (!hasHeader) {
     return (
@@ -88,7 +93,7 @@ export function Card({
       <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-3">
         <div className="flex items-center gap-2 text-[13px] font-semibold text-ink">
           {IconCmp && <IconCmp size={14} className="shrink-0 text-ink-soft" />}
-          {title && <span>{title}</span>}
+          {header && <span>{header}</span>}
         </div>
         {headerRight && (
           <div className="flex items-center gap-2 text-[12px] text-ink-soft">
