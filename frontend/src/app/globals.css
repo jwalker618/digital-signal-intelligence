@@ -1,4 +1,163 @@
-@import "tailwindcss";
-@import "../styles/theme.css";
-@import "../styles/utilities.css";
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
 
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  /* ─── Surface ─── */
+  --color-canvas: #f4efe5;
+  --color-surface: #ffffff;
+  --color-surface-sunken: #efeae0;
+  --color-surface-elev: #fbf8f2;
+
+  /* ─── Ink ─── */
+  --color-ink: #0b2237;
+  --color-ink-soft: #586b7c;
+  --color-ink-mute: #9aa4ae;
+
+  /* ─── Rules ─── */
+  --color-rule: #e4dccc;
+  --color-rule-strong: #c9bfac;
+
+  /* ─── Accent / structural ─── */
+  --color-accent: #0b2237;
+
+  /* ─── Info (teal): informative hero facts ─── */
+  --color-info: #0e7c8c;
+  --color-info-soft: #dceff2;
+  --color-info-deep: #084853;
+
+  /* ─── Spot (coral): awaiting-you / urgent action ─── */
+  --color-spot: #d97757;
+  --color-spot-soft: #fae5da;
+  --color-spot-deep: #5c2e1a;
+
+  /* ─── Pos / Neg / Warn / Aux ─── */
+  --color-pos: #1f8a5b;
+  --color-pos-soft: #dceedf;
+  --color-neg: #c24545;
+  --color-neg-soft: #f5dcdc;
+  --color-warn: #b47312;
+  --color-warn-soft: #f3e5c8;
+  --color-aux: #4a60a8;
+  --color-aux-soft: #dee3f2;
+
+  /* ─── Type ─── */
+  --font-sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", "IBM Plex Sans", system-ui, sans-serif;
+
+  /* ─── Radius ─── */
+  --radius-card: 14px;
+  --radius-chip: 999px;
+  --radius-btn: 10px;
+}
+
+/* ============================================================
+ * Dark mode token overrides
+ * Same token names → different values when .dark is on <html>.
+ * Tailwind utilities (bg-canvas, text-info, …) pick these up
+ * automatically because they reference the CSS variables.
+ * ============================================================ */
+@layer base {
+  .dark {
+    --color-canvas: #07182a;
+    --color-surface: #14304b;
+    --color-surface-sunken: #0e2640;
+    --color-surface-elev: #1a3d5f;
+
+    --color-ink: #f1ece0;
+    --color-ink-soft: #cdd8e5;
+    --color-ink-mute: #98a6b8;
+
+    --color-rule: #2b4f75;
+    --color-rule-strong: #3e6794;
+
+    --color-accent: #f1ece0;
+
+    --color-info: #39d3ba;
+    --color-info-soft: #173e48;
+    --color-info-deep: #b8f2e5;
+
+    --color-spot: #f0926e;
+    --color-spot-soft: #4a2519;
+    --color-spot-deep: #fbd0ba;
+
+    --color-pos: #6eee7a;
+    --color-pos-soft: #173821;
+    --color-neg: #ff8585;
+    --color-neg-soft: #3f1b1b;
+    --color-warn: #f8bd5e;
+    --color-warn-soft: #3b2911;
+    --color-aux: #9ab1f2;
+    --color-aux-soft: #1c2a4f;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular numerals globally on numeric utilities */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* ============================================================
+ * Component utilities — only patterns used across many places.
+ * Single-use styles stay in their component file as Tailwind classes.
+ * ============================================================ */
+@layer components {
+  /* Sidebar shell stays dark in both themes (it's chrome, not content) */
+  .chrome-sidebar {
+    background: #0b2237;
+  }
+  .dark .chrome-sidebar {
+    background: #051322;
+    border-right: 1px solid var(--color-rule);
+  }
+
+  /* DSI signal-pulse wordmark — three rising bars */
+  .dsi-wordmark {
+    position: relative;
+    width: 22px;
+    height: 16px;
+    display: block;
+  }
+  .dsi-wordmark::before,
+  .dsi-wordmark::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    border-radius: 2px;
+    background: var(--color-info);
+  }
+  .dsi-wordmark::before {
+    left: 0;
+    width: 4px;
+    height: 8px;
+    box-shadow:
+      6px 0 0 var(--color-info),
+      12px 0 0 var(--color-info),
+      18px 0 0 var(--color-info);
+  }
+  .dsi-wordmark::after {
+    left: 6px;
+    bottom: 0;
+    width: 4px;
+    height: 12px;
+    box-shadow:
+      6px 2px 0 var(--color-info),
+      12px 4px 0 var(--color-info);
+  }
+}

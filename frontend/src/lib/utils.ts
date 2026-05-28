@@ -2,6 +2,14 @@
  * Shared utilities used across all tabs.
  */
 
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+/** Tailwind-aware className merger. Used by every cva-driven primitive. */
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
 export const getJSONBItems = (
   data: Record<string, any> | null | undefined,
 ) => {

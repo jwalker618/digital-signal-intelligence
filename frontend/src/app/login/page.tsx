@@ -1,217 +1,155 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-
-import { 
-  Loader2, Lightbulb, LightbulbOff, PanelBottomClose, PanelBottomOpen,
-} from "lucide-react";
-
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import { useThemeStore } from "@/store/themeStore";
-import { MFAVerify } from "@/components/auth/MFAVerify";
-import { SidebarIconBtn } from "@/components/layout/nav";
-import { homePathForRole, isPortalPath } from "@/lib/portalPaths";
 
 export default function LoginPage() {
-
-  const [isSSO, onToggleSSO] = useState(false);
-
-  const isDark = useThemeStore((s) => s.isDark);
-  const toggleDark = useThemeStore((s) => s.toggleDark);
-
   const router = useRouter();
-  const params = useSearchParams();
-  // v8 Phase 8: when ?next= is set we honour it, otherwise route by role.
-  const nextPath = params.get("next");
-
   const login = useAuthStore((s) => s.login);
-  const loginSSO = useAuthStore((s) => s.loginSSO);
-  const isAuthed = useAuthStore((s) => s.isAuthenticated());
-  const userRole = useAuthStore((s) => s.user?.role ?? null);
-  const mfaChallengePending = useAuthStore((s) => s.mfaChallengePending);
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [tenantSlug, setTenantSlug] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Once fully authenticated, leave the login page. Portal users
-  // (BROKER, CLIENT) land on their persona home (/broker or /client);
-  // carrier roles honour ?next= or fall back to the carrier home (/).
-  // ?next= is only honoured if it points at a path the role can
-  // actually open -- otherwise we'd send a portal user back to /,
-  // which SessionGuard would just bounce again.
-  useEffect(() => {
-    if (!isAuthed) return;
-    const isPortalRole = userRole === "BROKER" || userRole === "CLIENT";
-    const home = homePathForRole(userRole);
-    if (isPortalRole) {
-      const safeNext = nextPath && isPortalPath(nextPath) ? nextPath : home;
-      router.replace(safeNext);
-    } else {
-      router.replace(nextPath ?? "/");
-    }
-  }, [isAuthed, nextPath, router, userRole]);
-
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
+    if (submitting) return;
     setError(null);
+    setSubmitting(true);
     try {
-      await login(email.trim().toLowerCase(), password,);
+      await login(email, password);
+      // mfaChallengePending is set inside the store on response; check after.
+      const pending = useAuthStore.getState().mfaChallengePending;
+      router.replace(pending ? "/login/mfa" : "/client");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      setError(err instanceof Error ? err.message : "Sign-in failed.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  async function onSSO() {
-    if (!tenantSlug.trim()) {
-      setError("Enter your tenant identifier");
-      return;
-    }
-    setSubmitting(true);
-    setError(null);
-    try {
-      await loginSSO(tenantSlug.trim());
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "SSO redirect failed");
-      setSubmitting(false);
-    }
-  }
-
   return (
-    <>
-      <div className="generate-app-page">
+    <div className="space-y-7">
+      <header>
+        <Eyebrow>Sign in</Eyebrow>
+        <h1 className="mt-2 font-display text-[28px] font-semibold leading-none text-ink">
+          Welcome back
+        </h1>
+        <Body className="mt-2">
+          Use your work email and password. SSO and MFA are supported.
+        </Body>
+      </header>
 
-        <div>
-          <img
-              alt="Generate Logo"
-              src={isDark ? 
-                "/Standard_Generate_Logo_and_Product.svg" : "/BlackWhite_Generate_Logo_and_Product.svg"
-                }
-              className="generate-login-icon absolute top-generate-gap left-generate-gap " 
+      <form className="space-y-5" onSubmit={onSubmit}>
+        <Field id="email" label="Email">
+          <input
+            id="email"
+            type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+          />
+        </Field>
+        <Field
+          id="password"
+          label="Password"
+          aside={
+            <Link
+              href="/login/reset-password"
+              className="text-[12px] font-medium text-info hover:underline"
+            >
+              Forgot password?
+            </Link>
+          }
+        >
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className={cn(inputClass, "pr-10")}
             />
-          <SidebarIconBtn
-              icon={isDark ? LightbulbOff : Lightbulb}
-              onClick={toggleDark}
-              className="generate-app-icon absolute top-generate-gap right-generate-gap "
-            />
+            <button
+              type="button"
+              onClick={() => setShowPassword((v) => !v)}
+              className="absolute inset-y-0 right-2 my-auto flex h-8 w-8 items-center justify-center rounded-md text-ink-soft hover:bg-surface-sunken"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+            >
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
+          </div>
+        </Field>
 
-        </div>
+        {error && (
+          <div
+            role="alert"
+            className="rounded-btn border border-neg bg-neg-soft px-3 py-2 text-[13px] text-neg"
+          >
+            {error}
+          </div>
+        )}
 
-        <div className="absolute top-1/3 left-1/3 w-1/4">
-    
-            <h2 className="text-2xl font-bold mb-4">
-              Sign in to your account
-            </h2>
-            
-            <div className="group">
-              <button
-                onClick={() => onToggleSSO(prev => !prev)}
-                className="flex gap-2 mb-2 items-center text-sm">
-                {isSSO ? (
-                  <PanelBottomOpen className="generate-app-icon group-hover:text-generate-text-input"/> 
-                ) : (
-                  <PanelBottomClose className="generate-app-icon group-hover:text-generate-text-input"/>
-                )}    
-                {isSSO ? 
-                  <span className="text-generate-text-placeholder group-hover:text-generate-text-input">Tenant (for SSO)</span> : 
-                  <span className="text-generate-text-placeholder group-hover:text-generate-text-input">Email Address / Password</span>
-                }
-              </button>
-            </div>
+        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+          {submitting ? "Signing in…" : "Sign in"}
+        </Button>
+      </form>
 
-            {mfaChallengePending ? ( <MFAVerify/> ) 
-            : (
-              <>             
-                {isSSO ? (               
-                  <div>                     
-                    
-                    <input
-                      value={tenantSlug}
-                      onChange={(e) => setTenantSlug(e.target.value)}
-                      placeholder="e.g. your company domain"
-                      className="generate-dark-inputbox w-full mb-2"
-                    />
-                    <input
-                      value={password}
-                      className="generate-dark-inputbox w-full mb-2 opacity-5 cursor-not-allowed"
-                      disabled 
-                    />
-
-                    <button
-                        type="button"
-                        onClick={onSSO}
-                        disabled={submitting} 
-                        className="generate-dark-actionbutton w-full mb-2"
-                        > Continue with SSO
-                    </button>
-
-                  </div>
-                 
-                ) : (
-                  
-                  <div> 
-                    <input
-                      id="email" name="email" type="email" autoComplete="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="email address"
-                      className="generate-dark-inputbox w-full mb-2"
-                    />      
-                    <input
-                      id="password" name="password" type="password" autoComplete="current-password"
-                      required
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="password"
-                      className="generate-dark-inputbox w-full mb-2"
-                    />
-                  
-                    <form onSubmit={onSubmit}>                            
-                      <div>
-                        
-                        {error && <div className="generate-error-message mb-2">{error}</div>}
-                        
-                        <button
-                          id="submit" name="submit" type="submit" 
-                          disabled={submitting}                      
-                          className="generate-dark-actionbutton w-full mb-2 flex gap-4"
-                        >
-                          Sign in
-                          {submitting && <Loader2 className="generate-dark-icon animate-spin" />}
-                        </button>
-
-                        <div>
-                          <a href="/login/reset-password" 
-                            className="
-                              text-sm font-bold
-                              text-generate-text-outline 
-                              hover:text-generate-text-input">
-                            Forgot Password?
-                          </a>
-                        </div>
-
-                      </div>
-                      
-                    </form>
-   
-                  </div>
-                              
-              )}              
-              </>
-            )}
-
-        </div>
-
+      <div className="flex items-center gap-3 text-[12px] text-ink-mute">
+        <span className="h-px flex-1 bg-rule" />
+        <span>or</span>
+        <span className="h-px flex-1 bg-rule" />
       </div>
-    </>
-  )
+
+      <Link
+        href="/login/sso"
+        className="flex h-12 items-center justify-center gap-2 rounded-btn border border-rule-strong bg-surface text-[13px] font-semibold text-ink hover:bg-surface-sunken"
+      >
+        <KeyRound size={15} />
+        Continue with SSO
+      </Link>
+
+      <Micro className="block text-center">
+        Need access? Ask your broker administrator to add you.
+      </Micro>
+    </div>
+  );
 }
 
+function Field({
+  id,
+  label,
+  aside,
+  children,
+}: {
+  id: string;
+  label: string;
+  aside?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <label htmlFor={id} className="text-[12.5px] font-medium text-ink-soft">
+          {label}
+        </label>
+        {aside}
+      </div>
+      {children}
+    </div>
+  );
+}
 
+const inputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";

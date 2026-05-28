@@ -111,8 +111,8 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
 
   if (isBooting && !isPublic) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-generate-light-background">
-        <Loader2 className="icon animate-spin" />
+      <div className="flex min-h-screen items-center justify-center bg-canvas">
+        <Loader2 className="h-5 w-5 animate-spin text-ink-mute" />
       </div>
     );
   }
