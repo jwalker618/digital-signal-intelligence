@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
+  ArrowDown,
   ArrowUp,
   Check,
   ChevronLeft,
@@ -184,15 +185,27 @@ function ScoreCard({ hero }: { hero?: ClientCoverageEntry }) {
         </NumDisplay>
         <div className="flex flex-col gap-1.5 pt-1">
           {vsMedian != null && (
-            <Chip variant="pos" size="sm" className="self-start">
-              <ArrowUp size={11} />
+            <Chip
+              variant={vsMedian >= 0 ? "pos" : "neg"}
+              size="sm"
+              className="self-start"
+            >
+              {vsMedian >= 0 ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
               {vsMedian >= 0 ? "+" : ""}
               {vsMedian} vs median
             </Chip>
           )}
           {vsPrev != null && (
-            <Chip variant="pos" size="sm" className="self-start">
-              <TrendingUp size={11} />
+            <Chip
+              variant={vsPrev >= 0 ? "pos" : "neg"}
+              size="sm"
+              className="self-start"
+            >
+              {vsPrev >= 0 ? (
+                <TrendingUp size={11} />
+              ) : (
+                <TrendingDown size={11} />
+              )}
               {vsPrev >= 0 ? "+" : ""}
               {vsPrev} since last quote
             </Chip>

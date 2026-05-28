@@ -214,15 +214,15 @@ function Row({ sub }: { sub: ApiRecord }) {
           <Micro className="mt-0.5 block">via {sub.broker_name}</Micro>
         )}
       </td>
-      <td className="px-5 py-3 text-ink">{sub.coverage ?? "—"}</td>
+      <td className="px-5 py-3 text-ink">{sub.coverage_configuration ?? "—"}</td>
       <td className="px-5 py-3">
-        {sub.composite_score != null ? (
+        {sub.final_composite_score != null ? (
           <div className="space-y-1">
             <span className="font-semibold tabular-nums text-ink">
-              {Number(sub.composite_score).toFixed(0)}
+              {Number(sub.final_composite_score).toFixed(0)}
             </span>
             <ScoreBar
-              value={Number(sub.composite_score)}
+              value={Number(sub.final_composite_score)}
               max={1000}
               showValue={false}
               thresholds={[

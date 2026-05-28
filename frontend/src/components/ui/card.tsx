@@ -30,6 +30,7 @@ const cardVariants = cva(
         neg: "bg-neg-soft border-neg",
       },
       pad: {
+        none: "",
         sm: "p-3",
         md: "p-5",
         lg: "p-6",
@@ -81,7 +82,7 @@ export function Card({
   const bodyPad = padToBody[pad ?? "md"];
   return (
     <div
-      className={cn(cardVariants({ variant, pad: undefined }), className)}
+      className={cn(cardVariants({ variant, pad: "none" }), className)}
       {...rest}
     >
       <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-3">

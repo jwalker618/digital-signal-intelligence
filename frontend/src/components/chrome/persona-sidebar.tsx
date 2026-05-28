@@ -6,7 +6,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   PanelLeftClose,
   PanelLeftOpen,
-  Settings,
   UserCircle,
   type LucideIcon,
 } from "lucide-react";
@@ -54,8 +53,8 @@ const HOVER_CLOSE_MS = 300;
  * Persona icon rail with overlay expansion.
  *
  * Behaviour:
- *  - Collapsed rail is always visible (72px). It hosts the toggle button,
- *    the persona nav icons, and a Settings link.
+ *  - Collapsed rail is always visible (72px). It hosts the toggle button
+ *    and the persona nav icons.
  *  - Expanded panel (50vw) is a `position: fixed` overlay so it escapes
  *    the (app)/layout.tsx `overflow-hidden`. It shows the same nav items
  *    with labels plus a Profile/Account link at the bottom.
@@ -217,15 +216,6 @@ export function PersonaSidebar({
             );
           })}
         </nav>
-        <div className="mt-auto flex w-full flex-col items-center gap-1">
-          <Link
-            href="/profile"
-            aria-label="Account"
-            className="flex h-[38px] w-[38px] items-center justify-center rounded-lg text-white/55 hover:text-white"
-          >
-            <Settings size={18} />
-          </Link>
-        </div>
       </aside>
 
       {/* Backdrop + expanded overlay — fixed to viewport so it escapes
@@ -293,13 +283,6 @@ export function PersonaSidebar({
               >
                 <UserCircle size={18} className="shrink-0" />
                 <span>Profile</span>
-              </Link>
-              <Link
-                href="/profile"
-                className="flex h-[38px] items-center gap-3 rounded-lg px-2 text-[13.5px] text-white/65 hover:bg-white/5 hover:text-white"
-              >
-                <Settings size={18} className="shrink-0" />
-                <span>Settings</span>
               </Link>
             </div>
           </aside>
