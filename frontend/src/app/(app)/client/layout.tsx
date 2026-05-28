@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { PersonaSidebar, SIDEBAR_NAV } from "@/components/chrome/persona-sidebar";
+import { PersonaSidebar } from "@/components/chrome/persona-sidebar";
 
 /**
  * Client persona shell. Owns the sidebar; each leaf page owns its own
@@ -8,7 +8,7 @@ import { PersonaSidebar, SIDEBAR_NAV } from "@/components/chrome/persona-sidebar
 export default function ClientShell({ children }: { children: ReactNode }) {
   return (
     <>
-      <PersonaSidebar nav={SIDEBAR_NAV.client} />
+      <PersonaSidebar persona="client" />
       <main className="flex h-full flex-1 flex-col overflow-hidden bg-canvas">
         {children}
       </main>
