@@ -11,6 +11,7 @@ import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 import { MFAVerify } from "@/components/auth/MFAVerify";
 import { SidebarIconBtn } from "@/components/layout/nav";
+import { homePathForRole, isPortalPath } from "@/lib/portalPaths";
 
 export default function LoginPage() {
 
@@ -37,16 +38,18 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   // Once fully authenticated, leave the login page. Portal users
-  // (BROKER, CLIENT) always land on /portal; carrier roles honour
-  // ?next= or fall back to the carrier home. Without this rule a
-  // portal user bounced from / via SessionGuard would re-enter / on
-  // login (its ?next=/ would override the role-based default).
+  // (BROKER, CLIENT) land on their persona home (/broker or /client);
+  // carrier roles honour ?next= or fall back to the carrier home (/).
+  // ?next= is only honoured if it points at a path the role can
+  // actually open -- otherwise we'd send a portal user back to /,
+  // which SessionGuard would just bounce again.
   useEffect(() => {
     if (!isAuthed) return;
     const isPortalRole = userRole === "BROKER" || userRole === "CLIENT";
+    const home = homePathForRole(userRole);
     if (isPortalRole) {
-      const portalNext = nextPath && nextPath.startsWith("/portal") ? nextPath : "/portal";
-      router.replace(portalNext);
+      const safeNext = nextPath && isPortalPath(nextPath) ? nextPath : home;
+      router.replace(safeNext);
     } else {
       router.replace(nextPath ?? "/");
     }

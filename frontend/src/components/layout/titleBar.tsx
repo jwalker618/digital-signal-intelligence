@@ -26,6 +26,7 @@ import { LabelValueList } from "@/components/base/content/primatives";
 import { useDsiStore } from "@/store/dsiStore";
 import { useAuthStore } from "@/store/authStore";
 import { formatDate, formatText } from "@/lib/format";
+import { isPortalPath } from "@/lib/portalPaths";
 
 export default function TitleBar() {
   const pathname = usePathname();
@@ -38,10 +39,11 @@ export default function TitleBar() {
   const sessionWarning = useAuthStore((s) => s.sessionWarning);
   const userRole = useAuthStore((s) => s.user?.role ?? null);
 
-  // Portal context: only render the portal-side breadcrumb (no carrier
-  // submission drilldown). Detected from pathname so /portal/* always
-  // shows portal chrome regardless of any stale dsiStore state.
-  const onPortalPath = !!pathname?.startsWith("/portal");
+  // Portal context: render the portal-side breadcrumb (no carrier
+  // submission drilldown). Detected from pathname so portal trees
+  // (/broker, /client, /communications, /coverages, /submissions)
+  // always show portal chrome regardless of any stale dsiStore state.
+  const onPortalPath = isPortalPath(pathname);
   const portalRolePrefix =
     userRole === "BROKER" ? "Broker Portal" :
     userRole === "CLIENT" ? "Client Portal" :

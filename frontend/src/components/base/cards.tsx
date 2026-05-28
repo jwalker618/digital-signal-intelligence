@@ -10,7 +10,7 @@ import {
   SECTIONS,
   SectionKey,
   SectionWrapper,
-} from "@/components/submissions/content/summary/sections";
+} from "@/components/carrier/content/summary/sections";
 
 import {
   accentVars,

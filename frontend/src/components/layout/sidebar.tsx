@@ -44,6 +44,7 @@ import {
   SUBMISSIONS_CHILDREN,
 } from "./navConfig";
 import UserMenu from "./userMenu";
+import { isPortalPath } from "@/lib/portalPaths";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -151,7 +152,7 @@ export default function Sidebar({
           }}
         >
           <div className="px-generate-pad">
-            {activeSubmission && !pathname?.startsWith("/portal") ? (
+            {activeSubmission && !isPortalPath(pathname) ? (
               /* ═══ DRILL-DOWN MODE (carrier paths only) ═══
                  Portal paths use top-level mode even when a portal
                  page has a notion of "active submission" -- the
@@ -229,8 +230,11 @@ export default function Sidebar({
                             label={item.name}
                             isActive={
                               pathname === item.href ||
-                              (item.href !== "/portal" &&
-                                !!pathname?.startsWith(item.href + "/"))
+                              // Don't let a parent href like "/broker"
+                              // claim active state when a deeper page
+                              // (e.g. /broker/carriers) is the actual match.
+                              (item.href !== "/broker" && item.href !== "/client"
+                                && !!pathname?.startsWith(item.href + "/"))
                             }
                             onClick={() => {
                               clearSubmissionContext();
