@@ -43,6 +43,18 @@ export const SUBMISSIONS_CHILDREN: NavLeaf[] = [
   { name: "Performance Metrics",  icon: Bot },
 ];
 
+/**
+ * Carrier sidebar (v8.2 reimagined): pipeline tabs + World Engine. Each
+ * entry is a real route so the chrome sidebar can highlight via the URL.
+ * When a submission is active the workbench layout swaps in DRILL_DOWN_CATEGORIES.
+ */
+export const PORTAL_CARRIER_CHILDREN: AdminNavLeaf[] = [
+  { name: "Referral Pipeline",   icon: UserStar,       href: "/carrier",                permission: "submissions:read" },
+  { name: "Full Pipeline",       icon: Rows4,          href: "/carrier/pipeline",       permission: "submissions:read" },
+  { name: "Performance Metrics", icon: Bot,            href: "/carrier/metrics",        permission: "submissions:read" },
+  { name: "World Engine",        icon: ChartNoAxesGantt, href: "/carrier/world-engine", permission: "submissions:read" },
+];
+
 /** Children of the Admin expander, shown in top-level mode. */
 export const ADMIN_CHILDREN: AdminNavLeaf[] = [
   { name: "System Health",  icon: Activity,        href: "/admin",                permission: "admin:system" },

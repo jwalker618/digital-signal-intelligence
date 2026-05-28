@@ -49,3 +49,12 @@ export function homePathForRole(role: string | null | undefined): string {
   // Everyone else (UNDERWRITER, ADMIN, MARSH_ADMIN, etc.) is carrier.
   return "/carrier";
 }
+
+/**
+ * True for any role that should see carrier-side views. Inverts the
+ * portal split: anything that's not BROKER/CLIENT is carrier.
+ */
+export function isCarrierRole(role: string | null | undefined): boolean {
+  if (!role) return true; // unknown role gets carrier home by default
+  return role !== "BROKER" && role !== "CLIENT";
+}
