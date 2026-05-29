@@ -1,13 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, FlaskConical, RotateCcw, ShieldAlert } from "lucide-react";
+import { FlaskConical, Layers, Shield, TrendingDown } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Button } from "@/components/ui/button";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { PageError, PageLoading } from "@/components/base/pageStates";
+import { WorkArea } from "@/components/ui/work-area";
+import { Body, Micro } from "@/components/ui/typography";
+import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency } from "@/lib/format";
 import {
@@ -15,527 +15,376 @@ import {
   type ScenarioOverrides,
   type ScenarioResult,
 } from "@/lib/scenarioEngine";
-import { cn } from "@/lib/utils";
 
-/**
- * Workbench Scenarios — pick a few signal overrides + limit / deductible
- * adjustments, see the recalculated composite / tier / premium with
- * guardrails. Runs entirely client-side via scenarioEngine.runFullCascade.
- */
-export default function WorkbenchScenariosPage() {
-  const sub = useDsiStore((s) => s.activeSubmission);
-  const ver = useDsiStore((s) => s.activeVersion);
-  const signals = useDsiStore((s) => s.riskSignals);
-  const fetchRiskSignals = useDsiStore((s) => s.fetchRiskSignals);
+/* ============================================================
+ * Scenarios — mirrors reim_wb_c.jsx WbScenarios.
+ *
+ * Three stacked rows:
+ *   1. Signal overrides — original vs scenario composite at the top,
+ *      then a 6-col table where the Scenario column is editable
+ *   2. Two-col: Loss modifier compare + Exposure & scaling compare
+ *   3. Pricing cascade — original vs scenario row-by-row, capped by
+ *      a heavy Final premium row with the dollar/% delta beneath
+ * ============================================================ */
+
+type SignalRow = {
+  signal_id?: string;
+  signal_code?: string;
+  signal_name?: string;
+  score?: number;
+  weight?: number;
+  contribution?: number;
+};
+
+export default function ScenariosPage() {
+  const sub = useDsiStore((s) => s.activeSubmission) as ApiRecord | null;
+  const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
+  const signals = useDsiStore((s) => s.riskSignals) as SignalRow[];
+  const fetchSignals = useDsiStore((s) => s.fetchRiskSignals);
 
   const versionCode = ver?.version_code as string | undefined;
-  const [signalsState, setSignalsState] = useState<"loading" | "ok" | "error">(
-    signals.length > 0 ? "ok" : "loading",
-  );
-  const [signalsErr, setSignalsErr] = useState<string | null>(null);
-
   useEffect(() => {
-    if (!versionCode) return;
-    if (signals.length > 0) {
-      setSignalsState("ok");
-      return;
+    if (versionCode && signals.length === 0) {
+      fetchSignals(versionCode).catch(() => undefined);
     }
-    setSignalsState("loading");
-    fetchRiskSignals(versionCode)
-      .then(() => setSignalsState("ok"))
-      .catch((e) => {
-        setSignalsErr(e instanceof Error ? e.message : String(e));
-        setSignalsState("error");
-      });
-  }, [versionCode, fetchRiskSignals, signals.length]);
+  }, [versionCode, signals.length, fetchSignals]);
 
-  if (!sub || !ver) {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Scenarios" />
-        <PageLoading message="Loading submission…" />
-      </>
-    );
-  }
-  if (signalsState === "loading")
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Scenarios" />
-        <PageLoading message="Loading signals…" />
-      </>
-    );
-  if (signalsState === "error")
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Scenarios" />
-        <PageError message={signalsErr ?? "Unknown error"} />
-      </>
-    );
-
-  return <ScenariosBody activeVersion={ver} signals={signals} />;
-}
-
-function ScenariosBody({
-  activeVersion,
-  signals,
-}: {
-  activeVersion: ApiRecord;
-  signals: ApiRecord[];
-}) {
-  const fpd = (activeVersion.final_premium_detail ?? {}) as Record<string, unknown>;
-  const baseLimit = Number(fpd.limit ?? activeVersion.recommended_limit ?? 0);
-  const baseDeductible = Number(fpd.deductible ?? 0);
-
-  // Overrides
-  const [signalOverrides, setSignalOverrides] = useState<Record<string, number>>(
-    {},
-  );
-  const [limitOverride, setLimitOverride] = useState<number | null>(null);
-  const [deductibleOverride, setDeductibleOverride] = useState<number | null>(
-    null,
-  );
+  const [signalOverrides, setSignalOverrides] = useState<Record<string, number>>({});
 
   const overrides: ScenarioOverrides = useMemo(
-    () => ({
-      signalOverrides,
-      lossModifierOverride: null,
-      exposureModifierOverride: null,
-      limitOverride,
-      deductibleOverride,
-    }),
-    [signalOverrides, limitOverride, deductibleOverride],
+    () => ({ signal_overrides: signalOverrides }),
+    [signalOverrides],
   );
 
   const result = useMemo<ScenarioResult | null>(() => {
+    if (!ver || !sub) return null;
     try {
-      return runFullCascade(signals, activeVersion, overrides);
+      return runFullCascade(ver, sub, overrides);
     } catch {
       return null;
     }
-  }, [signals, activeVersion, overrides]);
+  }, [ver, sub, overrides]);
 
-  const dirty =
-    Object.keys(signalOverrides).length > 0 ||
-    limitOverride !== null ||
-    deductibleOverride !== null;
-
-  function reset() {
-    setSignalOverrides({});
-    setLimitOverride(null);
-    setDeductibleOverride(null);
+  if (!ver || !sub) {
+    return (
+      <>
+        <WorkbenchTopbar activeTabLabel="Scenarios" />
+        <PageLoading message="Loading scenario engine…" />
+      </>
+    );
   }
+  if (!result) {
+    return (
+      <>
+        <WorkbenchTopbar activeTabLabel="Scenarios" />
+        <Body className="mx-auto max-w-[600px] py-12 text-center italic">
+          Scenario cascade unavailable for this version.
+        </Body>
+      </>
+    );
+  }
+
+  const modifiedCount = Object.keys(signalOverrides).length;
+  const compositeDelta = result.composite_score - result.original_composite;
+  const tierChanged =
+    result.tier != null && Number(result.tier.tier) !== result.original_tier;
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Scenarios" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6 lg:grid-cols-[1.4fr_1fr]">
-          {/* LEFT: live result */}
-          <div className="space-y-6">
-            <header>
-              <Eyebrow>What-if cascade</Eyebrow>
-              <h1 className="mt-1 flex items-center gap-3 font-display text-[28px] font-semibold leading-tight text-ink">
-                <FlaskConical size={22} className="text-info" />
-                Scenarios
-              </h1>
-              <Body className="mt-2">
-                Override signals and structural terms to see how composite,
-                tier, and premium would change. Guardrails enforced.
-              </Body>
-            </header>
-
-            {result ? (
-              <ResultCard result={result} dirty={dirty} onReset={reset} />
-            ) : (
-              <Card pad="lg" variant="warn">
-                <Eyebrow className="text-warn">Cascade error</Eyebrow>
-                <Body className="mt-1">
-                  Couldn't compute the cascade — likely a missing field on the
-                  active version. Try adjusting overrides.
-                </Body>
-              </Card>
-            )}
-
-            {result?.guardrails && (
-              <GuardrailCard result={result} />
-            )}
-          </div>
-
-          {/* RIGHT: controls */}
-          <div className="space-y-6">
-            <Card header="Structural overrides" icon={FlaskConical} pad="md" className="space-y-4">
-              <NumericOverride
-                label="Limit"
-                base={baseLimit}
-                value={limitOverride}
-                onChange={setLimitOverride}
-                step={1_000_000}
-                format="currency"
-              />
-              <NumericOverride
-                label="Deductible"
-                base={baseDeductible}
-                value={deductibleOverride}
-                onChange={setDeductibleOverride}
-                step={25_000}
-                format="currency"
-              />
-            </Card>
-
-            <Card
-              header={`Signal overrides · ${signals.length}`}
-              icon={FlaskConical}
-              headerRight={
-                Object.keys(signalOverrides).length > 0 ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setSignalOverrides({})}
+      <WorkArea>
+        {/* ─── 1. Signal overrides ─────────────────────────── */}
+        <Card
+          header="Signal overrides"
+          icon={FlaskConical}
+          pad="md"
+          headerRight={
+            modifiedCount > 0 ? (
+              <Chip variant="info" size="sm">
+                {modifiedCount} modified
+              </Chip>
+            ) : undefined
+          }
+        >
+          <div className="mb-3.5 grid grid-cols-2 gap-4">
+            <div>
+              <Micro>Original composite</Micro>
+              <div className="mt-0.5 flex items-baseline gap-2">
+                <span className="font-mono text-[22px] font-bold tabular-nums">
+                  {result.original_composite.toFixed(0)}
+                </span>
+                <Micro>Tier {result.original_tier}</Micro>
+              </div>
+            </div>
+            <div>
+              <Micro className="text-info">Scenario composite</Micro>
+              <div className="mt-0.5 flex items-baseline gap-2">
+                <span className="font-mono text-[26px] font-bold text-info tabular-nums">
+                  {result.composite_score.toFixed(0)}
+                </span>
+                {compositeDelta !== 0 && (
+                  <span
+                    className={`text-[11px] font-bold ${
+                      compositeDelta > 0 ? "text-pos" : "text-warn"
+                    }`}
                   >
-                    <RotateCcw size={11} />
-                    Reset signals
-                  </Button>
-                ) : undefined
-              }
-              pad="md"
-              className="space-y-3"
-            >
-              {signals.length === 0 ? (
-                <Body className="italic">
-                  No signals attached. Nothing to override.
-                </Body>
-              ) : (
-                <ul className="max-h-[640px] space-y-2 overflow-y-auto pr-1">
-                  {signals.slice(0, 30).map((s) => (
-                    <SignalOverride
-                      key={String(s.signal_id ?? s.signal_code)}
-                      signal={s}
-                      value={signalOverrides[String(s.signal_id ?? s.signal_code)]}
-                      onChange={(v) => {
-                        const key = String(s.signal_id ?? s.signal_code);
-                        setSignalOverrides((prev) => {
-                          if (v == null) {
-                            const next = { ...prev };
-                            delete next[key];
-                            return next;
-                          }
-                          return { ...prev, [key]: v };
-                        });
-                      }}
-                    />
-                  ))}
-                  {signals.length > 30 && (
-                    <li>
-                      <Micro>+{signals.length - 30} more not shown</Micro>
-                    </li>
-                  )}
-                </ul>
-              )}
-            </Card>
+                    {compositeDelta > 0 ? "+" : ""}
+                    {compositeDelta.toFixed(0)}
+                  </span>
+                )}
+                <Micro>
+                  Tier {result.tier?.tier ?? "—"} ·{" "}
+                  {tierChanged ? "changed" : "stays"}
+                </Micro>
+              </div>
+            </div>
           </div>
+
+          <div className="grid grid-cols-[1.6fr_70px_70px_90px_90px_90px] border-y border-rule py-2 text-[10.5px] uppercase tracking-wider text-ink-mute">
+            {[
+              "Signal",
+              "Original",
+              "Weight",
+              "Contribution",
+              "Scenario",
+              "New contrib",
+            ].map((h) => (
+              <span key={h}>{h}</span>
+            ))}
+          </div>
+          {signals.length === 0 ? (
+            <Micro className="block py-4 italic">No signals loaded.</Micro>
+          ) : (
+            signals.map((s) => {
+              const code = String(s.signal_code ?? s.signal_id ?? "");
+              const original = numOrNull(s.score);
+              const weight = numOrNull(s.weight);
+              const contribution = numOrNull(s.contribution);
+              const scenarioValue = signalOverrides[code] ?? original ?? 0;
+              const newContrib =
+                weight != null ? scenarioValue * weight : null;
+              const changed =
+                signalOverrides[code] != null &&
+                original != null &&
+                signalOverrides[code] !== original;
+              return (
+                <div
+                  key={code}
+                  className="grid grid-cols-[1.6fr_70px_70px_90px_90px_90px] items-center border-b border-rule py-2.5 text-[13px]"
+                >
+                  <code className="text-[12px]">{code}</code>
+                  <span className="tabular-nums">
+                    {original != null ? original.toFixed(0) : "—"}
+                  </span>
+                  <span className="tabular-nums text-ink-soft">
+                    {weight != null ? weight.toFixed(2) : "—"}
+                  </span>
+                  <span className="tabular-nums">
+                    {contribution != null ? contribution.toFixed(1) : "—"}
+                  </span>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={scenarioValue}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setSignalOverrides((prev) => {
+                        const next = { ...prev };
+                        if (
+                          Number.isFinite(v) &&
+                          original != null &&
+                          v !== original
+                        ) {
+                          next[code] = v;
+                        } else {
+                          delete next[code];
+                        }
+                        return next;
+                      });
+                    }}
+                    className={`w-16 rounded-md border px-2 py-1 text-center font-bold tabular-nums ${
+                      changed
+                        ? "border-info bg-info-soft text-info"
+                        : "border-rule bg-surface"
+                    }`}
+                  />
+                  <span
+                    className={`font-bold tabular-nums ${changed ? "text-info" : ""}`}
+                  >
+                    {newContrib != null ? newContrib.toFixed(1) : "—"}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </Card>
+
+        {/* ─── 2. Loss + Exposure compare ──────────────────── */}
+        <div className="grid gap-3.5 md:grid-cols-2">
+          <Card header="Loss modifier" icon={Shield} pad="md">
+            <CompareRow
+              k="Combined modifier"
+              o={`${result.original_loss_combined.toFixed(2)}x`}
+              s={`${result.scenario_loss_combined.toFixed(2)}x`}
+              bold
+            />
+            {result.loss_modifier && (
+              <>
+                <CompareRow
+                  k="Frequency multiplier"
+                  o={`${(result.loss_modifier.original_frequency ?? 1).toFixed(2)}x`}
+                  s={`${result.loss_modifier.frequency_multiplier.toFixed(2)}x`}
+                />
+                <CompareRow
+                  k="Severity multiplier"
+                  o={`${(result.loss_modifier.original_severity ?? 1).toFixed(2)}x`}
+                  s={`${result.loss_modifier.severity_multiplier.toFixed(2)}x`}
+                />
+              </>
+            )}
+          </Card>
+          <Card header="Exposure & scaling" icon={Layers} pad="md">
+            <CompareRow
+              k="Exposure modifier"
+              o={`${result.original_exposure_modifier.toFixed(2)}x`}
+              s={`${result.scenario_exposure_modifier.toFixed(2)}x`}
+              bold
+            />
+            <CompareRow
+              k="Exposure band"
+              o={strOrNull(ver.exposure_band_label) ?? "—"}
+              s={result.scenario_exposure_band || "—"}
+            />
+            <CompareRow
+              k="ILF factor"
+              o={`${result.original_ilf_factor.toFixed(3)}x`}
+              s={`${result.ilf_factor.toFixed(3)}x`}
+            />
+            <CompareRow
+              k="Deductible factor"
+              o={`${result.original_deductible_factor.toFixed(3)}x`}
+              s={`${result.deductible_factor.toFixed(3)}x`}
+            />
+          </Card>
         </div>
-      </div>
+
+        {/* ─── 3. Pricing cascade ──────────────────────────── */}
+        <Card
+          header="Pricing cascade · original vs scenario"
+          icon={TrendingDown}
+          pad="md"
+        >
+          <div className="grid grid-cols-[50%_25%_25%] border-b border-rule py-2 text-[10.5px] uppercase tracking-wider text-ink-mute">
+            <span>Step</span>
+            <span className="text-right">Original</span>
+            <span className="text-right text-info">Scenario</span>
+          </div>
+          <CascadeRow
+            step="Tier assignment"
+            o={`Tier ${result.original_tier}`}
+            s={`Tier ${result.tier?.tier ?? "—"}`}
+          />
+          <CascadeRow
+            step="Base premium"
+            o={formatCurrency(result.original_base_premium)}
+            s={formatCurrency(result.base_premium)}
+          />
+          {result.waterfall.map((step, i) => (
+            <CascadeRow
+              key={`${step.label}-${i}`}
+              step={`After ${step.label.toLowerCase()}`}
+              o={formatCurrency(step.original ?? step.value)}
+              s={formatCurrency(step.value)}
+            />
+          ))}
+          <div className="mt-1 grid grid-cols-[50%_25%_25%] border-t-2 border-ink px-1 py-3.5 text-[17px] font-bold">
+            <span>Final premium</span>
+            <span className="text-right font-mono tabular-nums">
+              {formatCurrency(result.original_final_premium)}
+            </span>
+            <span className="text-right font-mono text-pos tabular-nums">
+              {formatCurrency(result.final_premium)}
+            </span>
+          </div>
+          {result.final_premium !== result.original_final_premium && (
+            <Micro className="mt-1 block text-right text-[13px] font-bold text-pos">
+              {result.final_premium < result.original_final_premium ? "−" : "+"}
+              {formatCurrency(
+                Math.abs(result.final_premium - result.original_final_premium),
+              )}{" "}
+              (
+              {(
+                ((result.final_premium - result.original_final_premium) /
+                  result.original_final_premium) *
+                100
+              ).toFixed(1)}
+              %) vs original
+            </Micro>
+          )}
+        </Card>
+      </WorkArea>
     </>
   );
 }
 
-function ResultCard({
-  result,
-  dirty,
-  onReset,
+function CompareRow({
+  k,
+  o,
+  s,
+  bold,
 }: {
-  result: ScenarioResult;
-  dirty: boolean;
-  onReset: () => void;
+  k: string;
+  o: string;
+  s: string;
+  bold?: boolean;
 }) {
-  const compDelta = result.composite_score - result.original_composite;
-  const premDelta = result.final_premium - result.original_final_premium;
-  const tierDelta =
-    (result.tier?.tier_id ?? result.original_tier) - result.original_tier;
-
-  return (
-    <Card variant="info" pad="lg" className="space-y-5">
-      <header className="flex items-baseline justify-between">
-        <Eyebrow className="text-info-deep dark:text-info">
-          {dirty ? "Scenario result" : "Baseline (no overrides)"}
-        </Eyebrow>
-        {dirty && (
-          <Button type="button" variant="ghost" size="sm" onClick={onReset}>
-            <RotateCcw size={12} />
-            Reset all
-          </Button>
-        )}
-      </header>
-
-      <div className="grid gap-6 sm:grid-cols-3">
-        <DeltaStat
-          label="Composite"
-          before={result.original_composite}
-          after={result.composite_score}
-          delta={compDelta}
-          tone={compDelta > 0 ? "pos" : compDelta < 0 ? "neg" : "mute"}
-          fmt={(v) => v.toFixed(0)}
-        />
-        <DeltaStat
-          label="Tier"
-          before={result.original_tier}
-          after={result.tier?.tier_id ?? result.original_tier}
-          delta={tierDelta}
-          tone={tierDelta < 0 ? "pos" : tierDelta > 0 ? "neg" : "mute"}
-          fmt={(v) => v.toFixed(0)}
-        />
-        <DeltaStat
-          label="Final premium"
-          before={result.original_final_premium}
-          after={result.final_premium}
-          delta={premDelta}
-          tone={premDelta < 0 ? "pos" : premDelta > 0 ? "neg" : "mute"}
-          fmt={formatCurrency}
-          emphasis
-        />
-      </div>
-
-      <div className="grid gap-2 border-t border-info/30 pt-4 md:grid-cols-2">
-        <FactorRow
-          label="Loss combined"
-          before={result.original_loss_combined}
-          after={result.scenario_loss_combined}
-        />
-        <FactorRow
-          label="Exposure modifier"
-          before={result.original_exposure_modifier}
-          after={result.scenario_exposure_modifier}
-        />
-        <FactorRow
-          label="ILF"
-          before={result.original_ilf_factor}
-          after={result.ilf_factor}
-        />
-        <FactorRow
-          label="Deductible factor"
-          before={result.original_deductible_factor}
-          after={result.deductible_factor}
-        />
-      </div>
-    </Card>
-  );
-}
-
-function GuardrailCard({ result }: { result: ScenarioResult }) {
-  const g = result.guardrails as Record<string, unknown>;
-  const triggered = !!(g.triggered ?? g.capped);
-  const messages = (g.messages as string[]) ?? [];
-  if (!triggered && messages.length === 0) return null;
-  return (
-    <Card variant="warn" pad="md" className="flex items-start gap-3">
-      <ShieldAlert size={18} className="mt-0.5 shrink-0 text-warn" />
-      <div>
-        <Eyebrow className="text-warn">Guardrails active</Eyebrow>
-        {messages.length > 0 ? (
-          <ul className="mt-1.5 space-y-1">
-            {messages.map((m, i) => (
-              <li key={i} className="text-[13px] text-ink">
-                {m}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <Body className="mt-1">
-            The cascade hit a guardrail and the premium was capped from{" "}
-            <strong>{formatCurrency(result.final_premium * 1.5)}</strong> to{" "}
-            <strong>{formatCurrency(result.final_premium)}</strong>.
-          </Body>
-        )}
-      </div>
-    </Card>
-  );
-}
-
-function DeltaStat({
-  label,
-  before,
-  after,
-  delta,
-  tone,
-  fmt,
-  emphasis,
-}: {
-  label: string;
-  before: number;
-  after: number;
-  delta: number;
-  tone: "pos" | "neg" | "mute";
-  fmt: (v: number) => string;
-  emphasis?: boolean;
-}) {
-  return (
-    <div>
-      <Micro className="block">{label}</Micro>
-      <div className="mt-1 flex items-baseline gap-2">
-        <NumDisplay size={emphasis ? "lg" : "md"}>{fmt(after)}</NumDisplay>
-      </div>
-      <div className="mt-1 flex items-center gap-1 text-[12px]">
-        <span className="text-ink-mute tabular-nums">{fmt(before)}</span>
-        <ArrowRight size={10} className="text-ink-mute" />
-        <span
-          className={cn(
-            "tabular-nums",
-            tone === "pos"
-              ? "text-pos"
-              : tone === "neg"
-                ? "text-neg"
-                : "text-ink-mute",
-          )}
-        >
-          {delta > 0 ? "+" : ""}
-          {fmt(delta)}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function FactorRow({
-  label,
-  before,
-  after,
-}: {
-  label: string;
-  before: number;
-  after: number;
-}) {
-  const changed = Math.abs(before - after) > 0.0001;
+  const changed = o !== s;
   return (
     <div
-      className={cn(
-        "flex items-baseline justify-between text-[13px]",
-        changed && "font-semibold",
-      )}
+      className={`grid grid-cols-[1fr_80px_30px_80px] items-baseline border-b border-rule py-2 text-[13px] ${
+        bold ? "font-bold" : ""
+      }`}
     >
-      <span className="text-ink-soft">{label}</span>
-      <span className="tabular-nums text-ink">
-        ×{before.toFixed(3)}
-        {changed && (
-          <>
-            <ArrowRight size={10} className="mx-1 inline text-ink-mute" />×
-            {after.toFixed(3)}
-          </>
-        )}
+      <span className="text-ink-soft">{k}</span>
+      <span className="text-right font-mono tabular-nums">{o}</span>
+      <span className="text-center text-ink-mute">→</span>
+      <span
+        className={`text-right font-mono tabular-nums ${
+          changed ? "font-semibold text-info" : ""
+        }`}
+      >
+        {s}
       </span>
     </div>
   );
 }
 
-function NumericOverride({
-  label,
-  base,
-  value,
-  onChange,
-  step,
-  format,
-}: {
-  label: string;
-  base: number;
-  value: number | null;
-  onChange: (v: number | null) => void;
-  step: number;
-  format: "currency" | "number";
-}) {
-  const effective = value ?? base;
-  const fmt = format === "currency" ? formatCurrency : (v: number) => v.toLocaleString();
+function CascadeRow({ step, o, s }: { step: string; o: string; s: string }) {
+  const changed = o !== s;
   return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <label className="text-[12.5px] font-medium text-ink-soft">{label}</label>
-        <span className="text-[12px] text-ink-mute">
-          base {fmt(base)}
-        </span>
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="number"
-          value={effective}
-          step={step}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            onChange(Number.isFinite(v) && v !== base ? v : null);
-          }}
-          className="h-9 flex-1 rounded-btn border border-rule-strong bg-surface px-2.5 text-[13px] tabular-nums text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-        />
-        {value !== null && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => onChange(null)}
-            aria-label={`Reset ${label}`}
-          >
-            <RotateCcw size={12} />
-          </Button>
-        )}
-      </div>
+    <div className="grid grid-cols-[50%_25%_25%] border-b border-rule py-2 text-[13px]">
+      <span>{step}</span>
+      <span className="text-right font-mono tabular-nums">{o}</span>
+      <span
+        className={`text-right font-mono tabular-nums ${
+          changed ? "font-bold text-info" : ""
+        }`}
+      >
+        {s}
+      </span>
     </div>
   );
 }
 
-function SignalOverride({
-  signal,
-  value,
-  onChange,
-}: {
-  signal: ApiRecord;
-  value: number | undefined;
-  onChange: (v: number | null) => void;
-}) {
-  const baseMod = Number(signal.applied_modifier ?? 1);
-  const effective = value ?? baseMod;
-  const action = String(signal.action ?? "").toLowerCase();
-  const tone =
-    action === "approve"
-      ? "pos"
-      : action === "refer"
-        ? "warn"
-        : action === "decline"
-          ? "neg"
-          : "info";
-  return (
-    <li className="space-y-1 border-b border-rule pb-2 last:border-0">
-      <div className="flex items-center gap-2">
-        <Chip variant={tone} size="sm">
-          {signal.action ?? "—"}
-        </Chip>
-        <span className="flex-1 truncate font-mono text-[11.5px] text-ink">
-          {String(signal.signal_id ?? signal.signal_code ?? "—")}
-        </span>
-        {value !== undefined && (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className="text-ink-mute hover:text-ink"
-            aria-label="Reset signal"
-          >
-            <RotateCcw size={11} />
-          </button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          type="range"
-          min={0.5}
-          max={1.5}
-          step={0.01}
-          value={effective}
-          onChange={(e) => {
-            const v = Number(e.target.value);
-            onChange(Math.abs(v - baseMod) < 0.005 ? null : v);
-          }}
-          className="flex-1 accent-info"
-        />
-        <span className="w-12 text-right text-[11.5px] tabular-nums text-ink">
-          ×{effective.toFixed(2)}
-        </span>
-      </div>
-    </li>
-  );
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }
