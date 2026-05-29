@@ -1,18 +1,22 @@
+// No direct design counterpart; adapted from reim_overview.jsx (CohortStandingCard).
 "use client";
 
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { ArrowDown, ArrowUp, TrendingDown, TrendingUp } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, Body, Micro, Caption } from "@/components/ui/typography";
+import { CohortBar } from "@/components/charts/cohort-bar";
 import { BellCurve } from "@/components/charts/bell-curve";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview, fetchSubmissionPeers } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { peerStandingPositive } from "@/lib/portalTone";
+import { cn } from "@/lib/utils";
 import type {
   OverviewResponse,
   PeersResponse,
@@ -88,10 +92,7 @@ function PeersInner() {
   if (!peers.data) return <PageLoading />;
 
   return (
-    <PeersBody
-      entityName={overview.data.entity_name}
-      peers={peers.data}
-    />
+    <PeersBody entityName={overview.data.entity_name} peers={peers.data} />
   );
 }
 
@@ -105,12 +106,15 @@ function PeersBody({
   const you = peers.entity_score ?? 0;
   const mean = peers.cohort_mean_score ?? you;
   const median = peers.cohort_median_score ?? mean;
-  // Heuristic SD when API doesn't supply it explicitly; ~80 points covers
-  // a reasonable spread of composite scores.
   const sd = 80;
   const topDecile = mean + 1.28 * sd;
-  const lo = Math.max(0, Math.min(you, mean - 3 * sd));
-  const hi = Math.min(1000, Math.max(you, mean + 3 * sd));
+  const range: [number, number] = [
+    Math.max(0, Math.min(you, mean - 3 * sd)),
+    Math.min(1000, Math.max(you, mean + 3 * sd)),
+  ];
+  const percentile = peers.peer_percentile_rank ?? null;
+  const vsMedian = Math.round(you - median);
+  const toTopDecile = Math.max(0, Math.round(topDecile - you));
 
   return (
     <>
@@ -119,9 +123,9 @@ function PeersBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Industry Benchmarks</Eyebrow>
+        <div className="mx-auto grid max-w-[1280px] gap-4">
+          <div>
+            <Eyebrow>Industry benchmarks</Eyebrow>
             <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
               {peers.coverage}
             </h1>
@@ -130,80 +134,99 @@ function PeersBody({
                 cohort {peers.cohort_id}
               </Micro>
             )}
-          </header>
+          </div>
 
-          {/* Hero stat */}
-          <Card variant="info" pad="lg" className="space-y-4">
-            <div className="flex items-end justify-between gap-6">
+          {/* hero: cohort standing card */}
+          <Card pad="lg" className="flex flex-col">
+            <div className="flex items-baseline justify-between">
               <div>
-                <Eyebrow>Where you stand</Eyebrow>
-                <p className="mt-1 text-[24px] font-semibold leading-tight text-ink">
-                  {peerStandingPositive(peers.peer_percentile_rank)}
-                </p>
+                <Eyebrow>Cohort standing</Eyebrow>
+                <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-tight text-ink">
+                  You sit at the{" "}
+                  <span className="text-pos">
+                    {percentile != null
+                      ? `${Math.round(percentile)}th percentile`
+                      : peerStandingPositive(percentile)}
+                  </span>
+                </h3>
               </div>
-              {peers.peer_percentile_rank != null && (
-                <div className="text-right">
-                  <NumDisplay size="xl">
-                    {Math.round(peers.peer_percentile_rank)}
-                  </NumDisplay>
-                  <Micro>percentile</Micro>
-                </div>
-              )}
+              <Micro>{peers.cohort_size ?? 0} peers</Micro>
+            </div>
+            <div className="my-5 flex flex-1 items-center">
+              <CohortBar
+                value={you}
+                median={median}
+                topDecile={topDecile}
+                range={range}
+                className="w-full"
+              />
+            </div>
+            <div className="grid grid-cols-3 gap-3 border-t border-rule pt-3">
+              <Stat
+                label="vs median"
+                value={`${vsMedian >= 0 ? "+" : ""}${vsMedian}`}
+                tone={vsMedian >= 0 ? "pos" : "neg"}
+                icon={vsMedian >= 0 ? ArrowUp : ArrowDown}
+              />
+              <Stat
+                label="your score"
+                value={you.toFixed(0)}
+                tone="info"
+              />
+              <Stat
+                label="to top decile"
+                value={toTopDecile.toString()}
+              />
             </div>
           </Card>
 
-          {/* Bell curve */}
+          {/* distribution */}
           {peers.entity_score != null && peers.cohort_mean_score != null && (
             <Card pad="lg">
-              <header className="mb-4 flex items-center justify-between">
-                <Eyebrow>Cohort distribution</Eyebrow>
+              <div className="mb-4 flex items-baseline justify-between">
+                <div>
+                  <Eyebrow>Cohort distribution</Eyebrow>
+                  <h3 className="mt-1.5 font-display text-[17px] font-semibold leading-tight text-ink">
+                    Where you fall on the curve
+                  </h3>
+                </div>
                 <Micro>{peers.cohort_size ?? 0} peers</Micro>
-              </header>
+              </div>
               <BellCurve
                 cohort={{
                   mean,
                   sd,
                   median,
                   topDecile,
-                  range: [lo, hi],
+                  range,
                   you,
                 }}
                 height={200}
               />
-              <div className="mt-4 grid grid-cols-3 gap-6 border-t border-rule pt-4">
-                <Stat label="Your score" value={you.toFixed(0)} highlight />
-                <Stat
-                  label="Cohort median"
-                  value={median.toFixed(0)}
-                />
-                <Stat
-                  label="Top decile"
-                  value={topDecile.toFixed(0)}
-                />
-              </div>
             </Card>
           )}
 
           {peers.note && (
             <Card variant="aux" pad="md">
-              <Eyebrow className="text-aux">Methodology note</Eyebrow>
+              <Eyebrow className="text-aux">Methodology</Eyebrow>
               <Body className="mt-1">{peers.note}</Body>
             </Card>
           )}
 
-          {/* Signal ranking */}
           {peers.signal_ranking && (
-            <div className="grid gap-5 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2">
               <SignalRankList
                 title="You out-pace your peers on"
                 accent="pos"
                 items={peers.signal_ranking.strengths}
+                icon={TrendingUp}
                 empty="No standout strengths vs the cohort."
               />
               <SignalRankList
                 title="Peers out-pace you on"
                 accent="spot"
                 items={peers.signal_ranking.weaknesses}
+                icon={TrendingDown}
                 empty="No standout weaknesses vs the cohort."
               />
             </div>
@@ -217,19 +240,32 @@ function PeersBody({
 function Stat({
   label,
   value,
-  highlight,
+  tone,
+  icon: Icon,
 }: {
   label: string;
   value: string;
-  highlight?: boolean;
+  tone?: "pos" | "neg" | "info";
+  icon?: typeof ArrowUp;
 }) {
+  const toneClass =
+    tone === "pos"
+      ? "text-pos"
+      : tone === "neg"
+        ? "text-neg"
+        : tone === "info"
+          ? "text-info"
+          : "text-ink";
   return (
     <div>
       <Micro className="block">{label}</Micro>
       <p
-        className={`mt-1 text-[24px] font-semibold leading-none tabular-nums ${highlight ? "text-info" : "text-ink"}`}
+        className={cn(
+          "mt-0.5 flex items-center gap-1 text-[18px] font-semibold tabular-nums leading-none",
+          toneClass,
+        )}
       >
-        {value}
+        {Icon && <Icon size={14} />} {value}
       </p>
     </div>
   );
@@ -239,11 +275,13 @@ function SignalRankList({
   title,
   accent,
   items,
+  icon: Icon,
   empty,
 }: {
   title: string;
   accent: "pos" | "spot";
   items: SignalRankEntry[];
+  icon: typeof TrendingUp;
   empty: string;
 }) {
   const sorted = [...items].sort(
@@ -252,10 +290,17 @@ function SignalRankList({
   return (
     <Card pad="lg" variant={accent}>
       <header className="flex items-center justify-between">
-        <Eyebrow className={accent === "pos" ? "text-pos" : "text-spot-deep dark:text-spot"}>
+        <Eyebrow
+          className={
+            accent === "pos" ? "text-pos" : "text-spot-deep dark:text-spot"
+          }
+        >
           {title}
         </Eyebrow>
-        <Micro>{items.length} signals</Micro>
+        <Chip variant={accent} size="sm">
+          <Icon size={11} />
+          {items.length} signal{items.length === 1 ? "" : "s"}
+        </Chip>
       </header>
       {items.length === 0 ? (
         <Body className="mt-3 italic">{empty}</Body>
@@ -270,14 +315,12 @@ function SignalRankList({
                 <p className="truncate text-[13.5px] font-medium text-ink">
                   {s.signal_id}
                 </p>
-                <Micro className="block">
-                  You {s.entity_value.toFixed(1)} · cohort {s.cohort_mean.toFixed(1)}
-                </Micro>
+                <Caption className="block">
+                  You {s.entity_value.toFixed(1)} · cohort{" "}
+                  {s.cohort_mean.toFixed(1)}
+                </Caption>
               </div>
-              <Chip
-                variant={accent}
-                size="sm"
-              >
+              <Chip variant={accent} size="sm">
                 {s.z_score > 0 ? "+" : ""}
                 {s.z_score.toFixed(1)}σ
               </Chip>

@@ -100,12 +100,24 @@ class FrontendSubmissionPipeline(BaseModel):
     entity_name: str
     coverage_configuration: str
     created_at: datetime
+    # `status` here is the QUOTE status (DRAFT, BOUND, etc.) — kept for
+    # backwards compat. Use `submission_status` for the SUBMISSION lifecycle.
+    status: Optional[str] = None
+    submission_status: Optional[str] = None
     recommended_premium: Optional[float] = None
     recommended_limit: Optional[float] = None
+    # Bound/post-modifier premium — pulled from ModelVersionRecord.final_premium.
+    final_premium: Optional[float] = None
     final_composite_score: Optional[float] = None
     final_tier: Optional[int] = None
     tier_label: Optional[str] = None
     decision: str
+    # Referral lifecycle (PENDING, IN_REVIEW, AWAITING_BROKER, ...) when a
+    # referral exists; otherwise None.
+    referral_state: Optional[str] = None
+    # Broker that placed the submission, if any. NULL for direct carrier
+    # submissions.
+    broker_name: Optional[str] = None
 
 class FrontendRiskAssessment(BaseModel):
     signal_id: int

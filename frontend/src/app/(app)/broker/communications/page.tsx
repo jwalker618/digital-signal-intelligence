@@ -1,22 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useState } from "react";
 import { ChevronRight, MessageSquare } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import {
+  Body,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  KpiSnug,
+  Micro,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchCommunications } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
-import { fmtRelative } from "@/lib/utils";
-import { formatText } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { fmtRelative, cn } from "@/lib/utils";
 import type {
   CommunicationItem,
   CommunicationsListResponse,
 } from "@/types/portal";
+
+type Awaiting = "all" | "broker" | "client" | "resolved";
 
 export default function BrokerCommunicationsPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -38,104 +45,106 @@ export default function BrokerCommunicationsPage() {
   return <CommsBody data={data} />;
 }
 
+function classifyAwaiting(
+  item: CommunicationItem,
+): "broker" | "client" | "resolved" | "other" {
+  if (!item.is_open) return "resolved";
+  if (item.awaiting_party && /broker|me/i.test(item.awaiting_party))
+    return "broker";
+  if (item.awaiting_party && /client|insured/i.test(item.awaiting_party))
+    return "client";
+  return "other";
+}
+
 function CommsBody({ data }: { data: CommunicationsListResponse }) {
-  // Broker viewport: split by who's awaiting reply.
-  const awaitingMe: CommunicationItem[] = [];
-  const awaitingClient: CommunicationItem[] = [];
-  const otherOpen: CommunicationItem[] = [];
-  const closed: CommunicationItem[] = [];
-  for (const item of data.items) {
-    if (!item.is_open) closed.push(item);
-    else if (item.awaiting_party && /broker|me/i.test(item.awaiting_party)) {
-      awaitingMe.push(item);
-    } else if (item.awaiting_party && /client|insured/i.test(item.awaiting_party)) {
-      awaitingClient.push(item);
-    } else otherOpen.push(item);
-  }
+  const [filter, setFilter] = useState<Awaiting>("all");
+
+  const onBroker = data.items.filter(
+    (i) => classifyAwaiting(i) === "broker",
+  ).length;
+  const onClient = data.items.filter(
+    (i) => classifyAwaiting(i) === "client",
+  ).length;
+  const resolved = data.items.filter((i) => !i.is_open).length;
+  const totalOpen = data.items.length - resolved;
+
+  const filtered = useMemo(() => {
+    return data.items.filter((it) => {
+      const cls = classifyAwaiting(it);
+      if (filter === "all") return cls !== "resolved";
+      if (filter === "resolved") return cls === "resolved";
+      return cls === filter;
+    });
+  }, [data.items, filter]);
 
   return (
     <>
       <Topbar crumbs={["Broker Portal", "Communications"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1100px] gap-6">
-          <header className="flex items-end justify-between gap-6">
+        <div className="mx-auto grid max-w-[1100px] gap-4">
+          <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Inbox</Eyebrow>
-              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                Communications
+              <Eyebrow>Communications</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                Queries across your client book
               </h1>
-              <Body className="mt-2">
-                Queries from underwriters and follow-ups with your clients.
-                Items waiting on you sit at the top.
-              </Body>
             </div>
-            <div className="text-right">
-              <Eyebrow>Open</Eyebrow>
-              <p className="mt-1 font-display text-[28px] font-semibold tabular-nums text-ink">
-                {data.open_count}
-              </p>
+            <div className="flex flex-wrap gap-7">
+              <KpiSnug label="Total open" value={totalOpen} />
+              <KpiSnug label="Awaiting you" value={onBroker} tone="spot" />
+              <KpiSnug label="Awaiting client" value={onClient} tone="info" />
+              <KpiSnug label="Resolved" value={resolved} tone="pos" />
             </div>
           </header>
 
-          {awaitingMe.length > 0 && (
-            <Section title="Awaiting you" count={awaitingMe.length} accent="spot">
-              {awaitingMe.map((it) => (
-                <ThreadRow
-                  key={it.referral_code}
-                  item={it}
-                  highlight
-                  basePath="/broker/communications"
-                />
-              ))}
-            </Section>
-          )}
+          {/* Filter pills */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Micro className="mr-1">Awaiting:</Micro>
+            <FilterChip
+              label="All open"
+              active={filter === "all"}
+              onClick={() => setFilter("all")}
+            />
+            <FilterChip
+              label="On me"
+              active={filter === "broker"}
+              onClick={() => setFilter("broker")}
+            />
+            <FilterChip
+              label="On client"
+              active={filter === "client"}
+              onClick={() => setFilter("client")}
+            />
+            <FilterChip
+              label="Resolved"
+              active={filter === "resolved"}
+              onClick={() => setFilter("resolved")}
+            />
+            <span className="ml-auto">
+              <Caption>Sort: most recent</Caption>
+            </span>
+          </div>
 
-          {awaitingClient.length > 0 && (
-            <Section title="Waiting on client" count={awaitingClient.length}>
-              {awaitingClient.map((it) => (
-                <ThreadRow
-                  key={it.referral_code}
-                  item={it}
-                  basePath="/broker/communications"
-                />
-              ))}
-            </Section>
-          )}
-
-          {otherOpen.length > 0 && (
-            <Section title="Other open" count={otherOpen.length}>
-              {otherOpen.map((it) => (
-                <ThreadRow
-                  key={it.referral_code}
-                  item={it}
-                  basePath="/broker/communications"
-                />
-              ))}
-            </Section>
-          )}
-
-          {closed.length > 0 && (
-            <Section title="Closed" count={closed.length} muted>
-              {closed.map((it) => (
-                <ThreadRow
-                  key={it.referral_code}
-                  item={it}
-                  dim
-                  basePath="/broker/communications"
-                />
-              ))}
-            </Section>
-          )}
-
-          {data.items.length === 0 && (
+          {/* Threads */}
+          {filtered.length === 0 ? (
             <Card pad="lg" className="flex items-center gap-3">
               <MessageSquare size={20} className="text-ink-mute" />
               <div>
                 <Eyebrow>No threads</Eyebrow>
-                <Body className="mt-1">
-                  Your inbox is empty.
-                </Body>
+                <Body className="mt-1">No threads match the filter.</Body>
               </div>
+            </Card>
+          ) : (
+            <Card pad="none">
+              <ul>
+                {filtered.map((it, i) => (
+                  <BrokerThreadRow
+                    key={it.referral_code}
+                    item={it}
+                    first={i === 0}
+                  />
+                ))}
+              </ul>
             </Card>
           )}
         </div>
@@ -144,108 +153,95 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
   );
 }
 
-function Section({
-  title,
-  count,
-  accent,
-  muted,
-  children,
+function FilterChip({
+  label,
+  active,
+  onClick,
 }: {
-  title: string;
-  count: number;
-  accent?: "spot";
-  muted?: boolean;
-  children: React.ReactNode;
+  label: string;
+  active: boolean;
+  onClick: () => void;
 }) {
   return (
-    <section>
-      <header className="mb-2.5 flex items-center justify-between">
-        <Eyebrow className={accent === "spot" ? "text-spot" : ""}>{title}</Eyebrow>
-        <Micro>{count}</Micro>
-      </header>
-      <Card pad="md" className={cn("space-y-0 p-0", muted && "opacity-80")}>
-        <ul className="divide-y divide-rule">{children}</ul>
-      </Card>
-    </section>
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "rounded-chip border px-2.5 py-1 text-[11.5px] font-medium transition",
+        active
+          ? "border-ink bg-ink text-canvas"
+          : "border-rule-strong bg-surface text-ink-soft hover:bg-surface-sunken",
+      )}
+    >
+      {label}
+    </button>
   );
 }
 
-function ThreadRow({
+function BrokerThreadRow({
   item,
-  highlight,
-  dim,
-  basePath,
+  first,
 }: {
   item: CommunicationItem;
-  highlight?: boolean;
-  dim?: boolean;
-  basePath: string;
+  first: boolean;
 }) {
-  const dir = item.last_message_direction;
-  const from =
-    dir === "uw" || dir === "underwriter"
-      ? "Underwriter"
-      : dir === "broker"
-        ? "You"
-        : dir === "client" || dir === "insured"
-          ? "Client"
-          : "—";
+  const cls = classifyAwaiting(item);
+  const accent =
+    cls === "broker"
+      ? "bg-spot"
+      : cls === "client"
+        ? "bg-info"
+        : cls === "resolved"
+          ? "bg-transparent"
+          : "bg-info";
+  const chipTone: "spot" | "info" | "pos" | "mute" =
+    cls === "broker"
+      ? "spot"
+      : cls === "client"
+        ? "info"
+        : cls === "resolved"
+          ? "pos"
+          : "info";
+  const statusLabel =
+    cls === "broker"
+      ? "awaiting you"
+      : cls === "client"
+        ? "awaiting client"
+        : cls === "resolved"
+          ? "resolved"
+          : "open";
+
   return (
     <li>
       <Link
-        href={`${basePath}/${item.referral_code}`}
+        href={`/broker/communications/${item.referral_code}`}
         className={cn(
-          "group flex items-start gap-4 px-4 py-4 transition hover:bg-surface-sunken/40",
-          dim && "text-ink-soft",
+          "grid grid-cols-[4px_1.6fr_2.4fr_110px_110px_70px_28px] items-center gap-4 px-4 py-4 transition hover:bg-surface-sunken/40",
+          !first && "border-t border-rule",
         )}
       >
-        <div
-          className={cn(
-            "mt-1 h-2 w-2 shrink-0 rounded-full",
-            highlight ? "bg-spot" : item.is_open ? "bg-info" : "bg-ink-mute/40",
-          )}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <p className={cn("font-semibold text-ink", dim && "text-ink-soft")}>
-              {item.coverage}
-            </p>
-            <Micro>{item.entity_name}</Micro>
-            <span className="ml-auto flex items-center gap-2">
-              {highlight && (
-                <Chip variant="spot" size="sm">
-                  Awaiting you
-                </Chip>
-              )}
-              {!highlight && item.is_open && item.awaiting_party && (
-                <Chip variant="info" size="sm">
-                  {formatText(item.awaiting_party, "capitalize")}
-                </Chip>
-              )}
-              {!item.is_open && (
-                <Chip variant="mute" size="sm">
-                  Closed
-                </Chip>
-              )}
-              <Micro>{fmtRelative(item.last_message_at)}</Micro>
-            </span>
+        <span className={cn("h-10 w-1 rounded-sm", accent)} />
+        <div>
+          <div className="text-[13.5px] font-bold text-ink">
+            {item.entity_name}
           </div>
-          {item.last_message_excerpt && (
-            <p
-              className={cn(
-                "mt-1.5 line-clamp-2 text-[13px] text-ink-soft",
-                dim && "text-ink-mute",
-              )}
-            >
-              <span className="font-medium text-ink-soft">{from}:</span>{" "}
-              {item.last_message_excerpt}
-            </p>
-          )}
+          <Micro className="mt-0.5 block">
+            {item.coverage} · {item.referral_code}
+          </Micro>
         </div>
-        <ChevronRight
-          size={16}
-          className="mt-1 shrink-0 text-ink-mute transition group-hover:text-ink"
-        />
+        <div className="min-w-0">
+          <div className="truncate text-[13px] text-ink">
+            {item.last_message_excerpt ? `"${item.last_message_excerpt}"` : "—"}
+          </div>
+        </div>
+        <Chip variant="mute" size="sm">
+          {item.coverage}
+        </Chip>
+        <Chip variant={chipTone} size="sm">
+          {statusLabel}
+        </Chip>
+        <Micro className="text-right">{fmtRelative(item.last_message_at)}</Micro>
+        <ChevronRight size={18} className="text-ink-mute" />
       </Link>
     </li>
   );

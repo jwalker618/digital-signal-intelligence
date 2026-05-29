@@ -1,4 +1,5 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -29,6 +30,7 @@ const cardVariants = cva(
         neg: "bg-neg-soft border-neg",
       },
       pad: {
+        none: "",
         sm: "p-3",
         md: "p-5",
         lg: "p-6",
@@ -38,12 +40,68 @@ const cardVariants = cva(
   },
 );
 
+const padToBody: Record<NonNullable<VariantProps<typeof cardVariants>["pad"]>, string> = {
+  sm: "p-3",
+  md: "p-5",
+  lg: "p-6",
+};
+
 export interface CardProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+    VariantProps<typeof cardVariants> {
+  /**
+   * Optional header strip title. Renders the header when any of header /
+   * icon / headerRight is provided. Named `header` (not `title`) to avoid
+   * shadowing the standard HTML `title` tooltip attribute that
+   * React.HTMLAttributes already advertises.
+   */
+  header?: string;
+  /** Optional lucide icon shown to the left of the header label. */
+  icon?: LucideIcon;
+  /** Optional node aligned to the right of the header strip. */
+  headerRight?: React.ReactNode;
+}
 
-export function Card({ className, variant, pad, ...rest }: CardProps) {
+export function Card({
+  className,
+  variant,
+  pad,
+  header,
+  icon: IconCmp,
+  headerRight,
+  children,
+  ...rest
+}: CardProps) {
+  const hasHeader = !!(header || IconCmp || headerRight);
+
+  if (!hasHeader) {
+    return (
+      <div className={cn(cardVariants({ variant, pad }), className)} {...rest}>
+        {children}
+      </div>
+    );
+  }
+
+  // When a header strip is requested, drop the wrapper padding and apply
+  // it to the body instead so the rule sits flush with the card edges.
+  const bodyPad = padToBody[pad ?? "md"];
   return (
-    <div className={cn(cardVariants({ variant, pad }), className)} {...rest} />
+    <div
+      className={cn(cardVariants({ variant, pad: "none" }), className)}
+      {...rest}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-3">
+        <div className="flex items-center gap-2 text-[13px] font-semibold text-ink">
+          {IconCmp && <IconCmp size={14} className="shrink-0 text-ink-soft" />}
+          {header && <span>{header}</span>}
+        </div>
+        {headerRight && (
+          <div className="flex items-center gap-2 text-[12px] text-ink-soft">
+            {headerRight}
+          </div>
+        )}
+      </div>
+      <div className={bodyPad}>{children}</div>
+    </div>
   );
 }

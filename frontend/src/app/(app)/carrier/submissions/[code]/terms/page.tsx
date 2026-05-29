@@ -1,9 +1,10 @@
 "use client";
 
-import { Building2 } from "lucide-react";
+import { Building2, FileText, Layers } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, NumDisplay } from "@/components/ui/typography";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { LabelRow } from "@/components/ui/label-row";
 import { LooseRecordCard } from "@/components/base/loose-record";
 import { PageLoading } from "@/components/base/pageStates";
@@ -30,37 +31,78 @@ export default function TermsOverviewPage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = fpd.limit ?? commercial?.limit ?? ver?.recommended_limit;
-  const deductible = fpd.deductible ?? commercial?.deductible;
-  const aggregate = fpd.aggregate ?? commercial?.aggregate_limit;
+  // limit/deductible/aggregate are not on CommercialTermsDBRecord (they belong to risk terms);
+  // sourced from the version's final_premium_detail JSONB only.
+  const limit = fpd.limit;
+  const deductible = fpd.deductible;
+  const aggregate = fpd.aggregate;
   const finalPremium = ver?.final_premium ?? sub.final_premium ?? null;
   const basePremium = ver?.base_premium ?? null;
-  const effectiveFrom = commercial?.effective_from ?? ver?.effective_from;
-  const effectiveTo = commercial?.effective_to ?? ver?.effective_to;
-  const participants =
-    (commercial?.commercial_distribution as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+  // CommercialTermsDBRecord exposes earned_start/earned_end (no effective_from/to)
+  const effectiveFrom = commercial?.earned_start;
+  const effectiveTo = commercial?.earned_end;
+  // No commercial_distribution participants array; derive a single row from the flat line fields.
+  const signedLine = commercial?.signed_line;
+  const participants: Array<Record<string, unknown>> =
+    signedLine != null
+      ? [
+          {
+            name: commercial?.entity_name ?? "This carrier",
+            role: commercial?.role ?? "Participant",
+            share_pct: Number(signedLine) * 100,
+            premium: commercial?.net_premium ?? commercial?.gross_premium ?? null,
+            layer: commercial?.distribution_type ?? null,
+          },
+        ]
+      : [];
+
+  const netPremium = commercial?.net_premium ?? null;
+  const grossPremium = commercial?.gross_premium ?? null;
+  const offeredPremium = commercial?.offered_premium ?? null;
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Terms Overview" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Commercial</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Terms overview
-            </h1>
-            <Body className="mt-2">
-              What's actually being offered — limits, retentions, premium,
-              dates, and the commercial entity stack.
-            </Body>
-          </header>
+          {/* Hero — offered premium framed against net / gross / technical */}
+          <Card variant="info" pad="lg">
+            <div className="grid items-end gap-6 md:grid-cols-[1.4fr_auto_auto_auto]">
+              <div>
+                <Eyebrow className="text-info-deep dark:text-info">
+                  {offeredPremium != null ? "Offered premium" : "Final premium"}
+                </Eyebrow>
+                <NumDisplay size="xl" className="mt-2 block text-info">
+                  {offeredPremium != null
+                    ? formatCurrency(offeredPremium)
+                    : finalPremium != null
+                      ? formatCurrency(Number(finalPremium))
+                      : "—"}
+                </NumDisplay>
+              </div>
+              <MiniKpi
+                label="Net"
+                value={netPremium != null ? formatCurrency(netPremium) : "—"}
+              />
+              <MiniKpi
+                label="Gross"
+                value={
+                  grossPremium != null ? formatCurrency(grossPremium) : "—"
+                }
+              />
+              <MiniKpi
+                label="Technical"
+                value={
+                  finalPremium != null
+                    ? formatCurrency(Number(finalPremium))
+                    : "—"
+                }
+              />
+            </div>
+          </Card>
 
           {/* Coverage card */}
-          <Card variant="info" pad="lg" className="space-y-3">
-            <Eyebrow className="text-info-deep dark:text-info">Coverage</Eyebrow>
+          <Card header="Coverage" icon={FileText} pad="md">
             <div className="grid gap-2 md:grid-cols-2">
               <LabelRow
                 label="Coverage"
@@ -106,8 +148,7 @@ export default function TermsOverviewPage() {
           </Card>
 
           {/* Premium card */}
-          <Card pad="md" className="space-y-2">
-            <Eyebrow>Premium</Eyebrow>
+          <Card header="Premium ladder" icon={Layers} pad="md">
             <div className="grid gap-2 md:grid-cols-2">
               <LabelRow
                 label="Base premium"
@@ -128,10 +169,12 @@ export default function TermsOverviewPage() {
 
           {/* Commercial distribution */}
           {participants.length > 0 ? (
-            <Card pad="md" className="overflow-hidden p-0">
-              <header className="border-b border-rule px-5 py-3.5">
-                <Eyebrow>Commercial stack ({participants.length})</Eyebrow>
-              </header>
+            <Card
+              header={`Commercial stack · ${participants.length}`}
+              icon={Building2}
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken/60 text-left">

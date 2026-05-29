@@ -6,12 +6,14 @@ import {
   CornerDownLeft,
   FileQuestion,
   Loader2,
+  ShieldAlert,
 } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
 import { postBrokerReply } from "@/lib/portalApi";
@@ -72,8 +74,9 @@ export default function ReferralActionsPage() {
 
   const referralCode = String(referral.referral_code ?? "");
   const reasons = (referral.reasons as string[] | undefined) ?? [];
-  const status = String(referral.referral_state ?? referral.status ?? "open");
-  const awaiting = String(referral.awaiting_party ?? "");
+  // ReferralRecord exposes status (not referral_state) and review_decision (not awaiting_party)
+  const status = String(referral.status ?? "open");
+  const awaiting = String(referral.review_decision ?? "");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -118,45 +121,56 @@ export default function ReferralActionsPage() {
       <WorkbenchTopbar activeTabLabel="Referral Actions" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1080px] gap-6">
-          <header>
-            <Eyebrow>Underwriting</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Referral actions
-            </h1>
-            <Body className="mt-2">
-              Reply to the broker, optionally update a signal value and
-              trigger a reassessment.
-            </Body>
-          </header>
-
-          {/* Referral context */}
-          <Card pad="md" className="space-y-3">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <Eyebrow>Referral</Eyebrow>
-                <p className="mt-1 font-mono text-[13px] text-ink">
-                  {referralCode}
-                </p>
-                {referral.opened_at != null && (
+          {/* Referral banner */}
+          <Card variant="spot" pad="lg">
+            <div className="flex flex-wrap items-center justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <ShieldAlert size={28} className="shrink-0 text-spot" />
+                <div>
+                  <Eyebrow className="text-spot-deep dark:text-spot">
+                    {/awaiting/i.test(status)
+                      ? `Referred — awaiting ${awaiting ? formatText(awaiting, "capitalize").toLowerCase() : "review"}`
+                      : "Referred"}
+                  </Eyebrow>
+                  <h1 className="mt-1.5 text-[17px] font-semibold text-ink">
+                    Referral actions
+                  </h1>
                   <Micro className="mt-1 block">
-                    opened {fmtRelative(String(referral.opened_at))}
+                    {reasons.length > 0
+                      ? `Auto-referred by ${reasons.length} condition${reasons.length === 1 ? "" : "s"}.`
+                      : "Reply to the broker, optionally update a signal and trigger a reassessment."}
+                    {referral.created_at != null &&
+                      ` Opened ${fmtRelative(String(referral.created_at))}.`}
                   </Micro>
-                )}
+                </div>
               </div>
-              <div className="space-y-1 text-right">
-                <Chip
-                  variant={/awaiting/i.test(status) ? "spot" : "info"}
-                  size="sm"
-                >
-                  {formatText(status, "capitalize")}
-                </Chip>
-                {awaiting && (
-                  <Micro className="block">
-                    awaiting {formatText(awaiting, "capitalize")}
-                  </Micro>
-                )}
+              <div className="flex gap-6">
+                <KpiSnug
+                  label="Flagged"
+                  value={reasons.length}
+                  tone="warn"
+                />
+                <KpiSnug
+                  label="State"
+                  value={
+                    <Chip
+                      variant={/awaiting/i.test(status) ? "spot" : "info"}
+                      size="sm"
+                    >
+                      {formatText(status, "capitalize")}
+                    </Chip>
+                  }
+                />
               </div>
             </div>
+          </Card>
+
+          {/* Referral context */}
+          <Card header="Referral context" icon={ShieldAlert} pad="md" className="space-y-3">
+            <LabelRow
+              label="Referral code"
+              value={<span className="font-mono">{referralCode}</span>}
+            />
             {reasons.length > 0 && (
               <div className="rounded-card border border-rule bg-surface-sunken px-4 py-3">
                 <Eyebrow className="mb-1.5">Reasons</Eyebrow>

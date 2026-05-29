@@ -1,27 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Activity,
-  AlertCircle,
-  AlertTriangle,
-  CheckCircle2,
-  RefreshCw,
-  Server,
-} from "lucide-react";
+import { CheckCircle2, RefreshCw } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Button } from "@/components/ui/button";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
+import {
+  AdminTable,
+  Body,
+  Button,
+  Card,
+  Chip,
+  Eyebrow,
+  Micro,
+  MiniKpi,
+  NumDisplay,
+} from "@/components/ui";
+import type { AdminTableCol, AdminTableRow } from "@/components/ui";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { formatPercent, formatText } from "@/lib/format";
-import { fmtRelative } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+import { cn, fmtRelative } from "@/lib/utils";
 import type {
   ExtractorHealth,
   HealthStatus,
@@ -87,56 +86,92 @@ function HealthBody({
   data: HealthBundle;
   onReload: () => void;
 }) {
-  const components = data.health?.components ?? {};
+  const subsystems = data.health?.subsystems ?? [];
+  const greens = subsystems.filter((s) => s.status === "green").length;
+  const overallStatus = data.health?.overall ?? "green";
+  const overallLabel =
+    overallStatus === "green"
+      ? "All systems operational"
+      : overallStatus === "amber"
+        ? "Degraded performance"
+        : "Critical incident";
+
+  const extractorCols: AdminTableCol[] = [
+    { key: "name", label: "Extractor", width: "2fr" },
+    { key: "mode", label: "Mode", width: "90px" },
+    { key: "success", label: "Success", align: "right", width: "100px" },
+    { key: "errors", label: "Errors", align: "right", width: "90px" },
+    { key: "status", label: "Status", width: "110px" },
+    { key: "lastError", label: "Last error", width: "1.6fr" },
+  ];
+
+  const extractorRows: AdminTableRow[] = data.extractors.map((x) => ({
+    name: (
+      <code className="font-mono text-[12px] text-ink">{x.extractor_id}</code>
+    ),
+    mode: <Caption>{x.signal_type}</Caption>,
+    success: (
+      <span className="tabular-nums text-ink-soft">
+        {x.success_count_24h.toLocaleString()}
+      </span>
+    ),
+    errors: (
+      <span
+        className={cn(
+          "tabular-nums",
+          x.error_count_24h > 10
+            ? "text-warn"
+            : x.error_count_24h > 0
+              ? "text-ink-soft"
+              : "text-ink-mute",
+        )}
+      >
+        {x.error_count_24h.toLocaleString()}
+      </span>
+    ),
+    status: <StatusDot status={extractorStatus(x)} />,
+    lastError: (
+      <span className="text-[12px] text-ink-soft">
+        {x.last_error_message ??
+          (x.last_error_at ? fmtRelative(x.last_error_at) : "—")}
+      </span>
+    ),
+  }));
+
   return (
     <>
       <Topbar crumbs={["Admin", "System Health"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
-              <Eyebrow>Operations</Eyebrow>
-              <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                System Health
+              <Eyebrow>System health</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
+                {overallLabel}
               </h1>
-              {data.health?.checked_at && (
-                <Body className="mt-2">
-                  Last checked {fmtRelative(data.health.checked_at)}
+              {data.health?.evaluated_at && (
+                <Body className="mt-1.5">
+                  Auto-refresh every 30s · last check {fmtRelative(data.health.evaluated_at)}
                 </Body>
               )}
             </div>
-            <Button variant="ghost" onClick={onReload}>
-              <RefreshCw size={14} />
-              Refresh
-            </Button>
+            <div className="flex items-center gap-2.5">
+              <Chip variant={toneFromHealth(overallStatus)} size="md">
+                <CheckCircle2 size={13} />
+                {greens} of {subsystems.length || 0} green
+              </Chip>
+              <Button variant="ghost" onClick={onReload}>
+                <RefreshCw size={13} />
+                Refresh
+              </Button>
+            </div>
           </header>
 
-          {/* Overall status */}
-          {data.health?.status && (
-            <Card
-              variant={toneFromHealth(data.health.status)}
-              pad="lg"
-              className="flex items-center gap-4"
-            >
-              <StatusBadge status={data.health.status} large />
-              <div>
-                <Eyebrow>System status</Eyebrow>
-                <p className="font-display text-[24px] font-semibold leading-tight text-ink">
-                  {data.health.status === "green"
-                    ? "All systems operational"
-                    : data.health.status === "amber"
-                      ? "Degraded performance"
-                      : "Critical incident"}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {/* Pipeline metrics */}
           {data.pipeline && (
-            <Card pad="lg" className="space-y-4">
-              <header className="flex items-center justify-between">
-                <Eyebrow>Pipeline ({data.pipeline.window_hours}h window)</Eyebrow>
+            <Card
+              pad="lg"
+              header={`Pipeline · ${data.pipeline.period}`}
+              headerRight={
                 <Chip
                   variant={
                     data.pipeline.failure_rate <= 0.005
@@ -149,107 +184,89 @@ function HealthBody({
                 >
                   Failure {formatPercent(data.pipeline.failure_rate, 2)}
                 </Chip>
-              </header>
-              <div className="grid gap-6 md:grid-cols-4">
-                <Metric label="Assessments">
-                  {data.pipeline.total_assessments.toLocaleString()}
-                </Metric>
-                <Metric label="p50 latency">
-                  {data.pipeline.p50_ms.toFixed(0)}ms
-                </Metric>
-                <Metric label="p95 latency">
-                  {data.pipeline.p95_ms.toFixed(0)}ms
-                </Metric>
-                <Metric label="p99 latency">
-                  {data.pipeline.p99_ms.toFixed(0)}ms
-                </Metric>
+              }
+            >
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                <MiniKpi
+                  label="Assessments"
+                  value={data.pipeline.assessments_total.toLocaleString()}
+                />
+                <MiniKpi
+                  label="p50"
+                  value={`${data.pipeline.latency_p50_ms.toFixed(0)}ms`}
+                  caption="median latency"
+                />
+                <MiniKpi
+                  label="p95"
+                  value={`${data.pipeline.latency_p95_ms.toFixed(0)}ms`}
+                />
+                <MiniKpi
+                  label="p99"
+                  value={`${data.pipeline.latency_p99_ms.toFixed(0)}ms`}
+                />
+                <MiniKpi
+                  label="Failure rate"
+                  value={formatPercent(data.pipeline.failure_rate, 2)}
+                />
               </div>
             </Card>
           )}
 
-          {/* Components */}
-          {Object.keys(components).length > 0 && (
-            <section>
-              <Eyebrow className="mb-3">Components</Eyebrow>
-              <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                {Object.entries(components).map(([name, c]) => (
-                  <Card key={name} pad="md" className="flex items-start gap-3">
-                    <StatusBadge status={c.status} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-semibold text-ink">
-                        {formatText(name, "capitalize")}
-                      </p>
-                      {c.detail && (
-                        <Micro className="block">{c.detail}</Micro>
+          <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
+            {subsystems.length > 0 && (
+              <Card pad="lg">
+                <Eyebrow>Components</Eyebrow>
+                <h2 className="mt-1.5 mb-3 text-[17px] font-semibold text-ink">
+                  Subsystems
+                </h2>
+                <div className="flex flex-col">
+                  {subsystems.map((c, i) => (
+                    <div
+                      key={c.name}
+                      className={cn(
+                        "grid grid-cols-[12px_1fr] items-start gap-3 py-2.5",
+                        i < subsystems.length - 1 && "border-b border-rule",
                       )}
+                    >
+                      <span
+                        className={cn(
+                          "mt-1.5 h-2.5 w-2.5 rounded-full",
+                          c.status === "green"
+                            ? "bg-pos"
+                            : c.status === "amber"
+                              ? "bg-warn"
+                              : "bg-neg",
+                        )}
+                        aria-label={`Status ${c.status}`}
+                      />
+                      <div>
+                        <p className="text-[13px] font-semibold text-ink">
+                          {formatText(c.name, "capitalize")}
+                        </p>
+                        {c.detail && (
+                          <Micro className="mt-0.5 block">{c.detail}</Micro>
+                        )}
+                      </div>
                     </div>
-                  </Card>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Extractors */}
-          {data.extractors.length > 0 && (
-            <section>
-              <Eyebrow className="mb-3">
-                Extractors ({data.extractors.length})
-              </Eyebrow>
-              <Card pad="md" className="overflow-hidden p-0">
-                <table className="w-full table-fixed text-[13px]">
-                  <thead>
-                    <tr className="border-b border-rule bg-surface-sunken text-left">
-                      <ColHead width="w-[26%]">Name</ColHead>
-                      <ColHead width="w-[10%]">Mode</ColHead>
-                      <ColHead width="w-[10%]">Status</ColHead>
-                      <ColHead width="w-[12%]">Success</ColHead>
-                      <ColHead width="w-[12%]">Errors</ColHead>
-                      <ColHead width="w-[15%]">Last success</ColHead>
-                      <ColHead width="w-[15%]">Last error</ColHead>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.extractors.map((x) => (
-                      <tr
-                        key={x.name}
-                        className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
-                      >
-                        <td className="px-5 py-2.5">
-                          <div className="flex items-center gap-2">
-                            <Server size={13} className="text-ink-mute" />
-                            <span className="font-medium text-ink">{x.name}</span>
-                          </div>
-                        </td>
-                        <td className="px-5 py-2.5 font-mono text-[12.5px] text-ink-soft">
-                          {x.mode}
-                        </td>
-                        <td className="px-5 py-2.5">
-                          <StatusBadge status={x.status} />
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-pos">
-                          {x.success_count.toLocaleString()}
-                        </td>
-                        <td
-                          className={cn(
-                            "px-5 py-2.5 tabular-nums",
-                            x.error_count > 0 ? "text-neg" : "text-ink-mute",
-                          )}
-                        >
-                          {x.error_count.toLocaleString()}
-                        </td>
-                        <td className="px-5 py-2.5 text-ink-soft">
-                          {fmtRelative(x.last_success_at)}
-                        </td>
-                        <td className="px-5 py-2.5 text-ink-soft">
-                          {fmtRelative(x.last_error_at)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                  ))}
+                </div>
               </Card>
-            </section>
-          )}
+            )}
+
+            {data.extractors.length > 0 && (
+              <Card
+                pad="none"
+                header="Extractors"
+                headerRight={
+                  <Chip size="sm" variant="mute">
+                    {data.extractors.length} active
+                  </Chip>
+                }
+              >
+                <AdminTable cols={extractorCols} rows={extractorRows} dense />
+              </Card>
+            )}
+          </div>
 
           {!data.health && !data.pipeline && data.extractors.length === 0 && (
             <Card pad="lg">
@@ -264,35 +281,22 @@ function HealthBody({
   );
 }
 
-function StatusBadge({
-  status,
-  large,
-}: {
-  status: HealthStatus;
-  large?: boolean;
-}) {
-  const cls =
-    status === "green"
-      ? "bg-pos text-white"
-      : status === "amber"
-        ? "bg-warn text-white"
-        : "bg-neg text-white";
-  const Icon =
-    status === "green"
-      ? CheckCircle2
-      : status === "amber"
-        ? AlertTriangle
-        : AlertCircle;
+function StatusDot({ status }: { status: HealthStatus }) {
   return (
-    <span
-      className={cn(
-        "flex items-center justify-center rounded-full",
-        cls,
-        large ? "h-10 w-10" : "h-6 w-6",
-      )}
-      aria-label={`Status ${status}`}
-    >
-      <Icon size={large ? 18 : 12} />
+    <span className="inline-flex items-center gap-1.5">
+      <span
+        className={cn(
+          "h-2 w-2 rounded-full",
+          status === "green"
+            ? "bg-pos"
+            : status === "amber"
+              ? "bg-warn"
+              : "bg-neg",
+        )}
+      />
+      <span className="text-[12px] font-semibold capitalize text-ink">
+        {status}
+      </span>
     </span>
   );
 }
@@ -301,35 +305,16 @@ function toneFromHealth(s: HealthStatus): "pos" | "warn" | "neg" {
   return s === "green" ? "pos" : s === "amber" ? "warn" : "neg";
 }
 
-function Metric({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <Micro className="block">{label}</Micro>
-      <p className="mt-1 font-display text-[28px] font-semibold tabular-nums text-ink">
-        {children}
-      </p>
-    </div>
-  );
+// API does not expose a per-extractor status; derive one from the 24h counters.
+function extractorStatus(x: ExtractorHealth): HealthStatus {
+  if (x.status) return x.status;
+  if (x.error_count_24h > 10 || x.success_rate < 0.8) return "red";
+  if (x.error_count_24h > 0 || x.success_rate < 0.98) return "amber";
+  return "green";
 }
 
-function ColHead({
-  width,
-  children,
-}: {
-  width: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
-  );
+function Caption({ children }: { children: React.ReactNode }) {
+  return <span className="text-[12px] text-ink-soft">{children}</span>;
 }
+
+void NumDisplay;

@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
-import { Eye, EyeOff, KeyRound } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, Body, Caption } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
@@ -25,7 +25,6 @@ export default function LoginPage() {
     setSubmitting(true);
     try {
       await login(email, password);
-      // mfaChallengePending is set inside the store on response; check after.
       const pending = useAuthStore.getState().mfaChallengePending;
       router.replace(pending ? "/login/mfa" : "/client");
     } catch (err) {
@@ -36,19 +35,32 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="space-y-7">
-      <header>
-        <Eyebrow>Sign in</Eyebrow>
-        <h1 className="mt-2 font-display text-[28px] font-semibold leading-none text-ink">
-          Welcome back
+    <div>
+      <header className="mb-7">
+        <Eyebrow className="text-info">Welcome</Eyebrow>
+        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+          Sign in to your account
         </h1>
-        <Body className="mt-2">
-          Use your work email and password. SSO and MFA are supported.
+        <Body className="mt-2 leading-[1.55]">
+          Use your work email + password, or switch to SSO if your
+          organisation has it set up.
         </Body>
       </header>
 
-      <form className="space-y-5" onSubmit={onSubmit}>
-        <Field id="email" label="Email">
+      <div className="mb-[22px] grid grid-cols-2 gap-1 rounded-[10px] bg-surface-sunken p-1">
+        <div className="flex items-center justify-center rounded-lg bg-surface px-3 py-2 text-[13px] font-semibold text-ink shadow-[0_1px_2px_rgba(0,0,0,0.08)]">
+          Email + password
+        </div>
+        <Link
+          href="/login/sso"
+          className="flex items-center justify-center rounded-lg px-3 py-2 text-[13px] font-semibold text-ink-soft hover:text-ink"
+        >
+          SSO
+        </Link>
+      </div>
+
+      <form className="space-y-3.5" onSubmit={onSubmit}>
+        <Field id="email" label="Work email">
           <input
             id="email"
             type="email"
@@ -56,21 +68,12 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={inputClass}
+            className={authInputClass}
+            placeholder="you@company.com"
           />
         </Field>
-        <Field
-          id="password"
-          label="Password"
-          aside={
-            <Link
-              href="/login/reset-password"
-              className="text-[12px] font-medium text-info hover:underline"
-            >
-              Forgot password?
-            </Link>
-          }
-        >
+
+        <Field id="password" label="Password">
           <div className="relative">
             <input
               id="password"
@@ -79,7 +82,11 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={cn(inputClass, "pr-10")}
+              className={cn(
+                authInputClass,
+                "pr-10",
+                !showPassword && password ? "font-mono tracking-[0.2em]" : null,
+              )}
             />
             <button
               type="button"
@@ -91,6 +98,15 @@ export default function LoginPage() {
             </button>
           </div>
         </Field>
+
+        <div className="flex justify-end pb-1">
+          <Link
+            href="/login/reset-password"
+            className="text-[13px] font-medium text-ink-soft hover:text-ink"
+          >
+            Forgot password?
+          </Link>
+        </div>
 
         {error && (
           <div
@@ -106,23 +122,15 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      <div className="flex items-center gap-3 text-[12px] text-ink-mute">
-        <span className="h-px flex-1 bg-rule" />
-        <span>or</span>
-        <span className="h-px flex-1 bg-rule" />
+      <div className="mt-6 flex items-center justify-between border-t border-rule pt-[18px]">
+        <Caption>First time here?</Caption>
+        <Link
+          href="/login/sso"
+          className="text-[13px] font-medium text-ink-soft hover:text-ink"
+        >
+          Get an invite from your broker →
+        </Link>
       </div>
-
-      <Link
-        href="/login/sso"
-        className="flex h-12 items-center justify-center gap-2 rounded-btn border border-rule-strong bg-surface text-[13px] font-semibold text-ink hover:bg-surface-sunken"
-      >
-        <KeyRound size={15} />
-        Continue with SSO
-      </Link>
-
-      <Micro className="block text-center">
-        Need access? Ask your broker administrator to add you.
-      </Micro>
     </div>
   );
 }
@@ -130,26 +138,21 @@ export default function LoginPage() {
 function Field({
   id,
   label,
-  aside,
   children,
 }: {
   id: string;
   label: string;
-  aside?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <label htmlFor={id} className="text-[12.5px] font-medium text-ink-soft">
-          {label}
-        </label>
-        {aside}
-      </div>
+    <label htmlFor={id} className="block">
+      <span className="mb-1.5 block text-[12px] font-medium text-ink-soft">
+        {label}
+      </span>
       {children}
-    </div>
+    </label>
   );
 }
 
-const inputClass =
-  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
+const authInputClass =
+  "block h-11 w-full rounded-btn border border-rule-strong bg-surface px-3.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";

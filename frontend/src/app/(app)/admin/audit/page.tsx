@@ -1,16 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, History, Search } from "lucide-react";
+import { Download, Search } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import {
+  AdminTable,
+  Body,
+  Button,
+  Card,
+  Chip,
+  Eyebrow,
+  Micro,
+} from "@/components/ui";
+import type { AdminTableCol, AdminTableRow } from "@/components/ui";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { api } from "@/lib/api";
-import { formatText } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
 import type { AuditEventRow } from "@/types/admin";
 
@@ -32,6 +37,8 @@ function AuditInner() {
 
   const [actionType, setActionType] = useState("");
   const [resourceType, setResourceType] = useState("");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [query, setQuery] = useState("");
 
   async function load() {
@@ -40,6 +47,8 @@ function AuditInner() {
       const params = new URLSearchParams();
       if (actionType) params.set("action_type", actionType);
       if (resourceType) params.set("resource_type", resourceType);
+      if (fromDate) params.set("from", fromDate);
+      if (toDate) params.set("to", toDate);
       params.set("limit", "200");
       const r = await api.get<{ events: AuditEventRow[] }>(
         `/api/v1/admin/audit?${params.toString()}`,
@@ -55,12 +64,23 @@ function AuditInner() {
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionType, resourceType]);
+  }, []);
+
+  function reset() {
+    setActionType("");
+    setResourceType("");
+    setFromDate("");
+    setToDate("");
+    setQuery("");
+    void load();
+  }
 
   function exportCsv() {
     const params = new URLSearchParams();
     if (actionType) params.set("action_type", actionType);
     if (resourceType) params.set("resource_type", resourceType);
+    if (fromDate) params.set("from", fromDate);
+    if (toDate) params.set("to", toDate);
     window.open(`/api/v1/admin/audit/export?${params.toString()}`, "_blank");
   }
 
@@ -76,117 +96,139 @@ function AuditInner() {
     );
   });
 
+  const cols: AdminTableCol[] = [
+    { key: "when", label: "When", width: "180px" },
+    { key: "action", label: "Action", width: "1.4fr" },
+    { key: "resource", label: "Resource", width: "2.2fr" },
+    { key: "user", label: "User", width: "1fr" },
+    { key: "latency", label: "Latency", align: "right", width: "110px" },
+  ];
+
+  const rows: AdminTableRow[] = filtered.map((e) => ({
+    when: (
+      <span className="font-mono text-[12px] tabular-nums text-ink-soft">
+        {fmtRelative(e.created_at)}
+      </span>
+    ),
+    action: (
+      <code className="text-[12px] font-bold text-ink">{e.action_type}</code>
+    ),
+    resource: e.resource_type ? (
+      <span className="text-[12.5px] text-ink-soft">
+        <span className="text-ink">{e.resource_type}</span>
+        {e.resource_id && (
+          <span className="ml-1 font-mono text-[11.5px] text-ink-mute">
+            · {e.resource_id}
+          </span>
+        )}
+      </span>
+    ) : (
+      <Micro>—</Micro>
+    ),
+    user: (
+      <code className="text-[11.5px] text-ink-mute">{e.user_id ?? "—"}</code>
+    ),
+    latency: (
+      <span className="tabular-nums text-[12.5px] text-ink-soft">
+        {e.duration_ms != null ? `${e.duration_ms} ms` : "—"}
+      </span>
+    ),
+  }));
+
   return (
     <>
       <Topbar crumbs={["Admin", "Audit Log"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
-              <Eyebrow>Compliance</Eyebrow>
-              <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                Audit Log
+              <Eyebrow>Audit log</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
+                Everything that changed
               </h1>
-              <Body className="mt-2">
-                Every state-changing action across the platform — who, what,
-                when, from where.
+              <Body className="mt-1.5">
+                Every config deploy, decision, user action, recalibration
+                approval — who, what, when, from where.
               </Body>
             </div>
             <Button variant="ghost" onClick={exportCsv}>
-              <Download size={14} />
+              <Download size={13} />
               Export CSV
             </Button>
           </header>
 
-          <Card pad="md" className="flex flex-wrap items-center gap-3">
-            <FilterField label="Action">
-              <input
-                type="text"
-                value={actionType}
-                onChange={(e) => setActionType(e.target.value)}
-                placeholder="login, config.deploy, …"
-                className={filterInput}
-              />
-            </FilterField>
-            <FilterField label="Resource">
-              <input
-                type="text"
-                value={resourceType}
-                onChange={(e) => setResourceType(e.target.value)}
-                placeholder="user, config, submission, …"
-                className={filterInput}
-              />
-            </FilterField>
-            <div className="ml-auto flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
-              <Search size={15} className="text-ink-mute" />
-              <input
-                type="search"
-                placeholder="Find an event…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="h-9 w-64 border-0 bg-transparent text-[13px] text-ink placeholder:text-ink-mute focus:outline-none"
-              />
+          <Card pad="md">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1fr_auto_auto]">
+              <FilterField label="Action">
+                <input
+                  type="text"
+                  value={actionType}
+                  onChange={(ev) => setActionType(ev.target.value)}
+                  placeholder="CONFIG_DEPLOY"
+                  className={filterInput}
+                />
+              </FilterField>
+              <FilterField label="Resource">
+                <input
+                  type="text"
+                  value={resourceType}
+                  onChange={(ev) => setResourceType(ev.target.value)}
+                  placeholder="config_version"
+                  className={filterInput}
+                />
+              </FilterField>
+              <FilterField label="From">
+                <input
+                  type="date"
+                  value={fromDate}
+                  onChange={(ev) => setFromDate(ev.target.value)}
+                  className={filterInput}
+                />
+              </FilterField>
+              <FilterField label="To">
+                <input
+                  type="date"
+                  value={toDate}
+                  onChange={(ev) => setToDate(ev.target.value)}
+                  className={filterInput}
+                />
+              </FilterField>
+              <div className="flex items-end gap-2">
+                <Button variant="primary" onClick={() => void load()}>
+                  Apply
+                </Button>
+                <Button variant="ghost" onClick={reset}>
+                  Reset
+                </Button>
+              </div>
+              <div className="flex items-end">
+                <div className="flex h-10 items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
+                  <Search size={14} className="text-ink-mute" />
+                  <input
+                    type="search"
+                    placeholder="Find an event…"
+                    value={query}
+                    onChange={(ev) => setQuery(ev.target.value)}
+                    className="w-44 border-0 bg-transparent text-[13px] text-ink placeholder:text-ink-mute focus:outline-none"
+                  />
+                </div>
+              </div>
             </div>
           </Card>
 
           {state === "loading" && <PageLoading message="Loading events…" />}
           {state === "error" && <PageError message={err ?? "Unknown error"} />}
           {state === "ok" && (
-            <Card pad="md" className="overflow-hidden p-0">
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken text-left">
-                    <ColHead width="w-[18%]">When</ColHead>
-                    <ColHead width="w-[18%]">Action</ColHead>
-                    <ColHead width="w-[20%]">Resource</ColHead>
-                    <ColHead width="w-[18%]">User</ColHead>
-                    <ColHead width="w-[14%]">IP</ColHead>
-                    <ColHead width="w-[12%]">Duration</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((e) => (
-                    <tr
-                      key={e.id}
-                      className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
-                    >
-                      <td className="px-5 py-2.5 text-ink-soft">
-                        {fmtRelative(e.created_at)}
-                      </td>
-                      <td className="px-5 py-2.5">
-                        <Chip variant={actionTone(e.action_type)} size="sm">
-                          {e.action_type}
-                        </Chip>
-                      </td>
-                      <td className="px-5 py-2.5 text-ink-soft">
-                        {e.resource_type ? (
-                          <>
-                            <span className="font-medium text-ink">
-                              {e.resource_type}
-                            </span>
-                            {e.resource_id && (
-                              <span className="ml-1 font-mono text-[11.5px] text-ink-mute">
-                                · {e.resource_id}
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          <Micro>—</Micro>
-                        )}
-                      </td>
-                      <td className="px-5 py-2.5 font-mono text-[12.5px] text-ink-soft">
-                        {e.user_id ?? "—"}
-                      </td>
-                      <td className="px-5 py-2.5 font-mono text-[12.5px] text-ink-soft">
-                        {e.ip_address ?? "—"}
-                      </td>
-                      <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                        {e.duration_ms != null ? `${e.duration_ms}ms` : "—"}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <Card
+              pad="none"
+              header="Events"
+              headerRight={
+                <Chip size="sm" variant="mute">
+                  {filtered.length}
+                </Chip>
+              }
+            >
+              <AdminTable cols={cols} rows={rows} />
               {filtered.length === 0 && (
                 <div className="px-5 py-8 text-center">
                   <Body className="italic">No events match the filters.</Body>
@@ -200,17 +242,6 @@ function AuditInner() {
   );
 }
 
-function actionTone(
-  action: string,
-): "pos" | "neg" | "warn" | "info" | "mute" {
-  const a = action.toLowerCase();
-  if (/delete|deactivate|revoke|reject/.test(a)) return "neg";
-  if (/login|auth|create|invite|deploy/.test(a)) return "pos";
-  if (/fail|error/.test(a)) return "warn";
-  if (/read|list|view|export/.test(a)) return "mute";
-  return "info";
-}
-
 function FilterField({
   label,
   children,
@@ -219,28 +250,12 @@ function FilterField({
   children: React.ReactNode;
 }) {
   return (
-    <label className="flex items-center gap-2 text-[12.5px]">
-      <span className="text-ink-mute">{label}:</span>
+    <div>
+      <Micro className="mb-1 block">{label}</Micro>
       {children}
-    </label>
+    </div>
   );
 }
 
 const filterInput =
-  "h-9 w-44 rounded-btn border border-rule-strong bg-surface px-2.5 text-[13px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
-
-function ColHead({
-  width,
-  children,
-}: {
-  width: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
-  );
-}
+  "block h-10 w-full rounded-btn border border-rule-strong bg-surface px-3 font-mono text-[12.5px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";

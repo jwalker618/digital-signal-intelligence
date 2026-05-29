@@ -5,7 +5,7 @@ import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { PageLoading } from "@/components/base/pageStates";
 import { LooseRecordCard } from "@/components/base/loose-record";
 import { useDsiStore } from "@/store/dsiStore";
@@ -26,39 +26,53 @@ export default function CoverageTermsPage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = Number(fpd.limit ?? risk?.limit ?? 0);
+  // RiskTermsDBRecord exposes layer_limit (per-occ) and aggregate_limit; JSONB detail preferred when present
+  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
   const aggregate = Number(fpd.aggregate ?? risk?.aggregate_limit ?? limit);
 
+  // coverages_included/excluded and endorsements are not exposed by RiskTermsDBRecord;
+  // kept as graceful empty fallbacks (no backing field) — sub_limits IS a real field.
   const coveragesIn =
-    (risk?.coverages_included as Array<unknown> | undefined) ??
-    (risk?.included as Array<unknown> | undefined) ??
-    [];
+    (risk?.coverages_included as Array<unknown> | undefined) ?? [];
   const coveragesOut =
-    (risk?.coverages_excluded as Array<unknown> | undefined) ??
-    (risk?.excluded as Array<unknown> | undefined) ??
-    [];
+    (risk?.coverages_excluded as Array<unknown> | undefined) ?? [];
   const subLimits =
     (risk?.sub_limits as Array<Record<string, unknown>> | undefined) ?? [];
   const endorsements =
     (risk?.endorsements as Array<Record<string, unknown>> | undefined) ?? [];
-  const structureMode = String(
-    risk?.structure ?? risk?.limit_structure ?? "BUNDLED",
-  );
+  // structure not exposed by RiskTermsDBRecord; aggregate_basis is the closest real field
+  const structureMode = String(risk?.aggregate_basis ?? "BUNDLED");
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Coverage Terms" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Risk terms</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Coverage terms
-            </h1>
-            <Body className="mt-2">
-              What's in, what's out, and how the limit is structured.
-            </Body>
-          </header>
+          {/* Coverage overview */}
+          <Card header="Coverage overview" icon={FileCheck} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              {/* territory not exposed by RiskTermsDBRecord; deductible basis shown instead */}
+              <MiniKpi
+                label="Basis"
+                value={
+                  risk?.deductible_basis
+                    ? formatText(String(risk.deductible_basis), "capitalize")
+                    : "—"
+                }
+              />
+              {/* coverage_trigger not exposed; waiting_period_type is the closest real field */}
+              <MiniKpi
+                label="Trigger"
+                value={
+                  risk?.waiting_period_type
+                    ? formatText(String(risk.waiting_period_type), "capitalize")
+                    : "—"
+                }
+              />
+              <MiniKpi label="Included" value={coveragesIn.length} />
+              <MiniKpi label="Excluded" value={coveragesOut.length} />
+            </div>
+          </Card>
 
           {/* Headline structure */}
           <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
@@ -109,11 +123,12 @@ export default function CoverageTermsPage() {
 
           {/* Sub-limits */}
           {subLimits.length > 0 && (
-            <Card pad="md" className="overflow-hidden p-0">
-              <header className="flex items-center gap-2 border-b border-rule px-5 py-3.5">
-                <FileCheck size={14} className="text-ink-mute" />
-                <Eyebrow>Sub-limits ({subLimits.length})</Eyebrow>
-              </header>
+            <Card
+              header={`Sub-limits · ${subLimits.length}`}
+              icon={FileCheck}
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken/60 text-left">
@@ -148,8 +163,7 @@ export default function CoverageTermsPage() {
 
           {/* Endorsements */}
           {endorsements.length > 0 && (
-            <Card pad="md" className="space-y-3">
-              <Eyebrow>Endorsements ({endorsements.length})</Eyebrow>
+            <Card header={`Endorsements · ${endorsements.length}`} icon={CheckCircle2} pad="md">
               <ul className="divide-y divide-rule">
                 {endorsements.map((e, i) => (
                   <li key={i} className="flex items-start gap-3 py-2.5">

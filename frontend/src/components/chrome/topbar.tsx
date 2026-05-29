@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Building2, Moon, Sun } from "lucide-react";
 import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
@@ -67,7 +68,13 @@ export function Topbar({ crumbs, entity, actions }: TopbarProps) {
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-        <Avatar initials={initials} />
+        <Link
+          href="/profile"
+          aria-label="Account"
+          className="rounded-full focus:outline-none focus:ring-2 focus:ring-info"
+        >
+          <Avatar initials={initials} />
+        </Link>
       </div>
     </header>
   );

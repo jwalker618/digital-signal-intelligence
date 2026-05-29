@@ -1,11 +1,9 @@
 "use client";
 
-import { RefreshCw } from "lucide-react";
+import { BarChart3, Layers, RefreshCw } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
 import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
 import { LooseRecordCard } from "@/components/base/loose-record";
 import { useDsiStore } from "@/store/dsiStore";
@@ -27,15 +25,15 @@ export default function AggregatePage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = Number(fpd.limit ?? risk?.limit ?? 0);
+  // RiskTermsDBRecord: layer_limit (per-occ), aggregate_limit, reinstatements, reinstatement_rate
+  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
   const aggregate = Number(fpd.aggregate ?? risk?.aggregate_limit ?? limit);
-  const reinstatementCount = Number(
-    risk?.reinstatements ?? risk?.reinstatement_count ?? 0,
-  );
-  const reinstatementPremiumPct = Number(
-    risk?.reinstatement_premium_pct ?? risk?.reinstatement_premium ?? 0,
-  );
-  const usedToDate = Number(risk?.aggregate_used_usd ?? 0);
+  const reinstatementCount = Number(risk?.reinstatements ?? 0);
+  // reinstatement_rate is a fraction (e.g. 1.0 = 100% of annual premium); display as a percentage
+  const reinstatementPremiumPct = Number(risk?.reinstatement_rate ?? 0) * 100;
+  // aggregate_used_usd / erosion-to-date is not exposed by RiskTermsDBRecord; only shown if JSONB detail carries it
+  const usedToDate = Number(fpd.aggregate_used ?? 0);
+  const hasUsage = usedToDate > 0;
   const usedPct = aggregate > 0 ? Math.min(1, usedToDate / aggregate) : 0;
 
   return (
@@ -43,62 +41,56 @@ export default function AggregatePage() {
       <WorkbenchTopbar activeTabLabel="Aggregate & Reinstatement" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1080px] gap-6">
-          <header>
-            <Eyebrow>Risk terms</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Aggregate & reinstatement
-            </h1>
-            <Body className="mt-2">
-              How the annual cap sits relative to the per-occurrence limit,
-              and what it costs to restore capacity after a loss.
-            </Body>
-          </header>
-
-          {/* Aggregate vs per-occurrence */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <Card pad="md" variant="info">
-              <Eyebrow className="text-info-deep dark:text-info">
-                Per occurrence
-              </Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {limit > 0 ? formatCurrency(limit) : "—"}
-              </NumDisplay>
-            </Card>
-            <Card pad="md">
-              <Eyebrow>Annual aggregate</Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {aggregate > 0 ? formatCurrency(aggregate) : "—"}
-              </NumDisplay>
-              <Micro className="mt-1 block">
-                {aggregate >= limit * 2
-                  ? "≥ 2× per-occurrence"
-                  : aggregate > limit
-                    ? "> per-occurrence"
-                    : "= per-occurrence"}
-              </Micro>
-            </Card>
-            <Card pad="md">
-              <Eyebrow>Reinstatements</Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {reinstatementCount}
-              </NumDisplay>
-              {reinstatementPremiumPct > 0 && (
+          {/* Aggregate limits */}
+          <Card header="Aggregate limits" icon={Layers} pad="md">
+            <div className="grid gap-6 md:grid-cols-3">
+              <div>
+                <Eyebrow className="text-info-deep dark:text-info">
+                  Per occurrence
+                </Eyebrow>
+                <NumDisplay size="lg" className="mt-2 block text-info">
+                  {limit > 0 ? formatCurrency(limit) : "—"}
+                </NumDisplay>
+              </div>
+              <div>
+                <Eyebrow>Annual aggregate</Eyebrow>
+                <NumDisplay size="lg" className="mt-2 block">
+                  {aggregate > 0 ? formatCurrency(aggregate) : "—"}
+                </NumDisplay>
                 <Micro className="mt-1 block">
-                  {reinstatementPremiumPct.toFixed(0)}% of annual premium each
+                  {aggregate >= limit * 2
+                    ? "≥ 2× per-occurrence"
+                    : aggregate > limit
+                      ? "> per-occurrence"
+                      : "= per-occurrence"}
                 </Micro>
-              )}
-            </Card>
-          </div>
+              </div>
+              <div>
+                <Eyebrow>Reinstatements</Eyebrow>
+                <NumDisplay size="lg" className="mt-2 block">
+                  {reinstatementCount}
+                </NumDisplay>
+                {reinstatementPremiumPct > 0 && (
+                  <Micro className="mt-1 block">
+                    {reinstatementPremiumPct.toFixed(0)}% of annual premium each
+                  </Micro>
+                )}
+              </div>
+            </div>
+          </Card>
 
-          {/* Usage meter */}
-          {aggregate > 0 && (
-            <Card pad="md">
-              <header className="mb-3 flex items-baseline justify-between">
-                <Eyebrow>Aggregate erosion</Eyebrow>
-                <span className="text-[13px] tabular-nums text-ink-soft">
+          {/* Usage meter — only when erosion-to-date is actually available (JSONB) */}
+          {aggregate > 0 && hasUsage && (
+            <Card
+              header="Aggregate erosion"
+              icon={BarChart3}
+              headerRight={
+                <span className="tabular-nums">
                   {formatCurrency(usedToDate)} of {formatCurrency(aggregate)}
                 </span>
-              </header>
+              }
+              pad="md"
+            >
               <div className="h-3 overflow-hidden rounded-full bg-surface-sunken">
                 <div
                   className={cn(
@@ -124,11 +116,9 @@ export default function AggregatePage() {
 
           {/* Reinstatement detail */}
           {reinstatementCount > 0 && (
-            <Card pad="md" className="flex items-start gap-3">
-              <RefreshCw size={16} className="mt-0.5 shrink-0 text-info" />
+            <Card header="Reinstatement provisions" icon={RefreshCw} pad="md">
               <div className="flex-1">
-                <Eyebrow>Reinstatement provision</Eyebrow>
-                <Body className="mt-1.5">
+                <Body>
                   {reinstatementCount} reinstatement
                   {reinstatementCount === 1 ? "" : "s"} available
                   {reinstatementPremiumPct > 0 &&

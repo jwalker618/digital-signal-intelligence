@@ -1,21 +1,18 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
-import {
-  AlertTriangle,
-  ArrowDownAZ,
-  Calendar,
-  HeartPulse,
-  MessageSquare,
-  Sparkles,
-  TrendingDown,
-} from "lucide-react";
+import { Calendar, CheckCircle2, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { ScoreBar } from "@/components/ui/score-bar";
+import {
+  Body,
+  Button,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  Micro,
+  MiniKpi,
+  NumDisplay,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchClientHealth } from "@/lib/portalApi";
@@ -23,8 +20,6 @@ import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { ClientHealthEntry, ClientHealthResponse } from "@/types/portal";
-
-type Sort = "engagement" | "premium" | "renewal" | "queries" | "name";
 
 export default function BrokerClientHealthPage() {
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -43,34 +38,43 @@ export default function BrokerClientHealthPage() {
   if (error) return <PageError message={error} />;
   if (!data) return <PageLoading />;
 
-  return <Body0 data={data} />;
+  return <Inner data={data} />;
 }
 
-function Body0({ data }: { data: ClientHealthResponse }) {
-  const [sort, setSort] = useState<Sort>("engagement");
+function engagementTone(score: number): "pos" | "info" | "warn" | "spot" {
+  if (score >= 80) return "pos";
+  if (score >= 60) return "info";
+  if (score >= 40) return "warn";
+  return "spot";
+}
 
-  const sorted = useMemo(() => {
-    const s = [...data.clients];
-    if (sort === "engagement") s.sort((a, b) => a.engagement_score - b.engagement_score);
-    else if (sort === "premium")
-      s.sort((a, b) => b.total_premium_usd - a.total_premium_usd);
-    else if (sort === "renewal")
-      s.sort(
-        (a, b) =>
-          (a.next_renewal_in_days ?? Infinity) -
-          (b.next_renewal_in_days ?? Infinity),
-      );
-    else if (sort === "queries")
-      s.sort((a, b) => b.open_query_count - a.open_query_count);
-    else s.sort((a, b) => a.entity_name.localeCompare(b.entity_name));
-    return s;
-  }, [data.clients, sort]);
+function engagementBorder(score: number): string {
+  if (score >= 80) return "border-l-pos";
+  if (score >= 60) return "border-l-info";
+  if (score >= 40) return "border-l-warn";
+  return "border-l-spot";
+}
 
-  const atRisk = data.clients.filter((c) => c.risk_flags.length > 0).length;
-  const opportunities = data.clients.filter(
-    (c) => c.opportunity_flags.length > 0,
+function engagementText(score: number): string {
+  if (score >= 80) return "text-pos";
+  if (score >= 60) return "text-info";
+  if (score >= 40) return "text-warn";
+  return "text-spot";
+}
+
+function Inner({ data }: { data: ClientHealthResponse }) {
+  const sorted = [...data.clients].sort(
+    (a, b) => b.engagement_score - a.engagement_score,
+  );
+
+  const strong = data.clients.filter((c) => c.engagement_score >= 80).length;
+  const quiet = data.clients.filter((c) => c.engagement_score < 40).length;
+  const opps = data.clients.reduce((s, c) => s + c.opportunity_flags.length, 0);
+  const risks = data.clients.reduce((s, c) => s + c.risk_flags.length, 0);
+  const renewalSoon = data.clients.filter(
+    (c) => c.next_renewal_in_days != null && c.next_renewal_in_days <= 60,
   ).length;
-  const totalOpen = data.clients.reduce((s, c) => s + c.open_query_count, 0);
+  const quietClients = data.clients.filter((c) => c.engagement_score < 40);
 
   return (
     <>
@@ -79,260 +83,243 @@ function Body0({ data }: { data: ClientHealthResponse }) {
         entity={data.broker_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header className="flex items-end justify-between gap-6">
-            <div>
-              <Eyebrow>Health</Eyebrow>
-              <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-                Client Health
-              </h1>
-              <Body className="mt-2">
-                Engagement, opportunities, and risk flags across the book.
-                Lowest-engagement clients surface first by default.
-              </Body>
-            </div>
-            <SortPicker value={sort} onChange={setSort} />
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* Hero */}
+          <header>
+            <Eyebrow>Client health</Eyebrow>
+            <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+              Engagement, opportunities, risks across your book
+            </h1>
+            <Body className="mt-2 max-w-[640px]">
+              Engagement is a leading indicator — a client scoring &quot;Quiet&quot; or
+              &quot;Dormant&quot; today is at elevated non-renewal risk in the next 6 months
+              unless re-engaged.
+            </Body>
           </header>
 
-          <div className="grid gap-4 sm:grid-cols-4">
-            <SummaryTile label="Clients">{data.clients.length}</SummaryTile>
-            <SummaryTile
-              label="At-risk flags"
-              tone={atRisk > 0 ? "neg" : undefined}
-            >
-              {atRisk}
-            </SummaryTile>
-            <SummaryTile
-              label="Opportunity flags"
-              tone={opportunities > 0 ? "pos" : undefined}
-            >
-              {opportunities}
-            </SummaryTile>
-            <SummaryTile
-              label="Open queries"
-              tone={totalOpen > 0 ? "spot" : undefined}
-            >
-              {totalOpen}
-            </SummaryTile>
+          {/* KPI row */}
+          <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <KpiCard label="Clients" value={data.clients.length} />
+            <KpiCard label="Strong" value={strong} tone="pos" />
+            <KpiCard label="Quiet / dormant" value={quiet} tone="spot" />
+            <KpiCard label="Open opps" value={opps} tone="info" />
+            <KpiCard label="Risk flags" value={risks} tone="neg" />
+            <KpiCard label="Renewal ≤60d" value={renewalSoon} tone="warn" />
           </div>
 
-          <div className="space-y-3">
+          {/* Quiet client alert strip */}
+          {quietClients.length > 0 && (
+            <Card variant="spot" pad="lg">
+              <div className="mb-3 flex items-baseline justify-between gap-3">
+                <div>
+                  <Eyebrow className="text-spot-deep dark:text-spot">
+                    Quiet client alerts
+                  </Eyebrow>
+                  <h2 className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">
+                    {quietClients.length} client
+                    {quietClients.length === 1 ? "" : "s"} showing dormant signals — proactive
+                    touchpoint recommended
+                  </h2>
+                </div>
+                <Chip variant="spot" size="sm">
+                  {quietClients.length} flagged
+                </Chip>
+              </div>
+              <div className="flex flex-col gap-2">
+                {quietClients.map((c) => (
+                  <div
+                    key={c.entity_name}
+                    className="grid items-center gap-3 rounded-card border border-rule bg-surface px-3.5 py-2.5 sm:grid-cols-[1.6fr_1fr_1fr_auto]"
+                  >
+                    <div>
+                      <div className="text-[13px] font-semibold text-ink">
+                        {c.entity_name}
+                      </div>
+                      <Micro className="mt-0.5 block">{c.vertical_name ?? "—"}</Micro>
+                    </div>
+                    <div>
+                      <Micro className="block">engagement</Micro>
+                      <span className="text-[14px] font-semibold text-spot">
+                        {c.engagement_score.toFixed(0)} · {c.engagement_label}
+                      </span>
+                    </div>
+                    <div>
+                      <Micro className="block">renewal in</Micro>
+                      <span
+                        className={cn(
+                          "text-[14px] font-semibold",
+                          c.next_renewal_in_days != null &&
+                            c.next_renewal_in_days <= 60
+                            ? "text-warn"
+                            : "text-ink",
+                        )}
+                      >
+                        {c.next_renewal_in_days != null
+                          ? `${c.next_renewal_in_days}d`
+                          : "—"}
+                      </span>
+                    </div>
+                    <Button variant="spot" size="sm">
+                      Reach out →
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+
+          {/* Client roster */}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-baseline justify-between">
+              <h2 className="text-[17px] font-semibold text-ink">
+                Client roster · {data.clients.length}
+              </h2>
+              <Caption>Sorted by engagement, highest first</Caption>
+            </div>
             {sorted.map((c) => (
-              <ClientCard key={c.entity_name} client={c} />
+              <ClientHealthCard key={c.entity_name} client={c} />
             ))}
-          </div>
+          </section>
         </div>
       </div>
     </>
   );
 }
 
-function ClientCard({ client }: { client: ClientHealthEntry }) {
-  const engagementTone =
-    client.engagement_score >= 75
-      ? "pos"
-      : client.engagement_score >= 50
-        ? "info"
-        : client.engagement_score >= 25
-          ? "warn"
-          : "neg";
-
-  const renewalChip =
-    client.next_renewal_in_days == null
-      ? null
-      : client.next_renewal_in_days <= 60
-        ? "spot"
-        : client.next_renewal_in_days <= 120
-          ? "warn"
-          : "mute";
-
+function KpiCard({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  tone?: "pos" | "spot" | "info" | "neg" | "warn" | "default";
+}) {
+  const cls =
+    tone === "pos"
+      ? "text-pos"
+      : tone === "spot"
+        ? "text-spot"
+        : tone === "info"
+          ? "text-info"
+          : tone === "neg"
+            ? "text-neg"
+            : tone === "warn"
+              ? "text-warn"
+              : "text-ink";
   return (
-    <Card pad="md" className="grid gap-4 md:grid-cols-[1.4fr_1fr_1fr_auto]">
-      {/* Identity + engagement */}
+    <Card pad="md">
+      <MiniKpi
+        label={label}
+        value={
+          <span className={cn("text-[26px] tabular-nums", cls)}>{value}</span>
+        }
+      />
+    </Card>
+  );
+}
+
+function ClientHealthCard({ client }: { client: ClientHealthEntry }) {
+  const tone = engagementTone(client.engagement_score);
+  return (
+    <Card
+      pad="md"
+      className={cn(
+        "grid items-center gap-5 border-l-4 md:grid-cols-[1.5fr_1fr_1.6fr_28px]",
+        engagementBorder(client.engagement_score),
+      )}
+    >
+      {/* identity */}
       <div>
-        <div className="flex items-center gap-2">
-          <h3 className="text-[16px] font-semibold text-ink">
+        <div className="mb-1 flex items-baseline gap-2.5">
+          <span className="text-[15px] font-semibold text-ink">
             {client.entity_name}
-          </h3>
+          </span>
           {client.vertical_name && (
             <Chip variant="mute" size="sm">
               {client.vertical_name}
             </Chip>
           )}
         </div>
-        <div className="mt-2 flex items-center gap-2">
-          <Chip variant={engagementTone} size="sm">
-            <HeartPulse size={11} />
-            {client.engagement_label}
-          </Chip>
-          <span className="text-[12px] tabular-nums text-ink-soft">
-            {client.engagement_score.toFixed(0)} / 100
-          </span>
-        </div>
-        <ScoreBar
-          value={client.engagement_score}
-          max={100}
-          className="mt-2 max-w-[260px]"
-          showValue={false}
-          thresholds={[
-            { at: 25, tone: "neg" },
-            { at: 50, tone: "warn" },
-            { at: 75, tone: "info" },
-            { at: 100, tone: "pos" },
-          ]}
-        />
-      </div>
-
-      {/* Premium / policies */}
-      <div className="space-y-1">
-        <div>
-          <Micro>Premium under management</Micro>
-          <p className="text-[16px] font-semibold tabular-nums text-ink">
-            {formatCurrency(client.total_premium_usd)}
-          </p>
-        </div>
         <Micro className="block">
-          {client.policy_count} polic{client.policy_count === 1 ? "y" : "ies"}
+          {client.policy_count} polic{client.policy_count === 1 ? "y" : "ies"} ·{" "}
+          {formatCurrency(client.total_premium_usd)} premium
         </Micro>
-      </div>
-
-      {/* Pulse */}
-      <div className="space-y-1.5 text-[12.5px] text-ink-soft">
-        {client.months_since_last_message != null && (
-          <div className="flex items-center gap-1.5">
-            <MessageSquare size={11} />
-            Last message{" "}
-            <span className="font-semibold text-ink">
-              {client.months_since_last_message}mo
-            </span>{" "}
-            ago
-          </div>
-        )}
-        {client.avg_response_hours != null && (
-          <div className="flex items-center gap-1.5">
-            <ArrowDownAZ size={11} />
-            Avg response{" "}
-            <span className="font-semibold text-ink">
-              {client.avg_response_hours.toFixed(1)}h
-            </span>
-          </div>
-        )}
-        {client.open_query_count > 0 && (
-          <Chip variant="spot" size="sm">
-            {client.open_query_count} open quer
-            {client.open_query_count === 1 ? "y" : "ies"}
-          </Chip>
-        )}
-        {client.next_renewal_in_days != null && renewalChip && (
-          <Chip variant={renewalChip} size="sm">
-            <Calendar size={10} />
+        {client.next_renewal_in_days != null && (
+          <div
+            className={cn(
+              "mt-2 flex items-center gap-1.5 text-[12px]",
+              client.next_renewal_in_days <= 60
+                ? "font-semibold text-warn"
+                : "text-ink-soft",
+            )}
+          >
+            <Calendar size={12} />
             Renewal in {client.next_renewal_in_days}d
-          </Chip>
+          </div>
         )}
       </div>
 
-      {/* Flags */}
-      <div className="space-y-1.5 text-[12px] md:max-w-[260px]">
-        {client.opportunity_flags.slice(0, 3).map((f, i) => (
-          <FlagLine key={`o-${i}`} tone="pos" icon={Sparkles}>
-            {f}
-          </FlagLine>
-        ))}
-        {client.risk_flags.slice(0, 3).map((f, i) => (
-          <FlagLine key={`r-${i}`} tone="neg" icon={AlertTriangle}>
-            {f}
-          </FlagLine>
-        ))}
-        {client.risk_flags.length === 0 &&
-          client.opportunity_flags.length === 0 && (
-            <Micro>No flags.</Micro>
-          )}
+      {/* engagement */}
+      <div>
+        <Micro className="block">Engagement</Micro>
+        <div className="mt-1 flex items-baseline gap-2">
+          <NumDisplay
+            size="md"
+            className={cn("leading-none", engagementText(client.engagement_score))}
+          >
+            {client.engagement_score.toFixed(0)}
+          </NumDisplay>
+          <Caption>{client.engagement_label}</Caption>
+        </div>
+        <div className="mt-2 h-1 overflow-hidden rounded-full bg-rule">
+          <div
+            className={cn(
+              "h-full",
+              tone === "pos"
+                ? "bg-pos"
+                : tone === "info"
+                  ? "bg-info"
+                  : tone === "warn"
+                    ? "bg-warn"
+                    : "bg-spot",
+            )}
+            style={{ width: `${Math.max(0, Math.min(100, client.engagement_score))}%` }}
+          />
+        </div>
       </div>
-    </Card>
-  );
-}
 
-function FlagLine({
-  tone,
-  icon: Icon,
-  children,
-}: {
-  tone: "pos" | "neg";
-  icon: typeof Sparkles;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-start gap-1.5",
-        tone === "pos" ? "text-pos" : "text-neg",
-      )}
-    >
-      <Icon size={11} className="mt-0.5 shrink-0" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function SortPicker({
-  value,
-  onChange,
-}: {
-  value: Sort;
-  onChange: (s: Sort) => void;
-}) {
-  return (
-    <label className="flex items-center gap-2 text-[12.5px]">
-      <span className="text-ink-mute">Sort:</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as Sort)}
-        className="rounded-btn border border-rule-strong bg-surface px-3 py-1.5 text-[13px] font-medium text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-      >
-        <option value="engagement">Engagement (low first)</option>
-        <option value="premium">Premium (high first)</option>
-        <option value="renewal">Renewal (soonest)</option>
-        <option value="queries">Open queries</option>
-        <option value="name">Name</option>
-      </select>
-    </label>
-  );
-}
-
-function SummaryTile({
-  label,
-  tone,
-  children,
-}: {
-  label: string;
-  tone?: "pos" | "neg" | "spot" | "warn";
-  children: React.ReactNode;
-}) {
-  const variant =
-    tone === "pos"
-      ? "pos"
-      : tone === "neg"
-        ? "neg"
-        : tone === "spot"
-          ? "spot"
-          : tone === "warn"
-            ? "warn"
-            : "default";
-  return (
-    <Card pad="md" variant={variant}>
-      <Micro
-        className={cn(
-          "block",
-          tone === "spot" && "text-spot-deep dark:text-spot",
-          tone === "pos" && "text-pos",
-          tone === "neg" && "text-neg",
+      {/* opps + risks */}
+      <div>
+        {client.opportunity_flags.length > 0 && (
+          <div className="mb-1.5">
+            <div className="mb-1 flex items-center gap-1.5 text-[11.5px] font-bold text-info-deep dark:text-info">
+              <TrendingUp size={11} /> OPPORTUNITIES · {client.opportunity_flags.length}
+            </div>
+            <Caption className="text-[12px]">
+              {client.opportunity_flags.slice(0, 3).join(" · ")}
+            </Caption>
+          </div>
         )}
-      >
-        {label}
-      </Micro>
-      <div className="mt-2">
-        <NumDisplay size="md">{children}</NumDisplay>
+        {client.risk_flags.length > 0 && (
+          <div>
+            <div className="mb-1 flex items-center gap-1.5 text-[11.5px] font-bold text-neg">
+              <TrendingDown size={11} /> RISKS · {client.risk_flags.length}
+            </div>
+            <Caption className="text-[12px]">
+              {client.risk_flags.slice(0, 3).join(" · ")}
+            </Caption>
+          </div>
+        )}
+        {client.opportunity_flags.length === 0 && client.risk_flags.length === 0 && (
+          <div className="flex items-center gap-1.5 text-pos">
+            <CheckCircle2 size={14} />
+            <span className="text-[13px] font-semibold">Clean status — no flags</span>
+          </div>
+        )}
       </div>
+
+      <ChevronRight size={18} className="text-ink-mute" />
     </Card>
   );
 }

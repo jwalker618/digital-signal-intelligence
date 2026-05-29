@@ -1,13 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { Search, AlertCircle, Briefcase, ChevronRight } from "lucide-react";
+import { useMemo } from "react";
+import { AlertCircle, Briefcase, ChevronRight } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
-import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { ScoreBar } from "@/components/ui/score-bar";
+import {
+  Body,
+  Card,
+  Caption,
+  Chip,
+  Eyebrow,
+  Micro,
+  NumDisplay,
+} from "@/components/ui";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview } from "@/lib/portalApi";
@@ -15,7 +20,7 @@ import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatText } from "@/lib/format";
 import { tierStatus } from "@/lib/portalTone";
 import { portalToneToTone } from "@/lib/design-tokens";
-import { cn, fmtRelative } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import type {
   BrokerOverviewResponse,
   ClientBookEntry,
@@ -43,33 +48,36 @@ export default function BrokerBookPage() {
 }
 
 function BookBody({ data }: { data: BrokerOverviewResponse }) {
-  const [query, setQuery] = useState("");
-
   const grouped = useMemo(() => {
     const m = new Map<string, ClientBookEntry[]>();
     for (const c of data.clients) {
-      if (
-        query &&
-        !c.entity_name.toLowerCase().includes(query.toLowerCase()) &&
-        !c.coverage.toLowerCase().includes(query.toLowerCase())
-      ) {
-        continue;
-      }
       const list = m.get(c.entity_name) ?? [];
       list.push(c);
       m.set(c.entity_name, list);
     }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-  }, [data.clients, query]);
+  }, [data.clients]);
 
   const totalPolicies = data.clients.length;
   const totalPremium = data.clients.reduce(
     (sum, c) => sum + (c.recommended_premium ?? 0),
     0,
   );
-  const awaiting = data.clients.filter(
-    (c) => c.referral_state && /awaiting/i.test(c.referral_state),
-  ).length;
+  const tierBuckets = useMemo(() => {
+    const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+    for (const c of data.clients) {
+      if (c.tier && counts[c.tier] != null) counts[c.tier] += 1;
+    }
+    return [1, 2, 3, 4, 5].map((t) => ({ t, n: counts[t] }));
+  }, [data.clients]);
+  const maxTier = Math.max(...tierBuckets.map((b) => b.n), 1);
+  const avgScore = useMemo(() => {
+    const scored = data.clients.filter((c) => c.composite_score != null);
+    if (!scored.length) return null;
+    return Math.round(
+      scored.reduce((s, c) => s + (c.composite_score ?? 0), 0) / scored.length,
+    );
+  }, [data.clients]);
 
   return (
     <>
@@ -78,43 +86,61 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
         entity={data.broker.name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-6">
-          <header className="flex items-end justify-between gap-6">
-            <div>
-              <Eyebrow>Broker</Eyebrow>
-              <h1 className="mt-1 font-display text-[36px] font-semibold leading-none tracking-tight text-ink">
-                {data.broker.name}
-              </h1>
-              <Body className="mt-2">
-                {grouped.length} client{grouped.length === 1 ? "" : "s"} ·{" "}
-                {totalPolicies} placement{totalPolicies === 1 ? "" : "s"}
-              </Body>
-            </div>
-            <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
-              <Search size={15} className="text-ink-mute" />
-              <input
-                type="search"
-                placeholder="Filter clients or coverages…"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="h-10 w-72 border-0 bg-transparent text-[13.5px] text-ink placeholder:text-ink-mute focus:outline-none"
-              />
-            </div>
-          </header>
-
-          <div className="grid gap-4 sm:grid-cols-4">
-            <SummaryTile label="Clients">{grouped.length}</SummaryTile>
-            <SummaryTile label="Policies">{totalPolicies}</SummaryTile>
-            <SummaryTile label="Premium under management" emphasis>
-              {formatCurrency(totalPremium)}
-            </SummaryTile>
-            <SummaryTile
-              label="Open queries"
-              emphasis={data.open_queries_count > 0}
-              variant={data.open_queries_count > 0 ? "spot" : "default"}
-            >
-              {data.open_queries_count}
-            </SummaryTile>
+        <div className="mx-auto grid max-w-[1400px] gap-4">
+          {/* Hero strip — broker identity + 4 KPIs */}
+          <div className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+            <Card pad="lg" className="flex items-center gap-4">
+              <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-card bg-info-soft text-info-deep dark:text-info">
+                <Briefcase size={28} />
+              </div>
+              <div className="min-w-0">
+                <Eyebrow>Broker book</Eyebrow>
+                <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight tracking-tight text-ink">
+                  {data.broker.name}
+                </h1>
+                <Caption className="mt-1.5 block">
+                  {grouped.length} client{grouped.length === 1 ? "" : "s"} · {totalPolicies}{" "}
+                  polic{totalPolicies === 1 ? "y" : "ies"} in force
+                </Caption>
+              </div>
+            </Card>
+            <Card pad="lg">
+              <Eyebrow>Aggregate premium</Eyebrow>
+              <NumDisplay size="lg" className="mt-1.5 block">
+                {formatCurrency(totalPremium)}
+              </NumDisplay>
+              <Micro className="mt-1 block">annual</Micro>
+            </Card>
+            <Card pad="lg" variant="info">
+              <Eyebrow className="text-info-deep dark:text-info">
+                Avg signal score
+              </Eyebrow>
+              <NumDisplay size="lg" className="mt-1.5 block text-info-deep dark:text-info">
+                {avgScore != null ? avgScore : "—"}
+              </NumDisplay>
+              <Micro className="mt-1 block">across the book</Micro>
+            </Card>
+            <Card pad="lg" variant={data.open_queries_count > 0 ? "spot" : "default"}>
+              <Eyebrow
+                className={
+                  data.open_queries_count > 0
+                    ? "text-spot-deep dark:text-spot"
+                    : ""
+                }
+              >
+                Awaiting you
+              </Eyebrow>
+              <NumDisplay
+                size="lg"
+                className={cn(
+                  "mt-1.5 block",
+                  data.open_queries_count > 0 && "text-spot-deep dark:text-spot",
+                )}
+              >
+                {data.open_queries_count}
+              </NumDisplay>
+              <Micro className="mt-1 block">open queries</Micro>
+            </Card>
           </div>
 
           {data.open_queries_count > 0 && (
@@ -123,155 +149,229 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
               className="flex items-center gap-3 rounded-card border border-spot bg-spot-soft px-4 py-3 text-[13.5px] font-medium text-spot-deep transition hover:bg-spot hover:text-white dark:text-spot"
             >
               <AlertCircle size={16} />
-              {data.open_queries_count} open quer{data.open_queries_count === 1 ? "y" : "ies"} awaiting reply
+              {data.open_queries_count} open quer
+              {data.open_queries_count === 1 ? "y" : "ies"} awaiting reply
               <ChevronRight size={14} className="ml-auto" />
             </Link>
           )}
 
-          {/* Client cards */}
-          {grouped.length === 0 ? (
-            <Card pad="lg" className="text-center">
-              <Body className="italic">
-                {query
-                  ? `No clients or coverages match "${query}".`
-                  : "Your book is empty."}
-              </Body>
+          {/* Book roster table */}
+          <Card
+            pad="none"
+            header={`Book roster`}
+            headerRight={
+              <Chip variant="mute" size="sm">
+                {totalPolicies} polic{totalPolicies === 1 ? "y" : "ies"}
+              </Chip>
+            }
+          >
+            {grouped.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <Body className="italic">Your book is empty.</Body>
+              </div>
+            ) : (
+              <table className="w-full text-[13px]">
+                <thead>
+                  <tr className="border-b border-rule bg-surface-sunken text-left">
+                    <ColHead>Client</ColHead>
+                    <ColHead>Coverage</ColHead>
+                    <ColHead>Score</ColHead>
+                    <ColHead>Tier</ColHead>
+                    <ColHead>Percentile</ColHead>
+                    <ColHead align="right">Premium</ColHead>
+                    <ColHead>Status</ColHead>
+                    <ColHead align="right" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {grouped.flatMap(([client, items]) =>
+                    items.map((c) => (
+                      <BookRow key={c.submission_code} client={client} entry={c} />
+                    )),
+                  )}
+                </tbody>
+              </table>
+            )}
+          </Card>
+
+          {/* Tier mix */}
+          <div className="grid gap-4 lg:grid-cols-[1fr_1.4fr]">
+            <Card pad="lg">
+              <Eyebrow>Tier mix</Eyebrow>
+              <h2 className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">
+                Risk quality across the book
+              </h2>
+              <div className="mt-4 flex h-[140px] items-end gap-3.5">
+                {tierBuckets.map(({ t, n }) => {
+                  const color =
+                    t <= 2 ? "bg-pos" : t === 3 ? "bg-info" : t === 4 ? "bg-warn" : "bg-neg";
+                  const numColor =
+                    t <= 2
+                      ? "text-pos"
+                      : t === 3
+                        ? "text-info"
+                        : t === 4
+                          ? "text-warn"
+                          : "text-neg";
+                  return (
+                    <div key={t} className="flex flex-1 flex-col items-center gap-1.5">
+                      <span className={cn("text-[15px] font-semibold tabular-nums", numColor)}>
+                        {n}
+                      </span>
+                      <div
+                        className={cn("w-full rounded-t-md", color)}
+                        style={{
+                          height: `${Math.max(4, (n / maxTier) * 100)}%`,
+                          minHeight: 4,
+                        }}
+                      />
+                      <Micro>Tier {t}</Micro>
+                    </div>
+                  );
+                })}
+              </div>
+              <Caption className="mt-4 block border-t border-rule pt-3">
+                Most of the book sits in the mid-tier band; outliers (tier 4–5) are worth a
+                proactive touchpoint.
+              </Caption>
             </Card>
-          ) : (
-            <div className="space-y-5">
-              {grouped.map(([clientName, coverages]) => (
-                <ClientBlock
-                  key={clientName}
-                  clientName={clientName}
-                  coverages={coverages}
-                />
-              ))}
-            </div>
-          )}
+
+            <Card pad="lg">
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <Eyebrow>Open queries</Eyebrow>
+                  <h2 className="mt-1.5 text-[17px] font-semibold leading-tight text-ink">
+                    Things waiting on you or your clients
+                  </h2>
+                </div>
+                {data.open_queries_count > 0 && (
+                  <Chip variant="spot" size="sm">
+                    {data.open_queries_count} open
+                  </Chip>
+                )}
+              </div>
+              <div className="mt-4 flex flex-col gap-2">
+                {data.clients
+                  .filter(
+                    (c) => c.referral_state && /awaiting/i.test(c.referral_state),
+                  )
+                  .slice(0, 4)
+                  .map((c) => (
+                    <div
+                      key={c.submission_code}
+                      className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-card border border-rule bg-surface-elev px-3.5 py-2.5"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate text-[13px] font-semibold text-ink">
+                          {c.entity_name}
+                        </div>
+                        <Micro className="mt-0.5 block truncate">
+                          {c.coverage} · {c.submission_code}
+                        </Micro>
+                      </div>
+                      <Chip
+                        variant={
+                          c.awaiting_party && /broker/i.test(c.awaiting_party)
+                            ? "spot"
+                            : "info"
+                        }
+                        size="sm"
+                      >
+                        {c.awaiting_party && /broker/i.test(c.awaiting_party)
+                          ? "on you"
+                          : "on client"}
+                      </Chip>
+                      <Micro>—</Micro>
+                    </div>
+                  ))}
+                {data.open_queries_count === 0 && (
+                  <Caption className="italic">No open queries.</Caption>
+                )}
+              </div>
+            </Card>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
-function ClientBlock({
-  clientName,
-  coverages,
+function BookRow({
+  client,
+  entry,
 }: {
-  clientName: string;
-  coverages: ClientBookEntry[];
+  client: string;
+  entry: ClientBookEntry;
 }) {
-  const totalPremium = coverages.reduce(
-    (sum, c) => sum + (c.recommended_premium ?? 0),
-    0,
-  );
-  const awaiting = coverages.filter(
-    (c) => c.referral_state && /awaiting/i.test(c.referral_state),
-  ).length;
-
-  return (
-    <Card pad="md" className="overflow-hidden p-0">
-      <header className="flex items-baseline justify-between gap-3 border-b border-rule px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <Briefcase size={15} className="text-ink-mute" />
-          <h2 className="text-[16px] font-semibold text-ink">{clientName}</h2>
-          <Chip variant="mute" size="sm">
-            {coverages.length} polic{coverages.length === 1 ? "y" : "ies"}
-          </Chip>
-          {awaiting > 0 && (
-            <Chip variant="spot" size="sm">
-              <AlertCircle size={10} />
-              {awaiting} awaiting
-            </Chip>
-          )}
-        </div>
-        <span className="text-[13px] font-semibold tabular-nums text-ink">
-          {formatCurrency(totalPremium)}
-        </span>
-      </header>
-      <table className="w-full table-fixed text-[13px]">
-        <thead>
-          <tr className="border-b border-rule bg-surface-sunken/60 text-left">
-            <ColHead width="w-[26%]">Coverage</ColHead>
-            <ColHead width="w-[16%]">Score</ColHead>
-            <ColHead width="w-[18%]">Status</ColHead>
-            <ColHead width="w-[14%]">Premium</ColHead>
-            <ColHead width="w-[18%]">Updated</ColHead>
-            <ColHead width="w-[8%]">{null}</ColHead>
-          </tr>
-        </thead>
-        <tbody>
-          {coverages.map((c) => (
-            <CoverageRow key={c.submission_code} entry={c} />
-          ))}
-        </tbody>
-      </table>
-    </Card>
-  );
-}
-
-function CoverageRow({ entry }: { entry: ClientBookEntry }) {
   const tone = tierStatus(entry.tier);
   const chipTone = portalToneToTone(tone.tone);
   const awaiting =
     entry.referral_state && /awaiting/i.test(entry.referral_state);
+  const tierColor =
+    entry.tier == null
+      ? "bg-surface-sunken text-ink-mute"
+      : entry.tier <= 2
+        ? "bg-pos-soft text-pos"
+        : entry.tier === 3
+          ? "bg-info-soft text-info"
+          : entry.tier === 4
+            ? "bg-warn-soft text-warn"
+            : "bg-neg-soft text-neg";
 
   return (
     <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
-      <td className="px-5 py-3">
+      <td className="px-5 py-2.5">
         <Link
           href={`/client/submissions/${entry.submission_code}`}
-          className="block"
+          className="block font-semibold text-ink hover:underline"
         >
-          <p className="font-medium text-ink">{entry.coverage}</p>
-          <Micro className="mt-0.5 block font-mono">
-            {entry.submission_code}
-          </Micro>
+          {client}
         </Link>
       </td>
-      <td className="px-5 py-3">
+      <td className="px-5 py-2.5 text-ink-soft">{entry.coverage}</td>
+      <td className="px-5 py-2.5">
         {entry.composite_score != null ? (
-          <div className="space-y-1">
-            <span className="font-semibold tabular-nums text-ink">
-              {entry.composite_score.toFixed(0)}
-            </span>
-            <ScoreBar
-              value={entry.composite_score}
-              max={1000}
-              showValue={false}
-              thresholds={[
-                { at: 400, tone: "neg" },
-                { at: 650, tone: "warn" },
-                { at: 800, tone: "info" },
-                { at: 1000, tone: "pos" },
-              ]}
-            />
-          </div>
+          <span className="font-semibold tabular-nums text-info">
+            {entry.composite_score.toFixed(0)}
+          </span>
         ) : (
           <span className="text-ink-mute">—</span>
         )}
       </td>
-      <td className="px-5 py-3">
+      <td className="px-5 py-2.5">
+        {entry.tier != null ? (
+          <span
+            className={cn(
+              "inline-flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold",
+              tierColor,
+            )}
+          >
+            {entry.tier}
+          </span>
+        ) : (
+          <span className="text-ink-mute">—</span>
+        )}
+      </td>
+      <td className="px-5 py-2.5 tabular-nums text-ink-soft">
+        {entry.peer_percentile_rank != null
+          ? `${Math.round(entry.peer_percentile_rank * 100)}th`
+          : "—"}
+      </td>
+      <td className="px-5 py-2.5 text-right font-semibold tabular-nums text-ink">
+        {entry.recommended_premium != null
+          ? formatCurrency(entry.recommended_premium)
+          : "—"}
+      </td>
+      <td className="px-5 py-2.5">
         <Chip variant={awaiting ? "spot" : chipTone} size="sm">
-          {awaiting
-            ? formatText(entry.referral_state, "capitalize")
-            : tone.label}
+          {awaiting ? formatText(entry.referral_state ?? "", "capitalize") : tone.label}
         </Chip>
       </td>
-      <td className="px-5 py-3">
-        <span className="font-semibold tabular-nums text-ink">
-          {entry.recommended_premium != null
-            ? formatCurrency(entry.recommended_premium)
-            : "—"}
-        </span>
-      </td>
-      <td className="px-5 py-3 text-ink-soft">
-        {fmtRelative(entry.updated_at)}
-      </td>
-      <td className="px-5 py-3 text-right">
+      <td className="px-5 py-2.5 text-right">
         <Link
           href={`/client/submissions/${entry.submission_code}`}
           className="inline-flex items-center text-ink-mute hover:text-ink"
+          aria-label={`Open ${entry.submission_code}`}
         >
           <ChevronRight size={16} />
         </Link>
@@ -280,46 +380,21 @@ function CoverageRow({ entry }: { entry: ClientBookEntry }) {
   );
 }
 
-function SummaryTile({
-  label,
-  children,
-  emphasis,
-  variant = "default",
-}: {
-  label: string;
-  children: React.ReactNode;
-  emphasis?: boolean;
-  variant?: "default" | "info" | "spot";
-}) {
-  return (
-    <Card pad="md" variant={emphasis ? variant : "default"}>
-      <Micro
-        className={cn(
-          "block",
-          variant === "spot" && "text-spot-deep dark:text-spot",
-        )}
-      >
-        {label}
-      </Micro>
-      <div className="mt-2">
-        <NumDisplay size={emphasis ? "lg" : "md"}>{children}</NumDisplay>
-      </div>
-    </Card>
-  );
-}
-
 function ColHead({
-  width,
   children,
+  align,
 }: {
-  width: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  align?: "left" | "right";
 }) {
   return (
     <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
+      className={cn(
+        "px-5 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-mute",
+        align === "right" ? "text-right" : "text-left",
+      )}
     >
-      {children}
+      {children ?? null}
     </th>
   );
 }

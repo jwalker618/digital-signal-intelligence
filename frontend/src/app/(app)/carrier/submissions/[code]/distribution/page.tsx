@@ -1,18 +1,20 @@
 "use client";
 
-import { Building2 } from "lucide-react";
+import { Building2, Network, Users } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 /**
  * Distribution — how the premium and risk are shared across the commercial
- * entity stack. Reads from activeCommercial.commercial_distribution
- * (an array of participants).
+ * entity stack. CommercialTermsDBRecord does not expose a participants array
+ * (no commercial_distribution field); it carries this carrier's flat line via
+ * signed_line / role / distribution_type, so a single participant row is
+ * derived from those real fields.
  */
 export default function DistributionPage() {
   const ver = useDsiStore((s) => s.activeVersion);
@@ -29,10 +31,22 @@ export default function DistributionPage() {
   }
 
   const totalPremium = Number(ver?.final_premium ?? sub.final_premium ?? 0);
-  const participants =
-    (commercial?.commercial_distribution as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+  // CommercialTermsDBRecord exposes a single flat line (signed_line/role/distribution_type),
+  // not a commercial_distribution participants array. Derive one row from the real fields.
+  const signedLine = commercial?.signed_line;
+  const participants: Array<Record<string, unknown>> =
+    signedLine != null
+      ? [
+          {
+            name: commercial?.entity_name ?? "This carrier",
+            role: commercial?.role ?? "Participant",
+            // signed_line is a fraction (0..1); display helpers expect a percentage
+            share_pct: Number(signedLine) * 100,
+            premium: commercial?.net_premium ?? commercial?.gross_premium ?? null,
+            line: commercial?.distribution_type ?? null,
+          },
+        ]
+      : [];
 
   const totalShare = participants.reduce((s, p) => {
     const share = p.share_pct ?? (p.share != null ? Number(p.share) * 100 : 0);
@@ -48,19 +62,8 @@ export default function DistributionPage() {
       <WorkbenchTopbar activeTabLabel="Distribution" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Commercial</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Distribution
-            </h1>
-            <Body className="mt-2">
-              Premium share across participants in the commercial stack — who
-              keeps what, who fronts, who reinsures.
-            </Body>
-          </header>
-
           {participants.length === 0 ? (
-            <Card pad="lg">
+            <Card header="Subscription tower" icon={Network} pad="lg">
               <Body className="italic">
                 No commercial distribution recorded for this submission.
               </Body>
@@ -82,16 +85,17 @@ export default function DistributionPage() {
               </div>
 
               {/* Stacked share bar */}
-              <Card pad="md">
-                <Eyebrow className="mb-3">Share stack</Eyebrow>
+              <Card header="Subscription tower" icon={Network} pad="md">
                 <ShareStack participants={participants} />
               </Card>
 
               {/* Per-participant rows */}
-              <Card pad="md" className="overflow-hidden p-0">
-                <header className="border-b border-rule px-5 py-3.5">
-                  <Eyebrow>Participants</Eyebrow>
-                </header>
+              <Card
+                header="Participants"
+                icon={Users}
+                pad="none"
+                className="overflow-hidden"
+              >
                 <table className="w-full table-fixed text-[13px]">
                   <thead>
                     <tr className="border-b border-rule bg-surface-sunken/60 text-left">
