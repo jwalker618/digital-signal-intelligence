@@ -631,6 +631,24 @@ function CohortStandingCard({ hero }: { hero?: ClientCoverageEntry }) {
 
 /* ────────── Row 3 — loss outlook + exposure + coverage shape ────────── */
 
+// 12 labels, oldest -> newest, ending in the current calendar quarter.
+// Matches the backend's loss_event_quarters bucketing so bar i maps to
+// label i.
+function lastTwelveQuarterLabels(now: Date = new Date()): string[] {
+  const labels: string[] = [];
+  let q = Math.floor(now.getUTCMonth() / 3); // 0..3
+  let yr = now.getUTCFullYear();
+  for (let i = 0; i < 12; i++) {
+    labels.unshift(`${String(yr).slice(2)} Q${q + 1}`);
+    q -= 1;
+    if (q < 0) {
+      q = 3;
+      yr -= 1;
+    }
+  }
+  return labels;
+}
+
 // Map the MV loss_propensity_band to the card's headline label.
 function lossBandLabel(band: string): string {
   switch (band) {
@@ -693,11 +711,14 @@ function LossOutlookCard({ hero }: { hero?: ClientCoverageEntry }) {
       ? Math.round(hero.loss_severity_velocity)
       : 41;
 
-  // TODO(B2): per-quarter claims strip needs a loss_events aggregation
-  // query — deferred. Keep the static fallback strip below as the visual.
-  const quarters: number[] = [
-    0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0, 0.7, 0,
-  ];
+  // Real per-quarter incurred-loss strip from /portal/overview. When the
+  // entity has no loss events in the 12-quarter window the backend
+  // returns null and we fall back to the designed placeholder strip so
+  // the card still reads (rather than collapsing to flat bars).
+  const quarters: number[] = hero?.loss_event_quarters?.length
+    ? hero.loss_event_quarters
+    : [0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0, 0.7, 0];
+  const quarterLabels = lastTwelveQuarterLabels();
   return (
     <Card variant="pos" pad="lg" className="flex h-full flex-col gap-3">
       <div className="flex items-baseline justify-between">
@@ -726,16 +747,12 @@ function LossOutlookCard({ hero }: { hero?: ClientCoverageEntry }) {
                   ? { background: `color-mix(in srgb, var(--color-neg) ${30 + v * 70}%, transparent)` }
                   : undefined
               }
-              title={
-                v > 0
-                  ? `Q${(i % 4) + 1} '${23 + Math.floor(i / 4)} — claim`
-                  : `Q${(i % 4) + 1} '${23 + Math.floor(i / 4)} — no claim`
-              }
+              title={`${quarterLabels[i]} — ${v > 0 ? "claim" : "no claim"}`}
             />
           ))}
         </div>
         <div className="mt-1 flex justify-between">
-          {["23 Q1", "24 Q1", "25 Q1"].map((l) => (
+          {[quarterLabels[0], quarterLabels[6], quarterLabels[11]].map((l) => (
             <Micro key={l}>{l}</Micro>
           ))}
         </div>

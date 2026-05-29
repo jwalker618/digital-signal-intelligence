@@ -83,13 +83,14 @@ class ClientCoverageEntry(BaseModel):
     exposure_size_score: Optional[float] = None
     exposure_value_prior: Optional[float] = None
     # Phase B2: loss-outlook summary off the latest MV row so the
-    # LossOutlookCard renders the real band / trend / velocities. The
-    # per-quarter claims strip remains a static fallback (deferred --
-    # needs a loss_events aggregation query). All optional.
+    # LossOutlookCard renders the real band / trend / velocities, plus
+    # a 12-quarter incurred-loss strip aggregated from loss_events
+    # (oldest-first, normalised so max=1.0). All optional.
     loss_propensity_band: Optional[str] = None
     loss_trend_direction: Optional[str] = None
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
+    loss_event_quarters: Optional[list[float]] = None
 
 
 class ClientOverviewResponse(BaseModel):
