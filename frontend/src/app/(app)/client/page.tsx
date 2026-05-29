@@ -23,14 +23,17 @@ import { CohortBar } from "@/components/charts/cohort-bar";
 import { PremiumBreakdown, type PremiumSlice } from "@/components/charts/premium-breakdown";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
-import { fetchOverview } from "@/lib/portalApi";
+import { fetchOverview, fetchSubmissionScore } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type {
   ClientOverviewResponse,
   ClientCoverageEntry,
+  ImpactBreakdown,
   OverviewResponse,
+  ScoreResponse,
+  SignalImpact,
 } from "@/types/portal";
 
 /**
@@ -70,8 +73,21 @@ export default function ClientOverviewPage() {
 }
 
 function OverviewBody({ data }: { data: ClientOverviewResponse }) {
+  const accessToken = useAuthStore((s) => s.accessToken);
   const coverages = data.active_coverages;
   const hero = coverages[0];
+
+  // Secondary fetch: pull the hero coverage's impact breakdown so the
+  // Signal Pulse card can show real strength / drag contributions. This
+  // is intentionally NOT awaited at the page level -- the card renders
+  // its own mini loading / empty state while the score loads, and the
+  // rest of the page is already rendered from the /overview payload.
+  const heroCode = hero?.submission_code ?? null;
+  const score = useRoleScopedFetch<ScoreResponse>({
+    fetcher: () => fetchSubmissionScore(accessToken, heroCode as string),
+    enabled: !!accessToken && !!heroCode,
+    deps: [accessToken, heroCode],
+  });
 
   // Derive premium slices from real coverages where possible.
   const slices: PremiumSlice[] = coverages
@@ -109,13 +125,16 @@ function OverviewBody({ data }: { data: ClientOverviewResponse }) {
 
           {/* ────────── ROW 2 — signal pulse + cohort ────────── */}
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
-            <SignalPulseCard />
+            <SignalPulseCard
+              breakdown={score.data?.impact_breakdown ?? null}
+              loading={score.loading}
+            />
             <CohortStandingCard hero={hero} />
           </div>
 
           {/* ────────── ROW 3 — loss / exposure / coverage shape ────────── */}
           <div className="grid gap-4 lg:grid-cols-3">
-            <LossOutlookCard />
+            <LossOutlookCard hero={hero} />
             <ExposureCard hero={hero} />
             <CoverageShapeCard coverages={coverages} />
           </div>
@@ -378,21 +397,73 @@ function AwaitingCard({ items }: { items: AwaitingItem[] }) {
 
 /* ────────── Row 2 — Signal pulse + cohort ────────── */
 
-function SignalPulseCard() {
-  // The /overview endpoint doesn't include signal contributions —
-  // those live behind the per-submission scoring detail. Use the
-  // designed default contribution structure so the layout reads, but
-  // render every row as a placeholder.
-  const helping: PulseRow[] = [
-    { label: "MFA on admins", value: 12100, max: 12100 },
-    { label: "No prior claims (5y)", value: 9300, max: 12100 },
-    { label: "EDR coverage 95%+", value: 6700, max: 12100 },
-  ];
-  const opportunity: PulseRow[] = [
-    { label: "SOC 2 Type II", value: 18200, max: 18200 },
-    { label: "Backup encryption", value: 11400, max: 18200 },
-    { label: "Public RDP exposed", value: 6200, max: 18200 },
-  ];
+// Designed-default contributions — used only when the score fetch
+// returns no impact breakdown (legacy / unscored submissions), so the
+// card never reads as broken.
+const FALLBACK_HELPING: PulseRow[] = [
+  { label: "MFA on admins", value: 12100, max: 12100 },
+  { label: "No prior claims (5y)", value: 9300, max: 12100 },
+  { label: "EDR coverage 95%+", value: 6700, max: 12100 },
+];
+const FALLBACK_OPPORTUNITY: PulseRow[] = [
+  { label: "SOC 2 Type II", value: 18200, max: 18200 },
+  { label: "Backup encryption", value: 11400, max: 18200 },
+  { label: "Public RDP exposed", value: 6200, max: 18200 },
+];
+const FALLBACK_HELPING_DELTA = "−$28.1k";
+const FALLBACK_OPPORTUNITY_DELTA = "+$40.7k";
+
+// Cap rows so the column reads cleanly; the breakdown is already sorted
+// by absolute dollar impact desc server-side.
+const PULSE_MAX_ROWS = 3;
+
+function deltaLabel(total: number, sign: "+" | "−"): string {
+  return `${sign}$${(Math.abs(total) / 1000).toFixed(1)}k`;
+}
+
+function impactsToRows(impacts: SignalImpact[]): PulseRow[] {
+  const rows = impacts.slice(0, PULSE_MAX_ROWS).map((s) => ({
+    label: s.signal_label,
+    value: Math.abs(s.premium_delta_usd),
+    max: 1,
+  }));
+  const max = rows.reduce((m, r) => Math.max(m, r.value), 0) || 1;
+  return rows.map((r) => ({ ...r, max }));
+}
+
+function SignalPulseCard({
+  breakdown,
+  loading,
+}: {
+  breakdown: ImpactBreakdown | null;
+  loading: boolean;
+}) {
+  // Prefer the real impact breakdown (helping = strengths, opportunity =
+  // drags). Fall back to the designed defaults ONLY when the secondary
+  // score fetch returned nothing usable.
+  const hasReal =
+    !!breakdown &&
+    (breakdown.strengths.length > 0 || breakdown.drags.length > 0);
+
+  const helping = hasReal
+    ? impactsToRows(breakdown!.strengths)
+    : FALLBACK_HELPING;
+  const opportunity = hasReal
+    ? impactsToRows(breakdown!.drags)
+    : FALLBACK_OPPORTUNITY;
+
+  const helpingDelta = hasReal
+    ? deltaLabel(
+        breakdown!.strengths.reduce((s, r) => s + r.premium_delta_usd, 0),
+        "−",
+      )
+    : FALLBACK_HELPING_DELTA;
+  const opportunityDelta = hasReal
+    ? deltaLabel(
+        breakdown!.drags.reduce((s, r) => s + r.premium_delta_usd, 0),
+        "+",
+      )
+    : FALLBACK_OPPORTUNITY_DELTA;
 
   return (
     <Card pad="lg">
@@ -405,28 +476,32 @@ function SignalPulseCard() {
         </div>
         <Micro>cyber · primary line</Micro>
       </div>
-      <div className="grid gap-6 sm:grid-cols-2">
-        <PulseColumn
-          heading="Helping"
-          headingChip="pos"
-          headingIcon={<TrendingDown size={12} />}
-          deltaLabel="−$28.1k"
-          accent="bg-pos"
-          rows={helping}
-          sign="−"
-          deltaClass="text-pos"
-        />
-        <PulseColumn
-          heading="Opportunity"
-          headingChip="spot"
-          headingIcon={<Lightbulb size={12} />}
-          deltaLabel="+$40.7k"
-          accent="bg-spot"
-          rows={opportunity}
-          sign="+"
-          deltaClass="text-spot-deep dark:text-spot"
-        />
-      </div>
+      {loading && !breakdown ? (
+        <Body className="italic">Loading signal contributions…</Body>
+      ) : (
+        <div className="grid gap-6 sm:grid-cols-2">
+          <PulseColumn
+            heading="Helping"
+            headingChip="pos"
+            headingIcon={<TrendingDown size={12} />}
+            deltaLabel={helpingDelta}
+            accent="bg-pos"
+            rows={helping}
+            sign="−"
+            deltaClass="text-pos"
+          />
+          <PulseColumn
+            heading="Opportunity"
+            headingChip="spot"
+            headingIcon={<Lightbulb size={12} />}
+            deltaLabel={opportunityDelta}
+            accent="bg-spot"
+            rows={opportunity}
+            sign="+"
+            deltaClass="text-spot-deep dark:text-spot"
+          />
+        </div>
+      )}
     </Card>
   );
 }
@@ -556,9 +631,70 @@ function CohortStandingCard({ hero }: { hero?: ClientCoverageEntry }) {
 
 /* ────────── Row 3 — loss outlook + exposure + coverage shape ────────── */
 
-function LossOutlookCard() {
-  // 12-quarter strip — designed placeholder data; loss history isn't on
-  // /overview. Two simulated claims at quarter indices 5 and 10.
+// Map the MV loss_propensity_band to the card's headline label.
+function lossBandLabel(band: string): string {
+  switch (band) {
+    case "very_low":
+      return "Very low";
+    case "low":
+      return "Low";
+    case "moderate":
+    case "medium":
+      return "Moderate";
+    case "elevated":
+      return "Elevated";
+    case "high":
+      return "High";
+    default:
+      // Title-case an unrecognised band rather than blanking it.
+      return band.charAt(0).toUpperCase() + band.slice(1).replace(/_/g, " ");
+  }
+}
+
+// Map loss_trend_direction to chip tone + arrow + label. The model
+// emits improving / stable / deteriorating.
+function lossTrend(direction: string): {
+  variant: "pos" | "neg" | "mute";
+  icon: React.ReactNode;
+  label: string;
+} {
+  switch (direction) {
+    case "improving":
+      return { variant: "pos", icon: <TrendingDown size={11} />, label: "Improving" };
+    case "deteriorating":
+    case "worsening":
+      return { variant: "neg", icon: <TrendingUp size={11} />, label: "Worsening" };
+    case "stable":
+      return { variant: "mute", icon: <Circle size={11} />, label: "Stable" };
+    default:
+      return { variant: "mute", icon: <Circle size={11} />, label: direction };
+  }
+}
+
+function LossOutlookCard({ hero }: { hero?: ClientCoverageEntry }) {
+  // Real band / trend off the latest MV row, falling back to the
+  // designed literals when the MV row hasn't populated them.
+  const bandLabel = hero?.loss_propensity_band
+    ? lossBandLabel(hero.loss_propensity_band)
+    : "Low";
+  const trend = hero?.loss_trend_direction
+    ? lossTrend(hero.loss_trend_direction)
+    : { variant: "pos" as const, icon: <TrendingDown size={11} />, label: "Improving" };
+
+  // Frequency / severity velocities (points/month). When present, surface
+  // the rounded velocity as the comparison value; otherwise keep the
+  // designed literals so the bars still read.
+  const freqValue =
+    hero?.loss_frequency_velocity != null
+      ? Math.round(hero.loss_frequency_velocity)
+      : 32;
+  const sevValue =
+    hero?.loss_severity_velocity != null
+      ? Math.round(hero.loss_severity_velocity)
+      : 41;
+
+  // TODO(B2): per-quarter claims strip needs a loss_events aggregation
+  // query — deferred. Keep the static fallback strip below as the visual.
   const quarters: number[] = [
     0, 0, 0, 0, 0, 0.4, 0, 0, 0, 0, 0.7, 0,
   ];
@@ -567,10 +703,10 @@ function LossOutlookCard() {
       <div className="flex items-baseline justify-between">
         <div>
           <Eyebrow className="text-pos">Loss outlook</Eyebrow>
-          <p className="mt-1 text-xl font-semibold text-pos">Low</p>
+          <p className="mt-1 text-xl font-semibold text-pos">{bandLabel}</p>
         </div>
-        <Chip variant="pos" size="sm">
-          <TrendingDown size={11} /> Improving
+        <Chip variant={trend.variant} size="sm">
+          {trend.icon} {trend.label}
         </Chip>
       </div>
       <div>
@@ -605,8 +741,8 @@ function LossOutlookCard() {
         </div>
       </div>
       <div className="mt-auto grid grid-cols-2 gap-3">
-        <CompareBar label="Frequency" value={32} cohort={48} />
-        <CompareBar label="Severity" value={41} cohort={44} />
+        <CompareBar label="Frequency" value={freqValue} cohort={48} />
+        <CompareBar label="Severity" value={sevValue} cohort={44} />
       </div>
     </Card>
   );

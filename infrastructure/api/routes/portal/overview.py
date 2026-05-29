@@ -289,4 +289,9 @@ async def _build_coverage_entry(
         exposure_band_label=(mv.exposure_band_label if mv else None),
         exposure_size_score=(mv.exposure_size_score if mv else None),
         exposure_value_prior=exposure_value_prior,
+        # Phase B2: loss-outlook fields straight off the latest MV row.
+        loss_propensity_band=(mv.loss_propensity_band if mv else None),
+        loss_trend_direction=(mv.loss_trend_direction if mv else None),
+        loss_frequency_velocity=(mv.loss_frequency_velocity if mv else None),
+        loss_severity_velocity=(mv.loss_severity_velocity if mv else None),
     )
