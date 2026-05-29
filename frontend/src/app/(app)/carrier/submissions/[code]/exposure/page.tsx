@@ -1,240 +1,384 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BarChart3, Gauge, Target } from "lucide-react";
+import { Gauge, ScatterChart, Puzzle, Target } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Micro } from "@/components/ui/typography";
-import { MiniKpi } from "@/components/ui/mini-kpi";
-import { PageError, PageLoading } from "@/components/base/pageStates";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { WorkArea } from "@/components/ui/work-area";
+import { Body, Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
+import { PageLoading } from "@/components/base/pageStates";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { formatCurrency, formatText } from "@/lib/format";
+
+/* ============================================================
+ * Exposure Assessment — mirrors reim_wb_c.jsx WbExposure.
+ *
+ * Three stacked rows:
+ *   1. Exposure profile — 7 KPIs
+ *   2. Two-col: Band position + Components
+ *   3. Exposure vs overall score — scatter
+ * ============================================================ */
+
+type ScatterPoint = {
+  exposure_size_score?: number;
+  composite_score?: number;
+  decision?: string;
+};
 
 export default function ExposureAssessmentPage() {
-  const sub = useDsiStore((s) => s.activeSubmission);
-  const ver = useDsiStore((s) => s.activeVersion);
-  const fetchExp = useDsiStore((s) => s.fetchExposureAnalytics);
-  const tier = useDsiStore((s) => s.exposureTierDistribution);
-  const band = useDsiStore((s) => s.exposureBandBenchmarks);
-
-  const [state, setState] = useState<"loading" | "ok" | "error">("loading");
-  const [err, setErr] = useState<string | null>(null);
+  const sub = useDsiStore((s) => s.activeSubmission) as ApiRecord | null;
+  const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
+  const fetch_ = useDsiStore((s) => s.fetchExposureAnalytics);
+  const scatter = useDsiStore((s) => s.exposureScatterData);
+  const [loading, setLoading] = useState(true);
 
   const coverage = sub?.coverage as string | undefined;
   useEffect(() => {
     if (!coverage) return;
-    setState("loading");
-    fetchExp(coverage)
-      .then(() => setState("ok"))
-      .catch((e) => {
-        setErr(e instanceof Error ? e.message : String(e));
-        setState("error");
-      });
-  }, [coverage, fetchExp]);
+    fetch_(coverage)
+      .catch(() => undefined)
+      .finally(() => setLoading(false));
+  }, [coverage, fetch_]);
 
-  if (!sub)
+  if (!ver) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
-        <PageLoading message="Loading submission…" />
+        <PageLoading />
       </>
     );
-  if (state === "loading")
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
-        <PageLoading message="Loading exposure analytics…" />
-      </>
-    );
-  if (state === "error")
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
-        <PageError message={err ?? "Unknown error"} />
-      </>
-    );
+  }
 
-  const exposureValue = Number(ver?.exposure_value ?? 0);
-  const exposureBand = String(ver?.exposure_band_label ?? "");
-  const sizeScore = Number(ver?.exposure_size_score ?? 0);
-  const complexityScore = Number(ver?.exposure_complexity_score ?? 0);
-  const expMod = Number(ver?.exposure_modifier ?? 1);
+  const value = numOrNull(ver.exposure_value);
+  const band = strOrNull(ver.exposure_band_label);
+  const sizeScore = numOrNull(ver.exposure_size_score);
+  const complexity = numOrNull(ver.exposure_complexity_score);
+  const modifier = numOrNull(ver.exposure_modifier);
+  const method = strOrNull(ver.exposure_assessment_method);
+  const finalTier = numOrNull(ver.final_tier);
+  const tierLabel = strOrNull(ver.tier_label);
+
+  const boundaries = (ver.exposure_band_boundaries as ApiRecord | undefined) ?? {};
+  const floor = numOrNull(boundaries.min_value);
+  const ceiling = numOrNull(boundaries.max_value);
+  const bandPct =
+    value != null && floor != null && ceiling != null && ceiling > floor
+      ? Math.max(0, Math.min(1, (value - floor) / (ceiling - floor)))
+      : null;
+
+  const cohortPoints: ScatterPoint[] = Array.isArray(scatter)
+    ? (scatter as ScatterPoint[])
+    : [];
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          {/* Exposure profile */}
-          <Card header="Exposure profile" icon={Target} pad="md">
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
-              <MiniKpi
-                label="Exposure value"
-                value={exposureValue > 0 ? formatCurrency(exposureValue) : "—"}
-              />
-              <MiniKpi label="Band" value={exposureBand || "—"} />
-              <MiniKpi
-                label="Size score"
-                value={sizeScore > 0 ? sizeScore.toFixed(0) : "—"}
-              />
-              <MiniKpi
-                label="Complexity"
-                value={complexityScore > 0 ? complexityScore.toFixed(0) : "—"}
-              />
-              <MiniKpi label="Modifier" value={`×${expMod.toFixed(3)}`} />
-            </div>
-          </Card>
+      <WorkArea>
+        {/* ─── 1. Exposure profile (7 KPIs) ─────────────────── */}
+        <Card header="Exposure profile" icon={Target} pad="md">
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 lg:grid-cols-7">
+            <KpiSnug
+              label="Exposure value"
+              value={value != null ? formatCurrencyShort(value) : "—"}
+              tone="info"
+            />
+            <KpiSnug
+              label="Band"
+              value={band ? formatText(band, "capitalize") : "—"}
+              delta={
+                floor != null && ceiling != null ? (
+                  <Micro>
+                    {formatCurrencyShort(floor)} – {formatCurrencyShort(ceiling)}
+                  </Micro>
+                ) : undefined
+              }
+            />
+            <KpiSnug
+              label="Size score"
+              value={sizeScore != null ? sizeScore.toFixed(0) : "—"}
+            />
+            <KpiSnug
+              label="Complexity"
+              value={complexity != null ? complexity.toFixed(0) : "—"}
+            />
+            <KpiSnug
+              label="Modifier"
+              value={modifier != null ? `${modifier.toFixed(2)}x` : "—"}
+            />
+            <KpiSnug
+              label="Method"
+              value={
+                method ? formatText(method.replace(/_/g, " "), "capitalize") : "—"
+              }
+            />
+            <KpiSnug
+              label="Final tier"
+              value={
+                finalTier != null
+                  ? `T${finalTier}${tierLabel ? ` · ${tierLabel}` : ""}`
+                  : "—"
+              }
+            />
+          </div>
+        </Card>
 
-          {/* Hero */}
-          <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
-            <div>
-              <Eyebrow className="text-info-deep dark:text-info">
-                Aggregate exposure
-              </Eyebrow>
-              <NumDisplay size="xl" className="mt-2 block">
-                {exposureValue > 0 ? formatCurrency(exposureValue) : "—"}
-              </NumDisplay>
-              {exposureBand && (
-                <Chip variant="info" size="sm" className="mt-2">
-                  {exposureBand}
-                </Chip>
+        {/* ─── 2. Band position + Components ────────────────── */}
+        <div className="grid gap-3.5 md:grid-cols-2">
+          <Card header="Band position" icon={Gauge} pad="md">
+            <Micro className="mb-3.5 block">
+              Where you sit within the {band ? formatText(band, "capitalize").toLowerCase() : "band"}.
+            </Micro>
+            <div className="relative h-9">
+              <div className="absolute inset-x-0 top-3.5 h-2 rounded-sm border border-rule bg-surface-sunken" />
+              {bandPct != null && (
+                <>
+                  <div
+                    className="absolute top-0 bottom-0 w-0.5 -translate-x-1/2 bg-info"
+                    style={{ left: `${bandPct * 100}%` }}
+                  />
+                  <div
+                    className="absolute -top-5 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold text-info"
+                    style={{ left: `${bandPct * 100}%` }}
+                  >
+                    {value != null ? formatCurrencyShort(value) : ""}
+                  </div>
+                </>
               )}
             </div>
-            <div>
-              <Eyebrow>Size score</Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {sizeScore > 0 ? sizeScore.toFixed(0) : "—"}
-              </NumDisplay>
+            <div className="mt-2 flex justify-between text-[11px] text-ink-mute">
+              <span>{floor != null ? `${formatCurrencyShort(floor)} floor` : "—"}</span>
+              <span>{ceiling != null ? `${formatCurrencyShort(ceiling)} ceiling` : "—"}</span>
             </div>
-            <div>
-              <Eyebrow>Complexity score</Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {complexityScore > 0 ? complexityScore.toFixed(0) : "—"}
-              </NumDisplay>
-            </div>
-          </Card>
-
-          {/* Modifier */}
-          <Card
-            pad="md"
-            variant={expMod > 1 ? "neg" : expMod < 1 ? "pos" : "default"}
-          >
-            <div className="flex items-baseline justify-between">
-              <Eyebrow
-                className={
-                  expMod > 1 ? "text-neg" : expMod < 1 ? "text-pos" : ""
+            <div className="mt-4 grid grid-cols-3 gap-3 border-t border-rule pt-3.5">
+              <KpiSnug
+                label="Band percentile"
+                value={bandPct != null ? `${(bandPct * 100).toFixed(0)}%` : "—"}
+              />
+              <KpiSnug
+                label="Below ceiling"
+                value={
+                  value != null && ceiling != null
+                    ? formatCurrencyShort(ceiling - value)
+                    : "—"
                 }
-              >
-                Exposure premium modifier
-              </Eyebrow>
-              <NumDisplay size="lg">×{expMod.toFixed(3)}</NumDisplay>
+              />
+              <KpiSnug
+                label="Above floor"
+                value={
+                  value != null && floor != null
+                    ? formatCurrencyShort(value - floor)
+                    : "—"
+                }
+              />
             </div>
-            <Micro className="mt-1 block">
-              {expMod !== 1
-                ? `${formatPercent(expMod - 1, 1)} adjustment to premium`
-                : "neutral — no exposure-driven adjustment"}
-            </Micro>
           </Card>
 
-          {/* Band benchmarks */}
-          {band.length > 0 && (
-            <Card
-              header={`Band position · ${band.length}`}
-              icon={Gauge}
-              pad="none"
-              className="overflow-hidden"
-            >
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken/60 text-left">
-                    <ColHead width="w-[36%]">Band</ColHead>
-                    <ColHead width="w-[22%]">You</ColHead>
-                    <ColHead width="w-[22%]">Cohort mean</ColHead>
-                    <ColHead width="w-[20%]">Population</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {band.map((b, i) => {
-                    const r = b as Record<string, unknown>;
-                    return (
-                      <tr
-                        key={i}
-                        className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
-                      >
-                        <td className="px-5 py-2.5 text-ink">
-                          {String(r.label ?? r.band ?? "—")}
-                        </td>
-                        <td className="px-5 py-2.5 font-semibold tabular-nums text-ink">
-                          {r.value != null
-                            ? Number(r.value).toLocaleString()
-                            : "—"}
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                          {r.cohort_mean != null
-                            ? Number(r.cohort_mean).toLocaleString()
-                            : "—"}
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                          {r.population != null
-                            ? Number(r.population).toLocaleString()
-                            : "—"}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          )}
-
-          {/* Tier distribution */}
-          {tier.length > 0 && (
-            <Card header="Tier distribution" icon={BarChart3} pad="md">
-              <ul className="space-y-2">
-                {tier.map((t, i) => {
-                  const r = t as Record<string, unknown>;
-                  const pct = Number(r.share_pct ?? r.share ?? 0);
-                  return (
-                    <li key={i}>
-                      <div className="flex items-baseline justify-between text-[13px]">
-                        <span className="font-medium text-ink">
-                          Tier {String(r.tier ?? r.band ?? i + 1)}
-                        </span>
-                        <span className="font-semibold tabular-nums text-ink">
-                          {pct.toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
-                        <div
-                          className="h-full bg-info"
-                          style={{ width: `${Math.min(100, pct)}%` }}
-                        />
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
-          )}
+          <Card header="Components" icon={Puzzle} pad="md">
+            <ComponentRow
+              name="Size"
+              weight={0.7}
+              score={sizeScore}
+              band={sizeScore != null ? scoreBand(sizeScore) : "—"}
+              mod={null}
+            />
+            <ComponentRow
+              name="Complexity"
+              weight={0.3}
+              score={complexity}
+              band={complexity != null ? scoreBand(complexity) : "—"}
+              mod={null}
+            />
+            <div className="mt-2 flex justify-between border-t border-ink-soft pt-3">
+              <span className="text-[13.5px] font-bold">Combined modifier</span>
+              <span className="font-mono text-[17px] font-bold text-info-deep dark:text-info tabular-nums">
+                {modifier != null ? `${modifier.toFixed(2)}x` : "—"}
+              </span>
+            </div>
+          </Card>
         </div>
-      </div>
+
+        {/* ─── 3. Exposure vs overall score scatter ────────── */}
+        <Card header="Exposure vs overall score" icon={ScatterChart} pad="md">
+          {loading && cohortPoints.length === 0 ? (
+            <Body className="italic">Loading cohort…</Body>
+          ) : (
+            <ExposureScatter
+              points={cohortPoints}
+              subject={
+                sizeScore != null && numOrNull(ver.final_composite_score) != null
+                  ? { x: sizeScore, y: Number(ver.final_composite_score) }
+                  : null
+              }
+            />
+          )}
+        </Card>
+      </WorkArea>
     </>
   );
 }
 
-function ColHead({
-  width,
-  children,
+function ComponentRow({
+  name,
+  weight,
+  score,
+  band,
+  mod,
 }: {
-  width: string;
-  children: React.ReactNode;
+  name: string;
+  weight: number;
+  score: number | null;
+  band: string;
+  mod: number | null;
 }) {
   return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
+    <div className="border-b border-rule py-3">
+      <div className="mb-2 flex justify-between">
+        <span className="text-[13px] font-semibold">{name}</span>
+        <Micro>Weight {weight.toFixed(2)}</Micro>
+      </div>
+      <div className="grid grid-cols-3 gap-2.5">
+        <div>
+          <Micro>Score</Micro>
+          <div className="font-semibold tabular-nums">
+            {score != null ? score.toFixed(0) : "—"}
+          </div>
+        </div>
+        <div>
+          <Micro>Band</Micro>
+          <div className="font-semibold">{band}</div>
+        </div>
+        <div>
+          <Micro>Modifier</Micro>
+          <div className="font-semibold tabular-nums">
+            {mod != null ? `${mod.toFixed(2)}x` : "—"}
+          </div>
+        </div>
+      </div>
+    </div>
   );
+}
+
+function ExposureScatter({
+  points,
+  subject,
+}: {
+  points: ScatterPoint[];
+  subject: { x: number; y: number } | null;
+}) {
+  const W = 980;
+  const H = 220;
+  const xToPx = (x: number) => 50 + (x / 100) * (W - 70);
+  const yToPx = (y: number) => H - 28 - ((y - 400) / 600) * (H - 56);
+  const color = (d?: string) =>
+    d === "approve"
+      ? "var(--color-pos)"
+      : d === "refer"
+        ? "var(--color-warn)"
+        : "var(--color-neg)";
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" className="block">
+      <line x1={50} y1={H - 28} x2={W - 20} y2={H - 28} stroke="var(--color-rule)" />
+      <line x1={50} y1={20} x2={50} y2={H - 28} stroke="var(--color-rule)" />
+      {[0, 25, 50, 75, 100].map((v) => (
+        <text
+          key={v}
+          x={xToPx(v)}
+          y={H - 12}
+          textAnchor="middle"
+          style={{ font: "10px IBM Plex Sans", fill: "var(--color-ink-mute)" }}
+        >
+          {v}
+        </text>
+      ))}
+      {[400, 600, 800, 1000].map((v) => (
+        <text
+          key={v}
+          x={42}
+          y={yToPx(v) + 3}
+          textAnchor="end"
+          style={{ font: "10px IBM Plex Sans", fill: "var(--color-ink-mute)" }}
+        >
+          {v}
+        </text>
+      ))}
+      <text
+        x={W / 2}
+        y={H}
+        textAnchor="middle"
+        style={{ font: "10.5px IBM Plex Sans", fill: "var(--color-ink-soft)" }}
+      >
+        Exposure magnitude score →
+      </text>
+      <text
+        x={16}
+        y={H / 2}
+        transform={`rotate(-90, 16, ${H / 2})`}
+        textAnchor="middle"
+        style={{ font: "10.5px IBM Plex Sans", fill: "var(--color-ink-soft)" }}
+      >
+        Composite score →
+      </text>
+      {points.map((p, i) => {
+        const x = p.exposure_size_score;
+        const y = p.composite_score;
+        if (x == null || y == null) return null;
+        return (
+          <circle
+            key={i}
+            cx={xToPx(x)}
+            cy={yToPx(y)}
+            r={4}
+            fill={color(p.decision)}
+            opacity={0.7}
+          />
+        );
+      })}
+      {subject && (
+        <>
+          <circle
+            cx={xToPx(subject.x)}
+            cy={yToPx(subject.y)}
+            r={8}
+            fill="var(--color-info)"
+            stroke="var(--color-surface)"
+            strokeWidth={2}
+          />
+          <text
+            x={xToPx(subject.x)}
+            y={yToPx(subject.y) - 14}
+            textAnchor="middle"
+            style={{ font: "600 11px IBM Plex Sans", fill: "var(--color-info)" }}
+          >
+            YOU · {Math.round(subject.x)} / {Math.round(subject.y)}
+          </text>
+        </>
+      )}
+    </svg>
+  );
+}
+
+function scoreBand(s: number): string {
+  if (s >= 70) return "High";
+  if (s >= 40) return "Mid";
+  return "Low";
+}
+
+function formatCurrencyShort(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
+  if (abs >= 1_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000).toFixed(0)}k`;
+  return formatCurrency(n);
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }
