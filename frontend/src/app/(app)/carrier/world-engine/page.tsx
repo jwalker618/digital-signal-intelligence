@@ -9,6 +9,8 @@ import {
   Link as LinkIcon,
   Orbit,
   Sparkles,
+  X,
+  Zap,
 } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { WorkArea } from "@/components/ui/work-area";
@@ -210,6 +212,12 @@ function Body0({
 
           {/* 4 — Portfolio overview */}
           <PortfolioCard submissions={submissions} />
+
+          {/* 5 — Emerging scenarios + Shock simulator */}
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+            <EmergingScenariosCard />
+            <ShockSimulatorCard />
+          </div>
       </WorkArea>
     </>
   );
@@ -296,6 +304,10 @@ function PortfolioCard({ submissions }: { submissions: ApiRecord[] }) {
       .map(([name, n]) => ({ name, n, pct: total > 0 ? (n / total) * 100 : 0 }))
       .sort((a, b) => b.n - a.n)
       .slice(0, 6);
+    const tierCounts = [1, 2, 3, 4, 5].map((t) => ({
+      t,
+      n: submissions.filter((s) => (s.final_tier ?? s.tier) === t).length,
+    }));
     return {
       total,
       premium,
@@ -303,6 +315,8 @@ function PortfolioCard({ submissions }: { submissions: ApiRecord[] }) {
       approvalRate: total > 0 ? approve / total : 0,
       referralRate: total > 0 ? refer / total : 0,
       sectors,
+      tierCounts,
+      maxTier: Math.max(...tierCounts.map((x) => x.n), 1),
     };
   }, [submissions]);
 
@@ -333,32 +347,198 @@ function PortfolioCard({ submissions }: { submissions: ApiRecord[] }) {
           tone="spot"
         />
       </div>
-      <div>
-        <Micro className="mb-2 block">Sector concentration</Micro>
-        {p.sectors.length === 0 ? (
-          <Caption className="italic">Sector data not available.</Caption>
-        ) : (
-          <ul className="flex flex-col gap-1.5">
-            {p.sectors.map((s) => (
-              <li key={s.name}>
-                <div className="flex items-baseline justify-between text-[12px]">
-                  <span className="truncate text-ink">{s.name}</span>
-                  <span className="tabular-nums text-ink-soft">
-                    {s.n} ({Math.round(s.pct)}%)
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Tier distribution */}
+        <div>
+          <Micro className="mb-2 block">Tier distribution</Micro>
+          <div className="flex h-[110px] items-end gap-2.5">
+            {p.tierCounts.map(({ t, n }) => {
+              const txt =
+                t <= 2 ? "text-pos" : t === 3 ? "text-info" : t === 4 ? "text-warn" : "text-neg";
+              const bar =
+                t <= 2 ? "bg-pos" : t === 3 ? "bg-info" : t === 4 ? "bg-warn" : "bg-neg";
+              return (
+                <div key={t} className="flex flex-1 flex-col items-center gap-1">
+                  <span className={cn("text-[14px] font-semibold tabular-nums", txt)}>
+                    {n}
                   </span>
-                </div>
-                <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
                   <div
-                    className="h-full bg-info"
-                    style={{ width: `${s.pct}%` }}
+                    className={cn("w-full rounded-t", bar)}
+                    style={{ height: `${Math.max(4, (n / p.maxTier) * 78)}px` }}
                   />
+                  <Micro className="text-[10px]">T{t}</Micro>
                 </div>
-              </li>
-            ))}
-          </ul>
-        )}
+              );
+            })}
+          </div>
+        </div>
+        {/* Sector concentration */}
+        <div>
+          <Micro className="mb-2 block">Sector concentration</Micro>
+          {p.sectors.length === 0 ? (
+            <Caption className="italic">Sector data not available.</Caption>
+          ) : (
+            <ul className="flex flex-col gap-1.5">
+              {p.sectors.map((s) => (
+                <li key={s.name}>
+                  <div className="flex items-baseline justify-between text-[12px]">
+                    <span className="truncate text-ink">{s.name}</span>
+                    <span className="tabular-nums text-ink-soft">
+                      {s.n} ({Math.round(s.pct)}%)
+                    </span>
+                  </div>
+                  <div className="mt-0.5 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
+                    <div className="h-full bg-info" style={{ width: `${s.pct}%` }} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </Card>
+  );
+}
+
+/* Emerging scenarios — World Engine surfaces continuously-monitored
+ * portfolio scenarios generated from signals. Forward-looking product
+ * surface (no dedicated endpoint yet); representative scenarios shown. */
+const EMERGING_SCENARIOS = [
+  {
+    id: "sc-1",
+    name: "Cyber ransomware wave — manufacturing",
+    likelihood: 0.62,
+    likelihoodLabel: "Elevated",
+    scope: "14 policies",
+    magnitude: -38,
+    horizon: "3–6 mo",
+    source: "claims.history + cyber.posture drift",
+  },
+  {
+    id: "sc-2",
+    name: "NE windstorm season — property aggregation",
+    likelihood: 0.41,
+    likelihoodLabel: "Watch",
+    scope: "9 policies",
+    magnitude: -26,
+    horizon: "Q3",
+    source: "exposure geo-concentration",
+  },
+  {
+    id: "sc-3",
+    name: "D&O securities-claim uptick — tech",
+    likelihood: 0.78,
+    likelihoodLabel: "High",
+    scope: "6 policies",
+    magnitude: -19,
+    horizon: "6–12 mo",
+    source: "market signals + financial drift",
+  },
+];
+
+function likelihoodTone(label: string): "neg" | "warn" | "info" {
+  return label === "High" ? "neg" : label === "Elevated" ? "warn" : "info";
+}
+
+function EmergingScenariosCard() {
+  return (
+    <Card pad="lg">
+      <div className="mb-3 flex items-baseline justify-between">
+        <div>
+          <Eyebrow>Emerging scenarios</Eyebrow>
+          <h3 className="mt-1.5 font-display text-[17px] font-semibold leading-tight text-ink">
+            Continuously monitored
+          </h3>
+        </div>
+        <Caption>Generated from portfolio + signals</Caption>
+      </div>
+      <div className="flex flex-col gap-2.5">
+        {EMERGING_SCENARIOS.map((sc) => {
+          const tone = likelihoodTone(sc.likelihoodLabel);
+          return (
+            <div
+              key={sc.id}
+              className="grid grid-cols-[1fr_auto] items-center gap-4 rounded-card border border-rule bg-surface-elev px-3.5 py-3"
+            >
+              <div>
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-[13px] font-bold">{sc.name}</span>
+                  <Chip variant={tone} size="sm">
+                    {Math.round(sc.likelihood * 100)}% · {sc.likelihoodLabel}
+                  </Chip>
+                </div>
+                <Caption className="text-[12px]">
+                  Scope: <strong>{sc.scope}</strong> · Magnitude:{" "}
+                  <strong>{sc.magnitude} pts</strong> · Horizon: {sc.horizon} ·
+                  Source: {sc.source}
+                </Caption>
+              </div>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md bg-spot px-3 py-2 text-[12px] font-semibold text-white hover:opacity-90"
+              >
+                <Zap size={13} /> Simulate
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function ShockSimulatorCard() {
+  return (
+    <Card variant="spot" pad="lg">
+      <div className="flex items-baseline justify-between">
+        <div>
+          <Eyebrow className="text-spot-deep dark:text-spot">Shock simulator</Eyebrow>
+          <h3 className="mt-1.5 font-display text-[17px] font-semibold leading-tight text-ink">
+            Stress-test the portfolio
+          </h3>
+        </div>
+        <Chip variant="spot" size="sm">
+          1 active
+        </Chip>
+      </div>
+      <div className="mt-3.5 flex flex-col gap-3">
+        <div>
+          <Micro className="mb-1 block">Active shocks</Micro>
+          <div className="flex items-center gap-2 rounded-md bg-surface-elev px-2.5 py-2 text-[12px]">
+            <Zap size={12} className="text-spot" />
+            <span className="font-semibold">Hurricane Wendell</span>
+            <Caption>property · −32 pts</Caption>
+            <X size={12} className="ml-auto text-ink-mute" />
+          </div>
+        </div>
+        <div className="border-t border-rule pt-3">
+          <Micro className="mb-2 block">Impact preview</Micro>
+          <div className="grid grid-cols-2 gap-3">
+            <ShockStat label="Affected" value="3" tone="text-spot" />
+            <ShockStat label="Tier migrations" value="2" tone="text-warn" />
+            <ShockStat label="Decision changes" value="1" tone="text-ink" />
+            <ShockStat label="Premium impact" value="+$84k" tone="text-neg" />
+          </div>
+        </div>
+        <button
+          type="button"
+          className="mt-1 inline-flex items-center justify-center gap-1.5 rounded-md bg-spot px-3 py-2.5 text-[13px] font-semibold text-white hover:opacity-90"
+        >
+          <Zap size={13} /> Open full analysis →
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+function ShockStat({ label, value, tone }: { label: string; value: string; tone: string }) {
+  return (
+    <div>
+      <Micro>{label}</Micro>
+      <div className={cn("font-mono text-[22px] font-semibold tabular-nums", tone)}>
+        {value}
+      </div>
+    </div>
   );
 }
 
