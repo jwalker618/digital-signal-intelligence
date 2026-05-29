@@ -61,10 +61,10 @@ function LossesInner() {
     try {
       const params = new URLSearchParams();
       params.set("limit", "200");
-      const r = await api.get<{ events: LossEvent[] }>(
+      const r = await api.get<{ losses: LossEvent[] }>(
         `/api/v1/losses?${params.toString()}`,
       );
-      setData(r.events ?? []);
+      setData(r.losses ?? []);
       setState("ok");
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -104,8 +104,10 @@ function LossesInner() {
     setLinking(true);
     setToast(null);
     try {
-      const r = await api.post<{ linked?: number }>("/api/v1/losses/link-all");
-      setToast(`Linked ${r.linked ?? 0} losses to submissions.`);
+      const r = await api.post<{ newly_linked?: number }>(
+        "/api/v1/losses/link-all",
+      );
+      setToast(`Linked ${r.newly_linked ?? 0} losses to submissions.`);
       await load();
     } catch (err) {
       setToast(err instanceof Error ? err.message : String(err));
@@ -116,11 +118,11 @@ function LossesInner() {
 
   const all = data ?? [];
   const linkedFlag = (l: LossEvent): boolean =>
-    Boolean(l.quote_id || l.assessment_id);
+    Boolean(l.quote_id || l.linked_assessment_id);
   const isOpen = (l: LossEvent): boolean => /open|reserve/i.test(l.status);
   const unlinkedCount = all.filter((l) => !linkedFlag(l)).length;
   const openCount = all.filter(isOpen).length;
-  const grossSum = all.reduce((s, l) => s + l.gross_amount, 0);
+  const grossSum = all.reduce((s, l) => s + l.incurred_amount, 0);
 
   const filtered = useMemo(() => {
     let rows = all;
@@ -132,7 +134,7 @@ function LossesInner() {
         (l) =>
           l.entity_name.toLowerCase().includes(q) ||
           l.coverage.toLowerCase().includes(q) ||
-          (l.cause_code ?? "").toLowerCase().includes(q) ||
+          (l.cause_description ?? "").toLowerCase().includes(q) ||
           l.id.toLowerCase().includes(q),
       );
     }
@@ -159,17 +161,18 @@ function LossesInner() {
     coverage: <code className="text-[12px] text-ink">{l.coverage}</code>,
     date: (
       <span className="font-mono text-[12px] text-ink-soft">
-        {formatDate(l.event_date)}
+        {formatDate(l.loss_date)}
       </span>
     ),
     gross: (
       <span className="tabular-nums font-semibold text-ink">
-        {formatCurrency(l.gross_amount)}
+        {formatCurrency(l.incurred_amount)}
       </span>
     ),
+    // "Net" = paid_amount (funds actually disbursed); backend has no net field.
     net: (
       <span className="tabular-nums text-ink-soft">
-        {l.net_amount != null ? formatCurrency(l.net_amount) : "—"}
+        {l.paid_amount != null ? formatCurrency(l.paid_amount) : "—"}
       </span>
     ),
     status: (

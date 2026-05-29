@@ -54,12 +54,13 @@ export interface LossEvent {
   tenant_id: string;
   entity_name: string;
   coverage: string;
-  event_date: string;
-  gross_amount: number;
-  net_amount: number | null;
-  cause_code: string | null;
+  loss_date: string;
+  incurred_amount: number;
+  paid_amount: number;
+  reserved_amount: number;
+  cause_description: string | null;
   status: string;
   quote_id: string | null;
-  assessment_id: string | null;
-  ingested_at: string;
+  linked_assessment_id: string | null;
+  linker_run_at: string | null;
 }

@@ -35,12 +35,12 @@ const STATUS_TONE: Record<
   "mute" | "info" | "warn" | "pos" | "neg"
 > = {
   DRAFT: "mute",
-  VALIDATING: "info",
-  CALIBRATING: "info",
-  READY: "warn",
+  VALIDATED: "info",
+  CALIBRATED: "warn",
   DEPLOYED: "pos",
+  ROLLED_BACK: "neg",
   SUPERSEDED: "mute",
-  ARCHIVED: "mute",
+  DISK_ONLY: "mute",
 };
 
 export default function AdminConfigsPage() {
@@ -74,10 +74,10 @@ function ConfigsInner() {
   async function load() {
     setState("loading");
     try {
-      const r = await api.get<{ versions: ConfigVersionRow[] }>(
+      const r = await api.get<{ configs: ConfigVersionRow[] }>(
         "/api/v1/admin/configs",
       );
-      setData(r.versions ?? []);
+      setData(r.configs ?? []);
       setState("ok");
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));
@@ -115,7 +115,7 @@ function ConfigsInner() {
       };
       g.versions.push(v);
       if (v.status === "DEPLOYED") {
-        g.activeVersion = Math.max(g.activeVersion ?? 0, v.version);
+        g.activeVersion = Math.max(g.activeVersion ?? 0, v.version_number);
       }
       if (v.status === "DRAFT") g.draftCount += 1;
       if (!g.lastUpdated || v.updated_at > g.lastUpdated) {
@@ -183,11 +183,11 @@ function ConfigsInner() {
 
   const historyRows: AdminTableRow[] = focusGroup
     ? [...focusGroup.versions]
-        .sort((a, b) => b.version - a.version)
+        .sort((a, b) => b.version_number - a.version_number)
         .map((v) => ({
           v: (
             <span className="font-mono font-bold tabular-nums text-ink">
-              v{v.version}
+              v{v.version_number}
             </span>
           ),
           status: (
@@ -304,7 +304,7 @@ function ActionButtons({
           <Loader2 size={11} className="animate-spin" />
         ) : next.endpoint === "deploy" ? (
           <Rocket size={11} />
-        ) : next.endpoint === "ready" ? (
+        ) : next.endpoint === "validate" ? (
           <ShieldCheck size={11} />
         ) : null}
         {next.label}
@@ -316,14 +316,15 @@ function ActionButtons({
 function nextTransition(
   status: VersionStatus,
 ): { endpoint: string; label: string } | null {
+  // Backend state machine (config_service.py): DRAFT -> validate -> VALIDATED
+  // -> calibrate -> CALIBRATED -> deploy -> DEPLOYED. There is no `ready`
+  // transition; deploy accepts CALIBRATED or VALIDATED.
   switch (status) {
     case "DRAFT":
       return { endpoint: "validate", label: "Validate" };
-    case "VALIDATING":
+    case "VALIDATED":
       return { endpoint: "calibrate", label: "Calibrate" };
-    case "CALIBRATING":
-      return { endpoint: "ready", label: "Mark ready" };
-    case "READY":
+    case "CALIBRATED":
       return { endpoint: "deploy", label: "Deploy" };
     default:
       return null;

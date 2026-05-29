@@ -70,10 +70,10 @@ function UsersInner() {
     setState("loading");
     try {
       const [users, roles] = await Promise.all([
-        api.get<{ users: UserRow[] }>("/api/v1/admin/users"),
-        api.get<{ roles: RoleRow[] }>("/api/v1/admin/roles"),
+        api.get<UserRow[]>("/api/v1/admin/users"),
+        api.get<RoleRow[]>("/api/v1/admin/roles"),
       ]);
-      setData({ users: users.users ?? [], roles: roles.roles ?? [] });
+      setData({ users: users ?? [], roles: roles ?? [] });
       setState("ok");
     } catch (e) {
       setErr(e instanceof Error ? e.message : String(e));

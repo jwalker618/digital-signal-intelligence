@@ -333,11 +333,11 @@ function DetailBody({
             />
             <MiniKpi
               label="Weight changes"
-              value={data.weight_change_count}
+              value={data.weight_changes.length}
             />
             <MiniKpi
               label="Tier threshold changes"
-              value={data.tier_change_count}
+              value={data.tier_threshold_changes.length}
             />
           </div>
 

@@ -2,38 +2,64 @@
 
 export type HealthStatus = "green" | "amber" | "red";
 
-export interface SystemHealth {
+export interface SubsystemHealth {
+  name: string;
   status: HealthStatus;
-  components?: Record<string, { status: HealthStatus; detail?: string }>;
-  checked_at: string;
+  detail?: string | null;
+  metrics?: Record<string, unknown>;
+  latency_ms?: number | null;
+}
+
+export interface SystemHealth {
+  overall: HealthStatus;
+  evaluated_at: string;
+  subsystems: SubsystemHealth[];
 }
 
 export interface ExtractorHealth {
-  name: string;
-  mode: string;
-  success_count: number;
-  error_count: number;
+  extractor_id: string;
+  coverage: string;
+  signal_type: string;
+  success_count_24h: number;
+  error_count_24h: number;
+  success_rate: number;
+  avg_latency_ms: number;
   last_success_at: string | null;
   last_error_at: string | null;
-  last_error: string | null;
-  status: HealthStatus;
+  last_error_message: string | null;
+  data_freshness_score: number;
+  // Derived/optional status badge (not part of the API payload).
+  status?: HealthStatus;
 }
 
 export interface PipelineMetrics {
-  total_assessments: number;
-  p50_ms: number;
-  p95_ms: number;
-  p99_ms: number;
+  period: string;
+  coverage: string | null;
+  captured_at: string;
+  assessments_total: number;
+  assessments_per_hour: number;
+  latency_p50_ms: number;
+  latency_p95_ms: number;
+  latency_p99_ms: number;
+  avg_latency_ms: number;
+  failure_count: number;
   failure_rate: number;
-  window_hours: number;
+  decision_mix: Record<string, number>;
 }
 
 export interface ConfigVersionRow {
   id: string;
   coverage: string;
   config_name: string;
-  version: number;
-  status: "DRAFT" | "VALIDATING" | "CALIBRATING" | "READY" | "DEPLOYED" | "SUPERSEDED" | "ARCHIVED";
+  version_number: number;
+  status:
+    | "DRAFT"
+    | "VALIDATED"
+    | "CALIBRATED"
+    | "DEPLOYED"
+    | "ROLLED_BACK"
+    | "SUPERSEDED"
+    | "DISK_ONLY";
   notes: string | null;
   author_id: string | null;
   created_at: string;

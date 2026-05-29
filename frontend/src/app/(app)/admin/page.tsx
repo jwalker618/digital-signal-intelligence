@@ -86,9 +86,9 @@ function HealthBody({
   data: HealthBundle;
   onReload: () => void;
 }) {
-  const components = Object.entries(data.health?.components ?? {});
-  const greens = components.filter(([, c]) => c.status === "green").length;
-  const overallStatus = data.health?.status ?? "green";
+  const subsystems = data.health?.subsystems ?? [];
+  const greens = subsystems.filter((s) => s.status === "green").length;
+  const overallStatus = data.health?.overall ?? "green";
   const overallLabel =
     overallStatus === "green"
       ? "All systems operational"
@@ -107,32 +107,33 @@ function HealthBody({
 
   const extractorRows: AdminTableRow[] = data.extractors.map((x) => ({
     name: (
-      <code className="font-mono text-[12px] text-ink">{x.name}</code>
+      <code className="font-mono text-[12px] text-ink">{x.extractor_id}</code>
     ),
-    mode: <Caption>{x.mode}</Caption>,
+    mode: <Caption>{x.signal_type}</Caption>,
     success: (
       <span className="tabular-nums text-ink-soft">
-        {x.success_count.toLocaleString()}
+        {x.success_count_24h.toLocaleString()}
       </span>
     ),
     errors: (
       <span
         className={cn(
           "tabular-nums",
-          x.error_count > 10
+          x.error_count_24h > 10
             ? "text-warn"
-            : x.error_count > 0
+            : x.error_count_24h > 0
               ? "text-ink-soft"
               : "text-ink-mute",
         )}
       >
-        {x.error_count.toLocaleString()}
+        {x.error_count_24h.toLocaleString()}
       </span>
     ),
-    status: <StatusDot status={x.status} />,
+    status: <StatusDot status={extractorStatus(x)} />,
     lastError: (
       <span className="text-[12px] text-ink-soft">
-        {x.last_error ?? (x.last_error_at ? fmtRelative(x.last_error_at) : "—")}
+        {x.last_error_message ??
+          (x.last_error_at ? fmtRelative(x.last_error_at) : "—")}
       </span>
     ),
   }));
@@ -148,16 +149,16 @@ function HealthBody({
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
                 {overallLabel}
               </h1>
-              {data.health?.checked_at && (
+              {data.health?.evaluated_at && (
                 <Body className="mt-1.5">
-                  Auto-refresh every 30s · last check {fmtRelative(data.health.checked_at)}
+                  Auto-refresh every 30s · last check {fmtRelative(data.health.evaluated_at)}
                 </Body>
               )}
             </div>
             <div className="flex items-center gap-2.5">
               <Chip variant={toneFromHealth(overallStatus)} size="md">
                 <CheckCircle2 size={13} />
-                {greens} of {components.length || 0} green
+                {greens} of {subsystems.length || 0} green
               </Chip>
               <Button variant="ghost" onClick={onReload}>
                 <RefreshCw size={13} />
@@ -169,7 +170,7 @@ function HealthBody({
           {data.pipeline && (
             <Card
               pad="lg"
-              header={`Pipeline · last ${data.pipeline.window_hours}h`}
+              header={`Pipeline · ${data.pipeline.period}`}
               headerRight={
                 <Chip
                   variant={
@@ -188,20 +189,20 @@ function HealthBody({
               <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                 <MiniKpi
                   label="Assessments"
-                  value={data.pipeline.total_assessments.toLocaleString()}
+                  value={data.pipeline.assessments_total.toLocaleString()}
                 />
                 <MiniKpi
                   label="p50"
-                  value={`${data.pipeline.p50_ms.toFixed(0)}ms`}
+                  value={`${data.pipeline.latency_p50_ms.toFixed(0)}ms`}
                   caption="median latency"
                 />
                 <MiniKpi
                   label="p95"
-                  value={`${data.pipeline.p95_ms.toFixed(0)}ms`}
+                  value={`${data.pipeline.latency_p95_ms.toFixed(0)}ms`}
                 />
                 <MiniKpi
                   label="p99"
-                  value={`${data.pipeline.p99_ms.toFixed(0)}ms`}
+                  value={`${data.pipeline.latency_p99_ms.toFixed(0)}ms`}
                 />
                 <MiniKpi
                   label="Failure rate"
@@ -212,19 +213,19 @@ function HealthBody({
           )}
 
           <div className="grid gap-4 lg:grid-cols-[1fr_1.6fr]">
-            {components.length > 0 && (
+            {subsystems.length > 0 && (
               <Card pad="lg">
                 <Eyebrow>Components</Eyebrow>
                 <h2 className="mt-1.5 mb-3 text-[17px] font-semibold text-ink">
                   Subsystems
                 </h2>
                 <div className="flex flex-col">
-                  {components.map(([name, c], i) => (
+                  {subsystems.map((c, i) => (
                     <div
-                      key={name}
+                      key={c.name}
                       className={cn(
                         "grid grid-cols-[12px_1fr] items-start gap-3 py-2.5",
-                        i < components.length - 1 && "border-b border-rule",
+                        i < subsystems.length - 1 && "border-b border-rule",
                       )}
                     >
                       <span
@@ -240,7 +241,7 @@ function HealthBody({
                       />
                       <div>
                         <p className="text-[13px] font-semibold text-ink">
-                          {formatText(name, "capitalize")}
+                          {formatText(c.name, "capitalize")}
                         </p>
                         {c.detail && (
                           <Micro className="mt-0.5 block">{c.detail}</Micro>
@@ -302,6 +303,14 @@ function StatusDot({ status }: { status: HealthStatus }) {
 
 function toneFromHealth(s: HealthStatus): "pos" | "warn" | "neg" {
   return s === "green" ? "pos" : s === "amber" ? "warn" : "neg";
+}
+
+// API does not expose a per-extractor status; derive one from the 24h counters.
+function extractorStatus(x: ExtractorHealth): HealthStatus {
+  if (x.status) return x.status;
+  if (x.error_count_24h > 10 || x.success_rate < 0.8) return "red";
+  if (x.error_count_24h > 0 || x.success_rate < 0.98) return "amber";
+  return "green";
 }
 
 function Caption({ children }: { children: React.ReactNode }) {
