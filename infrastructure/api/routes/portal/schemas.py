@@ -217,3 +217,100 @@ class OpenQueryEntry(BaseModel):
 class BrokerQueriesResponse(BaseModel):
     broker: BrokerInfo
     open_queries: list[OpenQueryEntry] = Field(default_factory=list)
+
+
+# -----------------------------------------------------------------------------
+# /portal/clients/{entity} — broker Client Workbench (revised pack cw_*)
+# -----------------------------------------------------------------------------
+
+class ClientWorkbenchCoverage(BaseModel):
+    """One coverage line in the client workbench (Submission + latest MV +
+    Quote + Referral + RiskTerms, flattened to what the tabs render)."""
+    code: str
+    line: str
+    carrier: Optional[str] = None
+    score: Optional[float] = None
+    pure: Optional[float] = None
+    tier: Optional[int] = None
+    tier_label: Optional[str] = None
+    decision: Optional[str] = None
+    confidence: Optional[float] = None
+    percentile: Optional[float] = None
+    cohort_median: Optional[float] = None
+    cohort_top_decile: Optional[float] = None
+    cohort_size: Optional[int] = None
+    premium: Optional[float] = None
+    recommended: Optional[float] = None
+    limit: Optional[float] = None
+    deductible: Optional[float] = None
+    status: str = "—"
+    status_tone: str = "mute"
+    signal_coverage: Optional[float] = None
+    awaiting: Optional[str] = None
+    prev_score: Optional[float] = None
+    # Risk terms (Risk Terms tab)
+    sir_amount: Optional[float] = None
+    sir_applies: Optional[bool] = None
+    waiting_period_hours: Optional[float] = None
+    aggregate_limit: Optional[float] = None
+    reinstatements: Optional[int] = None
+    reinstatement_rate: Optional[float] = None
+    coverage_trigger: Optional[str] = None
+    extensions_count: Optional[int] = None
+    exclusions_count: Optional[int] = None
+    sub_limits_label: Optional[str] = None
+    # Loss + exposure (Score/Loss/Exposure tabs surface the featured line)
+    loss_propensity_band: Optional[str] = None
+    loss_combined_modifier: Optional[float] = None
+    loss_frequency_multiplier: Optional[float] = None
+    loss_severity_multiplier: Optional[float] = None
+    exposure_value: Optional[float] = None
+    exposure_band_label: Optional[str] = None
+    exposure_size_score: Optional[float] = None
+    exposure_complexity_score: Optional[float] = None
+    exposure_modifier: Optional[float] = None
+    # Premium build-up + commercial (Premium tab, featured line)
+    base_premium: Optional[float] = None
+    net_premium: Optional[float] = None
+    gross_premium: Optional[float] = None
+    offered_premium: Optional[float] = None
+    total_commission: Optional[float] = None
+    score_history: Optional[list[ScoreHistoryPoint]] = None
+
+
+class ClientWorkbenchLossEvent(BaseModel):
+    date: Optional[datetime] = None
+    line: str
+    incurred: Optional[float] = None
+    paid: Optional[float] = None
+    cause: Optional[str] = None
+    status: Optional[str] = None
+
+
+class ClientWorkbenchResponse(BaseModel):
+    # Identity
+    entity_name: str
+    industry: Optional[str] = None
+    naics: Optional[str] = None
+    vertical: Optional[str] = None
+    revenue_band: Optional[str] = None
+    country: Optional[str] = None
+    locations: Optional[str] = None
+    employees: Optional[str] = None
+    domain: Optional[str] = None
+    first_seen: Optional[datetime] = None
+    last_seen: Optional[datetime] = None
+    broker: Optional[str] = None
+    # Engagement
+    engagement: Optional[float] = None
+    engagement_label: Optional[str] = None
+    last_message: Optional[str] = None
+    avg_response_hours: Optional[float] = None
+    open_queries: int = 0
+    next_renewal_days: Optional[int] = None
+    # Aggregates
+    total_premium: float = 0.0
+    avg_score: Optional[float] = None
+    # Detail
+    coverages: list[ClientWorkbenchCoverage] = Field(default_factory=list)
+    loss_events: list[ClientWorkbenchLossEvent] = Field(default_factory=list)

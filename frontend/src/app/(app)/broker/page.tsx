@@ -322,7 +322,7 @@ const BookRow = memo(function BookRow({
     <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
       <td className="px-5 py-2.5">
         <Link
-          href={`/client/submissions/${entry.submission_code}`}
+          href={`/broker/clients/${encodeURIComponent(client)}`}
           className="block font-semibold text-ink hover:underline"
         >
           {client}

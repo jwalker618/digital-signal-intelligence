@@ -33,11 +33,14 @@ from infrastructure.api.auth.permissions import (
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
     Broker,
+    CommercialTermsRecord,
+    LossEvent,
     MessageDirection,
     ModelVersionRecord,
     Quote,
     Referral,
     ReferralMessage,
+    RiskTermsRecord,
     Submission,
     User,
 )
@@ -56,6 +59,12 @@ from .broker_intel_data import (
     vertical_for_naics,
 )
 from .dependencies import get_user_record
+from .schemas import (
+    ClientWorkbenchCoverage,
+    ClientWorkbenchLossEvent,
+    ClientWorkbenchResponse,
+    ScoreHistoryPoint,
+)
 
 router = APIRouter()
 
@@ -400,6 +409,273 @@ async def _refs_for_submission(db: AsyncSession, submission_id: uuid.UUID) -> li
         )
     )
     return list(q.scalars().all())
+
+
+# ============================================================================
+# Client Workbench — per-client drill-down (revised pack cw_*)
+# ============================================================================
+
+_TIER_LABEL = {1: "Preferred", 2: "Standard", 3: "Under review", 4: "Watch", 5: "Decline"}
+
+
+def _status_for(decision: Optional[str], referral: Optional[Referral]) -> tuple[str, str]:
+    """Map decision + referral state to a (label, tone) chip."""
+    dec = (decision or "").lower()
+    if referral is not None and referral.awaiting_party:
+        return ("Awaiting docs" if referral.awaiting_party == "broker" else "In review", "spot")
+    if dec == "approve":
+        return ("Bound", "pos")
+    if dec == "decline":
+        return ("Declined", "neg")
+    if dec == "refer":
+        return ("In review", "spot")
+    return ("Pending", "mute")
+
+
+@router.get("/clients/{entity_name}", response_model=ClientWorkbenchResponse)
+async def client_workbench(
+    entity_name: str,
+    ctx: AuthContext = Depends(require_permission(Permission.PORTAL_BROKER_READ)),
+    db: AsyncSession = Depends(get_async_db),
+) -> ClientWorkbenchResponse:
+    """Per-client aggregation for the broker Client Workbench. Scoped to the
+    broker's own book — an entity not in their book 404s."""
+    user = await get_user_record(ctx, db)
+    if user is None or user.broker_id is None:
+        raise HTTPException(403, "Broker identity not configured.")
+
+    rows = await db.execute(
+        select(Submission, Quote)
+        .join(Quote, Quote.submission_id == Submission.id)
+        .where(
+            Submission.broker_id == user.broker_id,
+            Submission.entity_name == entity_name,
+        )
+    )
+    group = list(rows.all())
+    if not group:
+        raise HTTPException(404, "Client not found in your book.")
+
+    broker_q = await db.execute(select(Broker).where(Broker.id == user.broker_id))
+    broker = broker_q.scalar_one_or_none()
+
+    primary = group[0][0]
+    sd = primary.submission_data or {}
+    naics = sd.get("naics") or sd.get("naics_code")
+    vert_slug = vertical_for_naics(naics)
+    vert = get_vertical(vert_slug) if vert_slug else None
+
+    now = datetime.now(timezone.utc)
+    created_times = [s.created_at for s, _ in group if s.created_at]
+    first_seen = min(created_times) if created_times else None
+    last_seen = max(created_times) if created_times else None
+
+    coverages: list[ClientWorkbenchCoverage] = []
+    total_premium = 0.0
+    scores: list[float] = []
+
+    for sub, quote in group:
+        mv_q = await db.execute(
+            select(ModelVersionRecord).where(
+                ModelVersionRecord.submission_id == sub.id,
+                ModelVersionRecord.is_latest == True,  # noqa: E712
+            )
+        )
+        mv = mv_q.scalar_one_or_none()
+
+        refs = await _refs_for_submission(db, sub.id)
+        open_ref = next((r for r in refs if r.awaiting_party is not None), None)
+
+        # commercial + risk terms keyed on the latest MV
+        commercial = None
+        risk = None
+        if mv is not None:
+            c_q = await db.execute(
+                select(CommercialTermsRecord).where(
+                    CommercialTermsRecord.model_version_id == mv.id
+                )
+            )
+            commercial = c_q.scalar_one_or_none()
+            r_q = await db.execute(
+                select(RiskTermsRecord).where(
+                    RiskTermsRecord.model_version_id == mv.id
+                )
+            )
+            risk = r_q.scalar_one_or_none()
+
+        # score history (oldest → newest)
+        hist_q = await db.execute(
+            select(ModelVersionRecord)
+            .where(ModelVersionRecord.submission_id == sub.id)
+            .order_by(ModelVersionRecord.version_number.asc())
+        )
+        history = [
+            ScoreHistoryPoint(
+                version_number=h.version_number,
+                composite_score=h.final_composite_score,
+                created_at=h.created_at,
+            )
+            for h in hist_q.scalars().all()
+            if h.final_composite_score is not None and h.created_at is not None
+        ] or None
+        prev_score = None
+        if mv is not None:
+            prev_q = await db.execute(
+                select(ModelVersionRecord.final_composite_score)
+                .where(
+                    ModelVersionRecord.submission_id == sub.id,
+                    ModelVersionRecord.version_number < (mv.version_number or 0),
+                )
+                .order_by(ModelVersionRecord.version_number.desc())
+                .limit(1)
+            )
+            prev_score = prev_q.scalar_one_or_none()
+
+        decision = mv.decision.value if mv and mv.decision else None
+        status, tone = _status_for(decision, open_ref)
+        premium = float(quote.recommended_premium or 0)
+        total_premium += premium
+        if mv and mv.final_composite_score is not None:
+            scores.append(float(mv.final_composite_score))
+
+        ct = (risk.coverage_terms if risk else None) or {}
+        sub_limits = (risk.sub_limits if risk else None) or []
+        sub_label = " · ".join(
+            f"{(s.get('peril') or '').title()} ${int(s.get('sub_limit', 0) / 1_000_000)}M"
+            for s in sub_limits[:2]
+            if s.get("sub_limit")
+        ) or None
+
+        coverages.append(
+            ClientWorkbenchCoverage(
+                code=sub.submission_code,
+                line=sub.coverage,
+                carrier=(commercial.carrier_name if commercial and hasattr(commercial, "carrier_name") else None),
+                score=(mv.final_composite_score if mv else None),
+                pure=(mv.pure_composite_score if mv else None),
+                tier=(mv.final_tier if mv else None),
+                tier_label=(mv.tier_label if mv else None),
+                decision=decision,
+                confidence=(mv.confidence if mv else None),
+                percentile=(mv.peer_percentile_rank if mv else None),
+                cohort_median=(mv.peer_cohort_median_score if mv else None),
+                cohort_size=(mv.peer_cohort_size if mv else None),
+                premium=premium,
+                recommended=premium,
+                limit=(mv.recommended_limit if mv else None),
+                deductible=(risk.deductible_amount if risk else None),
+                status=status,
+                status_tone=tone,
+                signal_coverage=(mv.signal_coverage if mv else None),
+                awaiting=(open_ref.awaiting_party if open_ref else None),
+                prev_score=prev_score,
+                sir_amount=(risk.sir_amount if risk else None),
+                sir_applies=(risk.sir_applies if risk else None),
+                waiting_period_hours=(risk.waiting_period_hours if risk else None),
+                aggregate_limit=(risk.aggregate_limit if risk else None),
+                reinstatements=(risk.reinstatements if risk else None),
+                reinstatement_rate=(risk.reinstatement_rate if risk else None),
+                coverage_trigger=ct.get("trigger"),
+                extensions_count=len(ct.get("extensions", [])) if ct.get("extensions") else None,
+                exclusions_count=len(ct.get("exclusions", [])) if ct.get("exclusions") else None,
+                sub_limits_label=sub_label,
+                loss_propensity_band=(mv.loss_propensity_band if mv else None),
+                loss_combined_modifier=(mv.loss_combined_modifier if mv else None),
+                loss_frequency_multiplier=(mv.loss_frequency_multiplier if mv else None),
+                loss_severity_multiplier=(mv.loss_severity_multiplier if mv else None),
+                exposure_value=(mv.exposure_value if mv else None),
+                exposure_band_label=(mv.exposure_band_label if mv else None),
+                exposure_size_score=(mv.exposure_size_score if mv else None),
+                exposure_complexity_score=(mv.exposure_complexity_score if mv else None),
+                exposure_modifier=(mv.exposure_modifier if mv else None),
+                base_premium=(mv.base_premium if mv else None),
+                net_premium=(commercial.net_premium if commercial else None),
+                gross_premium=(commercial.gross_premium if commercial else None),
+                offered_premium=(commercial.offered_premium if commercial else None),
+                total_commission=(commercial.total_commission if commercial else None),
+                score_history=history,
+            )
+        )
+
+    # Engagement (reuse client-health computation)
+    sub_ids = [s.id for s, _ in group]
+    msgs_q = await db.execute(
+        select(ReferralMessage)
+        .join(Referral, ReferralMessage.referral_id == Referral.id)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .where(Quote.submission_id.in_(sub_ids))
+        .order_by(ReferralMessage.created_at.desc())
+    )
+    msgs = list(msgs_q.scalars().all())
+    last_msg_at = msgs[0].created_at if msgs else None
+    months_since = None
+    last_message_label = None
+    if last_msg_at:
+        delta = now - last_msg_at.replace(tzinfo=timezone.utc)
+        months_since = round(delta.days / 30.0, 1)
+        hrs = delta.total_seconds() / 3600.0
+        last_message_label = f"{int(hrs)}h ago" if hrs < 48 else f"{delta.days}d ago"
+
+    gaps: list[float] = []
+    for i in range(len(msgs) - 1):
+        cur, prev = msgs[i], msgs[i + 1]
+        if cur.direction == MessageDirection.BROKER_TO_UNDERWRITER.value \
+           and prev.direction == MessageDirection.UNDERWRITER_TO_BROKER.value:
+            g = (cur.created_at - prev.created_at).total_seconds() / 3600.0
+            if 0 < g < 24 * 60:
+                gaps.append(g)
+    avg_response = round(sum(gaps) / len(gaps), 1) if gaps else None
+    open_queries = sum(1 for c in coverages if c.awaiting is not None)
+    has_recent_signal = any(m.signal_value_update for m in msgs[:5])
+    eng_score, eng_label = engagement_score_for(
+        open_query_count=open_queries,
+        avg_response_hours=avg_response,
+        months_since_last_message=months_since,
+        has_recent_signal_update=has_recent_signal,
+    )
+
+    # Loss events for this entity (trailing — newest first)
+    le_q = await db.execute(
+        select(LossEvent)
+        .where(LossEvent.entity_name == entity_name)
+        .order_by(LossEvent.loss_date.desc())
+    )
+    loss_events = [
+        ClientWorkbenchLossEvent(
+            date=e.loss_date,
+            line=e.coverage,
+            incurred=e.incurred_amount,
+            paid=e.paid_amount,
+            cause=e.cause_description,
+            status=e.status,
+        )
+        for e in le_q.scalars().all()
+    ]
+
+    return ClientWorkbenchResponse(
+        entity_name=entity_name,
+        industry=sd.get("industry_label") or sd.get("naics_label"),
+        naics=str(naics) if naics else None,
+        vertical=vert.name if vert else None,
+        revenue_band=sd.get("revenue_band"),
+        country=sd.get("country"),
+        locations=sd.get("locations"),
+        employees=str(sd.get("employees")) if sd.get("employees") else None,
+        domain=primary.discovered_domain,
+        first_seen=first_seen,
+        last_seen=last_seen,
+        broker=broker.name if broker else "Marsh",
+        engagement=eng_score,
+        engagement_label=eng_label,
+        last_message=last_message_label,
+        avg_response_hours=avg_response,
+        open_queries=open_queries,
+        next_renewal_days=None,
+        total_premium=total_premium,
+        avg_score=round(sum(scores) / len(scores)) if scores else None,
+        coverages=coverages,
+        loss_events=loss_events,
+    )
 
 
 def _opportunity_risk_flags(
