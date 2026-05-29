@@ -44,13 +44,19 @@ interface BreakdownRow {
   share: number;
 }
 
+// lines_concentration / vertical_concentration are policy COUNTS per the
+// backend schema; convert to a fractional share of the book so formatPercent
+// renders correctly (a raw count would format as e.g. "1,200%").
+function toBreakdownRows(counts: Record<string, number>): BreakdownRow[] {
+  const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
+  return Object.entries(counts)
+    .map(([name, count]) => ({ name, share: total ? count / total : 0 }))
+    .sort((a, b) => b.share - a.share);
+}
+
 function HealthBody({ data }: { data: BookHealthResponse }) {
-  const lines: BreakdownRow[] = Object.entries(data.lines_concentration)
-    .map(([name, share]) => ({ name, share }))
-    .sort((a, b) => b.share - a.share);
-  const verticals: BreakdownRow[] = Object.entries(data.vertical_concentration)
-    .map(([name, share]) => ({ name, share }))
-    .sort((a, b) => b.share - a.share);
+  const lines = toBreakdownRows(data.lines_concentration);
+  const verticals = toBreakdownRows(data.vertical_concentration);
   const tenureYears = (data.avg_tenure_months / 12).toFixed(1);
 
   return (
@@ -161,8 +167,8 @@ function HealthBody({ data }: { data: BookHealthResponse }) {
 
           {/* Breakdowns */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <BreakdownCard title="Premium by vertical" rows={verticals} />
-            <BreakdownCard title="Premium by coverage line" rows={lines} />
+            <BreakdownCard title="Policy mix by vertical" rows={verticals} />
+            <BreakdownCard title="Policy mix by coverage line" rows={lines} />
           </div>
 
           {/* Footer note */}

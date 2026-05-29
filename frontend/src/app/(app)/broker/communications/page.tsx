@@ -93,7 +93,7 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
               <KpiSnug label="Total open" value={totalOpen} />
               <KpiSnug label="Awaiting you" value={onBroker} tone="spot" />
               <KpiSnug label="Awaiting client" value={onClient} tone="info" />
-              <KpiSnug label="Resolved (30d)" value={resolved} tone="pos" />
+              <KpiSnug label="Resolved" value={resolved} tone="pos" />
             </div>
           </header>
 
