@@ -2,32 +2,47 @@
 
 import { useEffect, useState } from "react";
 import {
-  AlertTriangle,
+  Layers,
+  ShieldAlert,
   Target,
-  TrendingDown,
   TrendingUp,
 } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { Sparkline } from "@/components/charts/sparkline";
+import { WorkArea } from "@/components/ui/work-area";
+import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageError, PageLoading } from "@/components/base/pageStates";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatPercent } from "@/lib/format";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+
+/* ============================================================
+ * Loss Assessment — mirrors reim_wb_b.jsx WbLoss (section 04).
+ *
+ * Three stacked rows:
+ *   1. Active Submission · Loss Profile — 8 KPIs
+ *   2. Two-col: Freq vs Severity matrix (scatter) + Loss Trajectory
+ *   3. Loss Group Scores — 2-col grid of group cards (freq + sev bars)
+ * ============================================================ */
+
+type ScatterPoint = {
+  loss_propensity_score?: number;
+  severity_propensity_score?: number;
+  decision?: string;
+  entity_name?: string;
+};
 
 export default function LossAssessmentPage() {
-  const sub = useDsiStore((s) => s.activeSubmission);
-  const ver = useDsiStore((s) => s.activeVersion);
+  const sub = useDsiStore((s) => s.activeSubmission) as ApiRecord | null;
+  const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
   const fetchLoss = useDsiStore((s) => s.fetchLossAnalytics);
-  const trend = useDsiStore((s) => s.lossTrendDistribution);
-  const cohort = useDsiStore((s) => s.lossCohortBenchmarks);
+  const trendDistribution = useDsiStore((s) => s.lossTrendDistribution);
   const scatter = useDsiStore((s) => s.lossScatterData);
 
   const [state, setState] = useState<"loading" | "ok" | "error">("loading");
   const [err, setErr] = useState<string | null>(null);
 
   const coverage = sub?.coverage as string | undefined;
+
   useEffect(() => {
     if (!coverage) return;
     setState("loading");
@@ -39,19 +54,11 @@ export default function LossAssessmentPage() {
       });
   }, [coverage, fetchLoss]);
 
-  if (!sub) {
+  if (!ver) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Loss Assessment" />
-        <PageLoading message="Loading submission…" />
-      </>
-    );
-  }
-  if (state === "loading") {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Loss Assessment" />
-        <PageLoading message="Loading loss analytics…" />
+        <PageLoading />
       </>
     );
   }
@@ -64,195 +71,375 @@ export default function LossAssessmentPage() {
     );
   }
 
-  const lossPropensity = Number(ver?.loss_propensity_score ?? 0);
-  const severityPropensity = Number(ver?.severity_propensity_score ?? 0);
-  const lossBand = String(ver?.loss_propensity_band ?? "");
-  const lossTrend = String(ver?.loss_trend_direction ?? "");
-  const lossMod = Number(ver?.loss_combined_modifier ?? 1);
+  const propensityBand = strOrNull(ver.loss_propensity_band);
+  const severityBand = strOrNull(ver.severity_propensity_band);
+  const combinedMod = numOrNull(ver.loss_combined_modifier);
+  const freqMult = numOrNull(ver.loss_frequency_multiplier);
+  const sevMult = numOrNull(ver.loss_severity_multiplier);
+  const confidence = numOrNull(ver.loss_confidence);
+  const cohortName = strOrNull(ver.loss_cohort_name);
+  const freqVelocity = numOrNull(ver.loss_frequency_velocity);
+  const sevVelocity = numOrNull(ver.loss_severity_velocity);
+  const trendDirection = strOrNull(ver.loss_trend_direction);
+  const propensityScore = numOrNull(ver.loss_propensity_score);
+  const severityScore = numOrNull(ver.severity_propensity_score);
 
-  const trendPoints = (trend ?? [])
-    .map((p) =>
-      Number(
-        (p as Record<string, unknown>).intensity ??
-          (p as Record<string, unknown>).value ??
-          0,
-      ),
-    )
-    .filter((n) => !Number.isNaN(n));
+  // Combined score velocity = average of freq + sev velocities when available.
+  const combinedVelocity =
+    freqVelocity != null && sevVelocity != null
+      ? (freqVelocity + sevVelocity) / 2
+      : freqVelocity ?? sevVelocity;
+
+  // Loss-related group scores. The MV row keeps these on `group_scores`
+  // JSONB; we surface every group that has any loss-relevant signal data
+  // (freq or sev scores). Falls back to all groups when not differentiated.
+  const groupScores = (ver.group_scores as ApiRecord | undefined) ?? {};
+  const lossGroups = Object.entries(groupScores).map(([id, raw]) => {
+    const v = (raw as ApiRecord) ?? {};
+    return {
+      id,
+      freq: numOrNull(v.frequency_score ?? v.score),
+      sev: numOrNull(v.severity_score ?? v.score),
+      conf: numOrNull(v.confidence),
+    };
+  });
+
+  const cohortPoints: ScatterPoint[] = Array.isArray(scatter)
+    ? (scatter as ScatterPoint[])
+    : [];
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Loss Assessment" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          {/* Hero metrics */}
+      <WorkArea>
+        {/* ─── 1. Loss Profile KPIs (8 across) ─────────────── */}
+        <Card header="Active Submission · Loss Profile" icon={Target} pad="md">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
+            <KpiSnug
+              label="Propensity band"
+              value={propensityBand ? propensityBand.toUpperCase() : "—"}
+              tone={
+                propensityBand && /low|very_low/i.test(propensityBand) ? "pos" : "default"
+              }
+            />
+            <KpiSnug
+              label="Severity band"
+              value={severityBand ? severityBand.toUpperCase() : "—"}
+            />
+            <KpiSnug
+              label="Combined modifier"
+              value={combinedMod != null ? `${combinedMod.toFixed(2)}x` : "—"}
+              tone={combinedMod != null && combinedMod < 1 ? "pos" : "default"}
+            />
+            <KpiSnug
+              label="Freq multiplier"
+              value={freqMult != null ? `${freqMult.toFixed(2)}x` : "—"}
+            />
+            <KpiSnug
+              label="Sev multiplier"
+              value={sevMult != null ? `${sevMult.toFixed(2)}x` : "—"}
+            />
+            <KpiSnug
+              label="Model confidence"
+              value={confidence != null ? `${(confidence * 100).toFixed(0)}%` : "—"}
+            />
+            <KpiSnug label="Cohort" value={cohortName ?? "—"} />
+            <KpiSnug
+              label="Score velocity"
+              value={
+                combinedVelocity != null
+                  ? `${combinedVelocity > 0 ? "+" : ""}${combinedVelocity.toFixed(1)}`
+                  : "—"
+              }
+              tone={combinedVelocity != null && combinedVelocity < 0 ? "pos" : "default"}
+            />
+          </div>
+        </Card>
+
+        {/* ─── 2. Matrix + Trajectory ──────────────────────── */}
+        <div className="grid gap-3.5 lg:grid-cols-[1.6fr_1fr]">
           <Card
-            header="Active submission · loss profile"
-            icon={Target}
+            header="Frequency vs Severity Matrix"
+            icon={ShieldAlert}
             pad="md"
-            className="grid gap-4 md:grid-cols-4"
           >
-            <div>
-              <Eyebrow className="text-info-deep dark:text-info">
-                Loss propensity
-              </Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block text-info">
-                {lossPropensity > 0 ? lossPropensity.toFixed(0) : "—"}
-              </NumDisplay>
-              {lossBand && (
-                <Chip
-                  variant={
-                    /low|good/i.test(lossBand)
-                      ? "pos"
-                      : /high|elev/i.test(lossBand)
-                        ? "neg"
-                        : "warn"
-                  }
-                  size="sm"
-                  className="mt-2"
-                >
-                  {lossBand}
-                </Chip>
-              )}
-            </div>
-            <div>
-              <Eyebrow>Severity propensity</Eyebrow>
-              <NumDisplay size="lg" className="mt-2 block">
-                {severityPropensity > 0 ? severityPropensity.toFixed(0) : "—"}
-              </NumDisplay>
-            </div>
-            <div>
-              <Eyebrow>Trend direction</Eyebrow>
-              <p className="mt-2 flex items-center gap-2 text-[18px] font-semibold text-ink">
-                {/improv|down|easing/i.test(lossTrend) ? (
-                  <TrendingDown size={16} className="text-pos" />
-                ) : /rising|wors|up/i.test(lossTrend) ? (
-                  <TrendingUp size={16} className="text-neg" />
-                ) : null}
-                {lossTrend || "—"}
-              </p>
-            </div>
-            <div>
-              <Eyebrow
-                className={lossMod > 1 ? "text-neg" : lossMod < 1 ? "text-pos" : ""}
-              >
-                Premium modifier
-              </Eyebrow>
-              <NumDisplay
-                size="lg"
-                className={`mt-2 block ${lossMod > 1 ? "text-neg" : lossMod < 1 ? "text-pos" : ""}`}
-              >
-                ×{lossMod.toFixed(3)}
-              </NumDisplay>
-              <Micro className="mt-1 block">
-                {lossMod !== 1 ? formatPercent(lossMod - 1, 1) : "neutral"}
-              </Micro>
+            <FreqSevScatter
+              points={cohortPoints}
+              subject={
+                propensityScore != null && severityScore != null
+                  ? { x: propensityScore, y: severityScore }
+                  : null
+              }
+            />
+            <div className="mt-2 flex gap-3 text-[11px]">
+              <LegendDot tone="pos" label="Approved" />
+              <LegendDot tone="warn" label="Referred" />
+              <LegendDot tone="neg" label="Declined" />
             </div>
           </Card>
 
-          {/* Sparkline trend */}
-          {trendPoints.length > 0 && (
-            <Card
-              header="Loss intensity trend"
-              icon={TrendingUp}
-              headerRight={<Micro>{trendPoints.length} quarters</Micro>}
-              pad="md"
-            >
-              <Sparkline
-                points={trendPoints}
-                height={80}
-                color="var(--color-warn)"
-              />
-            </Card>
-          )}
-
-          {/* Cohort benchmarks */}
-          {cohort.length > 0 && (
-            <Card
-              header="Cohort benchmarks"
-              icon={Target}
-              pad="none"
-              className="overflow-hidden"
-            >
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken/60 text-left">
-                    <ColHead width="w-[34%]">Metric</ColHead>
-                    <ColHead width="w-[22%]">You</ColHead>
-                    <ColHead width="w-[22%]">Cohort</ColHead>
-                    <ColHead width="w-[22%]">Delta</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cohort.map((c, i) => {
-                    const r = c as Record<string, unknown>;
-                    const you = Number(r.value ?? r.entity_value ?? 0);
-                    const peer = Number(r.cohort ?? r.cohort_value ?? r.peer ?? 0);
-                    const delta = you - peer;
-                    return (
-                      <tr
-                        key={i}
-                        className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
-                      >
-                        <td className="px-5 py-2.5 text-ink">
-                          {String(r.label ?? r.name ?? r.metric ?? "—")}
-                        </td>
-                        <td className="px-5 py-2.5 font-semibold tabular-nums text-ink">
-                          {you.toLocaleString()}
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                          {peer.toLocaleString()}
-                        </td>
-                        <td
-                          className={`px-5 py-2.5 tabular-nums ${
-                            delta > 0
-                              ? "text-neg"
-                              : delta < 0
-                                ? "text-pos"
-                                : "text-ink-mute"
-                          }`}
-                        >
-                          {delta > 0 ? "+" : ""}
-                          {delta.toLocaleString()}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          )}
-
-          {cohort.length === 0 && scatter.length === 0 && (
-            <Card pad="lg" className="flex items-start gap-3">
-              <AlertTriangle size={18} className="mt-0.5 shrink-0 text-warn" />
-              <div>
-                <Eyebrow>No loss analytics</Eyebrow>
-                <Body className="mt-1">
-                  Either the backend hasn't computed loss analytics for this
-                  coverage yet, or the API returned an empty response.
-                </Body>
-              </div>
-            </Card>
-          )}
+          <Card header="Loss Trajectory" icon={TrendingUp} pad="md">
+            <TrajectoryRow
+              label="Overall"
+              trend={trendDirection ?? "—"}
+              delta={combinedVelocity}
+            />
+            <TrajectoryRow
+              label="Frequency"
+              trend={velocityTrend(freqVelocity)}
+              delta={freqVelocity}
+            />
+            <TrajectoryRow
+              label="Severity"
+              trend={velocityTrend(sevVelocity)}
+              delta={sevVelocity}
+            />
+            <TrendDistribution rows={trendDistribution} />
+          </Card>
         </div>
-      </div>
+
+        {/* ─── 3. Loss Group Scores ────────────────────────── */}
+        <Card header="Loss Group Scores" icon={Layers} pad="md">
+          {lossGroups.length === 0 ? (
+            <Body className="italic">No loss group scores on this version.</Body>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2">
+              {lossGroups.map((g) => (
+                <div
+                  key={g.id}
+                  className="rounded-card border border-rule bg-surface-elev px-3.5 py-2.5"
+                >
+                  <div className="mb-1.5 flex justify-between">
+                    <span className="font-mono text-[12px] font-semibold">{g.id}</span>
+                    {g.conf != null && (
+                      <Micro>{Math.round(g.conf * 100)}% conf</Micro>
+                    )}
+                  </div>
+                  <div className="mb-1">
+                    <Micro>Freq</Micro>
+                    <div className="mt-0.5 h-1 overflow-hidden rounded-sm bg-rule">
+                      <div
+                        className="h-full bg-pos"
+                        style={{ width: `${pctBar(g.freq)}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Micro>Sev</Micro>
+                    <div className="mt-0.5 h-1 overflow-hidden rounded-sm bg-rule">
+                      <div
+                        className="h-full bg-info"
+                        style={{ width: `${pctBar(g.sev)}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </WorkArea>
     </>
   );
 }
 
-function ColHead({
-  width,
-  children,
+/* ──────────────────── sub-components ──────────────────── */
+
+function FreqSevScatter({
+  points,
+  subject,
 }: {
-  width: string;
-  children: React.ReactNode;
+  points: ScatterPoint[];
+  subject: { x: number; y: number } | null;
 }) {
+  const W = 560;
+  const H = 280;
+  const xToPx = (x: number) => 40 + (x / 100) * (W - 60);
+  const yToPx = (y: number) => H - 32 - (y / 100) * (H - 64);
+  const color = (d?: string) =>
+    d === "approve" ? "var(--color-pos)" : d === "refer" ? "var(--color-warn)" : "var(--color-neg)";
+
   return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" className="block">
+      <line x1={40} y1={H - 32} x2={W - 20} y2={H - 32} stroke="var(--color-rule)" />
+      <line x1={40} y1={20} x2={40} y2={H - 32} stroke="var(--color-rule)" />
+      {[0, 25, 50, 75, 100].map((v) => (
+        <g key={`x-${v}`}>
+          <line
+            x1={xToPx(v)}
+            y1={H - 32}
+            x2={xToPx(v)}
+            y2={H - 28}
+            stroke="var(--color-ink-mute)"
+          />
+          <text
+            x={xToPx(v)}
+            y={H - 14}
+            textAnchor="middle"
+            style={{ font: "10px IBM Plex Sans", fill: "var(--color-ink-mute)" }}
+          >
+            {v}
+          </text>
+        </g>
+      ))}
+      {[0, 25, 50, 75, 100].map((v) => (
+        <g key={`y-${v}`}>
+          <line x1={36} y1={yToPx(v)} x2={40} y2={yToPx(v)} stroke="var(--color-ink-mute)" />
+          <text
+            x={32}
+            y={yToPx(v) + 3}
+            textAnchor="end"
+            style={{ font: "10px IBM Plex Sans", fill: "var(--color-ink-mute)" }}
+          >
+            {v}
+          </text>
+        </g>
+      ))}
+      <text
+        x={W / 2}
+        y={H - 2}
+        textAnchor="middle"
+        style={{ font: "10.5px IBM Plex Sans", fill: "var(--color-ink-soft)" }}
+      >
+        Loss propensity score →
+      </text>
+      <text
+        x={14}
+        y={H / 2}
+        textAnchor="middle"
+        transform={`rotate(-90, 14, ${H / 2})`}
+        style={{ font: "10.5px IBM Plex Sans", fill: "var(--color-ink-soft)" }}
+      >
+        ← Severity score
+      </text>
+
+      {points.map((p, i) => {
+        const x = p.loss_propensity_score;
+        const y = p.severity_propensity_score;
+        if (x == null || y == null) return null;
+        return (
+          <circle
+            key={i}
+            cx={xToPx(x)}
+            cy={yToPx(y)}
+            r={4}
+            fill={color(p.decision)}
+            opacity={0.7}
+          />
+        );
+      })}
+
+      {subject && (
+        <>
+          <circle
+            cx={xToPx(subject.x)}
+            cy={yToPx(subject.y)}
+            r={8}
+            fill="var(--color-info)"
+            stroke="var(--color-surface)"
+            strokeWidth={2}
+          />
+          <text
+            x={xToPx(subject.x)}
+            y={yToPx(subject.y) - 14}
+            textAnchor="middle"
+            style={{ font: "600 11px IBM Plex Sans", fill: "var(--color-info)" }}
+          >
+            YOU · {Math.round(subject.x)}/{Math.round(subject.y)}
+          </text>
+        </>
+      )}
+    </svg>
   );
+}
+
+function LegendDot({ tone, label }: { tone: "pos" | "warn" | "neg"; label: string }) {
+  const bg = tone === "pos" ? "bg-pos" : tone === "warn" ? "bg-warn" : "bg-neg";
+  return (
+    <span className="flex items-center gap-1.5">
+      <span className={`h-2 w-2 rounded-full ${bg}`} />
+      {label}
+    </span>
+  );
+}
+
+function TrajectoryRow({
+  label,
+  trend,
+  delta,
+}: {
+  label: string;
+  trend: string;
+  delta: number | null;
+}) {
+  const tone = delta == null ? "text-ink" : delta < 0 ? "text-pos" : delta > 0 ? "text-warn" : "text-ink";
+  return (
+    <div className="mb-2 rounded-card border border-rule bg-surface-elev px-3.5 py-3">
+      <Micro className="mb-1 block">{label}</Micro>
+      <div className="flex items-baseline justify-between">
+        <span className="text-[14px] font-bold capitalize">{trend}</span>
+        <span className={`text-[14px] font-bold tabular-nums ${tone}`}>
+          {delta != null ? `${delta > 0 ? "+" : ""}${delta.toFixed(1)}` : "—"}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+type TrendCount = {
+  improving?: number;
+  stable?: number;
+  deteriorating?: number;
+  cohort_size?: number;
+};
+
+function TrendDistribution({ rows }: { rows: unknown }) {
+  // The backend returns either a single row (totals) or per-cohort rows.
+  // Aggregate when there are multiple.
+  const list: TrendCount[] = Array.isArray(rows) ? (rows as TrendCount[]) : [];
+  if (list.length === 0) return null;
+  let improving = 0;
+  let stable = 0;
+  let deteriorating = 0;
+  let total = 0;
+  for (const r of list) {
+    improving += r.improving ?? 0;
+    stable += r.stable ?? 0;
+    deteriorating += r.deteriorating ?? 0;
+    total += r.cohort_size ?? (r.improving ?? 0) + (r.stable ?? 0) + (r.deteriorating ?? 0);
+  }
+  return (
+    <Micro className="mt-2.5 block text-[11.5px]">
+      Book-wide trend ({total} peers):{" "}
+      <strong className="text-pos">{improving} improving</strong> ·{" "}
+      <strong>{stable} stable</strong> ·{" "}
+      <strong className="text-neg">{deteriorating} deteriorating</strong>.
+    </Micro>
+  );
+}
+
+/* ──────────────────── helpers ──────────────────── */
+
+function velocityTrend(v: number | null): string {
+  if (v == null) return "—";
+  if (v < -0.5) return "Improving";
+  if (v > 0.5) return "Deteriorating";
+  return "Stable";
+}
+
+function pctBar(v: number | null): number {
+  if (v == null) return 0;
+  return Math.max(0, Math.min(100, v));
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }
