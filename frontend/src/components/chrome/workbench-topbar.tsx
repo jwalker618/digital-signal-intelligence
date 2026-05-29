@@ -19,7 +19,10 @@ export function WorkbenchTopbar({ activeTabLabel }: { activeTabLabel: string }) 
   const isDark = useThemeStore((s) => s.isDark);
   const toggle = useThemeStore((s) => s.toggleDark);
 
-  const composite = ver?.composite_score ?? sub?.composite_score ?? null;
+  // ModelVersionDBRecord has final_composite_score / pure_composite_score;
+  // SubmissionRecord carries no score. Read from the version object only.
+  const composite =
+    ver?.final_composite_score ?? ver?.pure_composite_score ?? null;
   const decision = String(ver?.decision ?? sub?.decision ?? "").toLowerCase();
   const tier = ver?.final_tier ?? sub?.final_tier ?? null;
   const premium =

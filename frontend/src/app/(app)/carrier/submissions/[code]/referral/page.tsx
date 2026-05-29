@@ -1,364 +1,382 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { useEffect, useState } from "react";
 import {
-  CheckCircle2,
-  CornerDownLeft,
-  FileQuestion,
-  Loader2,
+  Check,
+  Flame,
+  Layers,
+  PenLine,
   ShieldAlert,
+  X,
 } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Button } from "@/components/ui/button";
+import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
 import { KpiSnug } from "@/components/ui/kpi-snug";
-import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
-import { postBrokerReply } from "@/lib/portalApi";
-import { useAuthStore } from "@/store/authStore";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatText } from "@/lib/format";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { fmtRelative } from "@/lib/utils";
 
-/**
- * Referral Actions — the underwriter's workspace for handling a referral.
- * Reply with body + optional signal_value_update. Reassessment is fired
- * server-side; the response carries `triggered_reassessment` + a new quote
- * id if applicable.
- */
+/* ============================================================
+ * Referral Actions — mirrors reim_wb_b.jsx WbReferral (section 07).
+ *
+ * Four stacked rows:
+ *   1. Spot-tone header — "Referred — pending underwriter audit" with
+ *      trigger summary + Flagged/Audited/Total KPIs on the right
+ *   2. Referral context — triggering conditions list with refer chips
+ *   3. Signal audit matrix — wide 8-col table, override-aware rows
+ *      (warn left border for flagged-unaudited; pos border for audited;
+ *      flame icon for high-impact)
+ *   4. Final decision — summary + Decline / Approve & bind buttons
+ * ============================================================ */
+
+type SignalAudit = {
+  signal_code?: string;
+  signal_id?: string;
+  score?: number;
+  confidence?: number;
+  weight?: number;
+  contribution?: number;
+  flagged?: boolean;
+  override?: boolean;
+  audited_value?: number;
+  rationale?: string;
+};
+
 export default function ReferralActionsPage() {
-  const accessToken = useAuthStore((s) => s.accessToken);
-  const sub = useDsiStore((s) => s.activeSubmission);
-  const referral = useDsiStore((s) => s.activeReferral);
-  const signals = useDsiStore((s) => s.riskSignals);
+  const referral = useDsiStore((s) => s.activeReferral) as ApiRecord | null;
+  const sub = useDsiStore((s) => s.activeSubmission) as ApiRecord | null;
+  const referralSignals = useDsiStore((s) => s.referralSignals);
+  const fetchReferralSignals = useDsiStore((s) => s.fetchReferralSignals);
+  const submitOverride = useDsiStore((s) => s.submitSignalOverride);
 
-  const [body, setBody] = useState("");
-  const [signalId, setSignalId] = useState("");
-  const [signalValue, setSignalValue] = useState("");
-  const [evidence, setEvidence] = useState("");
+  const submissionCode = sub?.submission_code as string | undefined;
+  const [overrideOpen, setOverrideOpen] = useState<string | null>(null);
 
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<{
-    triggered_reassessment: boolean;
-    new_quote_id: string | null;
-  } | null>(null);
+  useEffect(() => {
+    if (submissionCode) fetchReferralSignals(submissionCode).catch(() => undefined);
+  }, [submissionCode, fetchReferralSignals]);
 
-  if (!sub) {
+  if (!referral || !sub) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Referral Actions" />
-        <PageLoading message="Loading submission…" />
+        <PageLoading message="Loading referral…" />
       </>
     );
   }
 
-  if (!referral) {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Referral Actions" />
-        <div className="flex flex-1 items-start justify-center px-9 py-12">
-          <Card pad="lg" className="max-w-md">
-            <Eyebrow>No referral</Eyebrow>
-            <Body className="mt-2">
-              This submission isn't currently referred. Referral actions become
-              available once the engine flags a submission for review.
-            </Body>
-          </Card>
-        </div>
-      </>
-    );
-  }
+  const signals: SignalAudit[] = Array.isArray(referralSignals)
+    ? (referralSignals as SignalAudit[])
+    : [];
 
-  const referralCode = String(referral.referral_code ?? "");
-  const reasons = (referral.reasons as string[] | undefined) ?? [];
-  // ReferralRecord exposes status (not referral_state) and review_decision (not awaiting_party)
-  const status = String(referral.status ?? "open");
-  const awaiting = String(referral.review_decision ?? "");
+  const flagged = signals.filter((s) => s.flagged && !s.override);
+  const audited = signals.filter((s) => s.override);
 
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    if (!body.trim() || submitting) return;
-    setSubmitting(true);
-    setError(null);
-    try {
-      const payload = {
-        body,
-        ...(signalId && signalValue
-          ? {
-              signal_value_update: {
-                signal_id: signalId,
-                new_value: isNaN(Number(signalValue))
-                  ? signalValue
-                  : Number(signalValue),
-                evidence_basis: evidence || undefined,
-              },
-            }
-          : {}),
-      };
-      const resp = await postBrokerReply(accessToken, referralCode, payload);
-      setSuccess({
-        triggered_reassessment: resp.triggered_reassessment,
-        new_quote_id: resp.new_quote_id ?? null,
-      });
-      setBody("");
-      setSignalId("");
-      setSignalValue("");
-      setEvidence("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Couldn't send reply.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
-
-  const showSignalForm = !!signalId || signals.length > 0;
+  const reasons = Array.isArray(referral.reasons)
+    ? (referral.reasons as string[])
+    : Array.isArray(referral.referral_reasons)
+      ? (referral.referral_reasons as string[])
+      : [];
+  const priority = numOrNull(referral.priority) ?? (flagged.length >= 3 ? 1 : flagged.length >= 2 ? 2 : 3);
+  const created = strOrNull(referral.created_at);
+  const assignee = strOrNull(referral.assignee ?? referral.assigned_to);
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Referral Actions" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1080px] gap-6">
-          {/* Referral banner */}
-          <Card variant="spot" pad="lg">
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-start gap-4">
-                <ShieldAlert size={28} className="shrink-0 text-spot" />
+      <WorkArea>
+        {/* ─── 1. Referral header ─────────────────────────── */}
+        <Card variant="spot" pad="lg">
+          <div className="grid grid-cols-[auto_1fr_auto] items-center gap-5">
+            <ShieldAlert size={32} className="text-spot" />
+            <div>
+              <Eyebrow className="text-spot-deep dark:text-spot">
+                Referred — pending underwriter audit
+              </Eyebrow>
+              <h3 className="mt-1.5 font-display text-[17px] font-semibold leading-tight">
+                Priority {priority} · auto-referred by {flagged.length}{" "}
+                condition{flagged.length === 1 ? "" : "s"}
+              </h3>
+              <Micro className="mt-1 block">
+                {reasons.length > 0
+                  ? `Triggers: ${reasons.slice(0, 2).join(" · ")}.`
+                  : "No referral reasons recorded."}
+                {created ? ` Created ${fmtRelative(created)}.` : ""}
+                {assignee ? ` Assigned to ${assignee}.` : ""}
+              </Micro>
+            </div>
+            <div className="flex gap-3.5">
+              <KpiSnug label="Flagged" value={String(flagged.length)} tone="warn" />
+              <KpiSnug label="Audited" value={String(audited.length)} tone="pos" />
+              <KpiSnug label="Total" value={String(signals.length)} />
+            </div>
+          </div>
+        </Card>
+
+        {/* ─── 2. Referral context — triggering conditions ─── */}
+        <Card header="Referral context" icon={ShieldAlert} pad="md">
+          <Eyebrow className="mb-2 block">Triggering conditions</Eyebrow>
+          {reasons.length === 0 ? (
+            <Body className="italic">No triggering conditions recorded.</Body>
+          ) : (
+            reasons.map((r, i) => (
+              <div
+                key={`${r}-${i}`}
+                className="flex justify-between border-t border-rule py-2.5"
+              >
                 <div>
-                  <Eyebrow className="text-spot-deep dark:text-spot">
-                    {/awaiting/i.test(status)
-                      ? `Referred — awaiting ${awaiting ? formatText(awaiting, "capitalize").toLowerCase() : "review"}`
-                      : "Referred"}
-                  </Eyebrow>
-                  <h1 className="mt-1.5 text-[17px] font-semibold text-ink">
-                    Referral actions
-                  </h1>
-                  <Micro className="mt-1 block">
-                    {reasons.length > 0
-                      ? `Auto-referred by ${reasons.length} condition${reasons.length === 1 ? "" : "s"}.`
-                      : "Reply to the broker, optionally update a signal and trigger a reassessment."}
-                    {referral.created_at != null &&
-                      ` Opened ${fmtRelative(String(referral.created_at))}.`}
-                  </Micro>
+                  <span className="text-[13px]">{r}</span>
+                  <Micro className="mt-0.5 block">signal_condition · refer</Micro>
                 </div>
+                <Chip variant="spot" size="sm">
+                  refer
+                </Chip>
               </div>
-              <div className="flex gap-6">
-                <KpiSnug
-                  label="Flagged"
-                  value={reasons.length}
-                  tone="warn"
-                />
-                <KpiSnug
-                  label="State"
-                  value={
-                    <Chip
-                      variant={/awaiting/i.test(status) ? "spot" : "info"}
-                      size="sm"
-                    >
-                      {formatText(status, "capitalize")}
-                    </Chip>
+            ))
+          )}
+        </Card>
+
+        {/* ─── 3. Signal audit matrix ────────────────────── */}
+        <Card
+          header="Signal audit matrix"
+          icon={Layers}
+          pad="md"
+          headerRight={<Micro>{signals.length} signals</Micro>}
+        >
+          {signals.length === 0 ? (
+            <Body className="italic">No signals to audit.</Body>
+          ) : (
+            <>
+              <div className="grid grid-cols-[1.6fr_70px_70px_70px_90px_90px_1.4fr_60px] border-b border-rule py-1.5 text-[10.5px] uppercase tracking-wider text-ink-mute">
+                {[
+                  "Signal",
+                  "Score",
+                  "Conf",
+                  "Weight",
+                  "Contrib",
+                  "Audited",
+                  "Rationale",
+                  "",
+                ].map((h) => (
+                  <span key={h}>{h}</span>
+                ))}
+              </div>
+              {signals.map((s) => (
+                <SignalRow
+                  key={s.signal_code ?? s.signal_id}
+                  signal={s}
+                  onEdit={() =>
+                    setOverrideOpen(
+                      String(s.signal_code ?? s.signal_id ?? ""),
+                    )
                   }
                 />
-              </div>
-            </div>
-          </Card>
-
-          {/* Referral context */}
-          <Card header="Referral context" icon={ShieldAlert} pad="md" className="space-y-3">
-            <LabelRow
-              label="Referral code"
-              value={<span className="font-mono">{referralCode}</span>}
-            />
-            {reasons.length > 0 && (
-              <div className="rounded-card border border-rule bg-surface-sunken px-4 py-3">
-                <Eyebrow className="mb-1.5">Reasons</Eyebrow>
-                <ul className="space-y-1">
-                  {reasons.map((r, i) => (
-                    <li
-                      key={i}
-                      className="flex items-start gap-2 text-[13px] text-ink"
-                    >
-                      <FileQuestion
-                        size={13}
-                        className="mt-1 shrink-0 text-ink-mute"
-                      />
-                      {r}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </Card>
-
-          {/* Success state */}
-          {success && (
-            <Card variant="pos" pad="md" className="flex items-start gap-3">
-              <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-pos" />
-              <div>
-                <Eyebrow className="text-pos">Reply sent</Eyebrow>
-                <Body className="mt-1">
-                  {success.triggered_reassessment
-                    ? "Your reply triggered a reassessment."
-                    : "Your reply has been posted to the thread."}
-                  {success.new_quote_id && (
-                    <>
-                      {" "}
-                      New quote{" "}
-                      <span className="font-mono">{success.new_quote_id}</span>{" "}
-                      created.
-                    </>
-                  )}
-                </Body>
-              </div>
-            </Card>
+              ))}
+            </>
           )}
+        </Card>
 
-          {/* Composer */}
-          <Card variant="spot" pad="lg">
-            <form className="space-y-4" onSubmit={onSubmit}>
-              <header>
-                <Eyebrow className="text-spot-deep dark:text-spot">
-                  Your reply
-                </Eyebrow>
-                <Micro>
-                  Posts to /portal/queries/{referralCode}/reply. Visible to
-                  the broker (and the insured if open thread).
-                </Micro>
-              </header>
-              <textarea
-                value={body}
-                onChange={(e) => setBody(e.target.value)}
-                rows={6}
-                placeholder="Explain the decision, request evidence, set conditions…"
-                className="block w-full resize-y rounded-btn border border-spot bg-surface px-3 py-2.5 text-[14px] text-ink placeholder:text-ink-mute focus:border-spot focus:outline-none focus:ring-2 focus:ring-spot/30"
-              />
+        {/* ─── 4. Final decision ───────────────────────────── */}
+        <Card pad="md">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <Eyebrow>Final decision</Eyebrow>
+              <h3 className="mt-1.5 font-display text-[15px] font-semibold leading-tight">
+                {audited.length} signal{audited.length === 1 ? "" : "s"} audited ·{" "}
+                {flagged.length} flagged signal{flagged.length === 1 ? "" : "s"} still
+                pending audit
+              </h3>
+              <Micro className="mt-1 block">
+                Audit or override the remaining flagged signals before binding.
+              </Micro>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md border border-rule bg-surface px-3 py-1.5 text-[12px] text-neg hover:bg-surface-sunken"
+              >
+                <X size={13} /> Decline risk
+              </button>
+              <button
+                type="button"
+                className="inline-flex items-center gap-1.5 rounded-md bg-pos px-3 py-1.5 text-[12px] font-semibold text-canvas hover:opacity-90"
+              >
+                <Check size={13} /> Approve & bind
+              </button>
+            </div>
+          </div>
+        </Card>
 
-              {/* Signal value update */}
-              {showSignalForm && (
-                <details className="rounded-btn border border-rule bg-surface px-3 py-2">
-                  <summary className="cursor-pointer text-[12.5px] font-semibold text-ink">
-                    Optional: update a signal value
-                  </summary>
-                  <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <Field id="ref-sig" label="Signal">
-                      <select
-                        id="ref-sig"
-                        value={signalId}
-                        onChange={(e) => setSignalId(e.target.value)}
-                        className="block h-10 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[13px] text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-                      >
-                        <option value="">— none —</option>
-                        {signals.map((s) => (
-                          <option
-                            key={String(s.signal_id ?? s.signal_code)}
-                            value={String(s.signal_id ?? s.signal_code)}
-                          >
-                            {String(s.signal_id ?? s.signal_code)}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                    <Field id="ref-val" label="New value">
-                      <input
-                        id="ref-val"
-                        type="text"
-                        value={signalValue}
-                        onChange={(e) => setSignalValue(e.target.value)}
-                        placeholder="true / false / 0.85 / etc."
-                        className="block h-10 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[13px] text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-                      />
-                    </Field>
-                    <Field
-                      id="ref-evi"
-                      label="Evidence basis"
-                      className="md:col-span-2"
-                    >
-                      <input
-                        id="ref-evi"
-                        type="text"
-                        value={evidence}
-                        onChange={(e) => setEvidence(e.target.value)}
-                        placeholder="What backs this change — broker email, attestation, report…"
-                        className="block h-10 w-full rounded-btn border border-rule-strong bg-surface px-3 text-[13px] text-ink focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30"
-                      />
-                    </Field>
-                  </div>
-                  <Micro className="mt-2 block">
-                    Updating a signal value triggers a fresh assessment and may
-                    produce a new quote version.
-                  </Micro>
-                </details>
-              )}
-
-              {error && (
-                <div
-                  role="alert"
-                  className="rounded-btn border border-neg bg-neg-soft px-3 py-2 text-[13px] text-neg"
-                >
-                  {error}
-                </div>
-              )}
-
-              <div className="flex items-center justify-end gap-3">
-                <Micro>⌘↵ to send</Micro>
-                <Button
-                  type="submit"
-                  variant="spot"
-                  disabled={submitting || body.trim().length === 0}
-                >
-                  {submitting ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" />
-                      Sending…
-                    </>
-                  ) : (
-                    <>
-                      <CornerDownLeft size={14} />
-                      Send reply
-                    </>
-                  )}
-                </Button>
-              </div>
-            </form>
-          </Card>
-
-          {/* Quick reference */}
-          <LabelRow
-            label="Submission"
-            value={
-              <span className="font-mono text-[12.5px]">
-                {String(sub.submission_code)}
-              </span>
-            }
+        {/* Lightweight override sheet — rendered inline so the audit row
+            stays visible while editing. */}
+        {overrideOpen && (
+          <OverrideSheet
+            signalCode={overrideOpen}
+            onClose={() => setOverrideOpen(null)}
+            onSubmit={async (value, rationale) => {
+              const quoteCode = sub.quote_code as string | undefined;
+              if (!quoteCode) return;
+              await submitOverride(quoteCode, overrideOpen, value, rationale);
+              setOverrideOpen(null);
+            }}
           />
-        </div>
-      </div>
+        )}
+      </WorkArea>
     </>
   );
 }
 
-function Field({
-  id,
-  label,
-  className,
-  children,
+/* ──────────────────── sub-components ──────────────────── */
+
+function SignalRow({
+  signal,
+  onEdit,
 }: {
-  id: string;
-  label: string;
-  className?: string;
-  children: React.ReactNode;
+  signal: SignalAudit;
+  onEdit: () => void;
 }) {
+  const score = numOrNull(signal.score);
+  const conf = numOrNull(signal.confidence);
+  const weight = numOrNull(signal.weight);
+  const contrib = numOrNull(signal.contribution);
+  const highImpact = contrib != null && Math.abs(contrib) > 10;
+  const overridden = !!signal.override;
+  const flaggedUnaudited = !!signal.flagged && !overridden;
+  const auditedValue = numOrNull(signal.audited_value);
+  const rationale = strOrNull(signal.rationale);
+  const lowConf = conf != null && conf < 0.7;
+
+  const borderClass = flaggedUnaudited
+    ? "border-l-[3px] border-l-warn"
+    : overridden
+      ? "border-l-[3px] border-l-pos"
+      : "border-l-[3px] border-l-transparent";
+
   return (
-    <div className={className}>
-      <label
-        htmlFor={id}
-        className="mb-1.5 block text-[11.5px] font-semibold uppercase tracking-[0.08em] text-ink-soft"
+    <div
+      className={`grid grid-cols-[1.6fr_70px_70px_70px_90px_90px_1.4fr_60px] items-center border-b border-rule py-2.5 pl-2.5 text-[12.5px] ${borderClass}`}
+    >
+      <span className="flex items-center gap-1.5">
+        {highImpact && <Flame size={12} className="text-warn" />}
+        {overridden && <Check size={12} className="text-pos" />}
+        <span
+          className={`font-mono ${highImpact ? "font-bold" : "font-medium"}`}
+        >
+          {signal.signal_code ?? signal.signal_id ?? "—"}
+        </span>
+      </span>
+      <span
+        className={`tabular-nums ${overridden ? "font-bold text-pos" : ""}`}
       >
-        {label}
-      </label>
-      {children}
+        {score != null ? score.toFixed(1) : "—"}
+      </span>
+      <span
+        className={`tabular-nums ${lowConf ? "font-bold text-warn" : "text-ink-soft"}`}
+      >
+        {conf != null ? `${Math.round(conf * 100)}%` : "—"}
+      </span>
+      <span className="tabular-nums text-ink-soft">
+        {weight != null ? weight.toFixed(2) : "—"}
+      </span>
+      <span
+        className={`tabular-nums ${highImpact ? "font-bold text-warn" : ""}`}
+      >
+        {contrib != null ? contrib.toFixed(1) : "—"}
+      </span>
+      <span
+        className={`tabular-nums font-semibold ${overridden ? "text-pos" : "text-ink-mute"}`}
+      >
+        {auditedValue != null ? auditedValue.toFixed(1) : "—"}
+      </span>
+      <Micro className="overflow-hidden text-ellipsis whitespace-nowrap text-[11px]">
+        {rationale ?? "—"}
+      </Micro>
+      <button
+        type="button"
+        onClick={onEdit}
+        aria-label="Audit signal"
+        className="flex h-6 w-6 items-center justify-center justify-self-start rounded-md text-ink-mute hover:bg-surface-sunken hover:text-ink"
+      >
+        <PenLine size={14} />
+      </button>
     </div>
   );
+}
+
+function OverrideSheet({
+  signalCode,
+  onClose,
+  onSubmit,
+}: {
+  signalCode: string;
+  onClose: () => void;
+  onSubmit: (value: number | string, rationale: string) => Promise<void>;
+}) {
+  const [value, setValue] = useState("");
+  const [rationale, setRationale] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  return (
+    <Card pad="md">
+      <div className="flex items-baseline justify-between">
+        <Eyebrow>Audit signal</Eyebrow>
+        <button
+          type="button"
+          onClick={onClose}
+          className="text-[12px] text-ink-mute hover:text-ink"
+        >
+          Cancel
+        </button>
+      </div>
+      <p className="mt-1.5 font-mono text-[13px]">{signalCode}</p>
+      <div className="mt-3 grid gap-2.5 sm:grid-cols-[1fr_2fr_auto]">
+        <input
+          type="text"
+          placeholder="Audited value"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="rounded-md border border-rule bg-surface px-2.5 py-1.5 text-[13px]"
+        />
+        <input
+          type="text"
+          placeholder="Rationale"
+          value={rationale}
+          onChange={(e) => setRationale(e.target.value)}
+          className="rounded-md border border-rule bg-surface px-2.5 py-1.5 text-[13px]"
+        />
+        <button
+          type="button"
+          disabled={!value || !rationale || submitting}
+          onClick={async () => {
+            setSubmitting(true);
+            try {
+              const v = Number(value);
+              await onSubmit(Number.isFinite(v) ? v : value, rationale);
+            } finally {
+              setSubmitting(false);
+            }
+          }}
+          className="rounded-md bg-info px-3 py-1.5 text-[12px] font-semibold text-canvas hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {submitting ? "Saving…" : "Submit override"}
+        </button>
+      </div>
+    </Card>
+  );
+}
+
+/* ──────────────────── helpers ──────────────────── */
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }

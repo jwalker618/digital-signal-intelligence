@@ -1,49 +1,38 @@
 "use client";
 
-import Link from "next/link";
 import { Building2, Moon, Sun } from "lucide-react";
-import { Avatar } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
 
 interface TopbarProps {
-  /** Breadcrumb segments. The last one is rendered as the active page. */
   crumbs: string[];
-  /**
-   * Optional context badge next to the right-side actions — used to show
-   * the active entity (e.g. "Acme Industries") on persona pages.
-   */
   entity?: string;
-  /** Per-page actions slotted before the badge/avatar. */
   actions?: React.ReactNode;
 }
 
-/**
- * Application topbar. Persona-aware via the breadcrumb prop; entity
- * context, custom actions, theme toggle, and avatar live on the right.
- */
+// Persona crumbs that pages pass as the first segment but the user wants
+// stripped from display ("just start with a /").
+const PORTAL_CRUMBS = new Set([
+  "Carrier Portal",
+  "Client Portal",
+  "Broker Portal",
+  "Admin",
+]);
+
 export function Topbar({ crumbs, entity, actions }: TopbarProps) {
-  const user = useAuthStore((s) => s.user);
   const isDark = useThemeStore((s) => s.isDark);
   const toggle = useThemeStore((s) => s.toggleDark);
 
-  const initials =
-    (user?.email
-      ?.split("@")[0]
-      ?.split(/[._-]/)
-      .map((p) => p[0] ?? "")
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() ||
-      user?.email?.slice(0, 2).toUpperCase()) ??
-    "—";
+  const display = crumbs.length > 0 && PORTAL_CRUMBS.has(crumbs[0]!)
+    ? crumbs.slice(1)
+    : crumbs;
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-rule bg-canvas px-8">
       <nav className="flex items-center gap-3.5 text-[14px] text-ink-soft" aria-label="Breadcrumb">
-        {crumbs.map((c, i) => {
-          const last = i === crumbs.length - 1;
+        <span className="text-ink-mute" aria-hidden>/</span>
+        {display.map((c, i) => {
+          const last = i === display.length - 1;
           return (
             <span key={`${c}-${i}`} className="flex items-center gap-3.5">
               {i > 0 && <span className="text-ink-mute">/</span>}
@@ -68,13 +57,6 @@ export function Topbar({ crumbs, entity, actions }: TopbarProps) {
         >
           {isDark ? <Sun size={16} /> : <Moon size={16} />}
         </button>
-        <Link
-          href="/profile"
-          aria-label="Account"
-          className="rounded-full focus:outline-none focus:ring-2 focus:ring-info"
-        >
-          <Avatar initials={initials} />
-        </Link>
       </div>
     </header>
   );

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import statistics
 import uuid
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -19,6 +20,7 @@ from infrastructure.api.auth.permissions import AuthContext
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
     Broker,
+    LossEvent,
     ModelVersionRecord,
     Quote,
     Referral,
@@ -121,7 +123,9 @@ async def _client_overview(user: User, db: AsyncSession) -> ClientOverviewRespon
     broker_info = await _broker_info_for_submission(
         submissions[0] if submissions else None, db,
     )
-    coverages = [await _build_coverage_entry(s, db) for s in submissions]
+    coverages = [
+        await _build_coverage_entry(s, user.tenant_id, db) for s in submissions
+    ]
     coverages.sort(key=lambda c: (c.updated_at is None, c.updated_at), reverse=True)
 
     return ClientOverviewResponse(
@@ -206,8 +210,71 @@ async def _build_book_entry(
 _SCORE_HISTORY_LIMIT = 8
 
 
+def _quarter_start(d: datetime) -> datetime:
+    """Floor `d` to the start of its calendar quarter (UTC)."""
+    q_first_month = ((d.month - 1) // 3) * 3 + 1
+    return datetime(d.year, q_first_month, 1, tzinfo=timezone.utc)
+
+
+def _quarter_back(start: datetime, n: int) -> datetime:
+    """Return the start of the quarter that is `n` quarters before `start`."""
+    total_q = start.year * 4 + (start.month - 1) // 3 - n
+    year, q = divmod(total_q, 4)
+    return datetime(year, q * 3 + 1, 1, tzinfo=timezone.utc)
+
+
+async def _loss_event_quarters_for_coverage(
+    entity_name: str,
+    coverage: str,
+    tenant_id: uuid.UUID,
+    db: AsyncSession,
+) -> Optional[list[float]]:
+    """Aggregate incurred loss per quarter for an entity's coverage, last 12 Q.
+
+    Returns 12 floats oldest -> newest, normalised so max = 1.0. The
+    strip is purely a visual density indicator (no absolute scale), so
+    normalising lets the UI render bars consistently regardless of book
+    size. Returns None when the entity has no loss events at all — the
+    frontend falls back to its designed placeholder in that case.
+    """
+    now = datetime.now(timezone.utc)
+    current_q_start = _quarter_start(now)
+    window_start = _quarter_back(current_q_start, 11)  # 12 quarters inclusive
+
+    q = await db.execute(
+        select(LossEvent.loss_date, LossEvent.incurred_amount).where(
+            LossEvent.tenant_id == tenant_id,
+            LossEvent.entity_name == entity_name,
+            LossEvent.coverage == coverage,
+            LossEvent.loss_date >= window_start,
+        )
+    )
+    rows = list(q.all())
+    if not rows:
+        return None
+
+    buckets = [0.0] * 12
+    for loss_date, incurred in rows:
+        if loss_date is None or incurred is None:
+            continue
+        # Buckets are ordered oldest -> newest. Index = quarters since window_start.
+        delta_q = (loss_date.year - window_start.year) * 4 + (
+            (loss_date.month - 1) // 3 - (window_start.month - 1) // 3
+        )
+        if 0 <= delta_q < 12:
+            buckets[delta_q] += float(incurred)
+
+    peak = max(buckets)
+    if peak <= 0:
+        # Events existed but fell outside the window -- nothing to plot.
+        return None
+    return [round(v / peak, 4) for v in buckets]
+
+
 async def _build_coverage_entry(
-    submission: Submission, db: AsyncSession,
+    submission: Submission,
+    tenant_id: uuid.UUID,
+    db: AsyncSession,
 ) -> ClientCoverageEntry:
     mv = await _latest_mv_for_submission(submission, db)
     quote = await _latest_quote_for_submission(submission, db)
@@ -294,4 +361,7 @@ async def _build_coverage_entry(
         loss_trend_direction=(mv.loss_trend_direction if mv else None),
         loss_frequency_velocity=(mv.loss_frequency_velocity if mv else None),
         loss_severity_velocity=(mv.loss_severity_velocity if mv else None),
+        loss_event_quarters=await _loss_event_quarters_for_coverage(
+            submission.entity_name, submission.coverage, tenant_id, db,
+        ),
     )

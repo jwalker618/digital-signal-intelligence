@@ -11,6 +11,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
+import { WorkArea } from "@/components/ui/work-area";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Button } from "@/components/ui/button";
@@ -128,8 +129,7 @@ function Body0({
   return (
     <>
       <Topbar crumbs={["Carrier Portal", "World Engine"]} />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
+      <WorkArea maxWidth={1400} className="gap-4">
           {/* 1 — World Engine status */}
           {stats && <StatusCard stats={stats} alertCount={alerts.length} />}
 
@@ -210,8 +210,7 @@ function Body0({
 
           {/* 4 — Portfolio overview */}
           <PortfolioCard submissions={submissions} />
-        </div>
-      </div>
+      </WorkArea>
     </>
   );
 }

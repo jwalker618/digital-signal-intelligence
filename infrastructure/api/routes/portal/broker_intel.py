@@ -341,12 +341,14 @@ async def client_health(
                     response_gaps.append(gap_hours)
         avg_response = round(sum(response_gaps) / len(response_gaps), 1) if response_gaps else None
 
-        # Open queries
-        open_query_count = sum(
-            1 for sub, _ in group
-            for ref in await _refs_for_submission(db, sub.id)
-            if ref.awaiting_party is not None
-        )
+        # Open queries — `await` inside a sync generator-expression is
+        # a SyntaxError in Python 3.8+; iterate explicitly instead.
+        open_query_count = 0
+        for sub, _ in group:
+            refs = await _refs_for_submission(db, sub.id)
+            open_query_count += sum(
+                1 for ref in refs if ref.awaiting_party is not None
+            )
 
         # Recent signal update?
         has_recent_signal = any(m.signal_value_update for m in msgs[:5])

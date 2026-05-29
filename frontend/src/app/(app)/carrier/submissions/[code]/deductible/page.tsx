@@ -3,187 +3,111 @@
 import { Layers, MinusCircle } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Micro } from "@/components/ui/typography";
-import { MiniKpi } from "@/components/ui/mini-kpi";
+import { WorkArea } from "@/components/ui/work-area";
+import { Body, Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
-import { LooseRecordCard } from "@/components/base/loose-record";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { formatCurrency, formatText } from "@/lib/format";
 
-export default function DeductiblePage() {
-  const ver = useDsiStore((s) => s.activeVersion);
-  const risk = useDsiStore((s) => s.activeRisk);
-  const sub = useDsiStore((s) => s.activeSubmission);
+/* ============================================================
+ * Deductible Structure — mirrors reim_wb_c.jsx WbDeductible.
+ *
+ * Two rows:
+ *   1. Deductible — 4 KPIs (Type / Amount / Currency / Basis)
+ *   2. Sub-limits — flat list of label / amount rows from sub_limits JSONB
+ * ============================================================ */
 
-  if (!sub) {
+export default function DeductibleStructurePage() {
+  const risk = useDsiStore((s) => s.activeRisk) as ApiRecord | null;
+
+  if (!risk) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Deductible Structure" />
-        <PageLoading message="Loading deductible structure…" />
+        <PageLoading />
       </>
     );
   }
 
-  const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  // RiskTermsDBRecord.deductible_amount; JSONB detail preferred when present
-  const boundDeductible = Number(fpd.deductible ?? risk?.deductible_amount ?? 0);
-  const dedFactor = Number(fpd.deductible_factor ?? 1);
-
-  // deductible_bands/deductible_options not exposed by RiskTermsDBRecord; options table omitted when empty
-  const bands =
-    (risk?.deductible_bands as Array<Record<string, unknown>> | undefined) ?? [];
+  const type = strOrNull(risk.deductible_type);
+  const amount = numOrNull(risk.deductible_amount);
+  const currency = strOrNull(risk.deductible_currency) ?? "USD";
+  const basis = strOrNull(risk.deductible_basis);
+  const subLimits = Array.isArray(risk.sub_limits)
+    ? (risk.sub_limits as ApiRecord[])
+    : [];
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Deductible Structure" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1080px] gap-6">
-          {/* Deductible */}
-          <Card header="Deductible" icon={Layers} pad="md">
-            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-              <MiniKpi
-                label="Type"
-                value={
-                  risk?.deductible_type
-                    ? String(risk.deductible_type)
-                    : "Per occurrence"
-                }
-              />
-              <MiniKpi
-                label="Amount"
-                value={
-                  boundDeductible > 0 ? formatCurrency(boundDeductible) : "—"
-                }
-              />
-              <MiniKpi label="Currency" value={String(risk?.deductible_currency ?? "USD")} />
-              <MiniKpi
-                label="Basis"
-                value={
-                  risk?.deductible_basis
-                    ? String(risk.deductible_basis)
-                    : "Each claim"
-                }
-              />
-            </div>
-          </Card>
-
-          {/* Bound deductible */}
-          <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
-            <div>
-              <Eyebrow className="text-info-deep dark:text-info">
-                Bound deductible
-              </Eyebrow>
-              <NumDisplay size="xl" className="mt-2 block">
-                {boundDeductible > 0 ? formatCurrency(boundDeductible) : "—"}
-              </NumDisplay>
-            </div>
-            <div>
-              <Eyebrow>Applied factor</Eyebrow>
-              <p className="mt-2 font-display text-[28px] font-semibold tabular-nums text-ink">
-                ×{dedFactor.toFixed(3)}
-              </p>
-              <Micro className="mt-1 block">
-                {dedFactor > 1
-                  ? "premium loaded"
-                  : dedFactor < 1
-                    ? "premium credit"
-                    : "neutral"}
-              </Micro>
-            </div>
-            <div>
-              <Eyebrow>Currency</Eyebrow>
-              <p className="mt-2 font-display text-[28px] font-semibold tabular-nums text-ink">
-                {String(risk?.deductible_currency ?? "USD")}
-              </p>
-            </div>
-          </Card>
-
-          {/* Band table */}
-          {bands.length > 0 ? (
-            <Card
-              header={`Deductible options · ${bands.length}`}
-              icon={MinusCircle}
-              pad="none"
-              className="overflow-hidden"
-            >
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken/60 text-left">
-                    <ColHead width="w-[28%]">Deductible</ColHead>
-                    <ColHead width="w-[20%]">Factor</ColHead>
-                    <ColHead width="w-[28%]">Premium</ColHead>
-                    <ColHead width="w-[24%]">Selected</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {bands.map((b, i) => {
-                    const ded = Number(b.deductible ?? b.value ?? 0);
-                    const factor = Number(b.factor ?? 1);
-                    const premium = Number(b.premium ?? 0);
-                    const isBound = Math.abs(ded - boundDeductible) < 0.01;
-                    return (
-                      <tr
-                        key={i}
-                        className={cn(
-                          "border-b border-rule last:border-0 hover:bg-surface-sunken/40",
-                          isBound && "bg-info-soft/50",
-                        )}
-                      >
-                        <td className="px-5 py-2.5 font-semibold tabular-nums text-ink">
-                          {formatCurrency(ded)}
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                          ×{factor.toFixed(3)}
-                        </td>
-                        <td className="px-5 py-2.5 tabular-nums text-ink">
-                          {premium > 0 ? formatCurrency(premium) : "—"}
-                        </td>
-                        <td className="px-5 py-2.5">
-                          {isBound && (
-                            <Chip variant="info" size="sm">
-                              Bound
-                            </Chip>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </Card>
-          ) : (
-            <LooseRecordCard
-              title="Deductible terms"
-              data={risk as Record<string, unknown> | null}
-              fields={[
-                { key: "deductible_amount", label: "Deductible", kind: "currency" },
-                { key: "deductible_factor", label: "Factor", kind: "factor" },
-                { key: "deductible_type", label: "Type" },
-                { key: "deductible_basis", label: "Basis" },
-                { key: "waiting_period_hours", label: "Waiting period (hours)" },
-              ]}
+      <WorkArea>
+        <Card header="Deductible" icon={Layers} pad="md">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+            <KpiSnug
+              label="Type"
+              value={type ? formatText(type.replace(/_/g, " "), "capitalize") : "—"}
             />
+            <KpiSnug
+              label="Amount"
+              value={amount != null ? formatCurrency(amount) : "—"}
+            />
+            <KpiSnug label="Currency" value={currency} />
+            <KpiSnug
+              label="Basis"
+              value={basis ? formatText(basis.replace(/_/g, " "), "capitalize") : "—"}
+            />
+          </div>
+        </Card>
+
+        <Card
+          header={`Sub-limits · ${subLimits.length}`}
+          icon={MinusCircle}
+          pad="md"
+        >
+          {subLimits.length === 0 ? (
+            <Body className="italic">No sub-limits recorded.</Body>
+          ) : (
+            subLimits.map((s, i) => {
+              const peril = strOrNull(s.peril ?? s.label ?? s.name);
+              const sub = numOrNull(s.sub_limit ?? s.amount);
+              const subDed = numOrNull(s.sub_deductible);
+              return (
+                <div
+                  key={`${peril}-${i}`}
+                  className={`flex items-baseline justify-between py-2.5 ${
+                    i < subLimits.length - 1 ? "border-b border-rule" : ""
+                  }`}
+                >
+                  <span className="text-[13px]">
+                    {peril ? formatText(peril.replace(/_/g, " "), "capitalize") : "—"}
+                    {subDed != null && (
+                      <Micro className="ml-2 inline">
+                        ded {formatCurrency(subDed)}
+                      </Micro>
+                    )}
+                  </span>
+                  <span className="font-mono text-[13px] font-bold tabular-nums">
+                    {sub != null ? formatCurrency(sub) : "—"}
+                  </span>
+                </div>
+              );
+            })
           )}
-        </div>
-      </div>
+        </Card>
+      </WorkArea>
     </>
   );
 }
 
-function ColHead({
-  width,
-  children,
-}: {
-  width: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
-  );
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }

@@ -116,11 +116,14 @@ export interface ClientCoverageEntry {
   exposure_band_label?: string | null;
   exposure_size_score?: number | null;
   exposure_value_prior?: number | null;
-  // Phase B2: loss-outlook summary off the latest MV row.
+  // Phase B2: loss-outlook summary off the latest MV row, plus a
+  // 12-quarter incurred-loss strip aggregated from loss_events
+  // (oldest -> newest, normalised so max = 1.0).
   loss_propensity_band?: string | null;
   loss_trend_direction?: string | null;
   loss_frequency_velocity?: number | null;
   loss_severity_velocity?: number | null;
+  loss_event_quarters?: number[] | null;
 }
 
 export interface BrokerOverviewResponse {

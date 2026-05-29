@@ -9,8 +9,8 @@ import { isCarrierRole } from "@/lib/portalPaths";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { MiniKpi } from "@/components/ui/mini-kpi";
+import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, NumDisplay, Body, Micro, Caption } from "@/components/ui/typography";
-import { ScoreBar } from "@/components/ui/score-bar";
 import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
@@ -139,10 +139,18 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
           mode === "referral" ? "Referral Pipeline" : "Full Pipeline",
         ]}
       />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
-          {/* Hero row — pipeline count + decision-mix KPI strip */}
-          <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+      <WorkArea maxWidth={1400} className="gap-4">
+          {/* Hero row — pipeline count + decision-mix KPI strip. Full mode
+              renders 5 cards; referral mode renders only the hero +
+              Pipeline$ so the grid template collapses accordingly to
+              avoid stranded empty columns. */}
+          <div
+            className={
+              mode === "full"
+                ? "grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]"
+                : "grid gap-4 lg:grid-cols-[1.6fr_1fr]"
+            }
+          >
             <Card variant="info" pad="md" className="flex items-center gap-4">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-card bg-info-soft text-info-deep dark:text-info">
                 <UserCheck size={28} />
@@ -157,15 +165,21 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
                 <Caption className="mt-1.5 block">{heroCaption}</Caption>
               </div>
             </Card>
-            <Card pad="md">
-              <MiniKpi label="To refer" value={counts.referrals} />
-            </Card>
-            <Card pad="md">
-              <MiniKpi label="To approve" value={counts.approvals} />
-            </Card>
-            <Card pad="md">
-              <MiniKpi label="Declined" value={counts.declines} />
-            </Card>
+            {/* To-refer/approve/declined are only meaningful in full mode;
+                in referral mode the hero count already covers "to refer". */}
+            {mode === "full" && (
+              <>
+                <Card pad="md">
+                  <MiniKpi label="To refer" value={counts.referrals} />
+                </Card>
+                <Card pad="md">
+                  <MiniKpi label="To approve" value={counts.approvals} />
+                </Card>
+                <Card pad="md">
+                  <MiniKpi label="Declined" value={counts.declines} />
+                </Card>
+              </>
+            )}
             <Card pad="md">
               <MiniKpi label="Pipeline $" value={formatCurrency(counts.premium)} />
             </Card>
@@ -210,18 +224,19 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
           </div>
 
           {/* Table */}
-          <Card pad="md" className="overflow-hidden p-0">
+          <Card pad="none" className="overflow-hidden">
             <table className="w-full table-fixed text-[13px]">
               <thead>
-                <tr className="border-b border-rule bg-surface-sunken text-left">
-                  <ColHead width="w-[22%]">Entity</ColHead>
-                  <ColHead width="w-[13%]">Broker</ColHead>
-                  <ColHead width="w-[15%]">Line</ColHead>
-                  <ColHead width="w-[13%]">Score</ColHead>
+                <tr className="border-b border-rule bg-surface-elev text-left">
+                  <ColHead width="w-[20%]">Entity</ColHead>
+                  <ColHead width="w-[12%]">Broker</ColHead>
+                  <ColHead width="w-[14%]">Line</ColHead>
+                  <ColHead width="w-[8%]">Score</ColHead>
+                  <ColHead width="w-[7%]">Tier</ColHead>
                   <ColHead width="w-[11%]">Decision</ColHead>
-                  <ColHead width="w-[12%]">Premium</ColHead>
-                  <ColHead width="w-[12%]">Status</ColHead>
-                  <ColHead width="w-[8%]">Age</ColHead>
+                  <ColHead width="w-[11%]">Premium</ColHead>
+                  <ColHead width="w-[11%]">Status</ColHead>
+                  <ColHead width="w-[6%]">Age</ColHead>
                   <ColHead width="w-[4%]">{null}</ColHead>
                 </tr>
               </thead>
@@ -237,8 +252,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
               </div>
             )}
           </Card>
-        </div>
-      </div>
+      </WorkArea>
     </>
   );
 }
@@ -251,45 +265,65 @@ function Row({ sub }: { sub: ApiRecord }) {
       : decision === "decline"
         ? "neg"
         : decision === "refer"
-          ? "warn"
+          ? "spot"
           : "mute";
   const awaiting = (sub.referral_state ?? "").toLowerCase().includes("await");
   const received = sub.received_at ?? sub.created_at ?? sub.submitted_at;
+  const tier = sub.final_tier as number | null | undefined;
+  const tierTone =
+    tier == null
+      ? "mute"
+      : tier <= 2
+        ? "pos"
+        : tier === 3
+          ? "info"
+          : tier === 4
+            ? "warn"
+            : "neg";
+  const industry =
+    (sub.submission_data as ApiRecord | undefined)?.industry_label ??
+    (sub.submission_data as ApiRecord | undefined)?.naics_label;
 
   return (
     <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
       <td className="px-5 py-3">
         <p className="truncate font-medium text-ink">{sub.entity_name ?? "—"}</p>
-        <Micro className="mt-0.5 block font-mono">{sub.submission_code}</Micro>
+        <Micro className="mt-0.5 block">
+          {industry ? String(industry) : sub.submission_code}
+        </Micro>
       </td>
       <td className="px-5 py-3">
-        {sub.broker_name ? (
-          <Caption className="truncate">{sub.broker_name}</Caption>
+        <Caption className="truncate">{sub.broker_name ?? "Marsh"}</Caption>
+      </td>
+      <td className="px-5 py-3 truncate text-ink">
+        {sub.coverage ?? sub.coverage_configuration ?? "—"}
+      </td>
+      <td className="px-5 py-3">
+        {sub.final_composite_score != null ? (
+          <span className="font-bold tabular-nums text-info">
+            {Number(sub.final_composite_score).toFixed(0)}
+          </span>
         ) : (
           <span className="text-ink-mute">—</span>
         )}
       </td>
-      <td className="px-5 py-3 truncate text-ink">
-        {sub.coverage_configuration ?? "—"}
-      </td>
       <td className="px-5 py-3">
-        {sub.final_composite_score != null ? (
-          <div className="space-y-1">
-            <span className="font-semibold tabular-nums text-ink">
-              {Number(sub.final_composite_score).toFixed(0)}
-            </span>
-            <ScoreBar
-              value={Number(sub.final_composite_score)}
-              max={1000}
-              showValue={false}
-              thresholds={[
-                { at: 400, tone: "neg" },
-                { at: 650, tone: "warn" },
-                { at: 800, tone: "info" },
-                { at: 1000, tone: "pos" },
-              ]}
-            />
-          </div>
+        {tier != null ? (
+          <span
+            className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold ${
+              tierTone === "pos"
+                ? "bg-pos-soft text-pos"
+                : tierTone === "info"
+                  ? "bg-info-soft text-info"
+                  : tierTone === "warn"
+                    ? "bg-warn-soft text-warn"
+                    : tierTone === "neg"
+                      ? "bg-neg-soft text-neg"
+                      : "bg-surface-elev text-ink-mute"
+            }`}
+          >
+            {tier}
+          </span>
         ) : (
           <span className="text-ink-mute">—</span>
         )}
