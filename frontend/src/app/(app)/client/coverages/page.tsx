@@ -184,13 +184,31 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
   return (
     <Link
       href={`/client/submissions/${policy.submission_code}`}
-      className="grid grid-cols-[1.4fr_1fr_0.9fr_1fr_24px] items-center gap-4 border-t border-rule px-5 py-4 transition hover:bg-surface-sunken/40"
+      className="grid grid-cols-[1.4fr_1fr_0.9fr_0.9fr_0.9fr_1fr_24px] items-center gap-4 border-t border-rule px-5 py-4 transition hover:bg-surface-sunken/40"
     >
       <div className="min-w-0">
         <p className="truncate text-[14px] font-semibold text-ink">
-          {policy.submission_code}
+          {policy.coverage}
         </p>
-        <Micro>{peerStanding(policy.peer_percentile_rank)}</Micro>
+        <Micro className="block font-mono">{policy.submission_code}</Micro>
+        {policy.expires_at && (
+          <Micro className="mt-0.5 block">expires {fmtDate(policy.expires_at)}</Micro>
+        )}
+      </div>
+      <div>
+        <Micro className="block">Limit / Aggregate</Micro>
+        <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
+          {kfmt(policy.limit)}
+          {policy.aggregate_limit != null && (
+            <span className="font-normal text-ink-soft"> / {kfmt(policy.aggregate_limit)}</span>
+          )}
+        </p>
+      </div>
+      <div>
+        <Micro className="block">Retention</Micro>
+        <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
+          {kfmt(policy.deductible)}
+        </p>
       </div>
       <div>
         <Micro className="block">Signal score</Micro>
@@ -199,6 +217,7 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
             ? policy.composite_score.toFixed(0)
             : "—"}
         </p>
+        <Micro>{peerStanding(policy.peer_percentile_rank)}</Micro>
       </div>
       <div>
         <Chip variant={awaiting ? "spot" : chipTone} size="sm">
@@ -218,4 +237,19 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
       <ChevronRight size={18} className="text-ink-mute" />
     </Link>
   );
+}
+
+function kfmt(v: number | null | undefined): string {
+  if (v == null) return "—";
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
+  if (abs >= 1_000) return `$${Math.round(v / 1_000)}k`;
+  return `$${Math.round(v)}`;
+}
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }

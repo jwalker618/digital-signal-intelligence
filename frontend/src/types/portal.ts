@@ -124,6 +124,11 @@ export interface ClientCoverageEntry {
   loss_frequency_velocity?: number | null;
   loss_severity_velocity?: number | null;
   loss_event_quarters?: number[] | null;
+  // Phase F.2: policy facts for the Coverages table.
+  limit?: number | null;
+  deductible?: number | null;
+  aggregate_limit?: number | null;
+  expires_at?: string | null;
 }
 
 export interface BrokerOverviewResponse {

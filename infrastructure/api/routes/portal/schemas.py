@@ -91,6 +91,12 @@ class ClientCoverageEntry(BaseModel):
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
     loss_event_quarters: Optional[list[float]] = None
+    # Phase F.2: policy facts for the Coverages table (limit / retention /
+    # aggregate / expiry). Carrier name has no DB source — omitted.
+    limit: Optional[float] = None
+    deductible: Optional[float] = None
+    aggregate_limit: Optional[float] = None
+    expires_at: Optional[datetime] = None
 
 
 class ClientOverviewResponse(BaseModel):
