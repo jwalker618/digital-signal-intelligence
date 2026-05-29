@@ -14,6 +14,7 @@ import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { SubjectMarker } from "@/components/charts/subject-marker";
+import { numOrNull, strOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Loss Assessment — mirrors reim_wb_b.jsx WbLoss (section 04).
@@ -396,14 +397,4 @@ function pctBar(v: number | null): number {
   return Math.max(0, Math.min(100, v));
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

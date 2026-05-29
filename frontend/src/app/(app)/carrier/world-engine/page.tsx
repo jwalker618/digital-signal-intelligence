@@ -27,6 +27,7 @@ import { api } from "@/lib/api";
 import { formatCurrency, formatText, formatPercent } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { tierToneOf, TIER_BAR, TIER_TEXT } from "@/lib/tier";
 import type {
   DiscoveredRelationship,
   DriftAlert,
@@ -354,17 +355,14 @@ function PortfolioCard({ submissions }: { submissions: ApiRecord[] }) {
           <Micro className="mb-2 block">Tier distribution</Micro>
           <div className="flex h-[110px] items-end gap-2.5">
             {p.tierCounts.map(({ t, n }) => {
-              const txt =
-                t <= 2 ? "text-pos" : t === 3 ? "text-info" : t === 4 ? "text-warn" : "text-neg";
-              const bar =
-                t <= 2 ? "bg-pos" : t === 3 ? "bg-info" : t === 4 ? "bg-warn" : "bg-neg";
+              const tone = tierToneOf(t);
               return (
                 <div key={t} className="flex flex-1 flex-col items-center gap-1">
-                  <span className={cn("text-[14px] font-semibold tabular-nums", txt)}>
+                  <span className={cn("text-[14px] font-semibold tabular-nums", TIER_TEXT[tone])}>
                     {n}
                   </span>
                   <div
-                    className={cn("w-full rounded-t", bar)}
+                    className={cn("w-full rounded-t", TIER_BAR[tone])}
                     style={{ height: `${Math.max(4, (n / p.maxTier) * 78)}px` }}
                   />
                   <Micro className="text-[10px]">T{t}</Micro>

@@ -10,6 +10,7 @@ import { Body, Micro } from "@/components/ui/typography";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency } from "@/lib/format";
+import { numOrNull, strOrNull } from "@/lib/coerce";
 import {
   runFullCascade,
   type ScenarioOverrides,
@@ -373,14 +374,4 @@ function CascadeRow({ step, o, s }: { step: string; o: string; s: string }) {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

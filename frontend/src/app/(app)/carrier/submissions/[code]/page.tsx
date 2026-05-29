@@ -21,6 +21,7 @@ import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
 import type { Tone } from "@/lib/design-tokens";
+import { numOrNull, strOrNull, boolOrNull, pctOrNull, compactCurrency } from "@/lib/coerce";
 
 /* ============================================================
  * Carrier Submission Workbench — Summary tab.
@@ -145,7 +146,7 @@ export default function WorkbenchSummaryPage(props: {
             const peril = strOrNull(s.peril);
             const sl = numOrNull(s.sub_limit);
             return peril && sl != null
-              ? `${formatText(peril, "capitalize")} ${formatCurrencyShort(sl)}`
+              ? `${formatText(peril, "capitalize")} ${compactCurrency(sl)}`
               : peril ?? null;
           })
           .filter(Boolean)
@@ -194,12 +195,12 @@ export default function WorkbenchSummaryPage(props: {
                 <KpiSnug
                   label="Premium"
                   value={
-                    finalPremium != null ? formatCurrencyShort(finalPremium) : "—"
+                    finalPremium != null ? compactCurrency(finalPremium) : "—"
                   }
                 />
                 <KpiSnug
                   label="Limit"
-                  value={limit != null ? formatCurrencyShort(limit) : "—"}
+                  value={limit != null ? compactCurrency(limit) : "—"}
                 />
                 <KpiSnug
                   label="Confidence"
@@ -528,7 +529,7 @@ function pillarBullets(
   if (kind === "exposure") {
     const out: string[] = [];
     const ev = numOrNull(ver.exposure_value);
-    if (ev != null) out.push(`${formatCurrencyShort(ev)} exposure value`);
+    if (ev != null) out.push(`${compactCurrency(ev)} exposure value`);
     const cplx = numOrNull(ver.exposure_complexity_score);
     if (cplx != null) out.push(`Complexity ${Math.round(cplx)}/100`);
     return out;
@@ -576,32 +577,7 @@ function sumJsonbAmounts(j: ApiRecord): number {
   return total;
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}
 
-function boolOrNull(v: unknown): boolean | null {
-  if (v == null) return null;
-  return Boolean(v);
-}
 
-function pctOrNull(v: unknown): number | null {
-  // Stored as a fraction (0.125 = 12.5%) per the JSONB schema comments.
-  const n = numOrNull(v);
-  return n == null ? null : n * 100;
-}
 
-function formatCurrencyShort(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000).toFixed(0)}k`;
-  return formatCurrency(n);
-}

@@ -16,6 +16,7 @@ import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatText } from "@/lib/format";
 import { tierStatus, peerStanding } from "@/lib/portalTone";
 import { portalToneToTone } from "@/lib/design-tokens";
+import { compactCurrency } from "@/lib/coerce";
 import type {
   ClientCoverageEntry,
   ClientOverviewResponse,
@@ -200,16 +201,16 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
       <div>
         <Micro className="block">Limit / Aggregate</Micro>
         <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
-          {kfmt(policy.limit)}
+          {compactCurrency(policy.limit)}
           {policy.aggregate_limit != null && (
-            <span className="font-normal text-ink-soft"> / {kfmt(policy.aggregate_limit)}</span>
+            <span className="font-normal text-ink-soft"> / {compactCurrency(policy.aggregate_limit)}</span>
           )}
         </p>
       </div>
       <div>
         <Micro className="block">Retention</Micro>
         <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
-          {kfmt(policy.deductible)}
+          {compactCurrency(policy.deductible)}
         </p>
       </div>
       <div>
@@ -241,13 +242,6 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
   );
 }
 
-function kfmt(v: number | null | undefined): string {
-  if (v == null) return "—";
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `$${Math.round(v / 1_000)}k`;
-  return `$${Math.round(v)}`;
-}
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);

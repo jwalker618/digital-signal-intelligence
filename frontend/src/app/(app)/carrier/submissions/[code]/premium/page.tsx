@@ -8,6 +8,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency } from "@/lib/format";
+import { numOrNull, strOrNull, boolOrNull, pctOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Premium Assembly — mirrors reim_wb_b.jsx WbPremium (section 05).
@@ -332,24 +333,6 @@ function humanise(key: string): string {
     .join(" ");
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}
 
-function boolOrNull(v: unknown): boolean | null {
-  if (v == null) return null;
-  return Boolean(v);
-}
 
-function pctOrNull(v: unknown): number | null {
-  const n = numOrNull(v);
-  return n == null ? null : n * 100;
-}

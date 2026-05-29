@@ -1,30 +1,18 @@
-import { formatCurrency } from "@/lib/format";
+// Client-workbench display helpers. Tier + compact-currency logic is
+// shared app-wide (lib/tier, lib/coerce); re-exported here under the
+// names the CW tabs already import so there's a single source of truth.
+import { compactCurrency } from "@/lib/coerce";
+import { tierToneOf, TIER_CHIP, TIER_BAR } from "@/lib/tier";
 
-/** $185,200 → "$185k". Falls back to full currency under $1k. */
-export function kFmt(v: number | null | undefined): string {
-  if (v == null) return "—";
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `$${Math.round(v / 1_000)}k`;
-  return formatCurrency(v);
-}
+/** $185,200 → "$185k" (shared compact currency). */
+export const kFmt = compactCurrency;
 
-/** Tier → tone key (matches the design's tierColor). */
-export function tierTone(t: number | null | undefined): "pos" | "info" | "warn" | "neg" | "mute" {
-  if (t == null) return "mute";
-  if (t <= 2) return "pos";
-  if (t === 3) return "info";
-  if (t === 4) return "warn";
-  return "neg";
-}
-
-export const TIER_BG: Record<string, string> = {
-  pos: "bg-pos-soft text-pos",
-  info: "bg-info-soft text-info",
-  warn: "bg-warn-soft text-warn",
-  neg: "bg-neg-soft text-neg",
-  mute: "bg-surface-elev text-ink-mute",
-};
+/** Tier → tone key (shared). */
+export const tierTone = tierToneOf;
+/** Soft tier badge bg+text (shared). */
+export const TIER_BG = TIER_CHIP;
+/** Solid tier bar bg (shared). */
+export const BAR_BG = TIER_BAR;
 
 export function decisionTone(
   d: string | null | undefined,
@@ -40,7 +28,8 @@ export function pct(v: number | null | undefined, digits = 0): string {
   return v == null ? "—" : `${(v * 100).toFixed(digits)}%`;
 }
 
-// Explicit tone → class maps (Tailwind JIT can't see interpolated names).
+// Tone → class maps that include `spot` (pipeline-state dots / numbers) —
+// broader than the tier maps, so kept local.
 export const DOT_BG: Record<string, string> = {
   pos: "bg-pos",
   spot: "bg-spot",
@@ -57,12 +46,4 @@ export const NUM_TEXT: Record<string, string> = {
   info: "text-info",
   warn: "text-warn",
   mute: "text-ink-mute",
-};
-
-export const BAR_BG: Record<string, string> = {
-  pos: "bg-pos",
-  info: "bg-info",
-  warn: "bg-warn",
-  neg: "bg-neg",
-  mute: "bg-rule",
 };

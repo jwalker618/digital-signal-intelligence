@@ -8,6 +8,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
+import { numOrNull, strOrNull, boolOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * SIR & Waiting Periods — mirrors reim_wb_c.jsx WbSir.
@@ -87,19 +88,5 @@ export default function SirAndWaitingPage() {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}
 
-function boolOrNull(v: unknown): boolean | null {
-  if (v == null) return null;
-  return Boolean(v);
-}

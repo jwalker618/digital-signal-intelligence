@@ -11,6 +11,7 @@ import { useDsiStore } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { formatText } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
+import { numOrNull, strOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Model Versions — mirrors reim_wb_b.jsx WbVersions (section 08).
@@ -234,14 +235,4 @@ function VersionRow({ v, last }: { v: Version; last: boolean }) {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

@@ -17,6 +17,7 @@ import { fetchBookHealth } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { compactCurrency } from "@/lib/coerce";
 import type { BookHealthResponse } from "@/types/portal";
 
 export default function BrokerBookHealthPage() {
@@ -319,7 +320,7 @@ function BreakdownCard({
             <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
               <span className="truncate font-semibold text-ink">{r.name}</span>
               <span className="shrink-0 font-semibold tabular-nums text-ink">
-                {kfmt(r.premium)}{" "}
+                {compactCurrency(r.premium)}{" "}
                 <span className="font-normal text-ink-soft">
                   ({formatPercent(r.share, 0)} · {r.count})
                 </span>
@@ -338,10 +339,3 @@ function BreakdownCard({
   );
 }
 
-function kfmt(v: number | null | undefined): string {
-  if (v == null) return "—";
-  const abs = Math.abs(v);
-  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `$${Math.round(v / 1_000)}k`;
-  return `$${Math.round(v)}`;
-}
