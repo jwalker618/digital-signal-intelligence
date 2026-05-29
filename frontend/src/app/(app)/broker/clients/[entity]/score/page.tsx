@@ -1,10 +1,10 @@
 "use client";
 
-import { TrendingUpDown } from "lucide-react";
+import { ListChecks, TrendingUpDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
-import { Body } from "@/components/ui/typography";
+import { Body, Micro } from "@/components/ui/typography";
 import { KpiSnug } from "@/components/ui/kpi-snug";
 import { ScoreHistory, type ScorePoint } from "@/components/charts/score-history";
 import { useClientWorkbench } from "../_lib/context";
@@ -64,25 +64,75 @@ export default function ScoreCohortPage() {
         </Card>
       </div>
 
-      <Card
-        header={`Score history · ${c.line}`}
-        icon={TrendingUpDown}
-        pad="md"
-        headerRight={
-          delta != null ? (
-            <Chip variant={delta >= 0 ? "pos" : "warn"} size="sm">
-              {delta >= 0 ? "+" : ""}
-              {delta} vs last
-            </Chip>
-          ) : undefined
-        }
-      >
-        {history.length > 0 ? (
-          <ScoreHistory history={history} height={180} />
-        ) : (
-          <Body className="italic">No score history on this coverage yet.</Body>
-        )}
-      </Card>
+      <div className="grid gap-3.5 lg:grid-cols-[1.3fr_1fr]">
+        <Card
+          header={`Score history · ${c.line}`}
+          icon={TrendingUpDown}
+          pad="md"
+          headerRight={
+            delta != null ? (
+              <Chip variant={delta >= 0 ? "pos" : "warn"} size="sm">
+                {delta >= 0 ? "+" : ""}
+                {delta} vs last
+              </Chip>
+            ) : undefined
+          }
+        >
+          {history.length > 0 ? (
+            <ScoreHistory history={history} height={180} />
+          ) : (
+            <Body className="italic">No score history on this coverage yet.</Body>
+          )}
+          {c.cohort_median != null && (
+            <Micro className="mt-2 block">
+              Cohort median {c.cohort_median.toFixed(0)} · you{" "}
+              {c.score != null
+                ? `${c.score >= c.cohort_median ? "+" : ""}${Math.round(c.score - c.cohort_median)}`
+                : "—"}
+            </Micro>
+          )}
+        </Card>
+
+        <Card header="Impact breakdown" icon={ListChecks} pad="md" headerRight={<Chip variant="default" size="sm">top drivers</Chip>}>
+          {c.impact && c.impact.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              {c.impact.map((it) => {
+                const maxAbs = Math.max(...c.impact!.map((x) => Math.abs(x.delta)), 1);
+                const pctW = (Math.abs(it.delta) / maxAbs) * 50;
+                return (
+                  <div
+                    key={it.label}
+                    className="grid grid-cols-[1fr_120px_56px] items-center gap-2"
+                  >
+                    <span className="truncate text-[12px] text-ink-soft">{it.label}</span>
+                    <div className="relative h-2">
+                      <div className="absolute left-1/2 top-0 bottom-0 w-px bg-rule" />
+                      <div
+                        className={`absolute top-[1px] h-1.5 rounded-sm ${it.direction === "up" ? "bg-pos" : "bg-neg"}`}
+                        style={
+                          it.direction === "up"
+                            ? { left: "50%", width: `${pctW}%` }
+                            : { right: "50%", width: `${pctW}%` }
+                        }
+                      />
+                    </div>
+                    <span
+                      className={`text-right text-[12px] font-bold tabular-nums ${it.direction === "up" ? "text-pos" : "text-neg"}`}
+                    >
+                      {it.delta > 0 ? "+" : "−"}
+                      {Math.abs(it.delta) >= 1000
+                        ? `$${(Math.abs(it.delta) / 1000).toFixed(1)}k`
+                        : Math.abs(it.delta)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <Body className="italic">No signal impact on this coverage yet.</Body>
+          )}
+        </Card>
+      </div>
     </WorkArea>
   );
 }
