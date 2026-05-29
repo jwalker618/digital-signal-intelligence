@@ -1,14 +1,15 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import { Bot, GitBranch, GitCommitHorizontal, User } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
-import { PageError, PageLoading } from "@/components/base/pageStates";
-import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { PageLoading } from "@/components/base/pageStates";
+import { useDsiStore } from "@/store/dsiStore";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { formatText } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
 
@@ -49,32 +50,13 @@ export default function ModelVersionsPage(props: {
   const { code } = use(props.params);
   const versions = useDsiStore((s) => s.modelVersions) as Version[];
   const fetchHistory = useDsiStore((s) => s.fetchHistory);
-  const [state, setState] = useState<"loading" | "ok" | "error">("loading");
-  const [err, setErr] = useState<string | null>(null);
+  useEnsureFetched(code, fetchHistory);
 
-  useEffect(() => {
-    setState("loading");
-    fetchHistory(code)
-      .then(() => setState("ok"))
-      .catch((e) => {
-        setErr(e instanceof Error ? e.message : String(e));
-        setState("error");
-      });
-  }, [code, fetchHistory]);
-
-  if (state === "loading") {
+  if (versions.length === 0) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Model Versions" />
         <PageLoading message="Loading version history…" />
-      </>
-    );
-  }
-  if (state === "error") {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Model Versions" />
-        <PageError message={err ?? "Unknown error"} />
       </>
     );
   }

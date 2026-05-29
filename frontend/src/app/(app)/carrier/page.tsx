@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { AlertCircle, ChevronRight, Search, UserCheck } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { CarrierShell } from "@/components/chrome/carrier-shell";
@@ -257,7 +257,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
   );
 }
 
-function Row({ sub }: { sub: ApiRecord }) {
+const Row = memo(function Row({ sub }: { sub: ApiRecord }) {
   const decision = decisionOf(sub);
   const decisionTone =
     decision === "approve"
@@ -375,7 +375,7 @@ function Row({ sub }: { sub: ApiRecord }) {
       </td>
     </tr>
   );
-}
+});
 
 function ColHead({
   width,

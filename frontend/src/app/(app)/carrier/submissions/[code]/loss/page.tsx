@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
   Layers,
   ShieldAlert,
@@ -10,10 +9,11 @@ import {
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Body, Micro } from "@/components/ui/typography";
 import { KpiSnug } from "@/components/ui/kpi-snug";
-import { PageError, PageLoading } from "@/components/base/pageStates";
+import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 
 /* ============================================================
  * Loss Assessment — mirrors reim_wb_b.jsx WbLoss (section 04).
@@ -38,35 +38,14 @@ export default function LossAssessmentPage() {
   const trendDistribution = useDsiStore((s) => s.lossTrendDistribution);
   const scatter = useDsiStore((s) => s.lossScatterData);
 
-  const [state, setState] = useState<"loading" | "ok" | "error">("loading");
-  const [err, setErr] = useState<string | null>(null);
-
   const coverage = sub?.coverage as string | undefined;
-
-  useEffect(() => {
-    if (!coverage) return;
-    setState("loading");
-    fetchLoss(coverage)
-      .then(() => setState("ok"))
-      .catch((e) => {
-        setErr(e instanceof Error ? e.message : String(e));
-        setState("error");
-      });
-  }, [coverage, fetchLoss]);
+  useEnsureFetched(coverage, fetchLoss);
 
   if (!ver) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Loss Assessment" />
         <PageLoading />
-      </>
-    );
-  }
-  if (state === "error") {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Loss Assessment" />
-        <PageError message={err ?? "Unknown error"} />
       </>
     );
   }

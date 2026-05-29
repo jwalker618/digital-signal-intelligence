@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use } from "react";
 import {
   AlertTriangle,
   ArrowUp,
@@ -16,8 +16,9 @@ import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
 import { KpiSnug } from "@/components/ui/kpi-snug";
-import { PageError, PageLoading } from "@/components/base/pageStates";
+import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 
 /* ============================================================
  * Risk Assessment — mirrors reim_wb_a.jsx WbRisk (section 03).
@@ -49,44 +50,16 @@ export default function RiskAssessmentPage(props: {
   use(props.params);
   const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
   const fetchRiskSignals = useDsiStore((s) => s.fetchRiskSignals);
-  const [state, setState] = useState<"ok" | "loading" | "error">("ok");
-  const [err, setErr] = useState<string | null>(null);
 
   const versionCode = ver?.version_code as string | undefined;
   const hasConditions = Array.isArray(ver?.signal_conditions) && ver!.signal_conditions.length > 0;
-
-  useEffect(() => {
-    if (!versionCode || hasConditions) return;
-    setState("loading");
-    fetchRiskSignals(versionCode)
-      .then(() => setState("ok"))
-      .catch((e) => {
-        setErr(e instanceof Error ? e.message : String(e));
-        setState("error");
-      });
-  }, [versionCode, hasConditions, fetchRiskSignals]);
+  useEnsureFetched(hasConditions ? undefined : versionCode, fetchRiskSignals);
 
   if (!ver) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Risk Assessment" />
         <PageLoading />
-      </>
-    );
-  }
-  if (state === "loading") {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Risk Assessment" />
-        <PageLoading message="Loading signal evaluation…" />
-      </>
-    );
-  }
-  if (state === "error") {
-    return (
-      <>
-        <WorkbenchTopbar activeTabLabel="Risk Assessment" />
-        <PageError message={err ?? "Unknown error"} />
       </>
     );
   }
