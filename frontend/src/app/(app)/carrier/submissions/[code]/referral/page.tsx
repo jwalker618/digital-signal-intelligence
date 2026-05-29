@@ -10,7 +10,6 @@ import {
   ShieldAlert,
   X,
 } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -60,7 +59,6 @@ export default function ReferralActionsPage() {
   if (!referral || !sub) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Referral Actions" />
         <PageLoading message="Loading referral…" />
       </>
     );
@@ -84,7 +82,6 @@ export default function ReferralActionsPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Referral Actions" />
       <WorkArea>
         {/* ─── 1. Referral header ─────────────────────────── */}
         <Card variant="spot" pad="lg">

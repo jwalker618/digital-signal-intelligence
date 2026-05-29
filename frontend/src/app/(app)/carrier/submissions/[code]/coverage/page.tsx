@@ -1,7 +1,6 @@
 "use client";
 
 import { Check, FileCheck, MinusCircle, PlusCircle, X } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Micro } from "@/components/ui/typography";
@@ -28,7 +27,6 @@ export default function CoverageTermsPage() {
   if (!risk) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Coverage Terms" />
         <PageLoading message="Loading coverage terms…" />
       </>
     );
@@ -42,7 +40,6 @@ export default function CoverageTermsPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Coverage Terms" />
       <WorkArea>
         {/* ─── 1. Overview ─────────────────────────────────── */}
         <Card header="Coverage overview" icon={FileCheck} pad="md">

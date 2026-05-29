@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { FlaskConical, Layers, Shield, TrendingDown } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -68,7 +67,6 @@ export default function ScenariosPage() {
   if (!ver || !sub) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Scenarios" />
         <PageLoading message="Loading scenario engine…" />
       </>
     );
@@ -76,7 +74,6 @@ export default function ScenariosPage() {
   if (!result) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Scenarios" />
         <Body className="mx-auto max-w-[600px] py-12 text-center italic">
           Scenario cascade unavailable for this version.
         </Body>
@@ -91,7 +88,6 @@ export default function ScenariosPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Scenarios" />
       <WorkArea>
         {/* ─── 1. Signal overrides ─────────────────────────── */}
         <Card

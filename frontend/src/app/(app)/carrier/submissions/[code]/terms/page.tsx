@@ -1,7 +1,6 @@
 "use client";
 
 import { Building2, Calendar, HandCoins, Layers } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, Micro } from "@/components/ui/typography";
@@ -38,7 +37,6 @@ export default function TermsOverviewPage() {
   if (!commercial) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Terms Overview" />
         <PageLoading />
       </>
     );
@@ -99,7 +97,6 @@ export default function TermsOverviewPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Terms Overview" />
       <WorkArea>
         {/* ─── 1. Hero ──────────────────────────────────────── */}
         <Card variant="info" pad="lg">

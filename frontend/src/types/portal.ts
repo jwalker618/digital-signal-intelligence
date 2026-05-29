@@ -544,3 +544,91 @@ export interface BrokerReplyResponse {
   new_quote_id?: string | null;
   referral_state: string;
 }
+
+// -----------------------------------------------------------------------------
+// /portal/clients/{entity} — broker Client Workbench (revised pack cw_*)
+// -----------------------------------------------------------------------------
+
+export interface ClientWorkbenchCoverage {
+  code: string;
+  line: string;
+  carrier?: string | null;
+  score?: number | null;
+  pure?: number | null;
+  tier?: number | null;
+  tier_label?: string | null;
+  decision?: string | null;
+  confidence?: number | null;
+  percentile?: number | null;
+  cohort_median?: number | null;
+  cohort_top_decile?: number | null;
+  cohort_size?: number | null;
+  premium?: number | null;
+  recommended?: number | null;
+  limit?: number | null;
+  deductible?: number | null;
+  status: string;
+  status_tone: string;
+  signal_coverage?: number | null;
+  awaiting?: string | null;
+  prev_score?: number | null;
+  sir_amount?: number | null;
+  sir_applies?: boolean | null;
+  waiting_period_hours?: number | null;
+  aggregate_limit?: number | null;
+  reinstatements?: number | null;
+  reinstatement_rate?: number | null;
+  coverage_trigger?: string | null;
+  extensions_count?: number | null;
+  exclusions_count?: number | null;
+  sub_limits_label?: string | null;
+  loss_propensity_band?: string | null;
+  loss_combined_modifier?: number | null;
+  loss_frequency_multiplier?: number | null;
+  loss_severity_multiplier?: number | null;
+  exposure_value?: number | null;
+  exposure_band_label?: string | null;
+  exposure_size_score?: number | null;
+  exposure_complexity_score?: number | null;
+  exposure_modifier?: number | null;
+  base_premium?: number | null;
+  net_premium?: number | null;
+  gross_premium?: number | null;
+  offered_premium?: number | null;
+  total_commission?: number | null;
+  score_history?: ScoreHistoryPoint[] | null;
+}
+
+export interface ClientWorkbenchLossEvent {
+  date?: string | null;
+  line: string;
+  incurred?: number | null;
+  paid?: number | null;
+  cause?: string | null;
+  status?: string | null;
+}
+
+export interface ClientWorkbenchResponse {
+  entity_name: string;
+  industry?: string | null;
+  naics?: string | null;
+  vertical?: string | null;
+  revenue_band?: string | null;
+  country?: string | null;
+  locations?: string | null;
+  employees?: string | null;
+  domain?: string | null;
+  first_seen?: string | null;
+  last_seen?: string | null;
+  broker?: string | null;
+  engagement?: number | null;
+  engagement_label?: string | null;
+  last_message?: string | null;
+  avg_response_hours?: number | null;
+  open_queries: number;
+  next_renewal_days?: number | null;
+  total_premium: number;
+  avg_score?: number | null;
+  coverages: ClientWorkbenchCoverage[];
+  loss_events: ClientWorkbenchLossEvent[];
+}

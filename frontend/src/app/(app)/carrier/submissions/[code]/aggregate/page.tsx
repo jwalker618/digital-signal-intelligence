@@ -1,7 +1,6 @@
 "use client";
 
 import { BarChart3, Layers, RefreshCw } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Micro } from "@/components/ui/typography";
@@ -26,7 +25,6 @@ export default function AggregateAndReinstatementPage() {
   if (!risk) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Aggregate & Reinstatement" />
         <PageLoading />
       </>
     );
@@ -42,7 +40,6 @@ export default function AggregateAndReinstatementPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Aggregate & Reinstatement" />
       <WorkArea>
         <Card header="Aggregate limits" icon={Layers} pad="md">
           <div className="grid grid-cols-3 gap-4">

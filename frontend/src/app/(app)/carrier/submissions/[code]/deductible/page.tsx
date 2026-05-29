@@ -1,7 +1,6 @@
 "use client";
 
 import { Layers, MinusCircle } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Body, Micro } from "@/components/ui/typography";
@@ -24,7 +23,6 @@ export default function DeductibleStructurePage() {
   if (!risk) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Deductible Structure" />
         <PageLoading />
       </>
     );
@@ -40,7 +38,6 @@ export default function DeductibleStructurePage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Deductible Structure" />
       <WorkArea>
         <Card header="Deductible" icon={Layers} pad="md">
           <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">

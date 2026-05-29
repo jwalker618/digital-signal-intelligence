@@ -8,9 +8,10 @@ import {
   Layers,
   Scale,
   Search,
+  TrendingDown,
+  TrendingUp,
   User,
 } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Eyebrow, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
@@ -38,7 +39,6 @@ export default function WorkbenchSummaryPage(props: {
   if (!sub) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Summary" />
         <PageLoading message="Loading submission…" />
       </>
     );
@@ -70,6 +70,7 @@ export default function WorkbenchSummaryPage(props: {
       label: pillarLabel(pureScore != null ? pureScore / 10 : null, "risk"),
       tone: "info",
       bullets: pillarBullets("risk", ver),
+      signals: pillarSignals(ver),
     },
     {
       name: "Loss",
@@ -156,7 +157,6 @@ export default function WorkbenchSummaryPage(props: {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Summary" />
       <WorkArea>
           {/* ─── Decision banner ─────────────────────────────── */}
           <Card variant="spot" pad="lg">
@@ -406,12 +406,16 @@ export default function WorkbenchSummaryPage(props: {
 
 /* ─────────────────────────── helpers ─────────────────────────── */
 
+type PillarSignal = { group: string; dir: "up" | "down"; note: string };
+
 type Pillar = {
   name: string;
   score: number | null;
   label: string;
   tone: Tone;
   bullets: string[];
+  /** Risk pillar surfaces top contributory signal groups instead of bullets. */
+  signals?: PillarSignal[];
 };
 
 function PillarCell({ pillar }: { pillar: Pillar }) {
@@ -444,15 +448,56 @@ function PillarCell({ pillar }: { pillar: Pillar }) {
       <div className="mt-2 h-1 overflow-hidden rounded-sm bg-rule">
         <div className={`h-full ${toneBgClass}`} style={{ width: `${pct}%` }} />
       </div>
-      {pillar.bullets.length > 0 && (
-        <ul className="mt-2.5 list-disc space-y-0.5 pl-4 text-[12px] leading-relaxed text-ink-soft">
-          {pillar.bullets.map((b) => (
-            <li key={b}>{b}</li>
-          ))}
-        </ul>
+      {pillar.signals && pillar.signals.length > 0 ? (
+        <div className="mt-3">
+          <Micro className="text-[10px]">Top contributory signal groups</Micro>
+          <div className="mt-1.5 flex flex-col gap-[7px]">
+            {pillar.signals.map((s) => (
+              <div key={s.group} className="flex items-baseline gap-[7px] text-[12px]">
+                {s.dir === "up" ? (
+                  <TrendingUp size={12} className="shrink-0 text-pos" />
+                ) : (
+                  <TrendingDown size={12} className="shrink-0 text-neg" />
+                )}
+                <span className="font-semibold text-ink">{s.group}</span>
+                <span className="text-[11px] text-ink-soft">{s.note}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        pillar.bullets.length > 0 && (
+          <ul className="mt-2.5 list-disc space-y-0.5 pl-4 text-[12px] leading-relaxed text-ink-soft">
+            {pillar.bullets.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        )
       )}
     </div>
   );
+}
+
+// Top contributory signal groups for the Risk pillar (revised wb_a). Derived
+// from the version's group_scores JSONB: rank by |contribution|, mark trend
+// up when the group score sits above the mid-point, down otherwise.
+function pillarSignals(ver: ApiRecord | null | undefined): PillarSignal[] {
+  if (!ver) return [];
+  const groups = (ver.group_scores as ApiRecord | undefined) ?? {};
+  return Object.entries(groups)
+    .map(([id, raw]) => {
+      const v = (raw as ApiRecord) ?? {};
+      const score = numOrNull(v.score);
+      const contribution = numOrNull(v.contribution ?? v.weighted_score) ?? 0;
+      return { id, score, contribution };
+    })
+    .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
+    .slice(0, 3)
+    .map((g) => ({
+      group: formatText(g.id.replace(/[._]/g, " "), "capitalize"),
+      dir: (g.score == null || g.score >= 50 ? "up" : "down") as "up" | "down",
+      note: g.score != null ? `${g.score.toFixed(0)}/100` : "—",
+    }));
 }
 
 function pillarLabel(score: number | null, kind: "risk" | "loss" | "exposure"): string {

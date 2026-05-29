@@ -1,7 +1,6 @@
 "use client";
 
 import { AlertTriangle, Calculator, SlidersHorizontal } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Eyebrow, Micro } from "@/components/ui/typography";
@@ -32,7 +31,6 @@ export default function PremiumAssemblyPage() {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Premium Assembly" />
         <PageLoading message="Loading premium build-up…" />
       </>
     );
@@ -55,7 +53,6 @@ export default function PremiumAssemblyPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Premium Assembly" />
       <WorkArea>
         {/* ─── 1. Hero ──────────────────────────────────────── */}
         <Card variant="info" pad="lg">

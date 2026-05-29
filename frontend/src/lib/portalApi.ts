@@ -18,6 +18,7 @@ import type {
   CarrierRosterResponse,
   ClientHealthResponse,
   ClientProfileResponse,
+  ClientWorkbenchResponse,
   CommunicationsListResponse,
   CommunicationsThreadResponse,
   CoverageRequestPayload,
@@ -190,6 +191,14 @@ export function fetchCarrierDetail(
 
 export function fetchClientHealth(token: string | null): Promise<ClientHealthResponse> {
   return getJson<ClientHealthResponse>(token, "/client-health");
+}
+
+export function fetchClientWorkbench(
+  token: string | null, entity: string,
+): Promise<ClientWorkbenchResponse> {
+  return getJson<ClientWorkbenchResponse>(
+    token, `/clients/${encodeURIComponent(entity)}`,
+  );
 }
 
 export function fetchPlacementStrategy(

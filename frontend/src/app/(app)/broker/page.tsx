@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { memo, useMemo } from "react";
-import { AlertCircle, Briefcase, ChevronRight } from "lucide-react";
+import { memo, useMemo, useState } from "react";
+import { AlertCircle, Briefcase, ChevronRight, Search, TrendingDown, TrendingUp } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import {
   Body,
@@ -47,7 +47,20 @@ export default function BrokerBookPage() {
   return <BookBody data={data} />;
 }
 
+const MOVE_BG: Record<string, string> = {
+  pos: "bg-pos-soft text-pos",
+  warn: "bg-warn-soft text-warn",
+  info: "bg-info-soft text-info",
+};
+const MOVE_TEXT: Record<string, string> = {
+  pos: "text-pos",
+  warn: "text-warn",
+  info: "text-info",
+};
+
 function BookBody({ data }: { data: BrokerOverviewResponse }) {
+  const [query, setQuery] = useState("");
+  const [qFilter, setQFilter] = useState<"open" | "broker" | "client" | "resolved">("open");
   const grouped = useMemo(() => {
     const m = new Map<string, ClientBookEntry[]>();
     for (const c of data.clients) {
@@ -57,6 +70,43 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
     }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [data.clients]);
+
+  // Flattened roster rows + roster search across client / coverage / code.
+  const visibleRows = useMemo(() => {
+    const rows = grouped.flatMap(([client, items]) =>
+      items.map((entry) => ({ client, entry })),
+    );
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(({ client, entry }) =>
+      [client, entry.coverage, entry.submission_code]
+        .some((f) => String(f ?? "").toLowerCase().includes(q)),
+    );
+  }, [grouped, query]);
+
+  // Open-queries inbox — the book is the broker's comms hub, so it slices
+  // the queue by who it's waiting on.
+  const queries = useMemo(
+    () =>
+      data.clients
+        .filter((c) => c.referral_state && /awaiting/i.test(c.referral_state))
+        .map((c) => ({
+          entity: c.entity_name,
+          coverage: c.coverage,
+          code: c.submission_code,
+          awaiting:
+            c.awaiting_party && /broker/i.test(c.awaiting_party) ? "broker" : "client",
+        })),
+    [data.clients],
+  );
+  const queryTabs = [
+    { key: "open" as const, label: "Open", n: queries.length },
+    { key: "broker" as const, label: "On you", n: queries.filter((q) => q.awaiting === "broker").length },
+    { key: "client" as const, label: "On client", n: queries.filter((q) => q.awaiting === "client").length },
+    { key: "resolved" as const, label: "Resolved", n: 0 },
+  ];
+  const queriesShown =
+    qFilter === "open" ? queries : queries.filter((q) => q.awaiting === qFilter);
 
   const totalPolicies = data.clients.length;
   const totalPremium = data.clients.reduce(
@@ -160,9 +210,23 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             pad="none"
             header={`Book roster`}
             headerRight={
-              <Chip variant="mute" size="sm">
-                {totalPolicies} polic{totalPolicies === 1 ? "y" : "ies"}
-              </Chip>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
+                  <Search size={14} className="text-ink-mute" />
+                  <input
+                    type="search"
+                    placeholder="Search client, carrier…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="h-8 w-48 border-0 bg-transparent text-[13px] text-ink placeholder:text-ink-mute focus:outline-none"
+                  />
+                </div>
+                <Chip variant="mute" size="sm">
+                  {query
+                    ? `${visibleRows.length} of ${totalPolicies}`
+                    : `${totalPolicies} polic${totalPolicies === 1 ? "y" : "ies"}`}
+                </Chip>
+              </div>
             }
           >
             {grouped.length === 0 ? (
@@ -172,7 +236,7 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             ) : (
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-rule bg-surface-sunken text-left">
+                  <tr className="border-b border-rule bg-surface-elev text-left">
                     <ColHead>Client</ColHead>
                     <ColHead>Coverage</ColHead>
                     <ColHead>Score</ColHead>
@@ -184,13 +248,16 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {grouped.flatMap(([client, items]) =>
-                    items.map((c) => (
-                      <BookRow key={c.submission_code} client={client} entry={c} />
-                    )),
-                  )}
+                  {visibleRows.map(({ client, entry }) => (
+                    <BookRow key={entry.submission_code} client={client} entry={entry} />
+                  ))}
                 </tbody>
               </table>
+            )}
+            {grouped.length > 0 && visibleRows.length === 0 && (
+              <div className="px-5 py-9 text-center">
+                <Body className="italic">No policies match “{query}”.</Body>
+              </div>
             )}
           </Card>
 
@@ -230,10 +297,27 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
                   );
                 })}
               </div>
-              <Caption className="mt-4 block border-t border-rule pt-3">
-                Most of the book sits in the mid-tier band; outliers (tier 4–5) are worth a
-                proactive touchpoint.
-              </Caption>
+              {/* Recent movements — book trend context */}
+              <div className="mt-4 border-t border-rule pt-3.5">
+                <Micro className="mb-2.5 block">Recent movements · last 6 months</Micro>
+                <div className="flex flex-col gap-2.5">
+                  {[
+                    { icon: TrendingUp, tone: "pos" as const, delta: "+5%", text: "Tier-2 spread of the book as scores improved on renewals" },
+                    { icon: TrendingUp, tone: "warn" as const, delta: "+2", text: "Tier-4 placements — harder to place this cycle" },
+                    { icon: TrendingDown, tone: "info" as const, delta: "−18 days", text: "Avg time-to-bind, helped by pre-filled signal attestations" },
+                  ].map((m, i) => (
+                    <div key={i} className="flex items-start gap-2.5">
+                      <span className={cn("flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-md", MOVE_BG[m.tone])}>
+                        <m.icon size={13} />
+                      </span>
+                      <div className="text-[12.5px] leading-snug">
+                        <span className={cn("font-bold tabular-nums", MOVE_TEXT[m.tone])}>{m.delta}</span>
+                        <span className="text-ink-soft"> {m.text}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </Card>
 
             <Card pad="lg">
@@ -250,43 +334,44 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
                   </Chip>
                 )}
               </div>
-              <div className="mt-4 flex flex-col gap-2">
-                {data.clients
-                  .filter(
-                    (c) => c.referral_state && /awaiting/i.test(c.referral_state),
-                  )
-                  .slice(0, 4)
-                  .map((c) => (
-                    <div
-                      key={c.submission_code}
-                      className="grid grid-cols-[1fr_auto_auto] items-center gap-3 rounded-card border border-rule bg-surface-elev px-3.5 py-2.5"
-                    >
-                      <div className="min-w-0">
-                        <div className="truncate text-[13px] font-semibold text-ink">
-                          {c.entity_name}
-                        </div>
-                        <Micro className="mt-0.5 block truncate">
-                          {c.coverage} · {c.submission_code}
-                        </Micro>
-                      </div>
-                      <Chip
-                        variant={
-                          c.awaiting_party && /broker/i.test(c.awaiting_party)
-                            ? "spot"
-                            : "info"
-                        }
-                        size="sm"
-                      >
-                        {c.awaiting_party && /broker/i.test(c.awaiting_party)
-                          ? "on you"
-                          : "on client"}
-                      </Chip>
-                      <Micro>—</Micro>
-                    </div>
-                  ))}
-                {data.open_queries_count === 0 && (
-                  <Caption className="italic">No open queries.</Caption>
+              {/* Filter tabs */}
+              <div className="mt-3.5 flex flex-wrap gap-1.5">
+                {queryTabs.map((tab) => (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setQFilter(tab.key)}
+                    className="focus:outline-none"
+                  >
+                    <Chip variant={qFilter === tab.key ? "info" : "outline"} className="cursor-pointer">
+                      {tab.label} <span className="opacity-60">({tab.n})</span>
+                    </Chip>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-3 flex flex-col gap-2">
+                {queriesShown.length === 0 && (
+                  <Caption className="py-4 text-center italic">Nothing here right now.</Caption>
                 )}
+                {queriesShown.slice(0, 4).map((q) => (
+                  <Link
+                    key={q.code}
+                    href={`/broker/clients/${encodeURIComponent(q.entity)}`}
+                    className="grid grid-cols-[1fr_auto] items-center gap-3 rounded-card border border-rule bg-surface-elev px-3.5 py-2.5 hover:bg-surface-sunken"
+                  >
+                    <div className="min-w-0">
+                      <div className="truncate text-[13px] font-semibold text-ink">
+                        {q.entity}
+                      </div>
+                      <Micro className="mt-0.5 block truncate">
+                        {q.coverage} · {q.code}
+                      </Micro>
+                    </div>
+                    <Chip variant={q.awaiting === "broker" ? "spot" : "info"} size="sm">
+                      {q.awaiting === "broker" ? "on you" : "on client"}
+                    </Chip>
+                  </Link>
+                ))}
               </div>
             </Card>
           </div>
@@ -322,7 +407,7 @@ const BookRow = memo(function BookRow({
     <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
       <td className="px-5 py-2.5">
         <Link
-          href={`/client/submissions/${entry.submission_code}`}
+          href={`/broker/clients/${encodeURIComponent(client)}`}
           className="block font-semibold text-ink hover:underline"
         >
           {client}
@@ -369,10 +454,13 @@ const BookRow = memo(function BookRow({
       </td>
       <td className="px-5 py-2.5 text-right">
         <Link
-          href={`/client/submissions/${entry.submission_code}`}
-          className="inline-flex items-center text-ink-mute hover:text-ink"
-          aria-label={`Open ${entry.submission_code}`}
+          href={`/broker/clients/${encodeURIComponent(client)}`}
+          className="group/open inline-flex items-center gap-1 text-ink-mute hover:text-ink"
+          aria-label={`Open ${client}`}
         >
+          <span className="text-[12px] font-semibold text-info opacity-0 transition-opacity group-hover/open:opacity-100">
+            Open
+          </span>
           <ChevronRight size={16} />
         </Link>
       </td>

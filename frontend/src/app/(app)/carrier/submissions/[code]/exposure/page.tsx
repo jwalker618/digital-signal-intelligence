@@ -1,7 +1,6 @@
 "use client";
 
 import { Gauge, ScatterChart, Puzzle, Target } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Body, Micro } from "@/components/ui/typography";
@@ -9,6 +8,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
+import { SubjectMarker } from "@/components/charts/subject-marker";
 import { formatCurrency, formatText } from "@/lib/format";
 
 /* ============================================================
@@ -39,7 +39,6 @@ export default function ExposureAssessmentPage() {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
         <PageLoading />
       </>
     );
@@ -51,8 +50,6 @@ export default function ExposureAssessmentPage() {
   const complexity = numOrNull(ver.exposure_complexity_score);
   const modifier = numOrNull(ver.exposure_modifier);
   const method = strOrNull(ver.exposure_assessment_method);
-  const finalTier = numOrNull(ver.final_tier);
-  const tierLabel = strOrNull(ver.tier_label);
 
   const boundaries = (ver.exposure_band_boundaries as ApiRecord | undefined) ?? {};
   const floor = numOrNull(boundaries.min_value);
@@ -68,11 +65,10 @@ export default function ExposureAssessmentPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
       <WorkArea>
-        {/* ─── 1. Exposure profile (7 KPIs) ─────────────────── */}
+        {/* ─── 1. Exposure profile (6 KPIs) ─────────────────── */}
         <Card header="Exposure profile" icon={Target} pad="md">
-          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 lg:grid-cols-7">
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
             <KpiSnug
               label="Exposure value"
               value={value != null ? formatCurrencyShort(value) : "—"}
@@ -105,14 +101,6 @@ export default function ExposureAssessmentPage() {
               label="Method"
               value={
                 method ? formatText(method.replace(/_/g, " "), "capitalize") : "—"
-              }
-            />
-            <KpiSnug
-              label="Final tier"
-              value={
-                finalTier != null
-                  ? `T${finalTier}${tierLabel ? ` · ${tierLabel}` : ""}`
-                  : "—"
               }
             />
           </div>
@@ -330,24 +318,12 @@ function ExposureScatter({
         );
       })}
       {subject && (
-        <>
-          <circle
-            cx={xToPx(subject.x)}
-            cy={yToPx(subject.y)}
-            r={8}
-            fill="var(--color-info)"
-            stroke="var(--color-surface)"
-            strokeWidth={2}
-          />
-          <text
-            x={xToPx(subject.x)}
-            y={yToPx(subject.y) - 14}
-            textAnchor="middle"
-            style={{ font: "600 11px IBM Plex Sans", fill: "var(--color-info)" }}
-          >
-            YOU · {Math.round(subject.x)} / {Math.round(subject.y)}
-          </text>
-        </>
+        <SubjectMarker
+          cx={xToPx(subject.x)}
+          cy={yToPx(subject.y)}
+          label={`YOU · ${Math.round(subject.x)} / ${Math.round(subject.y)}`}
+          pillW={116}
+        />
       )}
     </svg>
   );
