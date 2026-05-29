@@ -141,8 +141,17 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1400px] gap-4">
-          {/* Hero row — pipeline count + decision-mix KPI strip */}
-          <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
+          {/* Hero row — pipeline count + decision-mix KPI strip. Full mode
+              renders 5 cards; referral mode renders only the hero +
+              Pipeline$ so the grid template collapses accordingly to
+              avoid stranded empty columns. */}
+          <div
+            className={
+              mode === "full"
+                ? "grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]"
+                : "grid gap-4 lg:grid-cols-[1.6fr_1fr]"
+            }
+          >
             <Card variant="info" pad="md" className="flex items-center gap-4">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-card bg-info-soft text-info-deep dark:text-info">
                 <UserCheck size={28} />
