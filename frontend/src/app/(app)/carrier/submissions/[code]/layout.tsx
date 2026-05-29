@@ -23,9 +23,11 @@ export default function WorkbenchLayout({
   );
   const fetchSubmissions = useDsiStore((s) => s.fetchSubmissions);
   const fetchCore = useDsiStore((s) => s.fetchCoreSubmissionDetail);
+  const prefetchTabs = useDsiStore((s) => s.prefetchWorkbenchTabs);
 
-  // Make sure the pipeline list is loaded, then activate this submission.
-  // fetchCoreSubmissionDetail() owns setting `activeSubmission` internally.
+  // Make sure the pipeline list is loaded, then activate this submission,
+  // then fan out a fire-and-forget preload of every tab's data so the
+  // user sees instant content when they click any tab in the sidebar.
   useEffect(() => {
     if (activeCode === code) return;
     let cancelled = false;
@@ -46,6 +48,9 @@ export default function WorkbenchLayout({
           await fetchCore(row);
         } catch {
           /* tab pages render their own empty/error state */
+        }
+        if (!cancelled) {
+          prefetchTabs().catch(() => undefined);
         }
       }
     })();
