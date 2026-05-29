@@ -14,6 +14,11 @@ import { cn } from "@/lib/utils";
  * - aux:     blue — secondary informative
  * - warn:    amber — caution
  * - neg:     red — bad
+ *
+ * Padding scale matches the design-pack tokens:
+ *   sm   = 14px (tight rows / chip-style cards)
+ *   md   = 22px (the design-pack default — used everywhere unless noted)
+ *   lg   = 24px (hero / decision banners with extra breathing room)
  */
 const cardVariants = cva(
   "rounded-card border transition-colors",
@@ -31,8 +36,8 @@ const cardVariants = cva(
       },
       pad: {
         none: "",
-        sm: "p-3",
-        md: "p-5",
+        sm: "p-[14px]",
+        md: "p-[22px]",
         lg: "p-6",
       },
     },
@@ -41,8 +46,9 @@ const cardVariants = cva(
 );
 
 const padToBody: Record<NonNullable<VariantProps<typeof cardVariants>["pad"]>, string> = {
-  sm: "p-3",
-  md: "p-5",
+  none: "",
+  sm: "p-[14px]",
+  md: "p-[22px]",
   lg: "p-6",
 };
 
@@ -84,15 +90,17 @@ export function Card({
 
   // When a header strip is requested, drop the wrapper padding and apply
   // it to the body instead so the rule sits flush with the card edges.
+  // Header: 12px vertical × 18px horizontal, surface-elev background,
+  // 14px semibold title, 15px icon — matches design-pack WbCard atom.
   const bodyPad = padToBody[pad ?? "md"];
   return (
     <div
-      className={cn(cardVariants({ variant, pad: "none" }), className)}
+      className={cn(cardVariants({ variant, pad: "none" }), "overflow-hidden", className)}
       {...rest}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-rule px-4 py-3">
-        <div className="flex items-center gap-2 text-[13px] font-semibold text-ink">
-          {IconCmp && <IconCmp size={14} className="shrink-0 text-ink-soft" />}
+      <div className="flex items-center justify-between gap-3 border-b border-rule bg-surface-elev px-[18px] py-3">
+        <div className="flex items-center gap-2.5 text-[14px] font-semibold leading-none text-ink">
+          {IconCmp && <IconCmp size={15} className="shrink-0 text-ink-soft" />}
           {header && <span>{header}</span>}
         </div>
         {headerRight && (

@@ -15,6 +15,7 @@ import { Card } from "@/components/ui/card";
 import { Eyebrow, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
 import { KpiSnug } from "@/components/ui/kpi-snug";
+import { WorkArea } from "@/components/ui/work-area";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
@@ -156,8 +157,7 @@ export default function WorkbenchSummaryPage(props: {
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Summary" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-3.5">
+      <WorkArea>
           {/* ─── Decision banner ─────────────────────────────── */}
           <Card variant="spot" pad="lg">
             <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto]">
@@ -399,8 +399,7 @@ export default function WorkbenchSummaryPage(props: {
               />
             </Card>
           </div>
-        </div>
-      </div>
+      </WorkArea>
     </>
   );
 }
