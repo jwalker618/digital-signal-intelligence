@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { memo, useMemo } from "react";
-import { AlertCircle, Briefcase, ChevronRight } from "lucide-react";
+import { memo, useMemo, useState } from "react";
+import { AlertCircle, Briefcase, ChevronRight, Search } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import {
   Body,
@@ -48,6 +48,7 @@ export default function BrokerBookPage() {
 }
 
 function BookBody({ data }: { data: BrokerOverviewResponse }) {
+  const [query, setQuery] = useState("");
   const grouped = useMemo(() => {
     const m = new Map<string, ClientBookEntry[]>();
     for (const c of data.clients) {
@@ -57,6 +58,19 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
     }
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [data.clients]);
+
+  // Flattened roster rows + roster search across client / coverage / code.
+  const visibleRows = useMemo(() => {
+    const rows = grouped.flatMap(([client, items]) =>
+      items.map((entry) => ({ client, entry })),
+    );
+    const q = query.trim().toLowerCase();
+    if (!q) return rows;
+    return rows.filter(({ client, entry }) =>
+      [client, entry.coverage, entry.submission_code]
+        .some((f) => String(f ?? "").toLowerCase().includes(q)),
+    );
+  }, [grouped, query]);
 
   const totalPolicies = data.clients.length;
   const totalPremium = data.clients.reduce(
@@ -160,9 +174,23 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             pad="none"
             header={`Book roster`}
             headerRight={
-              <Chip variant="mute" size="sm">
-                {totalPolicies} polic{totalPolicies === 1 ? "y" : "ies"}
-              </Chip>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
+                  <Search size={14} className="text-ink-mute" />
+                  <input
+                    type="search"
+                    placeholder="Search client, carrier…"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    className="h-8 w-48 border-0 bg-transparent text-[13px] text-ink placeholder:text-ink-mute focus:outline-none"
+                  />
+                </div>
+                <Chip variant="mute" size="sm">
+                  {query
+                    ? `${visibleRows.length} of ${totalPolicies}`
+                    : `${totalPolicies} polic${totalPolicies === 1 ? "y" : "ies"}`}
+                </Chip>
+              </div>
             }
           >
             {grouped.length === 0 ? (
@@ -172,7 +200,7 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             ) : (
               <table className="w-full text-[13px]">
                 <thead>
-                  <tr className="border-b border-rule bg-surface-sunken text-left">
+                  <tr className="border-b border-rule bg-surface-elev text-left">
                     <ColHead>Client</ColHead>
                     <ColHead>Coverage</ColHead>
                     <ColHead>Score</ColHead>
@@ -184,13 +212,16 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
                   </tr>
                 </thead>
                 <tbody>
-                  {grouped.flatMap(([client, items]) =>
-                    items.map((c) => (
-                      <BookRow key={c.submission_code} client={client} entry={c} />
-                    )),
-                  )}
+                  {visibleRows.map(({ client, entry }) => (
+                    <BookRow key={entry.submission_code} client={client} entry={entry} />
+                  ))}
                 </tbody>
               </table>
+            )}
+            {grouped.length > 0 && visibleRows.length === 0 && (
+              <div className="px-5 py-9 text-center">
+                <Body className="italic">No policies match “{query}”.</Body>
+              </div>
             )}
           </Card>
 
@@ -369,10 +400,13 @@ const BookRow = memo(function BookRow({
       </td>
       <td className="px-5 py-2.5 text-right">
         <Link
-          href={`/client/submissions/${entry.submission_code}`}
-          className="inline-flex items-center text-ink-mute hover:text-ink"
-          aria-label={`Open ${entry.submission_code}`}
+          href={`/broker/clients/${encodeURIComponent(client)}`}
+          className="group/open inline-flex items-center gap-1 text-ink-mute hover:text-ink"
+          aria-label={`Open ${client}`}
         >
+          <span className="text-[12px] font-semibold text-info opacity-0 transition-opacity group-hover/open:opacity-100">
+            Open
+          </span>
           <ChevronRight size={16} />
         </Link>
       </td>
