@@ -8,6 +8,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatText } from "@/lib/format";
+import { strOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Coverage Terms — mirrors reim_wb_b.jsx WbCoverage (section 06).
@@ -131,8 +132,3 @@ function toClauseList(raw: unknown): Clause[] {
     .filter((c): c is Clause => c !== null);
 }
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

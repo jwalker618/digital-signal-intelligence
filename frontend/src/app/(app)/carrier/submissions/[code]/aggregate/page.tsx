@@ -9,6 +9,7 @@ import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
+import { numOrNull, strOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Aggregate & Reinstatement — mirrors reim_wb_c.jsx WbAggregate.
@@ -113,14 +114,4 @@ export default function AggregateAndReinstatementPage() {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

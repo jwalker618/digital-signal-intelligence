@@ -58,6 +58,7 @@ function classifyAwaiting(
 
 function CommsBody({ data }: { data: CommunicationsListResponse }) {
   const [filter, setFilter] = useState<Awaiting>("all");
+  const [line, setLine] = useState<string>("all");
 
   const onBroker = data.items.filter(
     (i) => classifyAwaiting(i) === "broker",
@@ -68,20 +69,27 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
   const resolved = data.items.filter((i) => !i.is_open).length;
   const totalOpen = data.items.length - resolved;
 
+  // Distinct coverage lines for the Line filter pills.
+  const lines = useMemo(
+    () => [...new Set(data.items.map((i) => i.coverage).filter(Boolean))].sort(),
+    [data.items],
+  );
+
   const filtered = useMemo(() => {
     return data.items.filter((it) => {
+      if (line !== "all" && it.coverage !== line) return false;
       const cls = classifyAwaiting(it);
       if (filter === "all") return cls !== "resolved";
       if (filter === "resolved") return cls === "resolved";
       return cls === filter;
     });
-  }, [data.items, filter]);
+  }, [data.items, filter, line]);
 
   return (
     <>
       <Topbar crumbs={["Broker Portal", "Communications"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1100px] gap-4">
+        <div className="mx-auto grid max-w-[1400px] gap-4">
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
               <Eyebrow>Communications</Eyebrow>
@@ -120,6 +128,24 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
               active={filter === "resolved"}
               onClick={() => setFilter("resolved")}
             />
+            {lines.length > 1 && (
+              <>
+                <Micro className="ml-3 mr-1">Line:</Micro>
+                <FilterChip
+                  label="All"
+                  active={line === "all"}
+                  onClick={() => setLine("all")}
+                />
+                {lines.map((ln) => (
+                  <FilterChip
+                    key={ln}
+                    label={ln}
+                    active={line === ln}
+                    onClick={() => setLine(ln)}
+                  />
+                ))}
+              </>
+            )}
             <span className="ml-auto">
               <Caption>Sort: most recent</Caption>
             </span>

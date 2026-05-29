@@ -124,6 +124,11 @@ export interface ClientCoverageEntry {
   loss_frequency_velocity?: number | null;
   loss_severity_velocity?: number | null;
   loss_event_quarters?: number[] | null;
+  // Phase F.2: policy facts for the Coverages table.
+  limit?: number | null;
+  deductible?: number | null;
+  aggregate_limit?: number | null;
+  expires_at?: string | null;
 }
 
 export interface BrokerOverviewResponse {
@@ -493,6 +498,8 @@ export interface BookHealthResponse {
   avg_tenure_months: number;
   lines_concentration: Record<string, number>;
   vertical_concentration: Record<string, number>;
+  lines_premium: Record<string, number>;
+  vertical_premium: Record<string, number>;
   commission_yield_pct: number;
 }
 
@@ -586,17 +593,70 @@ export interface ClientWorkbenchCoverage {
   loss_combined_modifier?: number | null;
   loss_frequency_multiplier?: number | null;
   loss_severity_multiplier?: number | null;
+  loss_frequency_velocity?: number | null;
+  loss_severity_velocity?: number | null;
+  loss_confidence?: number | null;
+  loss_cohort_name?: string | null;
+  loss_trend_direction?: string | null;
   exposure_value?: number | null;
   exposure_band_label?: string | null;
   exposure_size_score?: number | null;
   exposure_complexity_score?: number | null;
   exposure_modifier?: number | null;
+  exposure_value_prior?: number | null;
+  exposure_bands?: ClientWorkbenchBand[] | null;
   base_premium?: number | null;
   net_premium?: number | null;
   gross_premium?: number | null;
   offered_premium?: number | null;
+  total_taxes?: number | null;
   total_commission?: number | null;
+  brokerage_rate?: number | null;
+  distribution_type?: string | null;
+  signed_line?: number | null;
+  role?: string | null;
+  lead_loading_factor?: number | null;
+  modifier_chain?: ClientWorkbenchModifier[] | null;
+  impact?: ClientWorkbenchImpact[] | null;
   score_history?: ScoreHistoryPoint[] | null;
+}
+
+export interface ClientWorkbenchModifier {
+  group: string;
+  factor?: number | null;
+  delta?: number | null;
+  running?: number | null;
+}
+
+export interface ClientWorkbenchImpact {
+  label: string;
+  delta: number;
+  direction: "up" | "down";
+}
+
+export interface ClientWorkbenchBand {
+  label: string;
+  min_value?: number | null;
+  max_value?: number | null;
+  modifier?: number | null;
+  active: boolean;
+}
+
+export interface ClientWorkbenchMessage {
+  direction: "carrier" | "broker";
+  who: string;
+  body: string;
+  at?: string | null;
+  signal?: string | null;
+}
+
+export interface ClientWorkbenchThread {
+  referral_code: string;
+  line: string;
+  carrier?: string | null;
+  awaiting?: string | null;
+  ask?: string | null;
+  messages: ClientWorkbenchMessage[];
 }
 
 export interface ClientWorkbenchLossEvent {
@@ -631,4 +691,5 @@ export interface ClientWorkbenchResponse {
   avg_score?: number | null;
   coverages: ClientWorkbenchCoverage[];
   loss_events: ClientWorkbenchLossEvent[];
+  threads: ClientWorkbenchThread[];
 }

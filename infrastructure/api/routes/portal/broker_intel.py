@@ -58,13 +58,36 @@ from .broker_intel_data import (
     get_vertical,
     vertical_for_naics,
 )
+from layers.risk.impact_breakdown import compute_from_model_version
+
 from .dependencies import get_user_record
 from .schemas import (
+    ClientWorkbenchBand,
     ClientWorkbenchCoverage,
+    ClientWorkbenchImpact,
     ClientWorkbenchLossEvent,
+    ClientWorkbenchMessage,
+    ClientWorkbenchModifier,
     ClientWorkbenchResponse,
+    ClientWorkbenchThread,
     ScoreHistoryPoint,
 )
+
+# Maps modifiers_applied `source` → the design's named build-up groups.
+_MODIFIER_GROUP_LABEL = {
+    "categorical": "Categorical",
+    "signal": "Signal-based",
+    "signal_feature": "Signal-based",
+    "signal_group": "Signal-based",
+    "evidence_grade": "Signal-based",
+    "direct_query": "Direct queries",
+    "query": "Direct queries",
+    "loss": "Loss analysis",
+    "experience": "Loss analysis",
+    "loss_modifier": "Loss analysis",
+    "exposure": "Exposure analysis",
+    "exposure_modifier": "Exposure analysis",
+}
 
 router = APIRouter()
 
@@ -474,62 +497,95 @@ async def client_workbench(
     total_premium = 0.0
     scores: list[float] = []
 
+    # ------------------------------------------------------------------
+    # Bulk-load everything keyed by submission / model-version in a fixed
+    # number of queries (production: no per-coverage N+1). One client can
+    # carry many coverages × many versions.
+    # ------------------------------------------------------------------
+    sub_ids = [s.id for s, _ in group]
+
+    # All model-version rows for the entity's submissions, version asc.
+    mv_rows_q = await db.execute(
+        select(ModelVersionRecord)
+        .where(ModelVersionRecord.submission_id.in_(sub_ids))
+        .order_by(
+            ModelVersionRecord.submission_id,
+            ModelVersionRecord.version_number.asc(),
+        )
+    )
+    mv_by_sub: dict[uuid.UUID, list[ModelVersionRecord]] = defaultdict(list)
+    for mv_row in mv_rows_q.scalars().all():
+        mv_by_sub[mv_row.submission_id].append(mv_row)
+    # Latest MV per submission (is_latest flag, else highest version).
+    latest_mv: dict[uuid.UUID, ModelVersionRecord] = {}
+    for sid, rows_ in mv_by_sub.items():
+        latest_mv[sid] = next(
+            (r for r in rows_ if r.is_latest),
+            rows_[-1] if rows_ else None,  # type: ignore[assignment]
+        )
+    latest_mv_ids = [mv.id for mv in latest_mv.values() if mv is not None]
+
+    # All open referrals for the submissions (one join, not N).
+    refs_q = await db.execute(
+        select(Quote.submission_id, Referral)
+        .join(Referral, Referral.quote_id == Quote.id)
+        .where(Quote.submission_id.in_(sub_ids))
+    )
+    open_ref_by_sub: dict[uuid.UUID, Referral] = {}
+    for sid, ref in refs_q.all():
+        if ref.awaiting_party is not None and sid not in open_ref_by_sub:
+            open_ref_by_sub[sid] = ref
+
+    # Commercial + risk terms for the latest MVs (two queries, not 2N).
+    commercial_by_mv: dict[uuid.UUID, CommercialTermsRecord] = {}
+    risk_by_mv: dict[uuid.UUID, RiskTermsRecord] = {}
+    if latest_mv_ids:
+        c_rows = await db.execute(
+            select(CommercialTermsRecord).where(
+                CommercialTermsRecord.model_version_id.in_(latest_mv_ids)
+            )
+        )
+        for c in c_rows.scalars().all():
+            commercial_by_mv[c.model_version_id] = c
+        r_rows = await db.execute(
+            select(RiskTermsRecord).where(
+                RiskTermsRecord.model_version_id.in_(latest_mv_ids)
+            )
+        )
+        for r in r_rows.scalars().all():
+            risk_by_mv[r.model_version_id] = r
+
     for sub, quote in group:
-        mv_q = await db.execute(
-            select(ModelVersionRecord).where(
-                ModelVersionRecord.submission_id == sub.id,
-                ModelVersionRecord.is_latest == True,  # noqa: E712
-            )
-        )
-        mv = mv_q.scalar_one_or_none()
+        history_rows = mv_by_sub.get(sub.id, [])
+        mv = latest_mv.get(sub.id)
+        open_ref = open_ref_by_sub.get(sub.id)
+        commercial = commercial_by_mv.get(mv.id) if mv else None
+        risk = risk_by_mv.get(mv.id) if mv else None
 
-        refs = await _refs_for_submission(db, sub.id)
-        open_ref = next((r for r in refs if r.awaiting_party is not None), None)
-
-        # commercial + risk terms keyed on the latest MV
-        commercial = None
-        risk = None
-        if mv is not None:
-            c_q = await db.execute(
-                select(CommercialTermsRecord).where(
-                    CommercialTermsRecord.model_version_id == mv.id
-                )
-            )
-            commercial = c_q.scalar_one_or_none()
-            r_q = await db.execute(
-                select(RiskTermsRecord).where(
-                    RiskTermsRecord.model_version_id == mv.id
-                )
-            )
-            risk = r_q.scalar_one_or_none()
-
-        # score history (oldest → newest)
-        hist_q = await db.execute(
-            select(ModelVersionRecord)
-            .where(ModelVersionRecord.submission_id == sub.id)
-            .order_by(ModelVersionRecord.version_number.asc())
-        )
+        # score history (already version asc from the bulk fetch)
         history = [
             ScoreHistoryPoint(
                 version_number=h.version_number,
                 composite_score=h.final_composite_score,
                 created_at=h.created_at,
             )
-            for h in hist_q.scalars().all()
+            for h in history_rows
             if h.final_composite_score is not None and h.created_at is not None
         ] or None
+        # prior version (the one before the latest) for delta + YoY exposure
         prev_score = None
-        if mv is not None:
-            prev_q = await db.execute(
-                select(ModelVersionRecord.final_composite_score)
-                .where(
-                    ModelVersionRecord.submission_id == sub.id,
-                    ModelVersionRecord.version_number < (mv.version_number or 0),
-                )
-                .order_by(ModelVersionRecord.version_number.desc())
-                .limit(1)
+        prev_exposure = None
+        if mv is not None and len(history_rows) >= 2:
+            prior = next(
+                (
+                    h for h in reversed(history_rows)
+                    if (h.version_number or 0) < (mv.version_number or 0)
+                ),
+                None,
             )
-            prev_score = prev_q.scalar_one_or_none()
+            if prior is not None:
+                prev_score = prior.final_composite_score
+                prev_exposure = prior.exposure_value
 
         decision = mv.decision.value if mv and mv.decision else None
         status, tone = _status_for(decision, open_ref)
@@ -545,6 +601,76 @@ async def client_workbench(
             for s in sub_limits[:2]
             if s.get("sub_limit")
         ) or None
+
+        # F.1 — premium build-up modifier chain from modifiers_applied
+        modifier_chain = None
+        impact_rows = None
+        if mv is not None and isinstance(mv.modifiers_applied, list) and mv.modifiers_applied:
+            running = float(mv.base_premium or 0)
+            chain = [
+                ClientWorkbenchModifier(
+                    group="Base premium", factor=None, delta=None, running=running,
+                )
+            ]
+            # Group modifiers by source into the design's named bins.
+            by_group: dict[str, dict[str, float]] = {}
+            order: list[str] = []
+            for m in mv.modifiers_applied:
+                src = str(m.get("source", "other")).lower()
+                label = _MODIFIER_GROUP_LABEL.get(src, src.replace("_", " ").title())
+                before = float(m.get("premium_before", 0) or 0)
+                after = float(m.get("premium_after", before) or before)
+                if label not in by_group:
+                    by_group[label] = {"delta": 0.0, "factor": 1.0}
+                    order.append(label)
+                by_group[label]["delta"] += after - before
+                by_group[label]["factor"] *= float(m.get("factor", 1.0) or 1.0)
+            for label in order:
+                running += by_group[label]["delta"]
+                chain.append(
+                    ClientWorkbenchModifier(
+                        group=label,
+                        factor=round(by_group[label]["factor"], 3),
+                        delta=round(by_group[label]["delta"], 2),
+                        running=round(running, 2),
+                    )
+                )
+            modifier_chain = chain
+
+            # F.1 — score impact breakdown (top drivers, up/down)
+            try:
+                breakdown = compute_from_model_version(mv)
+                rows: list[ClientWorkbenchImpact] = []
+                for s in (breakdown.strengths or [])[:3]:
+                    rows.append(ClientWorkbenchImpact(
+                        label=s.signal_label, delta=round(s.premium_delta_usd, 0), direction="up",
+                    ))
+                for d in (breakdown.drags or [])[:3]:
+                    rows.append(ClientWorkbenchImpact(
+                        label=d.signal_label, delta=round(d.premium_delta_usd, 0), direction="down",
+                    ))
+                impact_rows = rows or None
+            except Exception:  # noqa: BLE001 — impact is best-effort enrichment
+                impact_rows = None
+
+        # F.1 — exposure band boundaries (active band highlighted)
+        exposure_bands = None
+        if mv is not None and isinstance(mv.exposure_band_boundaries, dict):
+            b = mv.exposure_band_boundaries
+            mn, mx = b.get("min_value"), b.get("max_value")
+            exposure_bands = [
+                ClientWorkbenchBand(
+                    label=mv.exposure_band_label or "Active band",
+                    min_value=mn, max_value=mx, modifier=b.get("modifier"),
+                    active=True,
+                )
+            ]
+
+        brokerage_rate = None
+        if commercial and isinstance(commercial.deductions, dict):
+            brk = commercial.deductions.get("brokerage")
+            if isinstance(brk, dict):
+                brokerage_rate = brk.get("rate")
 
         coverages.append(
             ClientWorkbenchCoverage(
@@ -583,22 +709,36 @@ async def client_workbench(
                 loss_combined_modifier=(mv.loss_combined_modifier if mv else None),
                 loss_frequency_multiplier=(mv.loss_frequency_multiplier if mv else None),
                 loss_severity_multiplier=(mv.loss_severity_multiplier if mv else None),
+                loss_frequency_velocity=(mv.loss_frequency_velocity if mv else None),
+                loss_severity_velocity=(mv.loss_severity_velocity if mv else None),
+                loss_confidence=(mv.loss_confidence if mv else None),
+                loss_cohort_name=(mv.loss_cohort_name if mv else None),
+                loss_trend_direction=(mv.loss_trend_direction if mv else None),
                 exposure_value=(mv.exposure_value if mv else None),
                 exposure_band_label=(mv.exposure_band_label if mv else None),
                 exposure_size_score=(mv.exposure_size_score if mv else None),
                 exposure_complexity_score=(mv.exposure_complexity_score if mv else None),
                 exposure_modifier=(mv.exposure_modifier if mv else None),
+                exposure_value_prior=prev_exposure,
+                exposure_bands=exposure_bands,
                 base_premium=(mv.base_premium if mv else None),
                 net_premium=(commercial.net_premium if commercial else None),
                 gross_premium=(commercial.gross_premium if commercial else None),
                 offered_premium=(commercial.offered_premium if commercial else None),
+                total_taxes=(commercial.total_taxes if commercial else None),
                 total_commission=(commercial.total_commission if commercial else None),
+                brokerage_rate=brokerage_rate,
+                distribution_type=(commercial.distribution_type if commercial else None),
+                signed_line=(commercial.signed_line if commercial else None),
+                role=(commercial.role if commercial else None),
+                lead_loading_factor=(commercial.lead_loading_factor if commercial else None),
+                modifier_chain=modifier_chain,
+                impact=impact_rows,
                 score_history=history,
             )
         )
 
-    # Engagement (reuse client-health computation)
-    sub_ids = [s.id for s, _ in group]
+    # Engagement (reuse client-health computation; sub_ids bulk-loaded above)
     msgs_q = await db.execute(
         select(ReferralMessage)
         .join(Referral, ReferralMessage.referral_id == Referral.id)
@@ -652,6 +792,43 @@ async def client_workbench(
         for e in le_q.scalars().all()
     ]
 
+    # F.1 — referral message threads grouped by referral (CW Communications).
+    thread_rows = await db.execute(
+        select(ReferralMessage, Referral, Submission)
+        .join(Referral, ReferralMessage.referral_id == Referral.id)
+        .join(Quote, Referral.quote_id == Quote.id)
+        .join(Submission, Quote.submission_id == Submission.id)
+        .where(Quote.submission_id.in_(sub_ids))
+        .order_by(ReferralMessage.created_at.asc())
+    )
+    threads_by_ref: dict[str, ClientWorkbenchThread] = {}
+    for msg, ref, submission in thread_rows.all():
+        key = ref.referral_code or str(ref.id)
+        if key not in threads_by_ref:
+            threads_by_ref[key] = ClientWorkbenchThread(
+                referral_code=key,
+                line=submission.coverage,
+                carrier=None,
+                awaiting=ref.awaiting_party,
+                ask=None,
+                messages=[],
+            )
+        thread = threads_by_ref[key]
+        is_broker = msg.direction == MessageDirection.BROKER_TO_UNDERWRITER.value
+        # First underwriter query becomes the thread "ask" headline.
+        if thread.ask is None and not is_broker:
+            thread.ask = msg.body
+        thread.messages.append(
+            ClientWorkbenchMessage(
+                direction="broker" if is_broker else "carrier",
+                who="You (Marsh)" if is_broker else (broker.name if broker else "Carrier"),
+                body=msg.body,
+                at=msg.created_at,
+                signal=(msg.request_signal_evidence or None),
+            )
+        )
+    threads = list(threads_by_ref.values())
+
     return ClientWorkbenchResponse(
         entity_name=entity_name,
         industry=sd.get("industry_label") or sd.get("naics_label"),
@@ -675,6 +852,7 @@ async def client_workbench(
         avg_score=round(sum(scores) / len(scores)) if scores else None,
         coverages=coverages,
         loss_events=loss_events,
+        threads=threads,
     )
 
 
@@ -1012,6 +1190,10 @@ class BookHealthResponse(BaseModel):
     avg_tenure_months: float
     lines_concentration: dict[str, int]  # coverage -> policy count
     vertical_concentration: dict[str, int]  # vertical -> policy count
+    # Phase F.5: premium-$ share (the template's breakdown cards are
+    # premium-weighted, not policy-count).
+    lines_premium: dict[str, float]  # coverage -> premium $
+    vertical_premium: dict[str, float]  # vertical -> premium $
     commission_yield_pct: float
 
 
@@ -1039,6 +1221,8 @@ async def book_health(
     entity_to_lines: dict[str, set[str]] = defaultdict(set)
     line_counts: Counter[str] = Counter()
     vert_counts: Counter[str] = Counter()
+    line_premium: dict[str, float] = defaultdict(float)
+    vert_premium: dict[str, float] = defaultdict(float)
     total_premium = 0.0
     total_commission = 0.0
 
@@ -1050,6 +1234,8 @@ async def book_health(
         vert_slug = vertical_for_naics(naics) or "unknown"
         vert_counts[vert_slug] += 1
         premium = float(q.recommended_premium or 0)
+        line_premium[sub.coverage] += premium
+        vert_premium[vert_slug] += premium
         total_premium += premium
         # Average commission of ~13% (book-weighted heuristic).
         total_commission += premium * 0.13
@@ -1080,6 +1266,8 @@ async def book_health(
         avg_tenure_months=37.0,    # synthesised; v8.3 measures actual tenure
         lines_concentration=dict(line_counts),
         vertical_concentration=dict(vert_counts),
+        lines_premium={k: round(v, 0) for k, v in line_premium.items()},
+        vertical_premium={k: round(v, 0) for k, v in vert_premium.items()},
         commission_yield_pct=commission_yield,
     )
 

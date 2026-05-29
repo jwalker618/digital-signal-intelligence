@@ -4,7 +4,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Caption } from "@/components/ui/typography";
+import { Body, Caption } from "@/components/ui/typography";
 import { useAuthStore } from "@/store/authStore";
 
 const authInputClass =
@@ -32,8 +32,7 @@ export default function SSOPage() {
   return (
     <div>
       <header className="mb-7">
-        <Eyebrow className="text-info">Welcome</Eyebrow>
-        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+        <h1 className="font-display text-[28px] font-semibold leading-[1.2] text-ink">
           Sign in via SSO
         </h1>
         <Body className="mt-2 leading-[1.55]">

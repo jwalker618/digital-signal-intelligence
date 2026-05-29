@@ -9,7 +9,8 @@ import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { SubjectMarker } from "@/components/charts/subject-marker";
-import { formatCurrency, formatText } from "@/lib/format";
+import { formatText } from "@/lib/format";
+import { numOrNull, strOrNull, compactCurrency } from "@/lib/coerce";
 
 /* ============================================================
  * Exposure Assessment — mirrors reim_wb_c.jsx WbExposure.
@@ -71,7 +72,7 @@ export default function ExposureAssessmentPage() {
           <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-6">
             <KpiSnug
               label="Exposure value"
-              value={value != null ? formatCurrencyShort(value) : "—"}
+              value={value != null ? compactCurrency(value) : "—"}
               tone="info"
             />
             <KpiSnug
@@ -80,7 +81,7 @@ export default function ExposureAssessmentPage() {
               delta={
                 floor != null && ceiling != null ? (
                   <Micro>
-                    {formatCurrencyShort(floor)} – {formatCurrencyShort(ceiling)}
+                    {compactCurrency(floor)} – {compactCurrency(ceiling)}
                   </Micro>
                 ) : undefined
               }
@@ -124,14 +125,14 @@ export default function ExposureAssessmentPage() {
                     className="absolute -top-5 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold text-info"
                     style={{ left: `${bandPct * 100}%` }}
                   >
-                    {value != null ? formatCurrencyShort(value) : ""}
+                    {value != null ? compactCurrency(value) : ""}
                   </div>
                 </>
               )}
             </div>
             <div className="mt-2 flex justify-between text-[11px] text-ink-mute">
-              <span>{floor != null ? `${formatCurrencyShort(floor)} floor` : "—"}</span>
-              <span>{ceiling != null ? `${formatCurrencyShort(ceiling)} ceiling` : "—"}</span>
+              <span>{floor != null ? `${compactCurrency(floor)} floor` : "—"}</span>
+              <span>{ceiling != null ? `${compactCurrency(ceiling)} ceiling` : "—"}</span>
             </div>
             <div className="mt-4 grid grid-cols-3 gap-3 border-t border-rule pt-3.5">
               <KpiSnug
@@ -142,7 +143,7 @@ export default function ExposureAssessmentPage() {
                 label="Below ceiling"
                 value={
                   value != null && ceiling != null
-                    ? formatCurrencyShort(ceiling - value)
+                    ? compactCurrency(ceiling - value)
                     : "—"
                 }
               />
@@ -150,7 +151,7 @@ export default function ExposureAssessmentPage() {
                 label="Above floor"
                 value={
                   value != null && floor != null
-                    ? formatCurrencyShort(value - floor)
+                    ? compactCurrency(value - floor)
                     : "—"
                 }
               />
@@ -335,21 +336,5 @@ function scoreBand(s: number): string {
   return "Low";
 }
 
-function formatCurrencyShort(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000).toFixed(0)}k`;
-  return formatCurrency(n);
-}
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

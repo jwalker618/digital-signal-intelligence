@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowRight, FileDown, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, FileDown } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -16,7 +16,10 @@ import { fetchOverview, fetchSubmissionScore } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { LossOutlookCard } from "@/app/(app)/client/_components/LossOutlookCard";
+import { ExposureCard } from "@/app/(app)/client/_components/ExposureCard";
 import type {
+  ClientCoverageEntry,
   ImpactBreakdown,
   OverviewResponse,
   ScoreResponse,
@@ -70,6 +73,9 @@ function DriversInner() {
     <DriversBody
       entityName={overview.data.entity_name}
       score={score.data}
+      hero={overview.data.active_coverages.find(
+        (c) => c.submission_code === code,
+      )}
       allCoverages={overview.data.active_coverages.map((c) => ({
         code: c.submission_code,
         coverage: c.coverage,
@@ -112,11 +118,13 @@ function sumDeltas(items: ImpactBreakdown["strengths"]): number {
 function DriversBody({
   entityName,
   score,
+  hero,
   allCoverages,
   activeCode,
 }: {
   entityName: string;
   score: ScoreResponse;
+  hero?: ClientCoverageEntry;
   allCoverages: { code: string; coverage: string }[];
   activeCode: string;
 }) {
@@ -236,67 +244,12 @@ function DriversBody({
           )}
 
           {/* ────────── ROW 4 — loss / exposure / next move ────────── */}
+          {/* Reuse the rich overview cards (12-quarter claims strip +
+              cohort compare bars, market-scale YOU pin) — the hero
+              coverage from /overview carries the data ScoreResponse lacks. */}
           <div className="grid gap-4 md:grid-cols-3">
-            <Card variant="pos" pad="lg" className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <Eyebrow className="text-pos">Loss outlook</Eyebrow>
-                  <p className="mt-1 text-xl font-semibold text-pos">
-                    {score.loss_propensity_band ?? "—"}
-                  </p>
-                </div>
-                {score.loss_trend_direction && (
-                  <Chip variant="pos" size="sm">
-                    <TrendingDown size={11} /> {score.loss_trend_direction}
-                  </Chip>
-                )}
-              </div>
-              <div className="mt-1 grid grid-cols-2 gap-3">
-                <StatLine
-                  label="Frequency"
-                  value={
-                    score.loss_propensity_score != null
-                      ? score.loss_propensity_score.toFixed(0)
-                      : "—"
-                  }
-                />
-                <StatLine
-                  label="Severity"
-                  value={
-                    score.severity_propensity_score != null
-                      ? score.severity_propensity_score.toFixed(0)
-                      : "—"
-                  }
-                />
-              </div>
-            </Card>
-
-            <Card variant="aux" pad="lg" className="flex flex-col gap-2">
-              <div className="flex items-baseline justify-between">
-                <div>
-                  <Eyebrow className="text-aux">Exposure</Eyebrow>
-                  <p className="mt-1 text-xl font-semibold text-aux">
-                    {score.exposure_value != null
-                      ? formatCurrency(score.exposure_value)
-                      : "—"}
-                  </p>
-                  {score.exposure_band_label && (
-                    <Caption className="mt-0.5 block">
-                      {score.exposure_band_label}
-                    </Caption>
-                  )}
-                </div>
-                <Chip variant="aux" size="sm">
-                  <TrendingUp size={11} /> Where you sit
-                </Chip>
-              </div>
-              {score.exposure_size_score != null && (
-                <StatLine
-                  label="Market scale"
-                  value={`${score.exposure_size_score.toFixed(0)} / 100`}
-                />
-              )}
-            </Card>
+            <LossOutlookCard hero={hero} />
+            <ExposureCard hero={hero} />
 
             <Card variant="spot" pad="lg" className="flex flex-col gap-3">
               <div className="flex items-baseline justify-between">
@@ -386,17 +339,6 @@ function LegendDot({ color, label }: { color: string; label: string }) {
       <span className={cn("h-2.5 w-2.5 rounded-sm", color)} />
       {label}
     </span>
-  );
-}
-
-function StatLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline justify-between gap-2">
-      <Micro>{label}</Micro>
-      <span className="text-[13px] font-semibold tabular-nums text-ink">
-        {value}
-      </span>
-    </div>
   );
 }
 

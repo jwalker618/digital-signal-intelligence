@@ -91,6 +91,12 @@ class ClientCoverageEntry(BaseModel):
     loss_frequency_velocity: Optional[float] = None
     loss_severity_velocity: Optional[float] = None
     loss_event_quarters: Optional[list[float]] = None
+    # Phase F.2: policy facts for the Coverages table (limit / retention /
+    # aggregate / expiry). Carrier name has no DB source — omitted.
+    limit: Optional[float] = None
+    deductible: Optional[float] = None
+    aggregate_limit: Optional[float] = None
+    expires_at: Optional[datetime] = None
 
 
 class ClientOverviewResponse(BaseModel):
@@ -223,6 +229,47 @@ class BrokerQueriesResponse(BaseModel):
 # /portal/clients/{entity} — broker Client Workbench (revised pack cw_*)
 # -----------------------------------------------------------------------------
 
+class ClientWorkbenchModifier(BaseModel):
+    """One row in the featured coverage's premium build-up chain."""
+    group: str
+    factor: Optional[float] = None
+    delta: Optional[float] = None
+    running: Optional[float] = None
+
+
+class ClientWorkbenchImpact(BaseModel):
+    """One driver in the featured coverage's score impact breakdown."""
+    label: str
+    delta: float
+    direction: str  # "up" | "down"
+
+
+class ClientWorkbenchMessage(BaseModel):
+    """One message in a coverage's referral thread."""
+    direction: str  # "carrier" | "broker"
+    who: str
+    body: str
+    at: Optional[datetime] = None
+    signal: Optional[str] = None
+
+
+class ClientWorkbenchThread(BaseModel):
+    referral_code: str
+    line: str
+    carrier: Optional[str] = None
+    awaiting: Optional[str] = None
+    ask: Optional[str] = None
+    messages: list[ClientWorkbenchMessage] = Field(default_factory=list)
+
+
+class ClientWorkbenchBand(BaseModel):
+    label: str
+    min_value: Optional[float] = None
+    max_value: Optional[float] = None
+    modifier: Optional[float] = None
+    active: bool = False
+
+
 class ClientWorkbenchCoverage(BaseModel):
     """One coverage line in the client workbench (Submission + latest MV +
     Quote + Referral + RiskTerms, flattened to what the tabs render)."""
@@ -264,17 +311,36 @@ class ClientWorkbenchCoverage(BaseModel):
     loss_combined_modifier: Optional[float] = None
     loss_frequency_multiplier: Optional[float] = None
     loss_severity_multiplier: Optional[float] = None
+    # F.1: loss trajectory + extra KPIs (CW Loss tab)
+    loss_frequency_velocity: Optional[float] = None
+    loss_severity_velocity: Optional[float] = None
+    loss_confidence: Optional[float] = None
+    loss_cohort_name: Optional[str] = None
+    loss_trend_direction: Optional[str] = None
     exposure_value: Optional[float] = None
     exposure_band_label: Optional[str] = None
     exposure_size_score: Optional[float] = None
     exposure_complexity_score: Optional[float] = None
     exposure_modifier: Optional[float] = None
+    exposure_value_prior: Optional[float] = None
+    # F.1: exposure band boundaries (CW Exposure tab)
+    exposure_bands: Optional[list[ClientWorkbenchBand]] = None
     # Premium build-up + commercial (Premium tab, featured line)
     base_premium: Optional[float] = None
     net_premium: Optional[float] = None
     gross_premium: Optional[float] = None
     offered_premium: Optional[float] = None
+    total_taxes: Optional[float] = None
     total_commission: Optional[float] = None
+    brokerage_rate: Optional[float] = None
+    distribution_type: Optional[str] = None
+    signed_line: Optional[float] = None
+    role: Optional[str] = None
+    lead_loading_factor: Optional[float] = None
+    # F.1: full modifier chain (CW Premium tab)
+    modifier_chain: Optional[list[ClientWorkbenchModifier]] = None
+    # F.1: score impact breakdown (CW Score tab)
+    impact: Optional[list[ClientWorkbenchImpact]] = None
     score_history: Optional[list[ScoreHistoryPoint]] = None
 
 
@@ -314,3 +380,5 @@ class ClientWorkbenchResponse(BaseModel):
     # Detail
     coverages: list[ClientWorkbenchCoverage] = Field(default_factory=list)
     loss_events: list[ClientWorkbenchLossEvent] = Field(default_factory=list)
+    # F.1: referral message threads (CW Communications tab)
+    threads: list[ClientWorkbenchThread] = Field(default_factory=list)

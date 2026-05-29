@@ -20,11 +20,13 @@ from infrastructure.api.auth.permissions import AuthContext
 from infrastructure.db.config import get_async_db
 from infrastructure.db.models import (
     Broker,
+    CommercialTermsRecord,
     LossEvent,
     ModelVersionRecord,
     Quote,
     Referral,
     ReferralStatus,
+    RiskTermsRecord,
     Submission,
     User,
 )
@@ -280,6 +282,21 @@ async def _build_coverage_entry(
     quote = await _latest_quote_for_submission(submission, db)
     referral = await _open_referral_for_submission(submission, db)
 
+    # Phase F.2: risk + commercial terms for the Coverages policy facts.
+    risk = None
+    commercial = None
+    if mv is not None:
+        r_q = await db.execute(
+            select(RiskTermsRecord).where(RiskTermsRecord.model_version_id == mv.id)
+        )
+        risk = r_q.scalar_one_or_none()
+        c_q = await db.execute(
+            select(CommercialTermsRecord).where(
+                CommercialTermsRecord.model_version_id == mv.id
+            )
+        )
+        commercial = c_q.scalar_one_or_none()
+
     # Phase B1: fetch a short history of MV rows so we can derive
     # previous score, the score-history sparkline, and the prior
     # exposure value (for YoY). One extra query per coverage; for the
@@ -364,4 +381,9 @@ async def _build_coverage_entry(
         loss_event_quarters=await _loss_event_quarters_for_coverage(
             submission.entity_name, submission.coverage, tenant_id, db,
         ),
+        # Phase F.2: policy facts.
+        limit=(mv.recommended_limit if mv else None),
+        deductible=(risk.deductible_amount if risk else None),
+        aggregate_limit=(risk.aggregate_limit if risk else None),
+        expires_at=(commercial.earned_end if commercial else None),
     )

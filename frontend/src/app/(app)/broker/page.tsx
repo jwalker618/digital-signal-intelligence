@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { memo, useMemo, useState } from "react";
 import { AlertCircle, Briefcase, ChevronRight, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { tierToneOf, TIER_BAR, TIER_TEXT } from "@/lib/tier";
 import { Topbar } from "@/components/chrome/topbar";
 import {
   Body,
@@ -270,23 +271,14 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
               </h2>
               <div className="mt-4 flex h-[140px] items-end gap-3.5">
                 {tierBuckets.map(({ t, n }) => {
-                  const color =
-                    t <= 2 ? "bg-pos" : t === 3 ? "bg-info" : t === 4 ? "bg-warn" : "bg-neg";
-                  const numColor =
-                    t <= 2
-                      ? "text-pos"
-                      : t === 3
-                        ? "text-info"
-                        : t === 4
-                          ? "text-warn"
-                          : "text-neg";
+                  const tone = tierToneOf(t);
                   return (
                     <div key={t} className="flex flex-1 flex-col items-center gap-1.5">
-                      <span className={cn("text-[15px] font-semibold tabular-nums", numColor)}>
+                      <span className={cn("text-[15px] font-semibold tabular-nums", TIER_TEXT[tone])}>
                         {n}
                       </span>
                       <div
-                        className={cn("w-full rounded-t-md", color)}
+                        className={cn("w-full rounded-t-md", TIER_BAR[tone])}
                         style={{
                           height: `${Math.max(4, (n / maxTier) * 100)}%`,
                           minHeight: 4,

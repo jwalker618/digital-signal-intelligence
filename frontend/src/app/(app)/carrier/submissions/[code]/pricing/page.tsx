@@ -8,6 +8,7 @@ import { Eyebrow, Micro } from "@/components/ui/typography";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency } from "@/lib/format";
+import { numOrNull, strOrNull, compactCurrency } from "@/lib/coerce";
 
 /* ============================================================
  * Pricing Anatomy — mirrors reim_wb_a.jsx WbPricing.
@@ -238,7 +239,7 @@ export default function PricingAnatomyPage() {
               <span>
                 ILF factor
                 {recommendedLimit != null
-                  ? ` (limit ${formatCurrencyShort(recommendedLimit)})`
+                  ? ` (limit ${compactCurrency(recommendedLimit)})`
                   : ""}
               </span>
               <span className="font-mono">
@@ -279,7 +280,7 @@ export default function PricingAnatomyPage() {
               </div>
               <PRow
                 k="Technical limit"
-                v={o.limit != null ? formatCurrencyShort(o.limit) : "—"}
+                v={o.limit != null ? compactCurrency(o.limit) : "—"}
               />
               <PRow
                 k="Technical premium"
@@ -314,21 +315,5 @@ function PRow({ k, v, bold }: { k: string; v: string; bold?: boolean }) {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}
 
-function formatCurrencyShort(n: number): string {
-  const abs = Math.abs(n);
-  if (abs >= 1_000_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
-  if (abs >= 1_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000).toFixed(0)}k`;
-  return formatCurrency(n);
-}

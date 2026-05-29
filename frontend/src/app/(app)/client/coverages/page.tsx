@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight, ShieldCheck } from "lucide-react";
+import { lineIcon } from "@/lib/coverageIcon";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -15,6 +16,7 @@ import { useAuthStore } from "@/store/authStore";
 import { formatCurrency, formatText } from "@/lib/format";
 import { tierStatus, peerStanding } from "@/lib/portalTone";
 import { portalToneToTone } from "@/lib/design-tokens";
+import { compactCurrency } from "@/lib/coerce";
 import type {
   ClientCoverageEntry,
   ClientOverviewResponse,
@@ -150,12 +152,13 @@ function LineGroupCard({
     (sum, p) => sum + (p.recommended_premium ?? 0),
     0,
   );
+  const LineIcon = lineIcon(line);
   return (
     <Card pad="none" className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-rule bg-surface-elev px-5 py-3.5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-card border border-rule bg-surface">
-            <ShieldCheck size={16} className="text-ink" />
+            <LineIcon size={16} className="text-ink" />
           </div>
           <h3 className="font-display text-[17px] font-semibold leading-none text-ink">
             {line}
@@ -184,13 +187,31 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
   return (
     <Link
       href={`/client/submissions/${policy.submission_code}`}
-      className="grid grid-cols-[1.4fr_1fr_0.9fr_1fr_24px] items-center gap-4 border-t border-rule px-5 py-4 transition hover:bg-surface-sunken/40"
+      className="grid grid-cols-[1.4fr_1fr_0.9fr_0.9fr_0.9fr_1fr_24px] items-center gap-4 border-t border-rule px-5 py-4 transition hover:bg-surface-sunken/40"
     >
       <div className="min-w-0">
         <p className="truncate text-[14px] font-semibold text-ink">
-          {policy.submission_code}
+          {policy.coverage}
         </p>
-        <Micro>{peerStanding(policy.peer_percentile_rank)}</Micro>
+        <Micro className="block font-mono">{policy.submission_code}</Micro>
+        {policy.expires_at && (
+          <Micro className="mt-0.5 block">expires {fmtDate(policy.expires_at)}</Micro>
+        )}
+      </div>
+      <div>
+        <Micro className="block">Limit / Aggregate</Micro>
+        <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
+          {compactCurrency(policy.limit)}
+          {policy.aggregate_limit != null && (
+            <span className="font-normal text-ink-soft"> / {compactCurrency(policy.aggregate_limit)}</span>
+          )}
+        </p>
+      </div>
+      <div>
+        <Micro className="block">Retention</Micro>
+        <p className="mt-0.5 text-[13px] font-semibold tabular-nums text-ink">
+          {compactCurrency(policy.deductible)}
+        </p>
       </div>
       <div>
         <Micro className="block">Signal score</Micro>
@@ -199,6 +220,7 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
             ? policy.composite_score.toFixed(0)
             : "—"}
         </p>
+        <Micro>{peerStanding(policy.peer_percentile_rank)}</Micro>
       </div>
       <div>
         <Chip variant={awaiting ? "spot" : chipTone} size="sm">
@@ -218,4 +240,12 @@ function PolicyRow({ policy }: { policy: ClientCoverageEntry }) {
       <ChevronRight size={18} className="text-ink-mute" />
     </Link>
   );
+}
+
+
+function fmtDate(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? "—"
+    : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
 }

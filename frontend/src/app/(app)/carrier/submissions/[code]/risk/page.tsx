@@ -18,6 +18,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
+import { numOrNull, strOrNull } from "@/lib/coerce";
 
 /* ============================================================
  * Risk Assessment — mirrors reim_wb_a.jsx WbRisk (section 03).
@@ -328,14 +329,4 @@ export default function RiskAssessmentPage(props: {
   );
 }
 
-function numOrNull(v: unknown): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
 
-function strOrNull(v: unknown): string | null {
-  if (v == null) return null;
-  const s = String(v).trim();
-  return s.length > 0 ? s : null;
-}

@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, ShieldAlert, SlidersHorizontal } from "lucide-react";
+import { CheckCircle2, Minus, ShieldAlert, SlidersHorizontal, TrendingDown, TrendingUp } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -21,10 +21,14 @@ export default function LossProfilePage() {
   const combined = c?.loss_combined_modifier ?? null;
   const freq = c?.loss_frequency_multiplier ?? null;
   const sev = c?.loss_severity_multiplier ?? null;
+  const freqVel = c?.loss_frequency_velocity ?? null;
+  const sevVel = c?.loss_severity_velocity ?? null;
+  const combinedVel =
+    freqVel != null && sevVel != null ? (freqVel + sevVel) / 2 : freqVel ?? sevVel;
 
   return (
     <WorkArea>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <Card pad="sm">
           <KpiSnug
             label="Propensity"
@@ -49,18 +53,41 @@ export default function LossProfilePage() {
           <KpiSnug label="Sev mult" value={sev != null ? `${sev.toFixed(2)}x` : "—"} />
         </Card>
         <Card pad="sm">
-          <KpiSnug label="Events on record" value={cw.loss_events.length} />
+          <KpiSnug
+            label="Confidence"
+            value={c?.loss_confidence != null ? `${Math.round(c.loss_confidence * 100)}%` : "—"}
+          />
+        </Card>
+        <Card pad="sm">
+          <KpiSnug label="Cohort" value={c?.loss_cohort_name ?? "—"} />
         </Card>
       </div>
 
-      <Card header="Modifiers" icon={SlidersHorizontal} pad="md">
-        <div className="grid gap-x-8 md:grid-cols-2">
+      <div className="grid gap-3.5 lg:grid-cols-2">
+        <Card header="Loss trajectory" icon={TrendingUp} pad="md">
+          <TrajectoryRow
+            label="Overall"
+            trend={c?.loss_trend_direction ?? velocityTrend(combinedVel)}
+            delta={combinedVel}
+          />
+          <TrajectoryRow label="Frequency" trend={velocityTrend(freqVel)} delta={freqVel} />
+          <TrajectoryRow label="Severity" trend={velocityTrend(sevVel)} delta={sevVel} />
+          <Micro className="mt-2 block">
+            Velocity is points/month; negative reads as improving.
+          </Micro>
+        </Card>
+
+        <Card header="Modifiers" icon={SlidersHorizontal} pad="md">
           <LabelRow label="Frequency multiplier" value={freq != null ? `${freq.toFixed(2)}x` : "—"} />
           <LabelRow label="Severity multiplier" value={sev != null ? `${sev.toFixed(2)}x` : "—"} />
           <LabelRow label="Combined modifier" value={combined != null ? `${combined.toFixed(2)}x` : "—"} />
-          <LabelRow label="Propensity band" value={band ? formatText(band, "capitalize") : "—"} />
-        </div>
-      </Card>
+          <LabelRow label="Loss cohort" value={c?.loss_cohort_name ?? "—"} />
+          <LabelRow
+            label="Model confidence"
+            value={c?.loss_confidence != null ? `${Math.round(c.loss_confidence * 100)}%` : "—"}
+          />
+        </Card>
+      </div>
 
       <Card
         header="Loss event history"
@@ -108,5 +135,47 @@ export default function LossProfilePage() {
         )}
       </Card>
     </WorkArea>
+  );
+}
+
+function velocityTrend(v: number | null | undefined): string {
+  if (v == null) return "—";
+  if (v < -0.5) return "Improving";
+  if (v > 0.5) return "Deteriorating";
+  return "Stable";
+}
+
+function TrajectoryRow({
+  label,
+  trend,
+  delta,
+}: {
+  label: string;
+  trend: string;
+  delta: number | null | undefined;
+}) {
+  const tone =
+    delta == null
+      ? "text-ink-soft"
+      : delta < 0
+        ? "text-pos"
+        : delta > 0
+          ? "text-warn"
+          : "text-ink-soft";
+  const Icon = delta == null || Math.abs(delta) <= 0.5 ? Minus : delta < 0 ? TrendingDown : TrendingUp;
+  return (
+    <div className="grid grid-cols-[1fr_auto] items-center gap-3 border-b border-rule py-2.5 last:border-b-0">
+      <span className="text-[13px] font-semibold capitalize">{label}</span>
+      <span className={`flex items-center gap-1.5 text-[12px] font-bold ${tone}`}>
+        <Icon size={13} />
+        <span className="capitalize">{trend}</span>
+        {delta != null && (
+          <span className="tabular-nums">
+            {delta > 0 ? "+" : ""}
+            {delta.toFixed(1)}
+          </span>
+        )}
+      </span>
+    </div>
   );
 }
