@@ -24,6 +24,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Dev compile speed: rewrite `import { Foo } from "lucide-react"` to
+  // `import Foo from "lucide-react/dist/esm/icons/foo"` so the dev
+  // compiler doesn't traverse the icon barrel for every "use client"
+  // file. Production build was already tree-shaken; this only buys
+  // speed for local dev + HMR.
+  modularizeImports: {
+    "lucide-react": {
+      transform: "lucide-react/dist/esm/icons/{{ kebabCase member }}",
+      skipDefaultConversion: true,
+    },
+  },
 };
 
 // A-3i: Runtime caching strategy

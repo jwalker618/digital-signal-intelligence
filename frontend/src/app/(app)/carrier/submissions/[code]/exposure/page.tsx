@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Gauge, ScatterChart, Puzzle, Target } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Body, Micro } from "@/components/ui/typography";
 import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { formatCurrency, formatText } from "@/lib/format";
 
 /* ============================================================
@@ -31,15 +31,10 @@ export default function ExposureAssessmentPage() {
   const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
   const fetch_ = useDsiStore((s) => s.fetchExposureAnalytics);
   const scatter = useDsiStore((s) => s.exposureScatterData);
-  const [loading, setLoading] = useState(true);
 
   const coverage = sub?.coverage as string | undefined;
-  useEffect(() => {
-    if (!coverage) return;
-    fetch_(coverage)
-      .catch(() => undefined)
-      .finally(() => setLoading(false));
-  }, [coverage, fetch_]);
+  useEnsureFetched(coverage, fetch_);
+  const loading = !Array.isArray(scatter) || scatter.length === 0;
 
   if (!ver) {
     return (

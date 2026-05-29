@@ -96,6 +96,14 @@ export interface DsiState {
 
   fetchSubmissions: () => Promise<void>;
   fetchCoreSubmissionDetail: (row: ApiRecord) => Promise<void>;
+  /**
+   * Fire-and-forget preload of every tab's data dependency for the
+   * active submission. Called by the workbench layout after the core
+   * detail load resolves; each underlying fetcher is cache-keyed and
+   * no-ops if the data is already present, so the tab pages render
+   * instantly when the user navigates to them.
+   */
+  prefetchWorkbenchTabs: () => Promise<void>;
   updateDecision: (
     quoteCode: string,
     quoteDecision: string,
@@ -391,6 +399,29 @@ export const useDsiStore = create<DsiState>((set, get) => {
           activeMenu: "Summary",
         });
       });
+    },
+
+    prefetchWorkbenchTabs: async () => {
+      const state = get();
+      const sub = state.activeSubmission;
+      const ver = state.activeVersion;
+      const coverage = sub?.coverage as string | undefined;
+      const submissionCode = sub?.submission_code as string | undefined;
+      const versionCode = ver?.version_code as string | undefined;
+      const hasConditions =
+        Array.isArray(ver?.signal_conditions) && ver!.signal_conditions.length > 0;
+
+      // Each fetcher checks its own cache key and bails when fresh, so
+      // multiple calls (StrictMode double-invoke, tab nav) are no-ops.
+      // Promise.allSettled so one slow / failed endpoint can't hold up
+      // the others.
+      await Promise.allSettled([
+        coverage ? state.fetchLossAnalytics(coverage) : Promise.resolve(),
+        coverage ? state.fetchExposureAnalytics(coverage) : Promise.resolve(),
+        submissionCode ? state.fetchHistory(submissionCode) : Promise.resolve(),
+        submissionCode ? state.fetchReferralSignals(submissionCode) : Promise.resolve(),
+        versionCode && !hasConditions ? state.fetchRiskSignals(versionCode) : Promise.resolve(),
+      ]);
     },
 
     updateDecision: async (quoteCode, quoteAction, referralAction) => {

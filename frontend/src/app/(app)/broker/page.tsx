@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { AlertCircle, Briefcase, ChevronRight } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import {
@@ -296,7 +296,7 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
   );
 }
 
-function BookRow({
+const BookRow = memo(function BookRow({
   client,
   entry,
 }: {
@@ -378,7 +378,7 @@ function BookRow({
       </td>
     </tr>
   );
-}
+});
 
 function ColHead({
   children,

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 import { FlaskConical, Layers, Shield, TrendingDown } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
@@ -43,11 +44,10 @@ export default function ScenariosPage() {
   const fetchSignals = useDsiStore((s) => s.fetchRiskSignals);
 
   const versionCode = ver?.version_code as string | undefined;
-  useEffect(() => {
-    if (versionCode && signals.length === 0) {
-      fetchSignals(versionCode).catch(() => undefined);
-    }
-  }, [versionCode, signals.length, fetchSignals]);
+  useEnsureFetched(
+    signals.length === 0 ? versionCode : undefined,
+    fetchSignals,
+  );
 
   const [signalOverrides, setSignalOverrides] = useState<Record<string, number>>({});
 

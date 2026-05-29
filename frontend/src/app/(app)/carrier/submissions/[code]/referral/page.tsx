@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useEnsureFetched } from "@/store/useEnsureFetched";
 import {
   Check,
   Flame,
@@ -53,11 +54,8 @@ export default function ReferralActionsPage() {
   const submitOverride = useDsiStore((s) => s.submitSignalOverride);
 
   const submissionCode = sub?.submission_code as string | undefined;
+  useEnsureFetched(submissionCode, fetchReferralSignals);
   const [overrideOpen, setOverrideOpen] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (submissionCode) fetchReferralSignals(submissionCode).catch(() => undefined);
-  }, [submissionCode, fetchReferralSignals]);
 
   if (!referral || !sub) {
     return (
