@@ -24,16 +24,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
-  // Dev compile speed: rewrite `import { Foo } from "lucide-react"` to
-  // `import Foo from "lucide-react/dist/esm/icons/foo"` so the dev
-  // compiler doesn't traverse the icon barrel for every "use client"
-  // file. Production build was already tree-shaken; this only buys
-  // speed for local dev + HMR.
-  modularizeImports: {
-    "lucide-react": {
-      transform: "lucide-react/dist/esm/icons/{{ kebabCase member }}",
-      skipDefaultConversion: true,
-    },
+  // Dev compile speed for `lucide-react`. The library's per-icon
+  // `dist/esm/icons/*.mjs` files export the icon as `default`, so the
+  // naive `modularizeImports` rewrite of named imports → deep paths
+  // breaks every `import { Eye, EyeOff } from "lucide-react"` call
+  // site. Use Next.js's built-in `optimizePackageImports` instead: it
+  // ships with a curated allowlist (lucide-react included) and handles
+  // the default-vs-named import shape correctly under the hood.
+  experimental: {
+    optimizePackageImports: ["lucide-react"],
   },
 };
 
