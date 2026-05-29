@@ -4,7 +4,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Body, Caption } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -116,9 +115,15 @@ export default function LoginPage() {
           </div>
         )}
 
-        <Button type="submit" size="lg" className="w-full" disabled={submitting}>
+        {/* auth-primary: ink fill, mint-teal edge-light on hover (no opacity
+            dip, no layout shift — transparent 2px side borders by default). */}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="flex w-full items-center justify-center gap-2 rounded-[10px] border-x-2 border-transparent bg-ink px-3.5 py-3 text-[14px] font-semibold text-canvas transition-colors hover:border-x-[#39d3ba] disabled:pointer-events-none disabled:opacity-50"
+        >
           {submitting ? "Signing in…" : "Sign in"}
-        </Button>
+        </button>
       </form>
 
       <div className="mt-6 flex items-center justify-between border-t border-rule pt-[18px]">
