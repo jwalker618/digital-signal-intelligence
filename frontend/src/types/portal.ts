@@ -498,6 +498,8 @@ export interface BookHealthResponse {
   avg_tenure_months: number;
   lines_concentration: Record<string, number>;
   vertical_concentration: Record<string, number>;
+  lines_premium: Record<string, number>;
+  vertical_premium: Record<string, number>;
   commission_yield_pct: number;
 }
 

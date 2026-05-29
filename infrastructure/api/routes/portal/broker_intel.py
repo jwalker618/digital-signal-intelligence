@@ -1164,6 +1164,10 @@ class BookHealthResponse(BaseModel):
     avg_tenure_months: float
     lines_concentration: dict[str, int]  # coverage -> policy count
     vertical_concentration: dict[str, int]  # vertical -> policy count
+    # Phase F.5: premium-$ share (the template's breakdown cards are
+    # premium-weighted, not policy-count).
+    lines_premium: dict[str, float]  # coverage -> premium $
+    vertical_premium: dict[str, float]  # vertical -> premium $
     commission_yield_pct: float
 
 
@@ -1191,6 +1195,8 @@ async def book_health(
     entity_to_lines: dict[str, set[str]] = defaultdict(set)
     line_counts: Counter[str] = Counter()
     vert_counts: Counter[str] = Counter()
+    line_premium: dict[str, float] = defaultdict(float)
+    vert_premium: dict[str, float] = defaultdict(float)
     total_premium = 0.0
     total_commission = 0.0
 
@@ -1202,6 +1208,8 @@ async def book_health(
         vert_slug = vertical_for_naics(naics) or "unknown"
         vert_counts[vert_slug] += 1
         premium = float(q.recommended_premium or 0)
+        line_premium[sub.coverage] += premium
+        vert_premium[vert_slug] += premium
         total_premium += premium
         # Average commission of ~13% (book-weighted heuristic).
         total_commission += premium * 0.13
@@ -1232,6 +1240,8 @@ async def book_health(
         avg_tenure_months=37.0,    # synthesised; v8.3 measures actual tenure
         lines_concentration=dict(line_counts),
         vertical_concentration=dict(vert_counts),
+        lines_premium={k: round(v, 0) for k, v in line_premium.items()},
+        vertical_premium={k: round(v, 0) for k, v in vert_premium.items()},
         commission_yield_pct=commission_yield,
     )
 

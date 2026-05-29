@@ -42,21 +42,33 @@ export default function BrokerBookHealthPage() {
 interface BreakdownRow {
   name: string;
   share: number;
+  premium: number;
+  count: number;
 }
 
-// lines_concentration / vertical_concentration are policy COUNTS per the
-// backend schema; convert to a fractional share of the book so formatPercent
-// renders correctly (a raw count would format as e.g. "1,200%").
-function toBreakdownRows(counts: Record<string, number>): BreakdownRow[] {
-  const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
-  return Object.entries(counts)
-    .map(([name, count]) => ({ name, share: total ? count / total : 0 }))
+// Premium-weighted breakdown (template's cards are premium-$ share, with
+// the policy count as a secondary annotation).
+function toBreakdownRows(
+  premium: Record<string, number>,
+  counts: Record<string, number>,
+): BreakdownRow[] {
+  const total = Object.values(premium).reduce((sum, n) => sum + n, 0);
+  return Object.entries(premium)
+    .map(([name, prem]) => ({
+      name,
+      share: total ? prem / total : 0,
+      premium: prem,
+      count: counts[name] ?? 0,
+    }))
     .sort((a, b) => b.share - a.share);
 }
 
 function HealthBody({ data }: { data: BookHealthResponse }) {
-  const lines = toBreakdownRows(data.lines_concentration);
-  const verticals = toBreakdownRows(data.vertical_concentration);
+  const lines = toBreakdownRows(data.lines_premium, data.lines_concentration);
+  const verticals = toBreakdownRows(
+    data.vertical_premium,
+    data.vertical_concentration,
+  );
   const tenureYears = (data.avg_tenure_months / 12).toFixed(1);
 
   return (
@@ -167,8 +179,8 @@ function HealthBody({ data }: { data: BookHealthResponse }) {
 
           {/* Breakdowns */}
           <div className="grid gap-4 lg:grid-cols-2">
-            <BreakdownCard title="Policy mix by vertical" rows={verticals} />
-            <BreakdownCard title="Policy mix by coverage line" rows={lines} />
+            <BreakdownCard title="Premium by vertical" rows={verticals} />
+            <BreakdownCard title="Premium by coverage line" rows={lines} />
           </div>
 
           {/* Footer note */}
@@ -304,10 +316,13 @@ function BreakdownCard({
       <ul className="flex flex-col gap-2.5">
         {rows.slice(0, 8).map((r) => (
           <li key={r.name}>
-            <div className="mb-1 flex items-baseline justify-between text-[13px]">
+            <div className="mb-1 flex items-baseline justify-between gap-2 text-[13px]">
               <span className="truncate font-semibold text-ink">{r.name}</span>
-              <span className="font-semibold tabular-nums text-ink">
-                {formatPercent(r.share, 1)}
+              <span className="shrink-0 font-semibold tabular-nums text-ink">
+                {kfmt(r.premium)}{" "}
+                <span className="font-normal text-ink-soft">
+                  ({formatPercent(r.share, 0)} · {r.count})
+                </span>
               </span>
             </div>
             <div className="h-1.5 overflow-hidden rounded-full bg-surface-sunken">
@@ -321,4 +336,12 @@ function BreakdownCard({
       </ul>
     </Card>
   );
+}
+
+function kfmt(v: number | null | undefined): string {
+  if (v == null) return "—";
+  const abs = Math.abs(v);
+  if (abs >= 1_000_000) return `$${(v / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
+  if (abs >= 1_000) return `$${Math.round(v / 1_000)}k`;
+  return `$${Math.round(v)}`;
 }
