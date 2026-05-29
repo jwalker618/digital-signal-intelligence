@@ -10,8 +10,10 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       <AuthBrandPanel />
-      <div className="flex flex-1 items-center justify-center overflow-y-auto bg-canvas p-10">
-        <div className="w-full max-w-md">{children}</div>
+      {/* Form column — top-aligned (form sits ~200px down), left-aligned,
+          max 420 wide. Matches reim_auth.jsx AuthShell. */}
+      <div className="flex flex-1 flex-col items-start overflow-y-auto bg-canvas px-10 pb-10 pt-[200px]">
+        <div className="w-full max-w-[420px]">{children}</div>
       </div>
     </div>
   );
