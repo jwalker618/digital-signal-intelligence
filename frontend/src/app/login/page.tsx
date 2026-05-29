@@ -5,7 +5,7 @@ import Link from "next/link";
 import { FormEvent, useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Eyebrow, Body, Caption } from "@/components/ui/typography";
+import { Body, Caption } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 
@@ -37,8 +37,7 @@ export default function LoginPage() {
   return (
     <div>
       <header className="mb-7">
-        <Eyebrow className="text-info">Welcome</Eyebrow>
-        <h1 className="mt-1.5 font-display text-[28px] font-semibold leading-[1.2] text-ink">
+        <h1 className="font-display text-[28px] font-semibold leading-[1.2] text-ink">
           Sign in to your account
         </h1>
         <Body className="mt-2 leading-[1.55]">
