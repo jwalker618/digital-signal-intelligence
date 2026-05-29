@@ -1,13 +1,14 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { Glasses, Layers } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
-import { formatPercent } from "@/lib/format";
 
 /**
  * Risk assessment — the signal-by-signal view of why this submission got
@@ -80,28 +81,63 @@ export default function RiskAssessmentPage(props: {
     (c) => (c.action ?? "").toLowerCase() === "modifier",
   );
 
+  const composite = ver.composite_score ?? null;
+  const confidence = ver.confidence ?? null;
+  const coverage = ver.signal_coverage ?? null;
+  const tier = ver.final_tier ?? null;
+  const tierLabel = ver.tier_label ?? null;
+
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Risk Assessment" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Signals</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Risk assessment
-            </h1>
-            <Body className="mt-2">
-              Every signal that fired against this submission, grouped by the
-              action it triggered.
-            </Body>
-          </header>
+          {/* Results */}
+          <Card header="Results" icon={Glasses} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <KpiSnug
+                label="Composite"
+                value={composite != null ? Number(composite).toFixed(0) : "—"}
+                tone="info"
+              />
+              <KpiSnug
+                label="Confidence"
+                value={
+                  confidence != null
+                    ? `${(Number(confidence) * 100).toFixed(0)}%`
+                    : "—"
+                }
+                tone="pos"
+              />
+              <KpiSnug
+                label="Signal coverage"
+                value={
+                  coverage != null
+                    ? `${(Number(coverage) * 100).toFixed(0)}%`
+                    : "—"
+                }
+                tone="pos"
+              />
+              <KpiSnug
+                label="Final tier"
+                value={
+                  tier != null
+                    ? `T${tier}${tierLabel ? ` · ${tierLabel}` : ""}`
+                    : "—"
+                }
+                tone="info"
+              />
+            </div>
+          </Card>
 
-          <div className="grid gap-4 sm:grid-cols-4">
+          <Card header="Action breakdown" icon={Layers} pad="md">
+            <div className="grid gap-4 sm:grid-cols-4">
             <Bucket label="Approve" count={approve.length} tone="pos" />
             <Bucket label="Refer" count={refer.length} tone="warn" />
             <Bucket label="Decline" count={decline.length} tone="neg" />
             <Bucket label="Modifier" count={modifier.length} tone="info" />
-          </div>
+            </div>
+          </Card>
 
           {refer.length > 0 && (
             <SignalSection title="Referred" tone="warn" items={refer} />

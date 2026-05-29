@@ -1,9 +1,10 @@
 "use client";
 
-import { Clock, Layers } from "lucide-react";
+import { Clock, Layers, Shield } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
 import { LooseRecordCard } from "@/components/base/loose-record";
@@ -39,24 +40,28 @@ export default function SirPage() {
       <WorkbenchTopbar activeTabLabel="SIR & Waiting Periods" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1080px] gap-6">
-          <header>
-            <Eyebrow>Risk terms</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              SIR & waiting periods
-            </h1>
-            <Body className="mt-2">
-              Structural depth-of-cover — what the insured eats before the
-              policy responds, and how long they wait once it does.
-            </Body>
-          </header>
+          {/* Self-insured retention */}
+          <Card header="Self-insured retention" icon={Shield} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
+              <MiniKpi label="SIR applies" value={sir > 0 ? "Yes" : "No"} />
+              <MiniKpi
+                label="Amount"
+                value={sir > 0 ? formatCurrency(sir) : "—"}
+              />
+              <MiniKpi label="Currency" value={String(risk?.currency ?? "USD")} />
+            </div>
+            {sir === 0 && deductible > 0 && (
+              <Micro className="mt-3 block border-t border-rule pt-3">
+                No self-insured retention is structured into this risk. The{" "}
+                {formatCurrency(deductible)} deductible applies (see Deductible
+                Structure).
+              </Micro>
+            )}
+          </Card>
 
           {/* Layer visualization */}
           {(sir > 0 || deductible > 0 || limit > 0) && (
-            <Card pad="lg" className="space-y-4">
-              <header className="flex items-center gap-2">
-                <Layers size={14} className="text-ink-mute" />
-                <Eyebrow>Layer cascade</Eyebrow>
-              </header>
+            <Card header="Layer cascade" icon={Layers} pad="lg">
               <div className="space-y-2">
                 {sir > 0 && (
                   <LayerRow
@@ -87,11 +92,7 @@ export default function SirPage() {
           )}
 
           {/* Waiting periods */}
-          <Card pad="md" className="space-y-3">
-            <header className="flex items-center gap-2">
-              <Clock size={14} className="text-ink-mute" />
-              <Eyebrow>Waiting periods</Eyebrow>
-            </header>
+          <Card header="Waiting periods" icon={Clock} pad="md" className="space-y-3">
             {waitingPeriods.length === 0 && waitingHours === 0 ? (
               <Body className="italic">No waiting period configured.</Body>
             ) : waitingPeriods.length > 0 ? (

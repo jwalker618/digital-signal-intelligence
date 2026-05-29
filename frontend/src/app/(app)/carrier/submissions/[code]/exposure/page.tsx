@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Globe } from "lucide-react";
+import { BarChart3, Gauge, Target } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, NumDisplay, Micro } from "@/components/ui/typography";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
 import { formatCurrency, formatPercent } from "@/lib/format";
@@ -65,17 +66,25 @@ export default function ExposureAssessmentPage() {
       <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Technical assessment</Eyebrow>
-            <h1 className="mt-1 flex items-center gap-3 font-display text-[28px] font-semibold leading-tight text-ink">
-              <Globe size={22} className="text-info" />
-              Exposure assessment
-            </h1>
-            <Body className="mt-2">
-              Aggregate exposure value, size and complexity scores, and the
-              modifier that flows into the premium.
-            </Body>
-          </header>
+          {/* Exposure profile */}
+          <Card header="Exposure profile" icon={Target} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
+              <MiniKpi
+                label="Exposure value"
+                value={exposureValue > 0 ? formatCurrency(exposureValue) : "—"}
+              />
+              <MiniKpi label="Band" value={exposureBand || "—"} />
+              <MiniKpi
+                label="Size score"
+                value={sizeScore > 0 ? sizeScore.toFixed(0) : "—"}
+              />
+              <MiniKpi
+                label="Complexity"
+                value={complexityScore > 0 ? complexityScore.toFixed(0) : "—"}
+              />
+              <MiniKpi label="Modifier" value={`×${expMod.toFixed(3)}`} />
+            </div>
+          </Card>
 
           {/* Hero */}
           <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
@@ -130,10 +139,12 @@ export default function ExposureAssessmentPage() {
 
           {/* Band benchmarks */}
           {band.length > 0 && (
-            <Card pad="md" className="overflow-hidden p-0">
-              <header className="border-b border-rule px-5 py-3.5">
-                <Eyebrow>Band benchmarks ({band.length})</Eyebrow>
-              </header>
+            <Card
+              header={`Band position · ${band.length}`}
+              icon={Gauge}
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken/60 text-left">
@@ -179,8 +190,7 @@ export default function ExposureAssessmentPage() {
 
           {/* Tier distribution */}
           {tier.length > 0 && (
-            <Card pad="md">
-              <Eyebrow className="mb-3">Tier distribution</Eyebrow>
+            <Card header="Tier distribution" icon={BarChart3} pad="md">
               <ul className="space-y-2">
                 {tier.map((t, i) => {
                   const r = t as Record<string, unknown>;

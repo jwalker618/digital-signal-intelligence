@@ -5,7 +5,7 @@ import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { PageLoading } from "@/components/base/pageStates";
 import { LooseRecordCard } from "@/components/base/loose-record";
 import { useDsiStore } from "@/store/dsiStore";
@@ -50,15 +50,29 @@ export default function CoverageTermsPage() {
       <WorkbenchTopbar activeTabLabel="Coverage Terms" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Risk terms</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Coverage terms
-            </h1>
-            <Body className="mt-2">
-              What's in, what's out, and how the limit is structured.
-            </Body>
-          </header>
+          {/* Coverage overview */}
+          <Card header="Coverage overview" icon={FileCheck} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <MiniKpi
+                label="Territory"
+                value={
+                  risk?.territory
+                    ? formatText(String(risk.territory), "capitalize")
+                    : "—"
+                }
+              />
+              <MiniKpi
+                label="Trigger"
+                value={
+                  risk?.coverage_trigger
+                    ? formatText(String(risk.coverage_trigger), "capitalize")
+                    : "—"
+                }
+              />
+              <MiniKpi label="Included" value={coveragesIn.length} />
+              <MiniKpi label="Excluded" value={coveragesOut.length} />
+            </div>
+          </Card>
 
           {/* Headline structure */}
           <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
@@ -109,11 +123,12 @@ export default function CoverageTermsPage() {
 
           {/* Sub-limits */}
           {subLimits.length > 0 && (
-            <Card pad="md" className="overflow-hidden p-0">
-              <header className="flex items-center gap-2 border-b border-rule px-5 py-3.5">
-                <FileCheck size={14} className="text-ink-mute" />
-                <Eyebrow>Sub-limits ({subLimits.length})</Eyebrow>
-              </header>
+            <Card
+              header={`Sub-limits · ${subLimits.length}`}
+              icon={FileCheck}
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken/60 text-left">
@@ -148,8 +163,7 @@ export default function CoverageTermsPage() {
 
           {/* Endorsements */}
           {endorsements.length > 0 && (
-            <Card pad="md" className="space-y-3">
-              <Eyebrow>Endorsements ({endorsements.length})</Eyebrow>
+            <Card header={`Endorsements · ${endorsements.length}`} icon={CheckCircle2} pad="md">
               <ul className="divide-y divide-rule">
                 {endorsements.map((e, i) => (
                   <li key={i} className="flex items-start gap-3 py-2.5">

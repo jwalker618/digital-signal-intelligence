@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowDown } from "lucide-react";
+import { ArrowDown, Calculator } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
 import { formatCurrency, formatPercent } from "@/lib/format";
@@ -27,6 +28,7 @@ interface BuildStep {
  */
 export default function PremiumAssemblyPage() {
   const ver = useDsiStore((s) => s.activeVersion);
+  const commercial = useDsiStore((s) => s.activeCommercial);
 
   if (!ver) {
     return (
@@ -90,24 +92,53 @@ export default function PremiumAssemblyPage() {
 
   const totalChange = base > 0 ? (finalPremium - base) / base : 0;
 
+  const netPremium = commercial?.net_premium ?? null;
+  const grossPremium = commercial?.gross_premium ?? null;
+  const offeredPremium = commercial?.offered_premium ?? null;
+
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Premium Assembly" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[920px] gap-6">
-          <header>
-            <Eyebrow>Pricing</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Premium assembly
-            </h1>
-            <Body className="mt-2">
-              Step-by-step build from base rate to final recommended premium.
-              Multipliers compound left-to-right.
-            </Body>
-          </header>
+          {/* Hero — the answer first, math below */}
+          {(offeredPremium != null ||
+            netPremium != null ||
+            grossPremium != null) && (
+            <Card variant="info" pad="lg">
+              <div className="grid items-end gap-6 md:grid-cols-[1.4fr_auto_auto_auto]">
+                <div>
+                  <Eyebrow className="text-info-deep dark:text-info">
+                    Offered premium
+                  </Eyebrow>
+                  <NumDisplay size="xl" className="mt-2 block text-info">
+                    {offeredPremium != null
+                      ? formatCurrency(offeredPremium)
+                      : grossPremium != null
+                        ? formatCurrency(grossPremium)
+                        : "—"}
+                  </NumDisplay>
+                </div>
+                <MiniKpi
+                  label="Net premium"
+                  value={netPremium != null ? formatCurrency(netPremium) : "—"}
+                />
+                <MiniKpi
+                  label="Gross premium"
+                  value={
+                    grossPremium != null ? formatCurrency(grossPremium) : "—"
+                  }
+                />
+                <MiniKpi
+                  label="Technical premium"
+                  value={formatCurrency(finalPremium)}
+                />
+              </div>
+            </Card>
+          )}
 
           {/* Base */}
-          <Card pad="lg" className="space-y-1">
+          <Card header="Premium build-up" icon={Calculator} pad="lg" className="space-y-1">
             <Micro className="block">Base premium</Micro>
             <NumDisplay size="xl">{formatCurrency(base)}</NumDisplay>
             <Micro className="block">starting point before modifiers</Micro>

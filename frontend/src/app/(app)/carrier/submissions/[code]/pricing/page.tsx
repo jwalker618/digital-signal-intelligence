@@ -1,9 +1,10 @@
 "use client";
 
+import { Calculator, Layers, ShieldAlert } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
 import { Waterfall } from "@/components/charts/waterfall";
 import { PageLoading } from "@/components/base/pageStates";
@@ -51,17 +52,6 @@ export default function PricingAnatomyPage() {
       <WorkbenchTopbar activeTabLabel="Pricing Anatomy" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Pricing</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Pricing anatomy
-            </h1>
-            <Body className="mt-2">
-              Base premium, the modifier chain that lands on the final
-              recommended premium, and the signal conditions that drove it.
-            </Body>
-          </header>
-
           {/* Hero numbers */}
           <div className="grid gap-4 md:grid-cols-3">
             <Stat label="Base premium">{formatCurrency(base)}</Stat>
@@ -78,8 +68,7 @@ export default function PricingAnatomyPage() {
           </div>
 
           {/* Modifier chain */}
-          <Card pad="lg">
-            <Eyebrow className="mb-4">Modifier chain</Eyebrow>
+          <Card header="Pricing anatomy" icon={Calculator} pad="lg">
             <Waterfall
               items={[
                 { id: "base", label: "Base", value: base, type: "base" },
@@ -93,8 +82,7 @@ export default function PricingAnatomyPage() {
           </Card>
 
           {/* Detail */}
-          <Card pad="md" className="grid gap-2 md:grid-cols-2">
-            <Eyebrow className="md:col-span-2">Factors</Eyebrow>
+          <Card header="Factors" icon={Layers} pad="md" className="grid gap-2 md:grid-cols-2">
             <LabelRow
               label="Loss combined modifier"
               value={`×${lossMod.toFixed(3)}`}
@@ -112,10 +100,11 @@ export default function PricingAnatomyPage() {
 
           {/* Signal conditions */}
           {signalConditions.length > 0 && (
-            <Card pad="md">
-              <Eyebrow className="mb-3">
-                Signal conditions ({signalConditions.length})
-              </Eyebrow>
+            <Card
+              header={`Active conditions · ${signalConditions.length}`}
+              icon={ShieldAlert}
+              pad="md"
+            >
               <ul className="divide-y divide-rule">
                 {signalConditions.map((c, i) => {
                   const action = (c.action ?? "").toLowerCase();

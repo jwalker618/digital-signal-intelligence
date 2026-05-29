@@ -1,13 +1,13 @@
 "use client";
 
-import { Building2 } from "lucide-react";
+import { Building2, Network, Users } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 
 /**
  * Distribution — how the premium and risk are shared across the commercial
@@ -48,19 +48,8 @@ export default function DistributionPage() {
       <WorkbenchTopbar activeTabLabel="Distribution" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>Commercial</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Distribution
-            </h1>
-            <Body className="mt-2">
-              Premium share across participants in the commercial stack — who
-              keeps what, who fronts, who reinsures.
-            </Body>
-          </header>
-
           {participants.length === 0 ? (
-            <Card pad="lg">
+            <Card header="Subscription tower" icon={Network} pad="lg">
               <Body className="italic">
                 No commercial distribution recorded for this submission.
               </Body>
@@ -82,16 +71,17 @@ export default function DistributionPage() {
               </div>
 
               {/* Stacked share bar */}
-              <Card pad="md">
-                <Eyebrow className="mb-3">Share stack</Eyebrow>
+              <Card header="Subscription tower" icon={Network} pad="md">
                 <ShareStack participants={participants} />
               </Card>
 
               {/* Per-participant rows */}
-              <Card pad="md" className="overflow-hidden p-0">
-                <header className="border-b border-rule px-5 py-3.5">
-                  <Eyebrow>Participants</Eyebrow>
-                </header>
+              <Card
+                header="Participants"
+                icon={Users}
+                pad="none"
+                className="overflow-hidden"
+              >
                 <table className="w-full table-fixed text-[13px]">
                   <thead>
                     <tr className="border-b border-rule bg-surface-sunken/60 text-left">

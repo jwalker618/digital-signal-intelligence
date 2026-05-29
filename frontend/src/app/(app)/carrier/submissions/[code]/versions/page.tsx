@@ -1,10 +1,11 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import { GitBranch } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, Body, Micro } from "@/components/ui/typography";
+import { Body } from "@/components/ui/typography";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatDate, formatText } from "@/lib/format";
@@ -60,23 +61,22 @@ export default function ModelVersionsPage(props: {
       <WorkbenchTopbar activeTabLabel="Model Versions" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          <header>
-            <Eyebrow>History</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Model versions
-            </h1>
-            <Body className="mt-2">
-              Every quote version this submission has produced — score,
-              decision, premium, and what changed between revisions.
-            </Body>
-          </header>
-
           {versions.length === 0 ? (
-            <Card pad="lg">
+            <Card header="Version lineage" icon={GitBranch} pad="lg">
               <Body className="italic">No version history available.</Body>
             </Card>
           ) : (
-            <Card pad="md" className="overflow-hidden p-0">
+            <Card
+              header="Version lineage"
+              icon={GitBranch}
+              headerRight={
+                <Chip variant="mute" size="sm">
+                  {versions.length} version{versions.length === 1 ? "" : "s"}
+                </Chip>
+              }
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken text-left">

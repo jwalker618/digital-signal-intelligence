@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { use } from "react";
-import { AlertCircle, ExternalLink, FileText } from "lucide-react";
+import {
+  AlertCircle,
+  Building2,
+  ExternalLink,
+  FileText,
+  Layers,
+  Scale,
+  Search,
+} from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
 import { ScoreBar } from "@/components/ui/score-bar";
+import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore } from "@/store/dsiStore";
 import { formatCurrency, formatText, formatDate } from "@/lib/format";
@@ -17,12 +26,13 @@ import { fmtRelative } from "@/lib/utils";
 export default function WorkbenchSummaryPage(props: {
   params: Promise<{ code: string }>;
 }) {
-  // params is unwrapped only to keep the file consistent with sibling tabs.
   use(props.params);
   const sub = useDsiStore((s) => s.activeSubmission);
   const ver = useDsiStore((s) => s.activeVersion);
   const quote = useDsiStore((s) => s.activeQuote);
   const referral = useDsiStore((s) => s.activeReferral);
+  const commercial = useDsiStore((s) => s.activeCommercial);
+  const risk = useDsiStore((s) => s.activeRisk);
 
   if (!sub) {
     return (
@@ -40,25 +50,58 @@ export default function WorkbenchSummaryPage(props: {
   const finalPremium =
     ver?.final_premium ?? sub.final_premium ?? sub.recommended_premium ?? null;
   const basePremium = ver?.base_premium ?? null;
+  const confidence = ver?.confidence ?? null;
   const referralReasons: string[] = ver?.referral_reasons ?? [];
   const referralAwaiting = referral?.awaiting_party ?? null;
   const referralState = referral?.referral_state ?? sub.referral_state ?? null;
+
+  const decisionTone =
+    decision === "approve"
+      ? "pos"
+      : decision === "decline"
+        ? "neg"
+        : decision === "refer"
+          ? "warn"
+          : "mute";
+
+  const netPremium = commercial?.net_premium ?? null;
+  const grossPremium = commercial?.gross_premium ?? null;
+  const offeredPremium = commercial?.offered_premium ?? null;
+  const brokerage = commercial?.brokerage_pct ?? null;
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Summary" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1280px] gap-6">
-          {/* Hero — composite + decision */}
-          <Card variant="info" pad="lg" className="space-y-5">
-            <header className="flex items-start justify-between gap-6">
+          {/* Decision banner */}
+          <Card
+            variant={decision === "refer" ? "spot" : "info"}
+            pad="lg"
+            className="space-y-5"
+          >
+            <header className="flex flex-wrap items-start justify-between gap-6">
               <div>
-                <Eyebrow className="text-info-deep dark:text-info">
-                  Composite score
+                <Eyebrow
+                  className={
+                    decision === "refer"
+                      ? "text-spot-deep dark:text-spot"
+                      : "text-info-deep dark:text-info"
+                  }
+                >
+                  Decision
                 </Eyebrow>
-                <NumDisplay size="xl" className="mt-2 block">
-                  {composite != null ? Number(composite).toFixed(0) : "—"}
-                </NumDisplay>
+                <div className="mt-1 flex items-baseline gap-3">
+                  <span className="font-display text-[28px] font-semibold capitalize text-ink">
+                    {decision ? formatText(decision, "capitalize") : "—"}
+                  </span>
+                  {referralReasons.length > 0 && (
+                    <Micro>
+                      awaiting underwriter audit · {referralReasons.length}{" "}
+                      flagged signal{referralReasons.length === 1 ? "" : "s"}
+                    </Micro>
+                  )}
+                </div>
                 {composite != null && (
                   <ScoreBar
                     value={Number(composite)}
@@ -73,54 +116,53 @@ export default function WorkbenchSummaryPage(props: {
                     ]}
                   />
                 )}
-                {ver?.confidence != null && (
-                  <Micro className="mt-2 block">
-                    confidence {(Number(ver.confidence) * 100).toFixed(0)}%
-                  </Micro>
-                )}
               </div>
-              <div className="space-y-2 text-right">
-                {decision && (
-                  <Chip
-                    variant={
-                      decision === "approve"
-                        ? "pos"
-                        : decision === "decline"
-                          ? "neg"
-                          : decision === "refer"
-                            ? "warn"
-                            : "mute"
-                    }
-                  >
-                    {formatText(decision, "capitalize")}
-                  </Chip>
-                )}
-                {tier != null && (
-                  <div>
-                    <Micro className="block">Tier</Micro>
-                    <p className="text-[20px] font-semibold tabular-nums text-ink">
-                      {tier}
-                      {tierLabel && (
-                        <span className="ml-2 text-[12px] font-medium text-ink-soft">
-                          {tierLabel}
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                )}
-                {ver?.auto_approve != null && (
-                  <Chip
-                    variant={ver.auto_approve ? "pos" : "mute"}
-                    size="sm"
-                  >
-                    {ver.auto_approve ? "Auto-approved" : "Manual review"}
-                  </Chip>
-                )}
+              <div className="grid grid-cols-3 gap-6 sm:grid-cols-5">
+                <KpiSnug
+                  label="Score"
+                  value={composite != null ? Number(composite).toFixed(0) : "—"}
+                  tone="info"
+                />
+                <KpiSnug
+                  label="Tier"
+                  value={
+                    tier != null
+                      ? `T${tier}${tierLabel ? ` · ${tierLabel}` : ""}`
+                      : "—"
+                  }
+                />
+                <KpiSnug
+                  label="Premium"
+                  value={
+                    finalPremium != null ? formatCurrency(finalPremium) : "—"
+                  }
+                />
+                <KpiSnug
+                  label="Confidence"
+                  value={
+                    confidence != null
+                      ? `${(Number(confidence) * 100).toFixed(0)}%`
+                      : "—"
+                  }
+                  tone="pos"
+                />
+                <KpiSnug
+                  label="Decision"
+                  value={
+                    decision ? (
+                      <Chip variant={decisionTone} size="sm">
+                        {formatText(decision, "capitalize")}
+                      </Chip>
+                    ) : (
+                      "—"
+                    )
+                  }
+                />
               </div>
             </header>
 
             {referralReasons.length > 0 && (
-              <div className="rounded-card border border-info/30 bg-surface px-4 py-3">
+              <div className="rounded-card border border-spot/30 bg-surface px-4 py-3">
                 <Eyebrow className="mb-2">Referral reasons</Eyebrow>
                 <ul className="space-y-1">
                   {referralReasons.map((r, i) => (
@@ -143,11 +185,7 @@ export default function WorkbenchSummaryPage(props: {
           {/* Premium summary */}
           <div className="grid gap-4 md:grid-cols-3">
             <PremiumStat label="Base premium" value={basePremium} />
-            <PremiumStat
-              label="Final premium"
-              value={finalPremium}
-              emphasis
-            />
+            <PremiumStat label="Final premium" value={finalPremium} emphasis />
             <PremiumStat
               label="Δ from base"
               value={
@@ -159,12 +197,18 @@ export default function WorkbenchSummaryPage(props: {
             />
           </div>
 
-          {/* Entity + referral context */}
-          <div className="grid gap-5 md:grid-cols-2">
-            <Card pad="md" className="space-y-2">
-              <Eyebrow>Entity</Eyebrow>
-              <LabelRow label="Name" value={sub.entity_name ?? "—"} />
-              {sub.discovered_domain && (
+          {/* Who / discovery / commercial / risk terms */}
+          <div className="grid gap-5 lg:grid-cols-3">
+            <Card header="Who are they?" icon={Building2} pad="md" className="space-y-1">
+              <LabelRow label="Entity" value={sub.entity_name ?? "—"} />
+              <LabelRow label="Coverage" value={sub.coverage ?? "—"} />
+              <LabelRow
+                label="Pipeline status"
+                value={
+                  sub.status ? formatText(sub.status, "capitalize") : "—"
+                }
+              />
+              {sub.discovered_domain ? (
                 <LabelRow
                   label="Domain"
                   value={
@@ -179,36 +223,105 @@ export default function WorkbenchSummaryPage(props: {
                     </a>
                   }
                 />
+              ) : (
+                <LabelRow label="Domain" value="—" />
               )}
-              {sub.coverage && (
-                <LabelRow label="Coverage" value={sub.coverage} />
-              )}
-              {sub.created_at && (
-                <LabelRow
-                  label="Submitted"
-                  value={`${formatDate(sub.created_at)} · ${fmtRelative(sub.created_at)}`}
-                />
-              )}
-              {sub.status && (
-                <LabelRow
-                  label="Pipeline status"
-                  value={formatText(sub.status, "capitalize")}
-                />
-              )}
+              <LabelRow
+                label="Submitted"
+                value={
+                  sub.created_at
+                    ? `${formatDate(sub.created_at)} · ${fmtRelative(sub.created_at)}`
+                    : "—"
+                }
+              />
             </Card>
 
             <Card
+              header="Commercial summary"
+              icon={Search}
+              pad="md"
+              className="space-y-1"
+            >
+              <LabelRow
+                label="Technical premium"
+                value={finalPremium != null ? formatCurrency(finalPremium) : "—"}
+              />
+              <LabelRow
+                label="Brokerage"
+                value={
+                  brokerage != null
+                    ? `${(Number(brokerage) * 100).toFixed(1)}%`
+                    : "—"
+                }
+              />
+              <LabelRow
+                label="Net premium"
+                value={netPremium != null ? formatCurrency(netPremium) : "—"}
+              />
+              <LabelRow
+                label="Gross premium"
+                value={
+                  grossPremium != null ? formatCurrency(grossPremium) : "—"
+                }
+              />
+              <LabelRow
+                label="Offered premium"
+                value={
+                  offeredPremium != null ? formatCurrency(offeredPremium) : "—"
+                }
+              />
+            </Card>
+
+            <Card
+              header="Risk terms summary"
+              icon={Scale}
+              pad="md"
+              className="space-y-1"
+            >
+              <LabelRow
+                label="Deductible"
+                value={
+                  risk?.deductible_amount != null
+                    ? formatCurrency(risk.deductible_amount)
+                    : "—"
+                }
+              />
+              <LabelRow
+                label="SIR applies"
+                value={risk?.sir_applies != null ? (risk.sir_applies ? "Yes" : "No") : "—"}
+              />
+              <LabelRow
+                label="Aggregate"
+                value={
+                  risk?.aggregate_limit != null
+                    ? formatCurrency(risk.aggregate_limit)
+                    : "—"
+                }
+              />
+              <LabelRow
+                label="Reinstatements"
+                value={risk?.reinstatements ?? "—"}
+              />
+              <LabelRow
+                label="Coverage trigger"
+                value={
+                  risk?.coverage_trigger
+                    ? formatText(risk.coverage_trigger, "capitalize")
+                    : "—"
+                }
+              />
+            </Card>
+          </div>
+
+          {/* Referral + quote */}
+          <div className="grid gap-5 md:grid-cols-2">
+            <Card
+              header="Referral"
+              icon={Layers}
               pad="md"
               variant={referralState ? "spot" : "default"}
               className="space-y-2"
             >
-              <Eyebrow
-                className={
-                  referralState ? "text-spot-deep dark:text-spot" : ""
-                }
-              >
-                Referral
-              </Eyebrow>
               {referral ? (
                 <>
                   {referral.referral_code && (
@@ -253,13 +366,9 @@ export default function WorkbenchSummaryPage(props: {
                 <Body className="italic">No referral on this submission.</Body>
               )}
             </Card>
-          </div>
 
-          {/* Quote */}
-          {quote && (
-            <Card pad="md" className="space-y-2">
-              <Eyebrow>Current quote</Eyebrow>
-              <div className="grid gap-2 md:grid-cols-3">
+            {quote && (
+              <Card header="Current quote" icon={FileText} pad="md" className="space-y-1">
                 {quote.quote_code && (
                   <LabelRow
                     label="Code"
@@ -277,9 +386,9 @@ export default function WorkbenchSummaryPage(props: {
                     value={formatDate(quote.created_at)}
                   />
                 )}
-              </div>
-            </Card>
-          )}
+              </Card>
+            )}
+          </div>
         </div>
       </div>
     </>
@@ -307,15 +416,10 @@ function PremiumStat({
       : "text-ink";
   return (
     <Card pad="md" variant={emphasis ? "info" : "default"}>
-      <Micro
-        className={emphasis ? "text-info-deep dark:text-info" : "block"}
-      >
+      <Micro className={emphasis ? "text-info-deep dark:text-info" : "block"}>
         {label}
       </Micro>
-      <NumDisplay
-        size={emphasis ? "lg" : "md"}
-        className={`mt-2 block ${tone}`}
-      >
+      <NumDisplay size={emphasis ? "lg" : "md"} className={`mt-2 block ${tone}`}>
         {value == null
           ? "—"
           : `${signed && value > 0 ? "+" : ""}${formatCurrency(value)}`}

@@ -1,10 +1,11 @@
 "use client";
 
+import { Layers, MinusCircle } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
-import { LabelRow } from "@/components/ui/label-row";
+import { Eyebrow, NumDisplay, Micro } from "@/components/ui/typography";
+import { MiniKpi } from "@/components/ui/mini-kpi";
 import { PageLoading } from "@/components/base/pageStates";
 import { LooseRecordCard } from "@/components/base/loose-record";
 import { useDsiStore } from "@/store/dsiStore";
@@ -39,16 +40,34 @@ export default function DeductiblePage() {
       <WorkbenchTopbar activeTabLabel="Deductible Structure" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
         <div className="mx-auto grid max-w-[1080px] gap-6">
-          <header>
-            <Eyebrow>Risk terms</Eyebrow>
-            <h1 className="mt-1 font-display text-[28px] font-semibold leading-tight text-ink">
-              Deductible structure
-            </h1>
-            <Body className="mt-2">
-              The retention the insured carries before coverage responds, and
-              the factor that's applied to the premium for the bound level.
-            </Body>
-          </header>
+          {/* Deductible */}
+          <Card header="Deductible" icon={Layers} pad="md">
+            <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              <MiniKpi
+                label="Type"
+                value={
+                  risk?.deductible_type
+                    ? String(risk.deductible_type)
+                    : "Per occurrence"
+                }
+              />
+              <MiniKpi
+                label="Amount"
+                value={
+                  boundDeductible > 0 ? formatCurrency(boundDeductible) : "—"
+                }
+              />
+              <MiniKpi label="Currency" value={String(risk?.currency ?? "USD")} />
+              <MiniKpi
+                label="Basis"
+                value={
+                  risk?.deductible_basis
+                    ? String(risk.deductible_basis)
+                    : "Each claim"
+                }
+              />
+            </div>
+          </Card>
 
           {/* Bound deductible */}
           <Card variant="info" pad="lg" className="grid gap-6 sm:grid-cols-3">
@@ -83,10 +102,12 @@ export default function DeductiblePage() {
 
           {/* Band table */}
           {bands.length > 0 ? (
-            <Card pad="md" className="overflow-hidden p-0">
-              <header className="border-b border-rule px-5 py-3.5">
-                <Eyebrow>Deductible options ({bands.length})</Eyebrow>
-              </header>
+            <Card
+              header={`Deductible options · ${bands.length}`}
+              icon={MinusCircle}
+              pad="none"
+              className="overflow-hidden"
+            >
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken/60 text-left">

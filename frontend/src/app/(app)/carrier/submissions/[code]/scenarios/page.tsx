@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
-import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import {
   runFullCascade,
   type ScenarioOverrides,
@@ -163,8 +163,7 @@ function ScenariosBody({
 
           {/* RIGHT: controls */}
           <div className="space-y-6">
-            <Card pad="md" className="space-y-4">
-              <Eyebrow>Structural overrides</Eyebrow>
+            <Card header="Structural overrides" icon={FlaskConical} pad="md" className="space-y-4">
               <NumericOverride
                 label="Limit"
                 base={baseLimit}
@@ -183,10 +182,11 @@ function ScenariosBody({
               />
             </Card>
 
-            <Card pad="md" className="space-y-3">
-              <header className="flex items-baseline justify-between">
-                <Eyebrow>Signal overrides ({signals.length})</Eyebrow>
-                {Object.keys(signalOverrides).length > 0 && (
+            <Card
+              header={`Signal overrides · ${signals.length}`}
+              icon={FlaskConical}
+              headerRight={
+                Object.keys(signalOverrides).length > 0 ? (
                   <Button
                     type="button"
                     variant="ghost"
@@ -196,8 +196,11 @@ function ScenariosBody({
                     <RotateCcw size={11} />
                     Reset signals
                   </Button>
-                )}
-              </header>
+                ) : undefined
+              }
+              pad="md"
+              className="space-y-3"
+            >
               {signals.length === 0 ? (
                 <Body className="italic">
                   No signals attached. Nothing to override.
