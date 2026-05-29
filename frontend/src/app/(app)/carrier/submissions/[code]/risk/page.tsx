@@ -81,7 +81,7 @@ export default function RiskAssessmentPage(props: {
     (c) => (c.action ?? "").toLowerCase() === "modifier",
   );
 
-  const composite = ver.composite_score ?? null;
+  const composite = ver.final_composite_score ?? ver.pure_composite_score ?? null;
   const confidence = ver.confidence ?? null;
   const coverage = ver.signal_coverage ?? null;
   const tier = ver.final_tier ?? null;

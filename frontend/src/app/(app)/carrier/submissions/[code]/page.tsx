@@ -43,7 +43,9 @@ export default function WorkbenchSummaryPage(props: {
     );
   }
 
-  const composite = ver?.composite_score ?? sub.composite_score ?? null;
+  // activeQuote is a QuoteRecord (no composite_score); score comes from the model version
+  const composite =
+    ver?.final_composite_score ?? ver?.pure_composite_score ?? null;
   const decision = String(ver?.decision ?? sub.decision ?? "").toLowerCase();
   const tier = ver?.final_tier ?? sub.final_tier ?? null;
   const tierLabel = ver?.tier_label ?? null;
@@ -52,8 +54,9 @@ export default function WorkbenchSummaryPage(props: {
   const basePremium = ver?.base_premium ?? null;
   const confidence = ver?.confidence ?? null;
   const referralReasons: string[] = ver?.referral_reasons ?? [];
-  const referralAwaiting = referral?.awaiting_party ?? null;
-  const referralState = referral?.referral_state ?? sub.referral_state ?? null;
+  // ReferralRecord exposes review_decision (not awaiting_party) and status (not referral_state)
+  const referralAwaiting = referral?.review_decision ?? null;
+  const referralState = referral?.status ?? null;
 
   const decisionTone =
     decision === "approve"
@@ -67,7 +70,7 @@ export default function WorkbenchSummaryPage(props: {
   const netPremium = commercial?.net_premium ?? null;
   const grossPremium = commercial?.gross_premium ?? null;
   const offeredPremium = commercial?.offered_premium ?? null;
-  const brokerage = commercial?.brokerage_pct ?? null;
+  // brokerage_pct not exposed by CommercialTermsDBRecord; omitted
 
   return (
     <>
@@ -246,14 +249,7 @@ export default function WorkbenchSummaryPage(props: {
                 label="Technical premium"
                 value={finalPremium != null ? formatCurrency(finalPremium) : "—"}
               />
-              <LabelRow
-                label="Brokerage"
-                value={
-                  brokerage != null
-                    ? `${(Number(brokerage) * 100).toFixed(1)}%`
-                    : "—"
-                }
-              />
+              {/* Brokerage not exposed by CommercialTermsDBRecord; omitted */}
               <LabelRow
                 label="Net premium"
                 value={netPremium != null ? formatCurrency(netPremium) : "—"}
@@ -302,14 +298,7 @@ export default function WorkbenchSummaryPage(props: {
                 label="Reinstatements"
                 value={risk?.reinstatements ?? "—"}
               />
-              <LabelRow
-                label="Coverage trigger"
-                value={
-                  risk?.coverage_trigger
-                    ? formatText(risk.coverage_trigger, "capitalize")
-                    : "—"
-                }
-              />
+              {/* coverage_trigger not exposed by RiskTermsDBRecord; omitted */}
             </Card>
           </div>
 
@@ -346,10 +335,10 @@ export default function WorkbenchSummaryPage(props: {
                       value={formatText(referralAwaiting, "capitalize")}
                     />
                   )}
-                  {referral.opened_at && (
+                  {referral.created_at && (
                     <LabelRow
                       label="Opened"
-                      value={fmtRelative(referral.opened_at)}
+                      value={fmtRelative(referral.created_at)}
                     />
                   )}
                   {referral.referral_code && (
@@ -377,13 +366,11 @@ export default function WorkbenchSummaryPage(props: {
                     }
                   />
                 )}
-                {quote.version_number != null && (
-                  <LabelRow label="Version" value={`v${quote.version_number}`} />
-                )}
-                {quote.created_at && (
+                {/* version not exposed by QuoteRecord; omitted */}
+                {quote.valid_from && (
                   <LabelRow
                     label="Created"
-                    value={formatDate(quote.created_at)}
+                    value={formatDate(quote.valid_from)}
                   />
                 )}
               </Card>

@@ -8,7 +8,7 @@ import { Chip } from "@/components/ui/chip";
 import { Body } from "@/components/ui/typography";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
-import { formatCurrency, formatDate, formatText } from "@/lib/format";
+import { formatCurrency, formatText } from "@/lib/format";
 
 export default function ModelVersionsPage(props: {
   params: Promise<{ code: string }>;
@@ -80,13 +80,12 @@ export default function ModelVersionsPage(props: {
               <table className="w-full table-fixed text-[13px]">
                 <thead>
                   <tr className="border-b border-rule bg-surface-sunken text-left">
-                    <ColHead width="w-[10%]">Version</ColHead>
-                    <ColHead width="w-[18%]">Quote code</ColHead>
-                    <ColHead width="w-[12%]">Score</ColHead>
-                    <ColHead width="w-[10%]">Tier</ColHead>
-                    <ColHead width="w-[14%]">Decision</ColHead>
-                    <ColHead width="w-[18%]">Premium</ColHead>
-                    <ColHead width="w-[18%]">Created</ColHead>
+                    {/* quote_code and created_at not exposed by ModelVersionDBRecord; columns omitted */}
+                    <ColHead width="w-[20%]">Version</ColHead>
+                    <ColHead width="w-[20%]">Score</ColHead>
+                    <ColHead width="w-[18%]">Tier</ColHead>
+                    <ColHead width="w-[20%]">Decision</ColHead>
+                    <ColHead width="w-[22%]">Premium</ColHead>
                   </tr>
                 </thead>
                 <tbody>
@@ -102,7 +101,7 @@ export default function ModelVersionsPage(props: {
                             : "mute";
                     return (
                       <tr
-                        key={v.version_code ?? v.quote_code ?? i}
+                        key={v.version_code ?? i}
                         className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
                       >
                         <td className="px-5 py-3">
@@ -117,13 +116,12 @@ export default function ModelVersionsPage(props: {
                             )}
                           </div>
                         </td>
-                        <td className="px-5 py-3 font-mono text-[12.5px] text-ink-soft">
-                          {v.quote_code ?? "—"}
-                        </td>
                         <td className="px-5 py-3 font-semibold tabular-nums text-ink">
-                          {v.composite_score != null
-                            ? Number(v.composite_score).toFixed(0)
-                            : "—"}
+                          {v.final_composite_score != null
+                            ? Number(v.final_composite_score).toFixed(0)
+                            : v.pure_composite_score != null
+                              ? Number(v.pure_composite_score).toFixed(0)
+                              : "—"}
                         </td>
                         <td className="px-5 py-3 tabular-nums text-ink">
                           {v.final_tier ?? "—"}
@@ -142,9 +140,7 @@ export default function ModelVersionsPage(props: {
                             ? formatCurrency(v.final_premium)
                             : "—"}
                         </td>
-                        <td className="px-5 py-3 text-ink-soft">
-                          {v.created_at ? formatDate(v.created_at) : "—"}
-                        </td>
+                        {/* created_at not exposed by ModelVersionDBRecord; column omitted */}
                       </tr>
                     );
                   })}

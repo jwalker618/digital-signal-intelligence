@@ -26,24 +26,22 @@ export default function CoverageTermsPage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = Number(fpd.limit ?? risk?.limit ?? 0);
+  // RiskTermsDBRecord exposes layer_limit (per-occ) and aggregate_limit; JSONB detail preferred when present
+  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
   const aggregate = Number(fpd.aggregate ?? risk?.aggregate_limit ?? limit);
 
+  // coverages_included/excluded and endorsements are not exposed by RiskTermsDBRecord;
+  // kept as graceful empty fallbacks (no backing field) — sub_limits IS a real field.
   const coveragesIn =
-    (risk?.coverages_included as Array<unknown> | undefined) ??
-    (risk?.included as Array<unknown> | undefined) ??
-    [];
+    (risk?.coverages_included as Array<unknown> | undefined) ?? [];
   const coveragesOut =
-    (risk?.coverages_excluded as Array<unknown> | undefined) ??
-    (risk?.excluded as Array<unknown> | undefined) ??
-    [];
+    (risk?.coverages_excluded as Array<unknown> | undefined) ?? [];
   const subLimits =
     (risk?.sub_limits as Array<Record<string, unknown>> | undefined) ?? [];
   const endorsements =
     (risk?.endorsements as Array<Record<string, unknown>> | undefined) ?? [];
-  const structureMode = String(
-    risk?.structure ?? risk?.limit_structure ?? "BUNDLED",
-  );
+  // structure not exposed by RiskTermsDBRecord; aggregate_basis is the closest real field
+  const structureMode = String(risk?.aggregate_basis ?? "BUNDLED");
 
   return (
     <>
@@ -53,19 +51,21 @@ export default function CoverageTermsPage() {
           {/* Coverage overview */}
           <Card header="Coverage overview" icon={FileCheck} pad="md">
             <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
+              {/* territory not exposed by RiskTermsDBRecord; deductible basis shown instead */}
               <MiniKpi
-                label="Territory"
+                label="Basis"
                 value={
-                  risk?.territory
-                    ? formatText(String(risk.territory), "capitalize")
+                  risk?.deductible_basis
+                    ? formatText(String(risk.deductible_basis), "capitalize")
                     : "—"
                 }
               />
+              {/* coverage_trigger not exposed; waiting_period_type is the closest real field */}
               <MiniKpi
                 label="Trigger"
                 value={
-                  risk?.coverage_trigger
-                    ? formatText(String(risk.coverage_trigger), "capitalize")
+                  risk?.waiting_period_type
+                    ? formatText(String(risk.waiting_period_type), "capitalize")
                     : "—"
                 }
               />

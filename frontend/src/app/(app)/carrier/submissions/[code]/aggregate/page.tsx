@@ -25,15 +25,15 @@ export default function AggregatePage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = Number(fpd.limit ?? risk?.limit ?? 0);
+  // RiskTermsDBRecord: layer_limit (per-occ), aggregate_limit, reinstatements, reinstatement_rate
+  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
   const aggregate = Number(fpd.aggregate ?? risk?.aggregate_limit ?? limit);
-  const reinstatementCount = Number(
-    risk?.reinstatements ?? risk?.reinstatement_count ?? 0,
-  );
-  const reinstatementPremiumPct = Number(
-    risk?.reinstatement_premium_pct ?? risk?.reinstatement_premium ?? 0,
-  );
-  const usedToDate = Number(risk?.aggregate_used_usd ?? 0);
+  const reinstatementCount = Number(risk?.reinstatements ?? 0);
+  // reinstatement_rate is a fraction (e.g. 1.0 = 100% of annual premium); display as a percentage
+  const reinstatementPremiumPct = Number(risk?.reinstatement_rate ?? 0) * 100;
+  // aggregate_used_usd / erosion-to-date is not exposed by RiskTermsDBRecord; only shown if JSONB detail carries it
+  const usedToDate = Number(fpd.aggregate_used ?? 0);
+  const hasUsage = usedToDate > 0;
   const usedPct = aggregate > 0 ? Math.min(1, usedToDate / aggregate) : 0;
 
   return (
@@ -79,8 +79,8 @@ export default function AggregatePage() {
             </div>
           </Card>
 
-          {/* Usage meter */}
-          {aggregate > 0 && (
+          {/* Usage meter — only when erosion-to-date is actually available (JSONB) */}
+          {aggregate > 0 && hasUsage && (
             <Card
               header="Aggregate erosion"
               icon={BarChart3}

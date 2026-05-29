@@ -27,13 +27,13 @@ export default function DeductiblePage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const boundDeductible = Number(fpd.deductible ?? risk?.deductible ?? 0);
+  // RiskTermsDBRecord.deductible_amount; JSONB detail preferred when present
+  const boundDeductible = Number(fpd.deductible ?? risk?.deductible_amount ?? 0);
   const dedFactor = Number(fpd.deductible_factor ?? 1);
 
+  // deductible_bands/deductible_options not exposed by RiskTermsDBRecord; options table omitted when empty
   const bands =
-    (risk?.deductible_bands as Array<Record<string, unknown>> | undefined) ??
-    (risk?.deductible_options as Array<Record<string, unknown>> | undefined) ??
-    [];
+    (risk?.deductible_bands as Array<Record<string, unknown>> | undefined) ?? [];
 
   return (
     <>
@@ -57,7 +57,7 @@ export default function DeductiblePage() {
                   boundDeductible > 0 ? formatCurrency(boundDeductible) : "—"
                 }
               />
-              <MiniKpi label="Currency" value={String(risk?.currency ?? "USD")} />
+              <MiniKpi label="Currency" value={String(risk?.deductible_currency ?? "USD")} />
               <MiniKpi
                 label="Basis"
                 value={
@@ -95,7 +95,7 @@ export default function DeductiblePage() {
             <div>
               <Eyebrow>Currency</Eyebrow>
               <p className="mt-2 font-display text-[28px] font-semibold tabular-nums text-ink">
-                {String(risk?.currency ?? "USD")}
+                {String(risk?.deductible_currency ?? "USD")}
               </p>
             </div>
           </Card>
@@ -158,7 +158,7 @@ export default function DeductiblePage() {
               title="Deductible terms"
               data={risk as Record<string, unknown> | null}
               fields={[
-                { key: "deductible", label: "Deductible", kind: "currency" },
+                { key: "deductible_amount", label: "Deductible", kind: "currency" },
                 { key: "deductible_factor", label: "Factor", kind: "factor" },
                 { key: "deductible_type", label: "Type" },
                 { key: "deductible_basis", label: "Basis" },

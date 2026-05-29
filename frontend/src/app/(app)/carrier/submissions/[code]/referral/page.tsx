@@ -74,8 +74,9 @@ export default function ReferralActionsPage() {
 
   const referralCode = String(referral.referral_code ?? "");
   const reasons = (referral.reasons as string[] | undefined) ?? [];
-  const status = String(referral.referral_state ?? referral.status ?? "open");
-  const awaiting = String(referral.awaiting_party ?? "");
+  // ReferralRecord exposes status (not referral_state) and review_decision (not awaiting_party)
+  const status = String(referral.status ?? "open");
+  const awaiting = String(referral.review_decision ?? "");
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -138,8 +139,8 @@ export default function ReferralActionsPage() {
                     {reasons.length > 0
                       ? `Auto-referred by ${reasons.length} condition${reasons.length === 1 ? "" : "s"}.`
                       : "Reply to the broker, optionally update a signal and trigger a reassessment."}
-                    {referral.opened_at != null &&
-                      ` Opened ${fmtRelative(String(referral.opened_at))}.`}
+                    {referral.created_at != null &&
+                      ` Opened ${fmtRelative(String(referral.created_at))}.`}
                   </Micro>
                 </div>
               </div>

@@ -26,12 +26,12 @@ export default function SirPage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const sir = Number(risk?.sir ?? fpd.sir ?? 0);
-  const deductible = Number(fpd.deductible ?? risk?.deductible ?? 0);
-  const limit = Number(fpd.limit ?? risk?.limit ?? 0);
-  const waitingHours = Number(
-    risk?.waiting_period_hours ?? risk?.waiting_hours ?? 0,
-  );
+  // RiskTermsDBRecord: sir_amount / deductible_amount / layer_limit; JSONB detail preferred when present
+  const sir = Number(risk?.sir_amount ?? fpd.sir ?? 0);
+  const deductible = Number(fpd.deductible ?? risk?.deductible_amount ?? 0);
+  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
+  const waitingHours = Number(risk?.waiting_period_hours ?? 0);
+  // waiting_periods list not exposed by RiskTermsDBRecord; single waiting_period_hours used below
   const waitingPeriods =
     (risk?.waiting_periods as Array<Record<string, unknown>> | undefined) ?? [];
 
@@ -48,7 +48,7 @@ export default function SirPage() {
                 label="Amount"
                 value={sir > 0 ? formatCurrency(sir) : "—"}
               />
-              <MiniKpi label="Currency" value={String(risk?.currency ?? "USD")} />
+              <MiniKpi label="Currency" value={String(risk?.deductible_currency ?? "USD")} />
             </div>
             {sir === 0 && deductible > 0 && (
               <Micro className="mt-3 block border-t border-rule pt-3">
@@ -134,8 +134,7 @@ export default function SirPage() {
             title="Detail"
             data={risk as Record<string, unknown> | null}
             fields={[
-              { key: "sir", label: "SIR", kind: "currency", hideIfEmpty: true },
-              { key: "sir_basis", label: "SIR basis", hideIfEmpty: true },
+              { key: "sir_amount", label: "SIR", kind: "currency", hideIfEmpty: true },
               {
                 key: "annual_aggregate_sir",
                 label: "Annual aggregate SIR",

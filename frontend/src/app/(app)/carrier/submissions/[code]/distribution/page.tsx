@@ -11,8 +11,10 @@ import { formatCurrency } from "@/lib/format";
 
 /**
  * Distribution — how the premium and risk are shared across the commercial
- * entity stack. Reads from activeCommercial.commercial_distribution
- * (an array of participants).
+ * entity stack. CommercialTermsDBRecord does not expose a participants array
+ * (no commercial_distribution field); it carries this carrier's flat line via
+ * signed_line / role / distribution_type, so a single participant row is
+ * derived from those real fields.
  */
 export default function DistributionPage() {
   const ver = useDsiStore((s) => s.activeVersion);
@@ -29,10 +31,22 @@ export default function DistributionPage() {
   }
 
   const totalPremium = Number(ver?.final_premium ?? sub.final_premium ?? 0);
-  const participants =
-    (commercial?.commercial_distribution as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+  // CommercialTermsDBRecord exposes a single flat line (signed_line/role/distribution_type),
+  // not a commercial_distribution participants array. Derive one row from the real fields.
+  const signedLine = commercial?.signed_line;
+  const participants: Array<Record<string, unknown>> =
+    signedLine != null
+      ? [
+          {
+            name: commercial?.entity_name ?? "This carrier",
+            role: commercial?.role ?? "Participant",
+            // signed_line is a fraction (0..1); display helpers expect a percentage
+            share_pct: Number(signedLine) * 100,
+            premium: commercial?.net_premium ?? commercial?.gross_premium ?? null,
+            line: commercial?.distribution_type ?? null,
+          },
+        ]
+      : [];
 
   const totalShare = participants.reduce((s, p) => {
     const share = p.share_pct ?? (p.share != null ? Number(p.share) * 100 : 0);

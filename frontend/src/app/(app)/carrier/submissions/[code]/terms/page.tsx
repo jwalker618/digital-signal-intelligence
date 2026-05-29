@@ -31,17 +31,30 @@ export default function TermsOverviewPage() {
   }
 
   const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  const limit = fpd.limit ?? commercial?.limit ?? ver?.recommended_limit;
-  const deductible = fpd.deductible ?? commercial?.deductible;
-  const aggregate = fpd.aggregate ?? commercial?.aggregate_limit;
+  // limit/deductible/aggregate are not on CommercialTermsDBRecord (they belong to risk terms);
+  // sourced from the version's final_premium_detail JSONB only.
+  const limit = fpd.limit;
+  const deductible = fpd.deductible;
+  const aggregate = fpd.aggregate;
   const finalPremium = ver?.final_premium ?? sub.final_premium ?? null;
   const basePremium = ver?.base_premium ?? null;
-  const effectiveFrom = commercial?.effective_from ?? ver?.effective_from;
-  const effectiveTo = commercial?.effective_to ?? ver?.effective_to;
-  const participants =
-    (commercial?.commercial_distribution as
-      | Array<Record<string, unknown>>
-      | undefined) ?? [];
+  // CommercialTermsDBRecord exposes earned_start/earned_end (no effective_from/to)
+  const effectiveFrom = commercial?.earned_start;
+  const effectiveTo = commercial?.earned_end;
+  // No commercial_distribution participants array; derive a single row from the flat line fields.
+  const signedLine = commercial?.signed_line;
+  const participants: Array<Record<string, unknown>> =
+    signedLine != null
+      ? [
+          {
+            name: commercial?.entity_name ?? "This carrier",
+            role: commercial?.role ?? "Participant",
+            share_pct: Number(signedLine) * 100,
+            premium: commercial?.net_premium ?? commercial?.gross_premium ?? null,
+            layer: commercial?.distribution_type ?? null,
+          },
+        ]
+      : [];
 
   const netPremium = commercial?.net_premium ?? null;
   const grossPremium = commercial?.gross_premium ?? null;
