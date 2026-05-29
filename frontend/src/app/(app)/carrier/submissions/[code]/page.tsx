@@ -1,38 +1,38 @@
 "use client";
 
-import Link from "next/link";
 import { use } from "react";
 import {
   AlertCircle,
   Building2,
   ExternalLink,
-  FileText,
   Layers,
   Scale,
   Search,
+  User,
 } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Chip } from "@/components/ui/chip";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { Eyebrow, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
-import { ScoreBar } from "@/components/ui/score-bar";
 import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency, formatText, formatDate } from "@/lib/format";
-import { fmtRelative } from "@/lib/utils";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { formatCurrency, formatText } from "@/lib/format";
+import type { Tone } from "@/lib/design-tokens";
+
+/* ============================================================
+ * Carrier Submission Workbench — Summary tab.
+ * Mirrors reim_wb_a.jsx WbSummary section.
+ * ============================================================ */
 
 export default function WorkbenchSummaryPage(props: {
   params: Promise<{ code: string }>;
 }) {
   use(props.params);
   const sub = useDsiStore((s) => s.activeSubmission);
-  const ver = useDsiStore((s) => s.activeVersion);
-  const quote = useDsiStore((s) => s.activeQuote);
-  const referral = useDsiStore((s) => s.activeReferral);
-  const commercial = useDsiStore((s) => s.activeCommercial);
-  const risk = useDsiStore((s) => s.activeRisk);
+  const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
+  const commercial = useDsiStore((s) => s.activeCommercial) as ApiRecord | null;
+  const risk = useDsiStore((s) => s.activeRisk) as ApiRecord | null;
 
   if (!sub) {
     return (
@@ -43,60 +43,128 @@ export default function WorkbenchSummaryPage(props: {
     );
   }
 
-  // activeQuote is a QuoteRecord (no composite_score); score comes from the model version
-  const composite =
-    ver?.final_composite_score ?? ver?.pure_composite_score ?? null;
+  const composite = numOrNull(ver?.final_composite_score ?? ver?.pure_composite_score);
   const decision = String(ver?.decision ?? sub.decision ?? "").toLowerCase();
-  const tier = ver?.final_tier ?? sub.final_tier ?? null;
-  const tierLabel = ver?.tier_label ?? null;
-  const finalPremium =
-    ver?.final_premium ?? sub.final_premium ?? sub.recommended_premium ?? null;
-  const basePremium = ver?.base_premium ?? null;
-  const confidence = ver?.confidence ?? null;
-  const referralReasons: string[] = ver?.referral_reasons ?? [];
-  // ReferralRecord exposes review_decision (not awaiting_party) and status (not referral_state)
-  const referralAwaiting = referral?.review_decision ?? null;
-  const referralState = referral?.status ?? null;
+  const tier = (ver?.final_tier as number | null | undefined) ?? sub.final_tier ?? null;
+  const tierLabel = (ver?.tier_label as string | null | undefined) ?? null;
+  const finalPremium = numOrNull(
+    ver?.final_premium ?? sub.final_premium ?? sub.recommended_premium,
+  );
+  const limit = numOrNull(ver?.recommended_limit ?? null);
+  const confidence = numOrNull(ver?.confidence);
+  const signalCoverage = numOrNull(ver?.signal_coverage);
+  const referralReasons: string[] = Array.isArray(ver?.referral_reasons)
+    ? (ver?.referral_reasons as string[])
+    : [];
 
-  const decisionTone =
-    decision === "approve"
-      ? "pos"
-      : decision === "decline"
-        ? "neg"
-        : decision === "refer"
-          ? "warn"
-          : "mute";
+  // Three Pillar Assessment — Risk has no first-class column; derived from
+  // composite for now. Loss and Exposure come straight off the MV row.
+  const pillars: Pillar[] = [
+    {
+      name: "Risk",
+      score: composite != null ? Math.round(composite / 10) : null,
+      label: pillarLabel(composite != null ? composite / 10 : null, "risk"),
+      tone: "info",
+      bullets: pillarBullets("risk", ver),
+    },
+    {
+      name: "Loss",
+      score: numOrNull(ver?.loss_propensity_score),
+      label:
+        (ver?.loss_propensity_band as string | null | undefined)
+          ? formatText(String(ver?.loss_propensity_band), "capitalize") +
+            " propensity"
+          : pillarLabel(numOrNull(ver?.loss_propensity_score), "loss"),
+      tone: "pos",
+      bullets: pillarBullets("loss", ver),
+    },
+    {
+      name: "Exposure",
+      score: numOrNull(ver?.exposure_size_score),
+      label:
+        (ver?.exposure_band_label as string | null | undefined) ??
+        pillarLabel(numOrNull(ver?.exposure_size_score), "exposure"),
+      tone: "aux",
+      bullets: pillarBullets("exposure", ver),
+    },
+  ];
 
-  const netPremium = commercial?.net_premium ?? null;
-  const grossPremium = commercial?.gross_premium ?? null;
-  const offeredPremium = commercial?.offered_premium ?? null;
-  // brokerage_pct not exposed by CommercialTermsDBRecord; omitted
+  // submission_data JSONB may carry these. Render only what's present.
+  const sd: ApiRecord = (sub.submission_data as ApiRecord | undefined) ?? {};
+  const industry = strOrNull(sd.industry_label ?? sd.naics_label);
+  const naics = strOrNull(sd.naics_code ?? sd.naics);
+  const revenueBand = strOrNull(sd.revenue_band);
+  const country = strOrNull(sd.country);
+  const locations = strOrNull(sd.locations);
+  const employees = strOrNull(sd.employees);
+
+  // Discovery items — pulled from submission_data when present; rendered
+  // with the template's tone vocabulary so positive findings highlight pos
+  // and missing/risky findings highlight spot/neg.
+  const discovery = (sd.discovery as ApiRecord | undefined) ?? {};
+  const mfaVerified = strOrNull(discovery.mfa_verified);
+  const soc2 = strOrNull(discovery.soc2_status);
+  const edrCoverage = strOrNull(discovery.edr_coverage);
+  const publicRdp = strOrNull(discovery.public_rdp);
+
+  // Commercial JSONBs
+  const deductions = (commercial?.deductions as ApiRecord | undefined) ?? {};
+  const taxes = (commercial?.taxes_and_levies as ApiRecord | undefined) ?? {};
+  const brokeragePct = pctOrNull(
+    (deductions.brokerage as ApiRecord | undefined)?.rate,
+  );
+  const totalTaxes = numOrNull(commercial?.total_taxes);
+  const netPremium = numOrNull(commercial?.net_premium);
+  const grossPremium = numOrNull(commercial?.gross_premium);
+  const offeredPremium = numOrNull(commercial?.offered_premium);
+  const discretionPct = pctOrNull(commercial?.offered_premium_discretion);
+  const atMinimum = boolOrNull(commercial?.at_minimum_premium);
+  const currency = strOrNull(commercial?.base_currency) ?? "USD";
+
+  // Risk-terms JSONBs
+  const coverageTerms = (risk?.coverage_terms as ApiRecord | undefined) ?? {};
+  const extensionsList = Array.isArray(coverageTerms.extensions)
+    ? (coverageTerms.extensions as unknown[])
+    : [];
+  const exclusionsList = Array.isArray(coverageTerms.exclusions)
+    ? (coverageTerms.exclusions as unknown[])
+    : [];
+  const subLimitsList = Array.isArray(risk?.sub_limits)
+    ? (risk?.sub_limits as ApiRecord[])
+    : [];
+  const subLimitsLabel =
+    subLimitsList.length > 0
+      ? subLimitsList
+          .slice(0, 2)
+          .map((s) => {
+            const peril = strOrNull(s.peril);
+            const sl = numOrNull(s.sub_limit);
+            return peril && sl != null
+              ? `${formatText(peril, "capitalize")} ${formatCurrencyShort(sl)}`
+              : peril ?? null;
+          })
+          .filter(Boolean)
+          .join(" · ") || null
+      : null;
+  const waitingHours = numOrNull(risk?.waiting_period_hours);
+
+  const referText = decision === "refer" ? "Refer" : formatText(decision, "capitalize");
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Summary" />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          {/* Decision banner */}
-          <Card
-            variant={decision === "refer" ? "spot" : "info"}
-            pad="lg"
-            className="space-y-5"
-          >
-            <header className="flex flex-wrap items-start justify-between gap-6">
+        <div className="mx-auto grid max-w-[1280px] gap-3.5">
+          {/* ─── Decision banner ─────────────────────────────── */}
+          <Card variant="spot" pad="lg">
+            <div className="grid grid-cols-1 items-center gap-5 lg:grid-cols-[1fr_auto]">
               <div>
-                <Eyebrow
-                  className={
-                    decision === "refer"
-                      ? "text-spot-deep dark:text-spot"
-                      : "text-info-deep dark:text-info"
-                  }
-                >
+                <Eyebrow className="text-spot-deep dark:text-spot">
                   Decision
                 </Eyebrow>
-                <div className="mt-1 flex items-baseline gap-3">
-                  <span className="font-display text-[28px] font-semibold capitalize text-ink">
-                    {decision ? formatText(decision, "capitalize") : "—"}
+                <div className="mt-1 flex flex-wrap items-baseline gap-3.5">
+                  <span className="font-display text-[28px] font-semibold text-spot-deep dark:text-spot">
+                    {decision ? referText : "—"}
                   </span>
                   {referralReasons.length > 0 && (
                     <Micro>
@@ -105,25 +173,11 @@ export default function WorkbenchSummaryPage(props: {
                     </Micro>
                   )}
                 </div>
-                {composite != null && (
-                  <ScoreBar
-                    value={Number(composite)}
-                    max={1000}
-                    className="mt-3 max-w-[360px]"
-                    showValue={false}
-                    thresholds={[
-                      { at: 400, tone: "neg" },
-                      { at: 650, tone: "warn" },
-                      { at: 800, tone: "info" },
-                      { at: 1000, tone: "pos" },
-                    ]}
-                  />
-                )}
               </div>
-              <div className="grid grid-cols-3 gap-6 sm:grid-cols-5">
+              <div className="grid grid-cols-3 gap-6 sm:grid-cols-6">
                 <KpiSnug
                   label="Score"
-                  value={composite != null ? Number(composite).toFixed(0) : "—"}
+                  value={composite != null ? composite.toFixed(0) : "—"}
                   tone="info"
                 />
                 <KpiSnug
@@ -137,35 +191,35 @@ export default function WorkbenchSummaryPage(props: {
                 <KpiSnug
                   label="Premium"
                   value={
-                    finalPremium != null ? formatCurrency(finalPremium) : "—"
+                    finalPremium != null ? formatCurrencyShort(finalPremium) : "—"
                   }
+                />
+                <KpiSnug
+                  label="Limit"
+                  value={limit != null ? formatCurrencyShort(limit) : "—"}
                 />
                 <KpiSnug
                   label="Confidence"
                   value={
                     confidence != null
-                      ? `${(Number(confidence) * 100).toFixed(0)}%`
+                      ? `${(confidence * 100).toFixed(0)}%`
                       : "—"
                   }
                   tone="pos"
                 />
                 <KpiSnug
-                  label="Decision"
+                  label="Signal coverage"
                   value={
-                    decision ? (
-                      <Chip variant={decisionTone} size="sm">
-                        {formatText(decision, "capitalize")}
-                      </Chip>
-                    ) : (
-                      "—"
-                    )
+                    signalCoverage != null
+                      ? `${(signalCoverage * 100).toFixed(0)}%`
+                      : "—"
                   }
                 />
               </div>
-            </header>
+            </div>
 
             {referralReasons.length > 0 && (
-              <div className="rounded-card border border-spot/30 bg-surface px-4 py-3">
+              <div className="mt-5 rounded-card border border-spot/30 bg-surface px-4 py-3">
                 <Eyebrow className="mb-2">Referral reasons</Eyebrow>
                 <ul className="space-y-1">
                   {referralReasons.map((r, i) => (
@@ -185,196 +239,162 @@ export default function WorkbenchSummaryPage(props: {
             )}
           </Card>
 
-          {/* Premium summary */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <PremiumStat label="Base premium" value={basePremium} />
-            <PremiumStat label="Final premium" value={finalPremium} emphasis />
-            <PremiumStat
-              label="Δ from base"
-              value={
-                basePremium != null && finalPremium != null
-                  ? Number(finalPremium) - Number(basePremium)
-                  : null
-              }
-              signed
-            />
-          </div>
+          {/* ─── Three Pillar Assessment ─────────────────────── */}
+          <Card header="Three Pillar Assessment" icon={Layers} pad="md">
+            <div className="grid gap-3.5 md:grid-cols-3">
+              {pillars.map((p) => (
+                <PillarCell key={p.name} pillar={p} />
+              ))}
+            </div>
+          </Card>
 
-          {/* Who / discovery / commercial / risk terms */}
-          <div className="grid gap-5 lg:grid-cols-3">
-            <Card header="Who are they?" icon={Building2} pad="md" className="space-y-1">
-              <LabelRow label="Entity" value={sub.entity_name ?? "—"} />
-              <LabelRow label="Coverage" value={sub.coverage ?? "—"} />
-              <LabelRow
-                label="Pipeline status"
-                value={
-                  sub.status ? formatText(sub.status, "capitalize") : "—"
-                }
-              />
-              {sub.discovered_domain ? (
+          {/* ─── Bottom 3-col: identity+discovery · commercial · risk terms */}
+          <div className="grid gap-3.5 lg:grid-cols-[0.9fr_1.4fr_1.4fr]">
+            <div className="flex flex-col gap-3.5">
+              <Card header="Who are they?" icon={User} pad="md" className="space-y-1">
+                <LabelRow label="Industry" value={industry ?? "—"} />
+                <LabelRow label="NAICS" value={naics ? <span className="font-mono">{naics}</span> : "—"} />
+                <LabelRow label="Revenue band" value={revenueBand ?? "—"} />
+                <LabelRow label="Country" value={country ?? "—"} />
+                <LabelRow label="Locations" value={locations ?? "—"} />
+                <LabelRow label="Employees" value={employees ?? "—"} />
+              </Card>
+              <Card header="Discovery" icon={Search} pad="md" className="space-y-1">
                 <LabelRow
                   label="Domain"
                   value={
-                    <a
-                      href={`https://${sub.discovered_domain}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-info hover:underline"
-                    >
-                      {sub.discovered_domain}
-                      <ExternalLink size={11} />
-                    </a>
+                    sub.discovered_domain ? (
+                      <a
+                        href={`https://${sub.discovered_domain}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 font-mono text-info hover:underline"
+                      >
+                        {sub.discovered_domain}
+                        <ExternalLink size={11} />
+                      </a>
+                    ) : "—"
                   }
                 />
-              ) : (
-                <LabelRow label="Domain" value="—" />
-              )}
-              <LabelRow
-                label="Submitted"
-                value={
-                  sub.created_at
-                    ? `${formatDate(sub.created_at)} · ${fmtRelative(sub.created_at)}`
-                    : "—"
-                }
-              />
-            </Card>
+                <LabelRow label="MFA verified" value={mfaVerified ?? "—"} />
+                <LabelRow label="SOC 2 Type II" value={soc2 ?? "—"} />
+                <LabelRow label="EDR coverage" value={edrCoverage ?? "—"} />
+                <LabelRow label="Public RDP" value={publicRdp ?? "—"} />
+              </Card>
+            </div>
 
-            <Card
-              header="Commercial summary"
-              icon={Search}
-              pad="md"
-              className="space-y-1"
-            >
+            <Card header="Commercial Summary" icon={Building2} pad="md" className="space-y-1">
               <LabelRow
                 label="Technical premium"
-                value={finalPremium != null ? formatCurrency(finalPremium) : "—"}
+                value={
+                  finalPremium != null ? (
+                    <span className="font-mono font-semibold">{formatCurrency(finalPremium)}</span>
+                  ) : "—"
+                }
               />
-              {/* Brokerage not exposed by CommercialTermsDBRecord; omitted */}
+              <LabelRow
+                label="Brokerage"
+                value={brokeragePct != null ? `${brokeragePct.toFixed(1)}%` : "—"}
+              />
               <LabelRow
                 label="Net premium"
-                value={netPremium != null ? formatCurrency(netPremium) : "—"}
+                value={
+                  netPremium != null ? (
+                    <span className="font-mono">{formatCurrency(netPremium)}</span>
+                  ) : "—"
+                }
+              />
+              <LabelRow
+                label="Taxes + levies"
+                value={
+                  totalTaxes != null ? (
+                    <span className="font-mono">{formatCurrency(totalTaxes)}</span>
+                  ) : Object.keys(taxes).length > 0 ? (
+                    <span className="font-mono">
+                      {formatCurrency(sumJsonbAmounts(taxes))}
+                    </span>
+                  ) : "—"
+                }
               />
               <LabelRow
                 label="Gross premium"
                 value={
-                  grossPremium != null ? formatCurrency(grossPremium) : "—"
+                  grossPremium != null ? (
+                    <span className="font-mono font-semibold">{formatCurrency(grossPremium)}</span>
+                  ) : "—"
                 }
               />
               <LabelRow
                 label="Offered premium"
                 value={
-                  offeredPremium != null ? formatCurrency(offeredPremium) : "—"
+                  offeredPremium != null ? (
+                    <span className="font-mono font-semibold text-info">
+                      {formatCurrency(offeredPremium)}
+                    </span>
+                  ) : "—"
                 }
               />
+              <LabelRow
+                label="Discretion"
+                value={
+                  discretionPct != null ? `${discretionPct >= 0 ? "+" : ""}${discretionPct.toFixed(1)}%` : "—"
+                }
+              />
+              <LabelRow
+                label="At minimum?"
+                value={atMinimum != null ? (atMinimum ? "Yes" : "No") : "—"}
+              />
+              <LabelRow label="Currency" value={currency} />
             </Card>
 
-            <Card
-              header="Risk terms summary"
-              icon={Scale}
-              pad="md"
-              className="space-y-1"
-            >
+            <Card header="Risk Terms Summary" icon={Scale} pad="md" className="space-y-1">
               <LabelRow
                 label="Deductible"
                 value={
-                  risk?.deductible_amount != null
-                    ? formatCurrency(risk.deductible_amount)
+                  numOrNull(risk?.deductible_amount) != null
+                    ? deductibleLabel(risk!)
                     : "—"
                 }
               />
               <LabelRow
                 label="SIR applies"
-                value={risk?.sir_applies != null ? (risk.sir_applies ? "Yes" : "No") : "—"}
+                value={
+                  risk?.sir_applies != null ? (risk?.sir_applies ? "Yes" : "No") : "—"
+                }
+              />
+              <LabelRow
+                label="Waiting period"
+                value={waitingHours != null ? `${waitingHours} hours` : "—"}
               />
               <LabelRow
                 label="Aggregate"
                 value={
-                  risk?.aggregate_limit != null
-                    ? formatCurrency(risk.aggregate_limit)
-                    : "—"
+                  numOrNull(risk?.aggregate_limit) != null ? (
+                    <span className="font-mono">{formatCurrency(Number(risk!.aggregate_limit))}</span>
+                  ) : "—"
                 }
               />
               <LabelRow
                 label="Reinstatements"
-                value={risk?.reinstatements ?? "—"}
+                value={reinstatementsLabel(risk)}
               />
-              {/* coverage_trigger not exposed by RiskTermsDBRecord; omitted */}
+              <LabelRow
+                label="Coverage"
+                value={strOrNull(coverageTerms.trigger) ?? "—"}
+              />
+              <LabelRow
+                label="Extensions"
+                value={extensionsList.length > 0 ? String(extensionsList.length) : "—"}
+              />
+              <LabelRow
+                label="Exclusions"
+                value={exclusionsList.length > 0 ? String(exclusionsList.length) : "—"}
+              />
+              <LabelRow
+                label="Sub-limits"
+                value={subLimitsLabel ? <span className="font-mono">{subLimitsLabel}</span> : "—"}
+              />
             </Card>
-          </div>
-
-          {/* Referral + quote */}
-          <div className="grid gap-5 md:grid-cols-2">
-            <Card
-              header="Referral"
-              icon={Layers}
-              pad="md"
-              variant={referralState ? "spot" : "default"}
-              className="space-y-2"
-            >
-              {referral ? (
-                <>
-                  {referral.referral_code && (
-                    <LabelRow
-                      label="Code"
-                      value={
-                        <span className="font-mono">
-                          {referral.referral_code}
-                        </span>
-                      }
-                    />
-                  )}
-                  {referralState && (
-                    <LabelRow
-                      label="State"
-                      value={formatText(referralState, "capitalize")}
-                    />
-                  )}
-                  {referralAwaiting && (
-                    <LabelRow
-                      label="Awaiting"
-                      value={formatText(referralAwaiting, "capitalize")}
-                    />
-                  )}
-                  {referral.created_at && (
-                    <LabelRow
-                      label="Opened"
-                      value={fmtRelative(referral.created_at)}
-                    />
-                  )}
-                  {referral.referral_code && (
-                    <Link
-                      href={`/carrier/submissions/${sub.submission_code}/referral`}
-                      className="mt-2 inline-flex items-center gap-1.5 text-[13px] font-semibold text-spot-deep dark:text-spot hover:underline"
-                    >
-                      <FileText size={13} />
-                      Referral actions →
-                    </Link>
-                  )}
-                </>
-              ) : (
-                <Body className="italic">No referral on this submission.</Body>
-              )}
-            </Card>
-
-            {quote && (
-              <Card header="Current quote" icon={FileText} pad="md" className="space-y-1">
-                {quote.quote_code && (
-                  <LabelRow
-                    label="Code"
-                    value={
-                      <span className="font-mono">{quote.quote_code}</span>
-                    }
-                  />
-                )}
-                {/* version not exposed by QuoteRecord; omitted */}
-                {quote.valid_from && (
-                  <LabelRow
-                    label="Created"
-                    value={formatDate(quote.valid_from)}
-                  />
-                )}
-              </Card>
-            )}
           </div>
         </div>
       </div>
@@ -382,35 +402,159 @@ export default function WorkbenchSummaryPage(props: {
   );
 }
 
-function PremiumStat({
-  label,
-  value,
-  emphasis,
-  signed,
-}: {
+/* ─────────────────────────── helpers ─────────────────────────── */
+
+type Pillar = {
+  name: string;
+  score: number | null;
   label: string;
-  value: number | null;
-  emphasis?: boolean;
-  signed?: boolean;
-}) {
-  const tone =
-    signed && value != null
-      ? value > 0
-        ? "text-neg"
-        : value < 0
-          ? "text-pos"
-          : "text-ink"
-      : "text-ink";
+  tone: Tone;
+  bullets: string[];
+};
+
+function PillarCell({ pillar }: { pillar: Pillar }) {
+  const toneTextClass =
+    pillar.tone === "info"
+      ? "text-info"
+      : pillar.tone === "pos"
+        ? "text-pos"
+        : pillar.tone === "aux"
+          ? "text-aux"
+          : "text-ink";
+  const toneBgClass =
+    pillar.tone === "info"
+      ? "bg-info"
+      : pillar.tone === "pos"
+        ? "bg-pos"
+        : pillar.tone === "aux"
+          ? "bg-aux"
+          : "bg-rule";
+  const pct = pillar.score != null ? Math.max(0, Math.min(100, pillar.score)) : 0;
   return (
-    <Card pad="md" variant={emphasis ? "info" : "default"}>
-      <Micro className={emphasis ? "text-info-deep dark:text-info" : "block"}>
-        {label}
-      </Micro>
-      <NumDisplay size={emphasis ? "lg" : "md"} className={`mt-2 block ${tone}`}>
-        {value == null
-          ? "—"
-          : `${signed && value > 0 ? "+" : ""}${formatCurrency(value)}`}
-      </NumDisplay>
-    </Card>
+    <div className="rounded-card border border-rule bg-surface-elev p-4">
+      <Eyebrow>{pillar.name}</Eyebrow>
+      <div className="mt-1.5 flex items-baseline gap-2">
+        <span className={`font-mono text-[26px] font-semibold tabular-nums ${toneTextClass}`}>
+          {pillar.score != null ? pillar.score : "—"}
+        </span>
+        <Micro>{pillar.label}</Micro>
+      </div>
+      <div className="mt-2 h-1 overflow-hidden rounded-sm bg-rule">
+        <div className={`h-full ${toneBgClass}`} style={{ width: `${pct}%` }} />
+      </div>
+      {pillar.bullets.length > 0 && (
+        <ul className="mt-2.5 list-disc space-y-0.5 pl-4 text-[12px] leading-relaxed text-ink-soft">
+          {pillar.bullets.map((b) => (
+            <li key={b}>{b}</li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
+}
+
+function pillarLabel(score: number | null, kind: "risk" | "loss" | "exposure"): string {
+  if (score == null) return "—";
+  if (kind === "loss") {
+    return score >= 70 ? "High propensity" : score >= 40 ? "Moderate propensity" : "Low propensity";
+  }
+  if (kind === "exposure") {
+    return score >= 70 ? "Large" : score >= 40 ? "Mid-market" : "Small";
+  }
+  return score >= 70 ? "Strong" : score >= 40 ? "Acceptable" : "Watch";
+}
+
+function pillarBullets(
+  kind: "risk" | "loss" | "exposure",
+  ver: ApiRecord | null | undefined,
+): string[] {
+  // Real data-driven bullets where we can; otherwise empty (no fake mock copy).
+  if (!ver) return [];
+  if (kind === "loss") {
+    const out: string[] = [];
+    const trend = strOrNull(ver.loss_trend_direction);
+    if (trend) out.push(`Frequency trend ${trend}`);
+    const sev = numOrNull(ver.severity_propensity_score);
+    if (sev != null) out.push(`Severity score ${Math.round(sev)}/100`);
+    return out;
+  }
+  if (kind === "exposure") {
+    const out: string[] = [];
+    const ev = numOrNull(ver.exposure_value);
+    if (ev != null) out.push(`${formatCurrencyShort(ev)} exposure value`);
+    const cplx = numOrNull(ver.exposure_complexity_score);
+    if (cplx != null) out.push(`Complexity ${Math.round(cplx)}/100`);
+    return out;
+  }
+  // risk pillar: prefer cohort framing
+  const out: string[] = [];
+  const median = numOrNull(ver.peer_cohort_median_score);
+  const composite = numOrNull(ver.final_composite_score);
+  if (composite != null && median != null) {
+    const delta = composite - median;
+    out.push(`${delta >= 0 ? "Above" : "Below"} cohort median (${Math.abs(delta).toFixed(0)} pts)`);
+  }
+  const conf = numOrNull(ver.confidence);
+  if (conf != null) out.push(`Confidence ${(conf * 100).toFixed(0)}%`);
+  return out;
+}
+
+function deductibleLabel(risk: ApiRecord): React.ReactNode {
+  const amt = Number(risk.deductible_amount);
+  const basis = strOrNull(risk.deductible_basis ?? risk.deductible_type);
+  return (
+    <span className="font-mono">
+      {formatCurrency(amt)}
+      {basis ? ` · ${formatText(basis.replace(/_/g, " "), "capitalize")}` : ""}
+    </span>
+  );
+}
+
+function reinstatementsLabel(risk: ApiRecord | null | undefined): string {
+  if (!risk || risk.reinstatements == null) return "—";
+  const n = Number(risk.reinstatements);
+  const rate = numOrNull(risk.reinstatement_rate);
+  if (n <= 0) return "None";
+  return `${n}${rate != null ? ` · ${Math.round(rate * 100)}% of premium` : ""}`;
+}
+
+function sumJsonbAmounts(j: ApiRecord): number {
+  let total = 0;
+  for (const v of Object.values(j)) {
+    if (v && typeof v === "object" && "amount" in (v as ApiRecord)) {
+      const a = Number((v as ApiRecord).amount);
+      if (Number.isFinite(a)) total += a;
+    }
+  }
+  return total;
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
+}
+
+function boolOrNull(v: unknown): boolean | null {
+  if (v == null) return null;
+  return Boolean(v);
+}
+
+function pctOrNull(v: unknown): number | null {
+  // Stored as a fraction (0.125 = 12.5%) per the JSONB schema comments.
+  const n = numOrNull(v);
+  return n == null ? null : n * 100;
+}
+
+function formatCurrencyShort(n: number): string {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000_000).toFixed(abs >= 10_000_000 ? 0 : 1)}M`;
+  if (abs >= 1_000) return `${n < 0 ? "-" : ""}$${(abs / 1_000).toFixed(0)}k`;
+  return formatCurrency(n);
 }
