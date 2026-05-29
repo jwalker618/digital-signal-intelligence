@@ -4,9 +4,8 @@
  * dark mode from inverting the panel.
  */
 export function AuthBrandPanel() {
-  const pulseHeights = [10, 18, 12, 26, 16, 22, 14, 30, 20];
   return (
-    
+
     <div
       className="relative hidden w-[50%] shrink-0 flex-col overflow-hidden p-11 text-[#F1ECE0] lg:flex"
       style={{ background: "#051322" }}

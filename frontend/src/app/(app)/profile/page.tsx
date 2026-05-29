@@ -22,8 +22,6 @@ import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
 import type { AuthUser } from "@/types/auth";
 
-const VISIBLE_PERMS = 14;
-
 export default function ProfilePage() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
@@ -38,8 +36,17 @@ export default function ProfilePage() {
     router.replace("/login");
   }
 
-  const shownPerms = user.permissions.slice(0, VISIBLE_PERMS);
-  const remaining = Math.max(0, user.permissions.length - VISIBLE_PERMS);
+  // Group flat "resource:action" permissions by resource for display.
+  const permGroups: Array<[string, string[]]> = (() => {
+    const m = new Map<string, string[]>();
+    for (const p of user.permissions) {
+      const [resource, action = "*"] = p.split(":");
+      const list = m.get(resource) ?? [];
+      list.push(action);
+      m.set(resource, list);
+    }
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
+  })();
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
@@ -106,25 +113,40 @@ export default function ProfilePage() {
                     What you can do
                   </h3>
                 </div>
-                <Chip>{user.permissions.length} permissions</Chip>
+                <Chip>
+                  {user.permissions.length} across {permGroups.length} resource
+                  {permGroups.length === 1 ? "" : "s"}
+                </Chip>
               </div>
               {user.permissions.length === 0 ? (
                 <Body className="mt-3.5 italic">No permissions assigned.</Body>
               ) : (
-                <div className="mt-3.5 flex flex-wrap gap-1.5">
-                  {shownPerms.map((p) => (
-                    <span
-                      key={p}
-                      className="inline-flex items-center rounded-chip bg-surface-sunken px-[9px] py-1 font-mono text-[10.5px] text-ink-soft"
+                // Grouped by resource (revised pack) — splits "resource:action"
+                // and lists actions per resource so long permission sets stay
+                // legible instead of a flat wrap of mono pills.
+                <div className="mt-3 flex flex-col">
+                  {permGroups.map(([resource, actions], i) => (
+                    <div
+                      key={resource}
+                      className={`flex items-center gap-3.5 py-2.5 ${
+                        i < permGroups.length - 1 ? "border-b border-rule" : ""
+                      }`}
                     >
-                      {p}
-                    </span>
+                      <span className="flex-[0_0_132px] text-[13px] font-semibold capitalize">
+                        {resource.replace(/_/g, " ")}
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {actions.map((a) => (
+                          <span
+                            key={a}
+                            className="inline-flex items-center rounded-chip bg-surface-sunken px-2 py-[3px] font-mono text-[10.5px] text-ink-soft"
+                          >
+                            {a}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   ))}
-                  {remaining > 0 && (
-                    <span className="inline-flex items-center rounded-chip bg-surface-sunken px-2 py-1 text-[11px] text-ink-soft">
-                      + {remaining} more
-                    </span>
-                  )}
                 </div>
               )}
               <div className="mt-4 border-t border-rule pt-3.5">
