@@ -6,7 +6,6 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Body, Micro } from "@/components/ui/typography";
@@ -44,7 +43,6 @@ export default function LossAssessmentPage() {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Loss Assessment" />
         <PageLoading />
       </>
     );
@@ -89,7 +87,6 @@ export default function LossAssessmentPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Loss Assessment" />
       <WorkArea>
         {/* ─── 1. Loss Profile KPIs (8 across) ─────────────── */}
         <Card header="Active Submission · Loss Profile" icon={Target} pad="md">

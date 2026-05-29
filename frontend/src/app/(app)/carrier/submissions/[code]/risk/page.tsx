@@ -10,7 +10,6 @@ import {
   Layers,
   ShieldAlert,
 } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -58,7 +57,6 @@ export default function RiskAssessmentPage(props: {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Risk Assessment" />
         <PageLoading />
       </>
     );
@@ -105,7 +103,6 @@ export default function RiskAssessmentPage(props: {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Risk Assessment" />
       <WorkArea>
         {/* ─── 1. Results ────────────────────────────────────── */}
         <Card header="Results" icon={Glasses} pad="md">

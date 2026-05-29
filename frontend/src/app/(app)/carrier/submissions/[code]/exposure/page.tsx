@@ -1,7 +1,6 @@
 "use client";
 
 import { Gauge, ScatterChart, Puzzle, Target } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Body, Micro } from "@/components/ui/typography";
@@ -39,7 +38,6 @@ export default function ExposureAssessmentPage() {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
         <PageLoading />
       </>
     );
@@ -68,7 +66,6 @@ export default function ExposureAssessmentPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Exposure Assessment" />
       <WorkArea>
         {/* ─── 1. Exposure profile (7 KPIs) ─────────────────── */}
         <Card header="Exposure profile" icon={Target} pad="md">

@@ -1,7 +1,6 @@
 "use client";
 
 import { Network, Users } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -34,7 +33,6 @@ export default function DistributionPage() {
   if (!commercial) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Distribution" />
         <PageLoading />
       </>
     );
@@ -87,7 +85,6 @@ export default function DistributionPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Distribution" />
       <WorkArea>
         <Card
           header="Subscription · this carrier's slice"

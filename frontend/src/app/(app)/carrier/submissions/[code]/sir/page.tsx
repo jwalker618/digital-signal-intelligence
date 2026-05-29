@@ -1,7 +1,6 @@
 "use client";
 
 import { Clock, Shield } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { WorkArea } from "@/components/ui/work-area";
 import { Micro } from "@/components/ui/typography";
@@ -24,7 +23,6 @@ export default function SirAndWaitingPage() {
   if (!risk) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="SIR & Waiting Periods" />
         <PageLoading />
       </>
     );
@@ -40,7 +38,6 @@ export default function SirAndWaitingPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="SIR & Waiting Periods" />
       <WorkArea>
         <Card header="Self-insured retention" icon={Shield} pad="md">
           <div className="grid grid-cols-3 gap-4">

@@ -2,7 +2,6 @@
 
 import { use } from "react";
 import { Bot, GitBranch, GitCommitHorizontal, User } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -55,7 +54,6 @@ export default function ModelVersionsPage(props: {
   if (versions.length === 0) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Model Versions" />
         <PageLoading message="Loading version history…" />
       </>
     );
@@ -68,7 +66,6 @@ export default function ModelVersionsPage(props: {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Model Versions" />
       <WorkArea>
         <Card
           header="Version Lineage"

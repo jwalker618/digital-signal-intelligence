@@ -1,7 +1,6 @@
 "use client";
 
 import { ArrowRightToLine, Calculator, ChevronDown, CircleEllipsis } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { WorkArea } from "@/components/ui/work-area";
@@ -45,7 +44,6 @@ export default function PricingAnatomyPage() {
   if (!ver) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Pricing Anatomy" />
         <PageLoading message="Loading pricing data…" />
       </>
     );
@@ -136,7 +134,6 @@ export default function PricingAnatomyPage() {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Pricing Anatomy" />
       <WorkArea className="lg:grid-cols-[1.6fr_1fr]">
         {/* ─── Left: pricing anatomy ─────────────────────────── */}
         <Card header="Pricing Anatomy" icon={Calculator} pad="md">

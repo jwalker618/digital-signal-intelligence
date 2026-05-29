@@ -10,7 +10,6 @@ import {
   Search,
   User,
 } from "lucide-react";
-import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
 import { Eyebrow, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
@@ -38,7 +37,6 @@ export default function WorkbenchSummaryPage(props: {
   if (!sub) {
     return (
       <>
-        <WorkbenchTopbar activeTabLabel="Summary" />
         <PageLoading message="Loading submission…" />
       </>
     );
@@ -156,7 +154,6 @@ export default function WorkbenchSummaryPage(props: {
 
   return (
     <>
-      <WorkbenchTopbar activeTabLabel="Summary" />
       <WorkArea>
           {/* ─── Decision banner ─────────────────────────────── */}
           <Card variant="spot" pad="lg">
