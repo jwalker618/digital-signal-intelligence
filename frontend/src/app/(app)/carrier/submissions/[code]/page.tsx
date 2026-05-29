@@ -57,13 +57,16 @@ export default function WorkbenchSummaryPage(props: {
     ? (ver?.referral_reasons as string[])
     : [];
 
-  // Three Pillar Assessment — Risk has no first-class column; derived from
-  // composite for now. Loss and Exposure come straight off the MV row.
+  // Three Pillar Assessment.
+  // Risk pillar = pure_composite_score — the score from signal-group rollup
+  // BEFORE signal-condition / pricing modifiers (i.e. the "base" score, by
+  // symmetry with base_premium). Loss + Exposure come straight off the MV row.
+  const pureScore = numOrNull(ver?.pure_composite_score);
   const pillars: Pillar[] = [
     {
       name: "Risk",
-      score: composite != null ? Math.round(composite / 10) : null,
-      label: pillarLabel(composite != null ? composite / 10 : null, "risk"),
+      score: pureScore != null ? Math.round(pureScore / 10) : null,
+      label: pillarLabel(pureScore != null ? pureScore / 10 : null, "risk"),
       tone: "info",
       bullets: pillarBullets("risk", ver),
     },
