@@ -128,7 +128,7 @@ export default function LoginPage() {
           href="/login/sso"
           className="text-[13px] font-medium text-ink-soft hover:text-ink"
         >
-          Get an invite from your broker →
+          Get an invite from your local admin →
         </Link>
       </div>
     </div>
