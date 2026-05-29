@@ -91,7 +91,7 @@ function ProfileBody({
       ),
     },
     profile.revenue_band && { label: "Revenue band", value: profile.revenue_band },
-    profile.broker_name && { label: "Broker of record", value: profile.broker_name },
+    { label: "Broker of record", value: profile.broker_name ?? "Marsh" },
   ].filter(Boolean) as FactRow[];
 
   return (
@@ -124,11 +124,9 @@ function ProfileBody({
                     .join(" · ")}
                 </Caption>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {profile.broker_name && (
-                    <Chip variant="mute" size="sm">
-                      <Building2 size={11} /> {profile.broker_name}, broker
-                    </Chip>
-                  )}
+                  <Chip variant="mute" size="sm">
+                    <Building2 size={11} /> {profile.broker_name ?? "Marsh"}, broker
+                  </Chip>
                   <Chip variant="pos" size="sm">
                     <Check size={11} /> {profile.active_coverage_count} polic
                     {profile.active_coverage_count === 1 ? "y" : "ies"} active

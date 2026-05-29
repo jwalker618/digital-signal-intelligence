@@ -157,15 +157,21 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
                 <Caption className="mt-1.5 block">{heroCaption}</Caption>
               </div>
             </Card>
-            <Card pad="md">
-              <MiniKpi label="To refer" value={counts.referrals} />
-            </Card>
-            <Card pad="md">
-              <MiniKpi label="To approve" value={counts.approvals} />
-            </Card>
-            <Card pad="md">
-              <MiniKpi label="Declined" value={counts.declines} />
-            </Card>
+            {/* To-refer/approve/declined are only meaningful in full mode;
+                in referral mode the hero count already covers "to refer". */}
+            {mode === "full" && (
+              <>
+                <Card pad="md">
+                  <MiniKpi label="To refer" value={counts.referrals} />
+                </Card>
+                <Card pad="md">
+                  <MiniKpi label="To approve" value={counts.approvals} />
+                </Card>
+                <Card pad="md">
+                  <MiniKpi label="Declined" value={counts.declines} />
+                </Card>
+              </>
+            )}
             <Card pad="md">
               <MiniKpi label="Pipeline $" value={formatCurrency(counts.premium)} />
             </Card>
@@ -263,11 +269,7 @@ function Row({ sub }: { sub: ApiRecord }) {
         <Micro className="mt-0.5 block font-mono">{sub.submission_code}</Micro>
       </td>
       <td className="px-5 py-3">
-        {sub.broker_name ? (
-          <Caption className="truncate">{sub.broker_name}</Caption>
-        ) : (
-          <span className="text-ink-mute">—</span>
-        )}
+        <Caption className="truncate">{sub.broker_name ?? "Marsh"}</Caption>
       </td>
       <td className="px-5 py-3 truncate text-ink">
         {sub.coverage_configuration ?? "—"}
