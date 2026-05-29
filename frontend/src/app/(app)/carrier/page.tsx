@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { memo, useEffect, useMemo, useState } from "react";
-import { AlertCircle, Check, ChevronRight, Search, UserCheck, X } from "lucide-react";
+import { AlertCircle, Check, ChevronRight, Search, UserStar, X } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { CarrierShell } from "@/components/chrome/carrier-shell";
 import { isCarrierRole } from "@/lib/portalPaths";
@@ -17,8 +17,15 @@ import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
 import { fmtRelative } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { TIER_CHIP, tierToneOf } from "@/lib/tier";
 
 type DecisionFilter = "all" | "refer" | "approve" | "decline";
+
+// Pipeline table column template (template parity). Shared by header + rows.
+const PIPELINE_COLS_REFERRAL =
+  "grid-cols-[2fr_1fr_1.4fr_80px_70px_100px_110px_130px_70px_150px]";
+const PIPELINE_COLS_FULL =
+  "grid-cols-[2fr_1fr_1.4fr_80px_70px_100px_110px_130px_70px_28px]";
 
 export default function CarrierPipelinePage() {
   const user = useAuthStore((s) => s.user);
@@ -162,6 +169,9 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
       ? "submissions awaiting decision"
       : "submissions in the pipeline";
   const fmtK = (v: number) => `$${Math.round(v / 1000)}k`;
+  // Pipeline table grid — fixed-px columns per the template; last column
+  // widens in referral mode to hold the quick approve/decline actions.
+  const cols = mode === "referral" ? PIPELINE_COLS_REFERRAL : PIPELINE_COLS_FULL;
 
   return (
     <>
@@ -179,7 +189,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
           <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
             <Card variant="info" pad="md" className="flex items-center gap-4">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-card bg-info-soft text-info-deep dark:text-info">
-                <UserCheck size={28} />
+                <UserStar size={28} />
               </div>
               <div className="min-w-0 flex-1">
                 <Eyebrow className="text-info-deep dark:text-info">
@@ -280,35 +290,37 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
             )}
           </div>
 
-          {/* Table */}
-          <Card pad="none" className="overflow-hidden">
-            <table className="w-full table-fixed text-[13px]">
-              <thead>
-                <tr className="border-b border-rule bg-surface-elev text-left">
-                  <ColHead width="w-[20%]">Entity</ColHead>
-                  <ColHead width="w-[12%]">Broker</ColHead>
-                  <ColHead width="w-[14%]">Line</ColHead>
-                  <ColHead width="w-[8%]">Score</ColHead>
-                  <ColHead width="w-[7%]">Tier</ColHead>
-                  <ColHead width="w-[11%]">Decision</ColHead>
-                  <ColHead width="w-[11%]">Premium</ColHead>
-                  <ColHead width="w-[11%]">Status</ColHead>
-                  <ColHead width="w-[6%]">Age</ColHead>
-                  <ColHead width={mode === "referral" ? "w-[10%]" : "w-[4%]"}>
-                    {mode === "referral" ? "Quick" : null}
-                  </ColHead>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((s) => (
-                  <Row
-                    key={s.submission_code}
-                    sub={s}
-                    quick={mode === "referral"}
-                  />
-                ))}
-              </tbody>
-            </table>
+          {/* Table — fixed-px CSS grid columns (matches the template). */}
+          <Card pad="none" className="overflow-x-auto">
+            <div className="min-w-[940px] text-[13px]">
+              <div
+                className={cn(
+                  "grid items-center border-b border-rule bg-surface-elev px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute",
+                  cols,
+                )}
+              >
+                <span>Entity</span>
+                <span>Broker</span>
+                <span>Line</span>
+                <span>Score</span>
+                <span>Tier</span>
+                <span>Decision</span>
+                <span>Premium</span>
+                <span>Status</span>
+                <span>Age</span>
+                <span className={mode === "referral" ? "justify-self-center" : ""}>
+                  {mode === "referral" ? "Quick" : ""}
+                </span>
+              </div>
+              {filtered.map((s) => (
+                <Row
+                  key={s.submission_code}
+                  sub={s}
+                  quick={mode === "referral"}
+                  cols={cols}
+                />
+              ))}
+            </div>
             {filtered.length === 0 && (
               <div className="px-5 py-8 text-center">
                 <Body className="italic">
@@ -324,9 +336,17 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
   );
 }
 
-const Row = memo(function Row({ sub, quick }: { sub: ApiRecord; quick?: boolean }) {
+const Row = memo(function Row({
+  sub,
+  quick,
+  cols,
+}: {
+  sub: ApiRecord;
+  quick?: boolean;
+  cols: string;
+}) {
   const decision = decisionOf(sub);
-  const decisionTone =
+  const decisionChipTone =
     decision === "approve"
       ? "pos"
       : decision === "decline"
@@ -337,35 +357,28 @@ const Row = memo(function Row({ sub, quick }: { sub: ApiRecord; quick?: boolean 
   const awaiting = (sub.referral_state ?? "").toLowerCase().includes("await");
   const received = sub.received_at ?? sub.created_at ?? sub.submitted_at;
   const tier = sub.final_tier as number | null | undefined;
-  const tierTone =
-    tier == null
-      ? "mute"
-      : tier <= 2
-        ? "pos"
-        : tier === 3
-          ? "info"
-          : tier === 4
-            ? "warn"
-            : "neg";
   const industry =
     (sub.submission_data as ApiRecord | undefined)?.industry_label ??
     (sub.submission_data as ApiRecord | undefined)?.naics_label;
 
   return (
-    <tr className="border-b border-rule last:border-0 hover:bg-surface-sunken/40">
-      <td className="px-5 py-3">
+    <div
+      className={cn(
+        "grid items-center border-b border-rule px-5 py-3 last:border-0 hover:bg-surface-sunken/40",
+        cols,
+      )}
+    >
+      <div className="min-w-0 pr-3">
         <p className="truncate font-medium text-ink">{sub.entity_name ?? "—"}</p>
-        <Micro className="mt-0.5 block">
+        <Micro className="mt-0.5 block truncate">
           {industry ? String(industry) : sub.submission_code}
         </Micro>
-      </td>
-      <td className="px-5 py-3">
-        <Caption className="truncate">{sub.broker_name ?? "Marsh"}</Caption>
-      </td>
-      <td className="px-5 py-3 truncate text-ink">
+      </div>
+      <Caption className="truncate pr-3">{sub.broker_name ?? "Marsh"}</Caption>
+      <span className="truncate pr-3 text-ink">
         {sub.coverage ?? sub.coverage_configuration ?? "—"}
-      </td>
-      <td className="px-5 py-3">
+      </span>
+      <span>
         {sub.final_composite_score != null ? (
           <span className="font-bold tabular-nums text-info">
             {Number(sub.final_composite_score).toFixed(0)}
@@ -373,45 +386,36 @@ const Row = memo(function Row({ sub, quick }: { sub: ApiRecord; quick?: boolean 
         ) : (
           <span className="text-ink-mute">—</span>
         )}
-      </td>
-      <td className="px-5 py-3">
+      </span>
+      <span>
         {tier != null ? (
           <span
-            className={`inline-flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold ${
-              tierTone === "pos"
-                ? "bg-pos-soft text-pos"
-                : tierTone === "info"
-                  ? "bg-info-soft text-info"
-                  : tierTone === "warn"
-                    ? "bg-warn-soft text-warn"
-                    : tierTone === "neg"
-                      ? "bg-neg-soft text-neg"
-                      : "bg-surface-elev text-ink-mute"
-            }`}
+            className={cn(
+              "inline-flex h-6 w-6 items-center justify-center rounded-md text-[12px] font-bold",
+              TIER_CHIP[tierToneOf(tier)],
+            )}
           >
             {tier}
           </span>
         ) : (
           <span className="text-ink-mute">—</span>
         )}
-      </td>
-      <td className="px-5 py-3">
+      </span>
+      <span>
         {decision ? (
-          <Chip variant={decisionTone} size="sm">
+          <Chip variant={decisionChipTone} size="sm">
             {formatText(decision, "capitalize")}
           </Chip>
         ) : (
           <span className="text-ink-mute">—</span>
         )}
-      </td>
-      <td className="px-5 py-3">
-        <span className="font-semibold tabular-nums text-ink">
-          {sub.final_premium != null || sub.recommended_premium != null
-            ? formatCurrency(sub.final_premium ?? sub.recommended_premium)
-            : "—"}
-        </span>
-      </td>
-      <td className="px-5 py-3">
+      </span>
+      <span className="font-semibold tabular-nums text-ink">
+        {sub.final_premium != null || sub.recommended_premium != null
+          ? formatCurrency(sub.final_premium ?? sub.recommended_premium)
+          : "—"}
+      </span>
+      <span>
         {awaiting ? (
           <Chip variant="spot" size="sm">
             <AlertCircle size={10} />
@@ -428,64 +432,42 @@ const Row = memo(function Row({ sub, quick }: { sub: ApiRecord; quick?: boolean 
         ) : (
           <span className="text-ink-mute">—</span>
         )}
-      </td>
-      <td className="px-5 py-3">
-        <Micro>{received ? fmtRelative(String(received)) : "—"}</Micro>
-      </td>
-      <td className="px-5 py-3">
-        {quick ? (
-          <div className="flex items-center justify-end gap-1.5">
-            <button
-              type="button"
-              aria-label="Approve"
-              title="Approve"
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-pos/40 text-pos hover:bg-pos-soft"
-            >
-              <Check size={14} />
-            </button>
-            <button
-              type="button"
-              aria-label="Decline"
-              title="Decline"
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-neg/40 text-neg hover:bg-neg-soft"
-            >
-              <X size={14} />
-            </button>
-            <Link
-              href={`/carrier/submissions/${sub.submission_code}`}
-              className="ml-0.5 inline-flex items-center text-ink-mute hover:text-ink"
-            >
-              <ChevronRight size={16} />
-            </Link>
-          </div>
-        ) : (
+      </span>
+      <Micro>{received ? fmtRelative(String(received)) : "—"}</Micro>
+      {quick ? (
+        <div className="flex items-center justify-center gap-1.5">
+          <button
+            type="button"
+            aria-label="Approve"
+            title="Approve"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-pos/40 text-pos hover:bg-pos-soft"
+          >
+            <Check size={14} />
+          </button>
+          <button
+            type="button"
+            aria-label="Decline"
+            title="Decline"
+            className="flex h-7 w-7 items-center justify-center rounded-md border border-neg/40 text-neg hover:bg-neg-soft"
+          >
+            <X size={14} />
+          </button>
           <Link
             href={`/carrier/submissions/${sub.submission_code}`}
-            className="flex items-center justify-end text-ink-mute hover:text-ink"
+            className="ml-0.5 inline-flex items-center text-ink-mute hover:text-ink"
           >
             <ChevronRight size={16} />
           </Link>
-        )}
-      </td>
-    </tr>
+        </div>
+      ) : (
+        <Link
+          href={`/carrier/submissions/${sub.submission_code}`}
+          className="flex items-center justify-end text-ink-mute hover:text-ink"
+        >
+          <ChevronRight size={16} />
+        </Link>
+      )}
+    </div>
   );
 });
 
-function ColHead({
-  width,
-  children,
-}: {
-  width: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <th
-      className={cn(
-        "px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute",
-        width,
-      )}
-    >
-      {children}
-    </th>
-  );
-}
