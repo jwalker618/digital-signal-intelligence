@@ -16,7 +16,6 @@ import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Caption } from "@/components/ui/typography";
 import { Button } from "@/components/ui/button";
-import { BackButton } from "@/components/ui/back-button";
 import { PageLoading } from "@/components/base/pageStates";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
@@ -52,16 +51,14 @@ export default function ProfilePage() {
     <div className="flex h-full flex-1 flex-col overflow-hidden">
       <Topbar crumbs={["Account", "Your Profile"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-5xl gap-4">
-          <BackButton />
-
+        <div className="mx-auto grid max-w-[1280px] gap-4">
           <Card pad="lg" className="flex items-center gap-[18px]">
             <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-ink text-[28px] font-semibold text-canvas">
               {display.initials}
             </div>
             <div className="min-w-0 flex-1">
               <Eyebrow>Your account</Eyebrow>
-              <h2 className="mt-1 font-display text-[24px] font-semibold leading-tight text-ink">
+              <h2 className="mt-1 font-display text-[32px] font-semibold leading-[1.05] text-ink">
                 {display.name}
               </h2>
               <Caption className="mt-1 block">
