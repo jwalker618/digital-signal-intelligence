@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 
@@ -49,7 +50,7 @@ interface PremiumBreakdownProps {
   className?: string;
 }
 
-export function PremiumBreakdown({
+export const PremiumBreakdown = memo(function PremiumBreakdown({
   slices,
   maxVisible = 4,
   barHeight = 14,
@@ -114,4 +115,4 @@ export function PremiumBreakdown({
       </ul>
     </div>
   );
-}
+});

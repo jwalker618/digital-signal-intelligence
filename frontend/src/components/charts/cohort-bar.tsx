@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { cn } from "@/lib/utils";
 
 interface CohortBarProps {
@@ -21,7 +22,7 @@ interface CohortBarProps {
  * a vertical median tick, and a labeled YOU pin. Custom SVG — recharts
  * doesn't give us this exact shape without a lot of overrides.
  */
-export function CohortBar({
+export const CohortBar = memo(function CohortBar({
   value,
   median,
   topDecile,
@@ -68,4 +69,4 @@ export function CohortBar({
       </div>
     </div>
   );
-}
+});
