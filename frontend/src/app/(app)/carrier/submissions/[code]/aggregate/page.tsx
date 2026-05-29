@@ -3,164 +3,127 @@
 import { BarChart3, Layers, RefreshCw } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Eyebrow, NumDisplay, Body, Micro } from "@/components/ui/typography";
+import { WorkArea } from "@/components/ui/work-area";
+import { Micro } from "@/components/ui/typography";
+import { KpiSnug } from "@/components/ui/kpi-snug";
+import { LabelRow } from "@/components/ui/label-row";
 import { PageLoading } from "@/components/base/pageStates";
-import { LooseRecordCard } from "@/components/base/loose-record";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { formatCurrency, formatText } from "@/lib/format";
 
-export default function AggregatePage() {
-  const ver = useDsiStore((s) => s.activeVersion);
-  const risk = useDsiStore((s) => s.activeRisk);
-  const sub = useDsiStore((s) => s.activeSubmission);
+/* ============================================================
+ * Aggregate & Reinstatement — mirrors reim_wb_c.jsx WbAggregate.
+ *
+ * Three rows:
+ *   1. Aggregate limits (3 KPIs)
+ *   2. Reinstatement provisions (2 KPIs with subcaptions)
+ *   3. Layer detail (2-col DefList)
+ * ============================================================ */
 
-  if (!sub) {
+export default function AggregateAndReinstatementPage() {
+  const risk = useDsiStore((s) => s.activeRisk) as ApiRecord | null;
+
+  if (!risk) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Aggregate & Reinstatement" />
-        <PageLoading message="Loading aggregate detail…" />
+        <PageLoading />
       </>
     );
   }
 
-  const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  // RiskTermsDBRecord: layer_limit (per-occ), aggregate_limit, reinstatements, reinstatement_rate
-  const limit = Number(fpd.limit ?? risk?.layer_limit ?? 0);
-  const aggregate = Number(fpd.aggregate ?? risk?.aggregate_limit ?? limit);
-  const reinstatementCount = Number(risk?.reinstatements ?? 0);
-  // reinstatement_rate is a fraction (e.g. 1.0 = 100% of annual premium); display as a percentage
-  const reinstatementPremiumPct = Number(risk?.reinstatement_rate ?? 0) * 100;
-  // aggregate_used_usd / erosion-to-date is not exposed by RiskTermsDBRecord; only shown if JSONB detail carries it
-  const usedToDate = Number(fpd.aggregate_used ?? 0);
-  const hasUsage = usedToDate > 0;
-  const usedPct = aggregate > 0 ? Math.min(1, usedToDate / aggregate) : 0;
+  const aggLimit = numOrNull(risk.aggregate_limit);
+  const aggDed = numOrNull(risk.aggregate_deductible);
+  const aggBasis = strOrNull(risk.aggregate_basis);
+  const reinstatements = numOrNull(risk.reinstatements);
+  const reinstateRate = numOrNull(risk.reinstatement_rate);
+  const attachment = numOrNull(risk.attachment_point);
+  const layerLimit = numOrNull(risk.layer_limit);
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Aggregate & Reinstatement" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1080px] gap-6">
-          {/* Aggregate limits */}
-          <Card header="Aggregate limits" icon={Layers} pad="md">
-            <div className="grid gap-6 md:grid-cols-3">
-              <div>
-                <Eyebrow className="text-info-deep dark:text-info">
-                  Per occurrence
-                </Eyebrow>
-                <NumDisplay size="lg" className="mt-2 block text-info">
-                  {limit > 0 ? formatCurrency(limit) : "—"}
-                </NumDisplay>
-              </div>
-              <div>
-                <Eyebrow>Annual aggregate</Eyebrow>
-                <NumDisplay size="lg" className="mt-2 block">
-                  {aggregate > 0 ? formatCurrency(aggregate) : "—"}
-                </NumDisplay>
-                <Micro className="mt-1 block">
-                  {aggregate >= limit * 2
-                    ? "≥ 2× per-occurrence"
-                    : aggregate > limit
-                      ? "> per-occurrence"
-                      : "= per-occurrence"}
-                </Micro>
-              </div>
-              <div>
-                <Eyebrow>Reinstatements</Eyebrow>
-                <NumDisplay size="lg" className="mt-2 block">
-                  {reinstatementCount}
-                </NumDisplay>
-                {reinstatementPremiumPct > 0 && (
-                  <Micro className="mt-1 block">
-                    {reinstatementPremiumPct.toFixed(0)}% of annual premium each
-                  </Micro>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Usage meter — only when erosion-to-date is actually available (JSONB) */}
-          {aggregate > 0 && hasUsage && (
-            <Card
-              header="Aggregate erosion"
-              icon={BarChart3}
-              headerRight={
-                <span className="tabular-nums">
-                  {formatCurrency(usedToDate)} of {formatCurrency(aggregate)}
-                </span>
+      <WorkArea>
+        <Card header="Aggregate limits" icon={Layers} pad="md">
+          <div className="grid grid-cols-3 gap-4">
+            <KpiSnug
+              label="Aggregate limit"
+              value={aggLimit != null ? formatCurrency(aggLimit) : "—"}
+              tone="info"
+            />
+            <KpiSnug
+              label="Aggregate deductible"
+              value={aggDed != null ? formatCurrency(aggDed) : "—"}
+            />
+            <KpiSnug
+              label="Basis"
+              value={
+                aggBasis ? formatText(aggBasis.replace(/_/g, " "), "capitalize") : "—"
               }
-              pad="md"
-            >
-              <div className="h-3 overflow-hidden rounded-full bg-surface-sunken">
-                <div
-                  className={cn(
-                    "h-full",
-                    usedPct > 0.75
-                      ? "bg-neg"
-                      : usedPct > 0.4
-                        ? "bg-warn"
-                        : "bg-pos",
-                  )}
-                  style={{ width: `${usedPct * 100}%` }}
-                />
-              </div>
-              <Micro className="mt-2 block">
-                {usedPct > 0.75
-                  ? "Aggregate nearly exhausted — reinstatement or new placement needed."
-                  : usedPct > 0.4
-                    ? "Aggregate partially drawn — track closely."
-                    : "Healthy aggregate headroom."}
-              </Micro>
-            </Card>
-          )}
+            />
+          </div>
+        </Card>
 
-          {/* Reinstatement detail */}
-          {reinstatementCount > 0 && (
-            <Card header="Reinstatement provisions" icon={RefreshCw} pad="md">
-              <div className="flex-1">
-                <Body>
-                  {reinstatementCount} reinstatement
-                  {reinstatementCount === 1 ? "" : "s"} available
-                  {reinstatementPremiumPct > 0 &&
-                    ` at ${reinstatementPremiumPct.toFixed(0)}% of the annual premium`}
-                  . Each restores the per-occurrence limit; the annual
-                  aggregate cap remains the upper bound.
-                </Body>
-              </div>
-            </Card>
-          )}
+        <Card header="Reinstatement provisions" icon={RefreshCw} pad="md">
+          <div className="grid grid-cols-2 gap-4">
+            <KpiSnug
+              label="Reinstatements"
+              value={reinstatements != null ? String(reinstatements) : "—"}
+              delta={
+                reinstatements != null ? (
+                  <Micro>available during period</Micro>
+                ) : undefined
+              }
+            />
+            <KpiSnug
+              label="Rate"
+              value={
+                reinstateRate != null ? `${(reinstateRate * 100).toFixed(0)}%` : "—"
+              }
+              delta={
+                reinstateRate != null ? (
+                  <Micro>of original premium per reinstatement</Micro>
+                ) : undefined
+              }
+            />
+          </div>
+        </Card>
 
-          <LooseRecordCard
-            title="Detail"
-            data={risk as Record<string, unknown> | null}
-            fields={[
-              {
-                key: "aggregate_limit",
-                label: "Aggregate limit",
-                kind: "currency",
-                hideIfEmpty: true,
-              },
-              {
-                key: "aggregate_basis",
-                label: "Aggregate basis",
-                hideIfEmpty: true,
-              },
-              {
-                key: "stop_loss_attachment",
-                label: "Stop-loss attachment",
-                kind: "currency",
-                hideIfEmpty: true,
-              },
-              {
-                key: "stop_loss_premium",
-                label: "Stop-loss premium",
-                kind: "currency",
-                hideIfEmpty: true,
-              },
-            ]}
-          />
-        </div>
-      </div>
+        <Card header="Layer detail" icon={BarChart3} pad="md">
+          <div className="grid gap-4 md:grid-cols-2">
+            <LabelRow
+              label="Attachment point"
+              value={attachment != null ? formatCurrency(attachment) : "—"}
+            />
+            <LabelRow
+              label="Layer limit"
+              value={layerLimit != null ? formatCurrency(layerLimit) : "—"}
+            />
+            <LabelRow
+              label="Position"
+              value={
+                attachment != null && attachment <= 0
+                  ? "Primary · ground-up"
+                  : attachment != null
+                    ? "Excess"
+                    : "—"
+              }
+            />
+          </div>
+        </Card>
+      </WorkArea>
     </>
   );
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
 }
