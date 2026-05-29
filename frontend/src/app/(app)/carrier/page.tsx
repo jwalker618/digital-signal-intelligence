@@ -311,7 +311,11 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
             </table>
             {filtered.length === 0 && (
               <div className="px-5 py-8 text-center">
-                <Body className="italic">No submissions match the filters.</Body>
+                <Body className="italic">
+                  {query
+                    ? `No submissions match “${query}”.`
+                    : "No submissions match the filters."}
+                </Body>
               </div>
             )}
           </Card>

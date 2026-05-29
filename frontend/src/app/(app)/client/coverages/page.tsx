@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronRight, ShieldCheck } from "lucide-react";
+import {
+  ChevronRight,
+  FileCheck,
+  ShieldCheck,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -150,12 +156,13 @@ function LineGroupCard({
     (sum, p) => sum + (p.recommended_premium ?? 0),
     0,
   );
+  const LineIcon = lineIcon(line);
   return (
     <Card pad="none" className="overflow-hidden">
       <div className="flex items-center justify-between gap-3 border-b border-rule bg-surface-elev px-5 py-3.5">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-card border border-rule bg-surface">
-            <ShieldCheck size={16} className="text-ink" />
+            <LineIcon size={16} className="text-ink" />
           </div>
           <h3 className="font-display text-[17px] font-semibold leading-none text-ink">
             {line}
@@ -252,4 +259,12 @@ function fmtDate(iso: string): string {
   return Number.isNaN(d.getTime())
     ? "—"
     : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+}
+
+// Per-line header icon (revised pack uses line-specific glyphs).
+function lineIcon(line: string): LucideIcon {
+  const l = line.toLowerCase();
+  if (/pi|professional|e&o|errors/.test(l)) return FileCheck;
+  if (/d&o|directors|management/.test(l)) return Users;
+  return ShieldCheck;
 }

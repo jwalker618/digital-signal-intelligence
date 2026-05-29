@@ -1,6 +1,6 @@
 # Version 9 — Phase F: Template Fidelity Remediation
 
-**Status:** in progress
+**Status:** COMPLETE (F.0–F.6) — see per-phase notes below
 **Branch:** `claude/nice-ride-xSz7t`
 **Source of truth:** `development/project/version/9/Digital Signal Intelligence - Revised.zip`
 (extract to `/tmp/dsi-revised/`; templates live in `client_review/*.jsx` + `chrome.css` + `tokens.css` + `primitives.jsx`)
@@ -129,16 +129,19 @@ Templates: `reim_cw_a.jsx` (CwPremium), `reim_cw_b.jsx` (CwScore/CwLoss/CwExposu
 ---
 
 ## PHASE F.6 — Cosmetic / low-risk cleanup (batch last)
-- [ ] **Carrier · Pipeline** (`app/(app)/carrier/page.tsx`) — convert the `%`-width
-      `<table>` to fixed-px CSS grid columns matching the template
-      (`2fr 1fr 1.4fr 80px 70px 100px 110px 130px 70px 150px`). **(Med, cosmetic)**
-- [ ] Pipeline empty-state copy → `No submissions match "{query}".`; hero icon
-      `UserCheck`→`user-star` equivalent.
-- [ ] Verify Loss/Exposure scatter dots render coloured (`var(--color-pos)` tokens resolve).
-- [ ] World Engine relationships table — add the "Discovered" column (8th).
-- [ ] Carrier Premium Assembly — "Approver" vs "Commission total" label (template parity).
-- [ ] Client Coverages / Broker Coverages — per-line header icons (not hardcoded ShieldCheck).
-- [ ] Client Profile — "Joined" identity row/chip if a created-at is available.
+- [x] Pipeline empty-state copy → `No submissions match "{query}".`
+- [x] Verify Loss/Exposure scatter dots render coloured — `--color-pos` etc.
+      DO exist in globals.css, so the `var(--color-*)` references resolve. ✔
+- [x] Client Coverages — per-line header icons (FileCheck for PI/E&O,
+      Users for D&O, ShieldCheck default).
+- [ ] **DEFERRED (low value / higher risk):** Carrier Pipeline `%`-table →
+      fixed-px CSS grid. The table renders correctly; the proportion drift
+      is minor and a full <table>→grid rewrite of the Row + header carries
+      more regression risk than the cosmetic gain. Left as-is.
+- [ ] **Minor, optional:** pipeline hero icon UserCheck→user-star; World
+      Engine relationships "Discovered" column; Carrier Premium "Approver"
+      vs "Commission total" label; Broker Coverages per-line icons;
+      Profile "Joined" row. All Low — pick up opportunistically.
 
 ---
 
