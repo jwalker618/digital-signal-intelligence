@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Search } from "lucide-react";
+import { ChevronDown, ChevronRight, Download, Search } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import {
-  AdminTable,
   Body,
   Button,
   Card,
@@ -12,7 +11,6 @@ import {
   Eyebrow,
   Micro,
 } from "@/components/ui";
-import type { AdminTableCol, AdminTableRow } from "@/components/ui";
 import { PageError, PageLoading } from "@/components/base/pageStates";
 import { PermissionGate } from "@/components/shared/PermissionGate";
 import { api } from "@/lib/api";
@@ -95,45 +93,6 @@ function AuditInner() {
       (e.request_id ?? "").toLowerCase().includes(q)
     );
   });
-
-  const cols: AdminTableCol[] = [
-    { key: "when", label: "When", width: "180px" },
-    { key: "action", label: "Action", width: "1.4fr" },
-    { key: "resource", label: "Resource", width: "2.2fr" },
-    { key: "user", label: "User", width: "1fr" },
-    { key: "latency", label: "Latency", align: "right", width: "110px" },
-  ];
-
-  const rows: AdminTableRow[] = filtered.map((e) => ({
-    when: (
-      <span className="font-mono text-[12px] tabular-nums text-ink-soft">
-        {fmtRelative(e.created_at)}
-      </span>
-    ),
-    action: (
-      <code className="text-[12px] font-bold text-ink">{e.action_type}</code>
-    ),
-    resource: e.resource_type ? (
-      <span className="text-[12.5px] text-ink-soft">
-        <span className="text-ink">{e.resource_type}</span>
-        {e.resource_id && (
-          <span className="ml-1 font-mono text-[11.5px] text-ink-mute">
-            · {e.resource_id}
-          </span>
-        )}
-      </span>
-    ) : (
-      <Micro>—</Micro>
-    ),
-    user: (
-      <code className="text-[11.5px] text-ink-mute">{e.user_id ?? "—"}</code>
-    ),
-    latency: (
-      <span className="tabular-nums text-[12.5px] text-ink-soft">
-        {e.duration_ms != null ? `${e.duration_ms} ms` : "—"}
-      </span>
-    ),
-  }));
 
   return (
     <>
@@ -228,7 +187,19 @@ function AuditInner() {
                 </Chip>
               }
             >
-              <AdminTable cols={cols} rows={rows} />
+              {/* Column header strip mirrors the AdminTable layout but rows
+                  expand to reveal the before/after state diff. */}
+              <div className="grid grid-cols-[180px_1.4fr_2.2fr_1fr_110px_28px] gap-3 border-b border-rule bg-surface-elev px-5 py-2.5 text-[11px] uppercase tracking-wider text-ink-mute">
+                <span>When</span>
+                <span>Action</span>
+                <span>Resource</span>
+                <span>User</span>
+                <span className="text-right">Latency</span>
+                <span />
+              </div>
+              {filtered.map((e) => (
+                <AuditRow key={e.id} event={e} />
+              ))}
               {filtered.length === 0 && (
                 <div className="px-5 py-8 text-center">
                   <Body className="italic">No events match the filters.</Body>
@@ -259,3 +230,85 @@ function FilterField({
 
 const filterInput =
   "block h-10 w-full rounded-btn border border-rule-strong bg-surface px-3 font-mono text-[12.5px] text-ink placeholder:text-ink-mute focus:border-info focus:outline-none focus:ring-2 focus:ring-info/30";
+
+function AuditRow({ event: e }: { event: AuditEventRow }) {
+  const [open, setOpen] = useState(false);
+  const hasDiff =
+    (e.before_state != null && e.before_state !== "") ||
+    (e.after_state != null && e.after_state !== "");
+
+  return (
+    <div className="border-b border-rule last:border-0">
+      <button
+        type="button"
+        onClick={() => hasDiff && setOpen((v) => !v)}
+        className={`grid w-full grid-cols-[180px_1.4fr_2.2fr_1fr_110px_28px] items-center gap-3 px-5 py-3 text-left ${
+          hasDiff ? "hover:bg-surface-sunken/40" : "cursor-default"
+        }`}
+      >
+        <span className="font-mono text-[12px] tabular-nums text-ink-soft">
+          {fmtRelative(e.created_at)}
+        </span>
+        <code className="text-[12px] font-bold text-ink">{e.action_type}</code>
+        <span className="text-[12.5px] text-ink-soft">
+          {e.resource_type ? (
+            <>
+              <span className="text-ink">{e.resource_type}</span>
+              {e.resource_id && (
+                <span className="ml-1 font-mono text-[11.5px] text-ink-mute">
+                  · {e.resource_id}
+                </span>
+              )}
+            </>
+          ) : (
+            "—"
+          )}
+        </span>
+        <code className="text-[11.5px] text-ink-mute">{e.user_id ?? "—"}</code>
+        <span className="text-right text-[12.5px] tabular-nums text-ink-soft">
+          {e.duration_ms != null ? `${e.duration_ms} ms` : "—"}
+        </span>
+        <span className="flex justify-end text-ink-mute">
+          {hasDiff ? (
+            open ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+          ) : null}
+        </span>
+      </button>
+      {open && hasDiff && (
+        <div className="grid gap-3 px-5 pb-4 md:grid-cols-2">
+          <DiffPanel label="Before" state={e.before_state} tone="neg" />
+          <DiffPanel label="After" state={e.after_state} tone="pos" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function DiffPanel({
+  label,
+  state,
+  tone,
+}: {
+  label: string;
+  state: unknown;
+  tone: "neg" | "pos";
+}) {
+  const border = tone === "neg" ? "border-neg/40" : "border-pos/40";
+  const text = tone === "neg" ? "text-neg" : "text-pos";
+  const body =
+    state == null
+      ? "—"
+      : typeof state === "string"
+        ? state
+        : JSON.stringify(state, null, 2);
+  return (
+    <div className={`rounded-card border ${border} bg-surface-elev p-3`}>
+      <div className={`mb-1.5 text-[10.5px] font-bold uppercase tracking-wider ${text}`}>
+        {label}
+      </div>
+      <pre className="overflow-x-auto whitespace-pre-wrap break-words font-mono text-[11.5px] leading-relaxed text-ink-soft">
+        {body}
+      </pre>
+    </div>
+  );
+}
