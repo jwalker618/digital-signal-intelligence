@@ -1,266 +1,312 @@
 "use client";
 
-import { Building2, FileText, Layers } from "lucide-react";
+import { Building2, Calendar, HandCoins, Layers } from "lucide-react";
 import { WorkbenchTopbar } from "@/components/chrome/workbench-topbar";
 import { Card } from "@/components/ui/card";
-import { Eyebrow, NumDisplay } from "@/components/ui/typography";
-import { MiniKpi } from "@/components/ui/mini-kpi";
+import { WorkArea } from "@/components/ui/work-area";
+import { Eyebrow, Micro } from "@/components/ui/typography";
 import { LabelRow } from "@/components/ui/label-row";
-import { LooseRecordCard } from "@/components/base/loose-record";
 import { PageLoading } from "@/components/base/pageStates";
-import { useDsiStore } from "@/store/dsiStore";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
+import { formatCurrency, formatDate, formatText } from "@/lib/format";
 
-/**
- * Terms Overview — high-level commercial terms (limit, retention, premium,
- * effective dates, commercial entity stack). Reads from `activeCommercial`
- * which is the response of /api/v1/commercialterms/{version_code}.
- */
+/* ============================================================
+ * Terms Overview — mirrors reim_wb_c.jsx WbCommercial.
+ *
+ * Four stacked rows:
+ *   1. Hero info-tone card: Offered premium (44px) + net / gross /
+ *      technical stats
+ *   2. Two-col: Insured entity + Policy period (2-col DefLists each)
+ *   3. Two-col: Premium ladder + Commission structure
+ *      (Premium ladder is the compact build-up: technical → commission →
+ *       net → taxes → gross → discretion → offered)
+ * ============================================================ */
+
+type Rung = {
+  label: string;
+  value: number | null;
+  rate?: string;
+  tone: "muted" | "neg" | "warn" | "sub" | "final";
+};
+
 export default function TermsOverviewPage() {
-  const sub = useDsiStore((s) => s.activeSubmission);
-  const ver = useDsiStore((s) => s.activeVersion);
-  const commercial = useDsiStore((s) => s.activeCommercial);
+  const sub = useDsiStore((s) => s.activeSubmission) as ApiRecord | null;
+  const ver = useDsiStore((s) => s.activeVersion) as ApiRecord | null;
+  const commercial = useDsiStore((s) => s.activeCommercial) as ApiRecord | null;
+  const quote = useDsiStore((s) => s.activeQuote) as ApiRecord | null;
 
-  if (!sub) {
+  if (!commercial) {
     return (
       <>
         <WorkbenchTopbar activeTabLabel="Terms Overview" />
-        <PageLoading message="Loading commercial terms…" />
+        <PageLoading />
       </>
     );
   }
 
-  const fpd = (ver?.final_premium_detail ?? {}) as Record<string, unknown>;
-  // limit/deductible/aggregate are not on CommercialTermsDBRecord (they belong to risk terms);
-  // sourced from the version's final_premium_detail JSONB only.
-  const limit = fpd.limit;
-  const deductible = fpd.deductible;
-  const aggregate = fpd.aggregate;
-  const finalPremium = ver?.final_premium ?? sub.final_premium ?? null;
-  const basePremium = ver?.base_premium ?? null;
-  // CommercialTermsDBRecord exposes earned_start/earned_end (no effective_from/to)
-  const effectiveFrom = commercial?.earned_start;
-  const effectiveTo = commercial?.earned_end;
-  // No commercial_distribution participants array; derive a single row from the flat line fields.
-  const signedLine = commercial?.signed_line;
-  const participants: Array<Record<string, unknown>> =
-    signedLine != null
-      ? [
-          {
-            name: commercial?.entity_name ?? "This carrier",
-            role: commercial?.role ?? "Participant",
-            share_pct: Number(signedLine) * 100,
-            premium: commercial?.net_premium ?? commercial?.gross_premium ?? null,
-            layer: commercial?.distribution_type ?? null,
-          },
-        ]
-      : [];
+  const technicalPremium = numOrNull(
+    commercial.technical_premium_usd ??
+      commercial.technical_premium_local ??
+      ver?.final_premium,
+  );
+  const netPremium = numOrNull(commercial.net_premium);
+  const grossPremium = numOrNull(commercial.gross_premium);
+  const offeredPremium = numOrNull(commercial.offered_premium);
+  const discretionPct = pctOrNull(commercial.offered_premium_discretion);
+  const totalCommission = numOrNull(commercial.total_commission);
+  const totalTaxes = numOrNull(commercial.total_taxes);
 
-  const netPremium = commercial?.net_premium ?? null;
-  const grossPremium = commercial?.gross_premium ?? null;
-  const offeredPremium = commercial?.offered_premium ?? null;
+  const entityName = strOrNull(sub?.entity_name);
+  const entityId = strOrNull(sub?.entity_id ?? sub?.id);
+  const market = strOrNull(sub?.country) ?? strOrNull(commercial.base_currency_market);
+  const baseCurrency = strOrNull(commercial.base_currency) ?? "USD";
+
+  const writtenDate = strOrNull(quote?.created_at ?? quote?.valid_from);
+  const earnedStart = strOrNull(commercial.earned_start ?? quote?.valid_from);
+  const earnedEnd = strOrNull(commercial.earned_end ?? quote?.valid_until);
+  const earningMethod = strOrNull(commercial.earning_method ?? "straight_line");
+
+  const deductions = (commercial.deductions as Record<string, ApiRecord> | undefined) ?? {};
+  const brokerageRate = pctOrNull(deductions.brokerage?.rate);
+  const overriderRate = pctOrNull(deductions.overrider?.rate);
+  const profitCommissionRate = pctOrNull(deductions.profit_commission?.rate);
+
+  const rungs: Rung[] = [
+    { label: "Technical premium", value: technicalPremium, tone: "muted" },
+    {
+      label: "Total commission",
+      value: totalCommission != null ? -totalCommission : null,
+      tone: "neg",
+    },
+    { label: "Net premium", value: netPremium, tone: "sub" },
+    {
+      label: "Taxes & levies",
+      value: totalTaxes != null ? totalTaxes : null,
+      tone: "warn",
+    },
+    { label: "Gross premium", value: grossPremium, tone: "sub" },
+    {
+      label: "Discretion",
+      value:
+        discretionPct != null && grossPremium != null
+          ? grossPremium * (discretionPct / 100)
+          : 0,
+      rate: discretionPct != null ? `${discretionPct.toFixed(1)}%` : "—",
+      tone: "muted",
+    },
+    { label: "Offered premium", value: offeredPremium, tone: "final" },
+  ];
 
   return (
     <>
       <WorkbenchTopbar activeTabLabel="Terms Overview" />
-      <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-6">
-          {/* Hero — offered premium framed against net / gross / technical */}
-          <Card variant="info" pad="lg">
-            <div className="grid items-end gap-6 md:grid-cols-[1.4fr_auto_auto_auto]">
-              <div>
-                <Eyebrow className="text-info-deep dark:text-info">
-                  {offeredPremium != null ? "Offered premium" : "Final premium"}
-                </Eyebrow>
-                <NumDisplay size="xl" className="mt-2 block text-info">
-                  {offeredPremium != null
-                    ? formatCurrency(offeredPremium)
-                    : finalPremium != null
-                      ? formatCurrency(Number(finalPremium))
-                      : "—"}
-                </NumDisplay>
+      <WorkArea>
+        {/* ─── 1. Hero ──────────────────────────────────────── */}
+        <Card variant="info" pad="lg">
+          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1fr_auto_auto_auto]">
+            <div>
+              <Eyebrow className="text-info-deep dark:text-info">
+                Offered premium
+              </Eyebrow>
+              <div className="mt-1.5 font-display text-[44px] font-semibold leading-none text-info-deep dark:text-info">
+                {offeredPremium != null ? formatCurrency(offeredPremium) : "—"}
               </div>
-              <MiniKpi
-                label="Net"
-                value={netPremium != null ? formatCurrency(netPremium) : "—"}
-              />
-              <MiniKpi
-                label="Gross"
+              <Micro className="mt-2 block">
+                at gross ·{" "}
+                {discretionPct != null
+                  ? `${discretionPct.toFixed(1)}% discretion applied`
+                  : "no discretion recorded"}
+              </Micro>
+            </div>
+            <HeroStat label="Net" value={netPremium} />
+            <HeroStat label="Gross" value={grossPremium} />
+            <HeroStat label="Technical" value={technicalPremium} muted />
+          </div>
+        </Card>
+
+        {/* ─── 2. Entity + Period ──────────────────────────── */}
+        <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
+          <Card header="Insured entity" icon={Building2} pad="md">
+            <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+              <LabelRow label="Entity name" value={entityName ?? "—"} />
+              <LabelRow
+                label="Entity ID"
                 value={
-                  grossPremium != null ? formatCurrency(grossPremium) : "—"
+                  entityId ? <span className="font-mono">{entityId}</span> : "—"
                 }
               />
-              <MiniKpi
-                label="Technical"
+              <LabelRow
+                label="Market"
+                value={market ? formatText(market, "capitalize") : "—"}
+              />
+              <LabelRow label="Base currency" value={baseCurrency} />
+            </div>
+          </Card>
+          <Card header="Policy period" icon={Calendar} pad="md">
+            <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+              <LabelRow
+                label="Written date"
+                value={writtenDate ? formatDate(writtenDate) : "—"}
+              />
+              <LabelRow
+                label="Earned start"
+                value={earnedStart ? formatDate(earnedStart) : "—"}
+              />
+              <LabelRow
+                label="Earned end"
+                value={earnedEnd ? formatDate(earnedEnd) : "—"}
+              />
+              <LabelRow
+                label="Method"
                 value={
-                  finalPremium != null
-                    ? formatCurrency(Number(finalPremium))
+                  earningMethod
+                    ? formatText(earningMethod.replace(/_/g, " "), "capitalize")
                     : "—"
                 }
               />
             </div>
           </Card>
-
-          {/* Coverage card */}
-          <Card header="Coverage" icon={FileText} pad="md">
-            <div className="grid gap-2 md:grid-cols-2">
-              <LabelRow
-                label="Coverage"
-                value={sub.coverage ?? "—"}
-              />
-              <LabelRow
-                label="Limit (per occurrence)"
-                value={
-                  limit != null ? formatCurrency(Number(limit)) : "—"
-                }
-              />
-              <LabelRow
-                label="Aggregate limit"
-                value={
-                  aggregate != null
-                    ? formatCurrency(Number(aggregate))
-                    : limit != null
-                      ? formatCurrency(Number(limit))
-                      : "—"
-                }
-              />
-              <LabelRow
-                label="Deductible / retention"
-                value={
-                  deductible != null ? formatCurrency(Number(deductible)) : "—"
-                }
-              />
-              <LabelRow
-                label="Effective from"
-                value={
-                  effectiveFrom
-                    ? formatDate(String(effectiveFrom))
-                    : "—"
-                }
-              />
-              <LabelRow
-                label="Effective to"
-                value={
-                  effectiveTo ? formatDate(String(effectiveTo)) : "—"
-                }
-              />
-            </div>
-          </Card>
-
-          {/* Premium card */}
-          <Card header="Premium ladder" icon={Layers} pad="md">
-            <div className="grid gap-2 md:grid-cols-2">
-              <LabelRow
-                label="Base premium"
-                value={
-                  basePremium != null ? formatCurrency(Number(basePremium)) : "—"
-                }
-              />
-              <LabelRow
-                label="Final premium"
-                value={
-                  finalPremium != null
-                    ? formatCurrency(Number(finalPremium))
-                    : "—"
-                }
-              />
-            </div>
-          </Card>
-
-          {/* Commercial distribution */}
-          {participants.length > 0 ? (
-            <Card
-              header={`Commercial stack · ${participants.length}`}
-              icon={Building2}
-              pad="none"
-              className="overflow-hidden"
-            >
-              <table className="w-full table-fixed text-[13px]">
-                <thead>
-                  <tr className="border-b border-rule bg-surface-sunken/60 text-left">
-                    <ColHead width="w-[28%]">Participant</ColHead>
-                    <ColHead width="w-[14%]">Type</ColHead>
-                    <ColHead width="w-[14%]">Share</ColHead>
-                    <ColHead width="w-[16%]">Premium</ColHead>
-                    <ColHead width="w-[14%]">Commission</ColHead>
-                    <ColHead width="w-[14%]">Layer</ColHead>
-                  </tr>
-                </thead>
-                <tbody>
-                  {participants.map((p, i) => (
-                    <tr
-                      key={String(p.id ?? p.name ?? i)}
-                      className="border-b border-rule last:border-0 hover:bg-surface-sunken/40"
-                    >
-                      <td className="px-5 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <Building2 size={13} className="text-ink-mute" />
-                          <span className="font-medium text-ink">
-                            {String(p.name ?? p.carrier ?? "—")}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-5 py-2.5 text-ink-soft">
-                        {String(p.type ?? p.role ?? "—")}
-                      </td>
-                      <td className="px-5 py-2.5 tabular-nums text-ink">
-                        {p.share_pct != null
-                          ? `${Number(p.share_pct).toFixed(1)}%`
-                          : p.share != null
-                            ? `${(Number(p.share) * 100).toFixed(1)}%`
-                            : "—"}
-                      </td>
-                      <td className="px-5 py-2.5 tabular-nums text-ink">
-                        {p.premium != null
-                          ? formatCurrency(Number(p.premium))
-                          : "—"}
-                      </td>
-                      <td className="px-5 py-2.5 tabular-nums text-ink-soft">
-                        {p.commission_pct != null
-                          ? `${Number(p.commission_pct).toFixed(1)}%`
-                          : "—"}
-                      </td>
-                      <td className="px-5 py-2.5 text-ink-soft">
-                        {String(p.layer ?? "—")}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </Card>
-          ) : (
-            <LooseRecordCard
-              title="Commercial entity"
-              data={commercial as Record<string, unknown> | null}
-              fields={[
-                { key: "lead_carrier", label: "Lead carrier" },
-                { key: "broker", label: "Broker" },
-                { key: "syndicate", label: "Syndicate" },
-                { key: "mga", label: "MGA" },
-                { key: "fronting_carrier", label: "Fronting carrier" },
-              ]}
-              showRest
-              emptyMessage="No commercial entity data attached to this quote."
-            />
-          )}
         </div>
-      </div>
+
+        {/* ─── 3. Premium ladder + Commission ──────────────── */}
+        <div className="grid gap-3.5 lg:grid-cols-[1.4fr_1fr]">
+          <Card header="Premium ladder" icon={Layers} pad="md">
+            <PremiumLadder rungs={rungs} />
+          </Card>
+          <Card header="Commission structure" icon={HandCoins} pad="md">
+            <div className="grid grid-cols-1 gap-x-6 md:grid-cols-2">
+              <LabelRow
+                label="Brokerage"
+                value={brokerageRate != null ? `${brokerageRate.toFixed(1)}%` : "—"}
+              />
+              <LabelRow
+                label="Overrider"
+                value={overriderRate != null ? `${overriderRate.toFixed(1)}%` : "—"}
+              />
+              <LabelRow
+                label="Profit commission"
+                value={
+                  profitCommissionRate != null
+                    ? `${profitCommissionRate.toFixed(1)}%`
+                    : "—"
+                }
+              />
+            </div>
+            <div className="mt-3.5 flex items-baseline justify-between border-t border-ink-soft pt-3.5">
+              <span className="text-[13px] font-bold">Total commission</span>
+              <span className="font-mono text-[17px] font-bold tabular-nums">
+                {totalCommission != null ? formatCurrency(totalCommission) : "—"}
+              </span>
+            </div>
+            <Micro className="mt-2 block">
+              Earned on net premium · paid to the broker on placement.
+            </Micro>
+          </Card>
+        </div>
+      </WorkArea>
     </>
   );
 }
 
-function ColHead({
-  width,
-  children,
+function HeroStat({
+  label,
+  value,
+  muted,
 }: {
-  width: string;
-  children: React.ReactNode;
+  label: string;
+  value: number | null;
+  muted?: boolean;
 }) {
   return (
-    <th
-      className={`px-5 py-2.5 text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-mute ${width}`}
-    >
-      {children}
-    </th>
+    <div>
+      <Micro>{label}</Micro>
+      <div
+        className={`mt-1 font-mono text-[22px] font-semibold tabular-nums ${
+          muted ? "text-ink-soft" : "text-ink"
+        }`}
+      >
+        {value != null ? formatCurrency(value) : "—"}
+      </div>
+    </div>
   );
+}
+
+function PremiumLadder({ rungs }: { rungs: Rung[] }) {
+  return (
+    <div>
+      {rungs.map((r, i) => {
+        const isSub = r.tone === "sub";
+        const isFinal = r.tone === "final";
+        const isLast = i === rungs.length - 1;
+        const labelTone = r.tone === "muted" ? "text-ink-soft" : "text-ink";
+        const valueTone =
+          r.tone === "muted"
+            ? "text-ink-soft"
+            : r.tone === "neg"
+              ? "text-neg"
+              : r.tone === "warn"
+                ? "text-warn"
+                : r.tone === "final"
+                  ? "text-info-deep dark:text-info"
+                  : "text-ink";
+        const valueSize =
+          r.tone === "final" ? "text-[22px]" : isSub ? "text-[16px]" : "text-[13px]";
+        const padding = isFinal ? "py-3.5" : isSub ? "py-2.5" : "py-1.5";
+        const border = isSub
+          ? "border-t border-ink-soft mt-1"
+          : isFinal
+            ? "border-t-2 border-ink mt-1"
+            : !isLast
+              ? "border-b border-rule"
+              : "";
+        return (
+          <div
+            key={r.label}
+            className={`flex items-baseline justify-between px-1 ${padding} ${border}`}
+          >
+            <span
+              className={`${labelTone} ${
+                isFinal
+                  ? "text-[14px] font-bold uppercase tracking-wider"
+                  : isSub
+                    ? "text-[13px] font-bold"
+                    : "text-[13px] font-medium"
+              }`}
+            >
+              {r.label}
+              {r.rate && r.tone === "muted" && (
+                <Micro className="ml-2 inline">{r.rate}</Micro>
+              )}
+            </span>
+            <span
+              className={`font-mono font-bold tabular-nums ${valueSize} ${valueTone}`}
+            >
+              {r.value != null
+                ? r.value === 0
+                  ? r.rate ?? "—"
+                  : `${r.value < 0 ? "−" : r.tone === "warn" ? "+" : ""}${formatCurrency(Math.abs(r.value))}`
+                : "—"}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function numOrNull(v: unknown): number | null {
+  if (v == null) return null;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : null;
+}
+
+function strOrNull(v: unknown): string | null {
+  if (v == null) return null;
+  const s = String(v).trim();
+  return s.length > 0 ? s : null;
+}
+
+function pctOrNull(v: unknown): number | null {
+  const n = numOrNull(v);
+  return n == null ? null : n * 100;
 }
