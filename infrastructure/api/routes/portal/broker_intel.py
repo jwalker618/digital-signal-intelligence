@@ -497,68 +497,95 @@ async def client_workbench(
     total_premium = 0.0
     scores: list[float] = []
 
+    # ------------------------------------------------------------------
+    # Bulk-load everything keyed by submission / model-version in a fixed
+    # number of queries (production: no per-coverage N+1). One client can
+    # carry many coverages × many versions.
+    # ------------------------------------------------------------------
+    sub_ids = [s.id for s, _ in group]
+
+    # All model-version rows for the entity's submissions, version asc.
+    mv_rows_q = await db.execute(
+        select(ModelVersionRecord)
+        .where(ModelVersionRecord.submission_id.in_(sub_ids))
+        .order_by(
+            ModelVersionRecord.submission_id,
+            ModelVersionRecord.version_number.asc(),
+        )
+    )
+    mv_by_sub: dict[uuid.UUID, list[ModelVersionRecord]] = defaultdict(list)
+    for mv_row in mv_rows_q.scalars().all():
+        mv_by_sub[mv_row.submission_id].append(mv_row)
+    # Latest MV per submission (is_latest flag, else highest version).
+    latest_mv: dict[uuid.UUID, ModelVersionRecord] = {}
+    for sid, rows_ in mv_by_sub.items():
+        latest_mv[sid] = next(
+            (r for r in rows_ if r.is_latest),
+            rows_[-1] if rows_ else None,  # type: ignore[assignment]
+        )
+    latest_mv_ids = [mv.id for mv in latest_mv.values() if mv is not None]
+
+    # All open referrals for the submissions (one join, not N).
+    refs_q = await db.execute(
+        select(Quote.submission_id, Referral)
+        .join(Referral, Referral.quote_id == Quote.id)
+        .where(Quote.submission_id.in_(sub_ids))
+    )
+    open_ref_by_sub: dict[uuid.UUID, Referral] = {}
+    for sid, ref in refs_q.all():
+        if ref.awaiting_party is not None and sid not in open_ref_by_sub:
+            open_ref_by_sub[sid] = ref
+
+    # Commercial + risk terms for the latest MVs (two queries, not 2N).
+    commercial_by_mv: dict[uuid.UUID, CommercialTermsRecord] = {}
+    risk_by_mv: dict[uuid.UUID, RiskTermsRecord] = {}
+    if latest_mv_ids:
+        c_rows = await db.execute(
+            select(CommercialTermsRecord).where(
+                CommercialTermsRecord.model_version_id.in_(latest_mv_ids)
+            )
+        )
+        for c in c_rows.scalars().all():
+            commercial_by_mv[c.model_version_id] = c
+        r_rows = await db.execute(
+            select(RiskTermsRecord).where(
+                RiskTermsRecord.model_version_id.in_(latest_mv_ids)
+            )
+        )
+        for r in r_rows.scalars().all():
+            risk_by_mv[r.model_version_id] = r
+
     for sub, quote in group:
-        mv_q = await db.execute(
-            select(ModelVersionRecord).where(
-                ModelVersionRecord.submission_id == sub.id,
-                ModelVersionRecord.is_latest == True,  # noqa: E712
-            )
-        )
-        mv = mv_q.scalar_one_or_none()
+        history_rows = mv_by_sub.get(sub.id, [])
+        mv = latest_mv.get(sub.id)
+        open_ref = open_ref_by_sub.get(sub.id)
+        commercial = commercial_by_mv.get(mv.id) if mv else None
+        risk = risk_by_mv.get(mv.id) if mv else None
 
-        refs = await _refs_for_submission(db, sub.id)
-        open_ref = next((r for r in refs if r.awaiting_party is not None), None)
-
-        # commercial + risk terms keyed on the latest MV
-        commercial = None
-        risk = None
-        if mv is not None:
-            c_q = await db.execute(
-                select(CommercialTermsRecord).where(
-                    CommercialTermsRecord.model_version_id == mv.id
-                )
-            )
-            commercial = c_q.scalar_one_or_none()
-            r_q = await db.execute(
-                select(RiskTermsRecord).where(
-                    RiskTermsRecord.model_version_id == mv.id
-                )
-            )
-            risk = r_q.scalar_one_or_none()
-
-        # score history (oldest → newest)
-        hist_q = await db.execute(
-            select(ModelVersionRecord)
-            .where(ModelVersionRecord.submission_id == sub.id)
-            .order_by(ModelVersionRecord.version_number.asc())
-        )
+        # score history (already version asc from the bulk fetch)
         history = [
             ScoreHistoryPoint(
                 version_number=h.version_number,
                 composite_score=h.final_composite_score,
                 created_at=h.created_at,
             )
-            for h in hist_q.scalars().all()
+            for h in history_rows
             if h.final_composite_score is not None and h.created_at is not None
         ] or None
+        # prior version (the one before the latest) for delta + YoY exposure
         prev_score = None
         prev_exposure = None
-        if mv is not None:
-            prev_q = await db.execute(
-                select(
-                    ModelVersionRecord.final_composite_score,
-                    ModelVersionRecord.exposure_value,
-                )
-                .where(
-                    ModelVersionRecord.submission_id == sub.id,
-                    ModelVersionRecord.version_number < (mv.version_number or 0),
-                )
-                .order_by(ModelVersionRecord.version_number.desc())
-                .limit(1)
+        if mv is not None and len(history_rows) >= 2:
+            prior = next(
+                (
+                    h for h in reversed(history_rows)
+                    if (h.version_number or 0) < (mv.version_number or 0)
+                ),
+                None,
             )
-            prev_row = prev_q.first()
-            if prev_row is not None:
-                prev_score, prev_exposure = prev_row[0], prev_row[1]
+            if prior is not None:
+                prev_score = prior.final_composite_score
+                prev_exposure = prior.exposure_value
 
         decision = mv.decision.value if mv and mv.decision else None
         status, tone = _status_for(decision, open_ref)
@@ -711,8 +738,7 @@ async def client_workbench(
             )
         )
 
-    # Engagement (reuse client-health computation)
-    sub_ids = [s.id for s, _ in group]
+    # Engagement (reuse client-health computation; sub_ids bulk-loaded above)
     msgs_q = await db.execute(
         select(ReferralMessage)
         .join(Referral, ReferralMessage.referral_id == Referral.id)

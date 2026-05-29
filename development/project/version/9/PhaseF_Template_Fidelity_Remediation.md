@@ -145,6 +145,12 @@ Templates: `reim_cw_a.jsx` (CwPremium), `reim_cw_b.jsx` (CwScore/CwLoss/CwExposu
 
 ---
 
+## PRODUCTION HARDENING
+- [x] `/portal/clients/{entity}` was N+1 (~7 queries per coverage). Rewritten to
+      bulk-load model-versions, referrals, commercial + risk terms keyed by
+      submission/MV before the loop → **9 constant queries** regardless of how
+      many coverages × versions a client carries (was ~7N+3).
+
 ## ACCEPT AS-IS (intentional deviations — do NOT "fix")
 - CW Opportunities cross-sell cards → honest "connect a peer-portfolio source" note
   (no peer-portfolio table exists).
