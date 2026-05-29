@@ -1224,6 +1224,10 @@ class UserInvitation(Base):
     tenant_id = Column(UUID(as_uuid=True), ForeignKey("tenants.id", ondelete="CASCADE"), nullable=False, index=True)
     role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="SET NULL"))
     inviter_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"))
+    # When the invited role is BROKER, the inviter stamps the broker
+    # identity here so the accepted user lands with users.broker_id set.
+    # Nullable for non-broker invites.
+    broker_id = Column(UUID(as_uuid=True), ForeignKey("brokers.id", ondelete="SET NULL"), nullable=True, index=True)
 
     token_hash = Column(String(255), nullable=False, unique=True, index=True)
     expires_at = Column(DateTime(timezone=True), nullable=False)

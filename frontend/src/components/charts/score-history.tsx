@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import {
   Area,
   AreaChart,
@@ -31,7 +32,7 @@ interface ScoreHistoryProps {
  * Annotated quarterly score history. Highlights the `prev` and `now` points
  * so the headline narrative ("724 → 735") is grounded in the chart.
  */
-export function ScoreHistory({
+export const ScoreHistory = memo(function ScoreHistory({
   history,
   color = "var(--color-info)",
   height = 220,
@@ -129,4 +130,4 @@ export function ScoreHistory({
       </ResponsiveContainer>
     </div>
   );
-}
+});

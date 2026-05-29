@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/format";
 
@@ -59,7 +59,7 @@ interface WaterfallProps {
  * then a final total bar. Custom SVG so we can render connectors between
  * steps — recharts can't draw cross-bar connectors out of the box.
  */
-export function Waterfall({ items, height = 260 }: WaterfallProps) {
+export const Waterfall = memo(function Waterfall({ items, height = 260 }: WaterfallProps) {
   const segments = useMemo(() => waterfallRunning(items), [items]);
   const maxVal = Math.max(...segments.flatMap((s) => [s.start, s.end]));
   const labels = items;
@@ -155,4 +155,4 @@ export function Waterfall({ items, height = 260 }: WaterfallProps) {
       </svg>
     </div>
   );
-}
+});

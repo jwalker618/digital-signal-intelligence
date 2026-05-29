@@ -101,17 +101,28 @@ class UserCreateRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=255)
     role_id: str
     password: str = Field(min_length=12, max_length=128)
+    # Required when role_id resolves to BROKER; ignored otherwise. The
+    # service writes this to users.broker_id so broker-portal endpoints
+    # (which join on `Submission.broker_id == user.broker_id`) succeed.
+    broker_id: Optional[str] = None
 
 
 class UserUpdateRequest(BaseModel):
     full_name: Optional[str] = None
     role_id: Optional[str] = None
     is_active: Optional[bool] = None
+    # Backfill / reassign broker linkage on an existing user. Set to
+    # null and pass `clear_broker_id=True` to unset.
+    broker_id: Optional[str] = None
+    clear_broker_id: Optional[bool] = None
 
 
 class InviteRequest(BaseModel):
     email: str = Field(pattern=EMAIL_PATTERN)
     role_id: str
+    # Stamp the broker firm onto the invitation; the invitee's resulting
+    # user row inherits this on accept. Required for BROKER role.
+    broker_id: Optional[str] = None
 
 
 class InvitationResponse(BaseModel):
@@ -270,6 +281,7 @@ def create_user(
             full_name=body.full_name,
             role_id=body.role_id,
             password=body.password,
+            broker_id=body.broker_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -314,6 +326,8 @@ def update_user(
             full_name=body.full_name,
             role_id=body.role_id,
             is_active=body.is_active,
+            broker_id=body.broker_id,
+            clear_broker_id=bool(body.clear_broker_id),
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
@@ -397,6 +411,7 @@ def send_invitation(
             email=body.email,
             role_id=body.role_id,
             inviter_id=ctx.user_id,
+            broker_id=body.broker_id,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))

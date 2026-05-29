@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 
 /**
  * Chart-local cohort shape. Domain entities (e.g. PeersResponse) get mapped
@@ -48,7 +48,7 @@ function youPosition(cohort: PeerCohort): number {
  * Cohort distribution with a YOU pin. SVG path is computed locally — no
  * recharts roundtrip needed for this simple shape.
  */
-export function BellCurve({ cohort, height = 160 }: BellCurveProps) {
+function BellCurveImpl({ cohort, height = 160 }: BellCurveProps) {
   const points = useMemo(() => bellCurve(cohort, 100), [cohort]);
   const youAt = useMemo(() => youPosition(cohort), [cohort]);
 
@@ -133,3 +133,5 @@ export function BellCurve({ cohort, height = 160 }: BellCurveProps) {
     </svg>
   );
 }
+
+export const BellCurve = memo(BellCurveImpl);

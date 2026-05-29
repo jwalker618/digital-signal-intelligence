@@ -116,10 +116,13 @@ class UserService:
         role_id: str,
         password: str,
         is_active: bool = True,
+        broker_id: Optional[str] = None,
     ) -> User:
         """Create a user directly (no invitation flow).
 
         Validates the role exists in the tenant + enforces unique email.
+        Pass `broker_id` for BROKER-role users so they pass the
+        broker-portal joins on `users.broker_id`.
         """
         email = email.lower().strip()
         if self.get_user_by_email(email):
@@ -134,6 +137,7 @@ class UserService:
             hashed_password=_hash_password(password),
             tenant_id=UUID(tenant_id),
             role_id=role.id,
+            broker_id=UUID(broker_id) if broker_id else None,
             is_active=is_active,
         )
         self.db.add(user)
@@ -148,6 +152,8 @@ class UserService:
         full_name: Optional[str] = None,
         role_id: Optional[str] = None,
         is_active: Optional[bool] = None,
+        broker_id: Optional[str] = None,
+        clear_broker_id: bool = False,
     ) -> User:
         user = self.get_user(tenant_id, user_id)
         if user is None:
@@ -166,6 +172,14 @@ class UserService:
             if not is_active:
                 self._assert_not_last_active_admin(tenant_id, user)
             user.is_active = is_active
+
+        # broker_id backfill for existing broker users that pre-date the
+        # invitation-side fix. `clear_broker_id=True` explicitly unsets
+        # the link (used when a broker leaves a firm).
+        if clear_broker_id:
+            user.broker_id = None
+        elif broker_id is not None:
+            user.broker_id = UUID(broker_id)
 
         self.db.flush()
         return user
@@ -339,6 +353,7 @@ class InvitationService:
         email: str,
         role_id: str,
         inviter_id: Optional[str] = None,
+        broker_id: Optional[str] = None,
     ) -> InvitationToken:
         """Create a pending invitation. Returns the raw token once; caller
         is responsible for delivering it (email TBD)."""
@@ -384,6 +399,7 @@ class InvitationService:
             tenant_id=UUID(tenant_id),
             role_id=role.id,
             inviter_id=UUID(inviter_id) if inviter_id else None,
+            broker_id=UUID(broker_id) if broker_id else None,
             token_hash=token_hash,
             expires_at=expires_at,
         )
@@ -437,6 +453,11 @@ class InvitationService:
             hashed_password=_hash_password(password),
             tenant_id=invitation.tenant_id,
             role_id=invitation.role_id,
+            # Propagate the broker stamp from the invitation so broker
+            # users land with users.broker_id set and pass the
+            # `Submission.broker_id == user.broker_id` join used by every
+            # broker-portal endpoint.
+            broker_id=invitation.broker_id,
             is_active=True,
         )
         self.db.add(user)

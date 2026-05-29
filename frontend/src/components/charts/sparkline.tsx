@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Area, AreaChart, ResponsiveContainer } from "recharts";
 
 interface SparklineProps {
@@ -13,7 +14,7 @@ interface SparklineProps {
  * Tiny inline trend line. Auto-scales to min/max; no axes.
  * Default color is `--color-info` so it reads as a neutral fact.
  */
-export function Sparkline({
+export const Sparkline = memo(function Sparkline({
   points,
   color = "var(--color-info)",
   height = 28,
@@ -43,4 +44,4 @@ export function Sparkline({
       </ResponsiveContainer>
     </div>
   );
-}
+});
