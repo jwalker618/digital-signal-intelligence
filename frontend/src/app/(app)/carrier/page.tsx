@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { memo, useEffect, useMemo, useState } from "react";
-import { AlertCircle, ChevronRight, Search, UserCheck } from "lucide-react";
+import { AlertCircle, Check, ChevronRight, Search, UserCheck, X } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { CarrierShell } from "@/components/chrome/carrier-shell";
 import { isCarrierRole } from "@/lib/portalPaths";
@@ -125,11 +125,43 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
     return { referrals, approvals, declines, awaiting, premium };
   }, [filtered]);
 
+  // Referral-mode triage metrics (replace the decision-breakdown KPIs that
+  // only make sense on the full pipeline). Same count + sizing as full mode.
+  const triage = useMemo(() => {
+    if (filtered.length === 0) {
+      return { avgScore: 0, loPrem: 0, medPrem: 0, hiPrem: 0, oldest: "—" };
+    }
+    const scores = filtered.map((s) =>
+      Number(s.final_composite_score ?? 0),
+    );
+    const avgScore = Math.round(
+      scores.reduce((a, b) => a + b, 0) / scores.length,
+    );
+    const premiums = filtered.map((s) => premiumOf(s)).sort((a, b) => a - b);
+    const n = premiums.length;
+    const medPrem =
+      n % 2 ? premiums[(n - 1) / 2]! : (premiums[n / 2 - 1]! + premiums[n / 2]!) / 2;
+    const oldestRow = filtered.reduce((a, b) => {
+      const at = new Date(String(a.received_at ?? a.created_at ?? 0)).getTime();
+      const bt = new Date(String(b.received_at ?? b.created_at ?? 0)).getTime();
+      return bt < at ? b : a;
+    });
+    const oldestTs = oldestRow.received_at ?? oldestRow.created_at;
+    return {
+      avgScore,
+      loPrem: premiums[0]!,
+      medPrem,
+      hiPrem: premiums[n - 1]!,
+      oldest: oldestTs ? fmtRelative(String(oldestTs)) : "—",
+    };
+  }, [filtered]);
+
   const heroLabel = mode === "referral" ? "Referral pipeline" : "Full pipeline";
   const heroCaption =
     mode === "referral"
       ? "submissions awaiting decision"
       : "submissions in the pipeline";
+  const fmtK = (v: number) => `$${Math.round(v / 1000)}k`;
 
   return (
     <>
@@ -140,17 +172,11 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
         ]}
       />
       <WorkArea maxWidth={1400} className="gap-4">
-          {/* Hero row — pipeline count + decision-mix KPI strip. Full mode
-              renders 5 cards; referral mode renders only the hero +
-              Pipeline$ so the grid template collapses accordingly to
-              avoid stranded empty columns. */}
-          <div
-            className={
-              mode === "full"
-                ? "grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]"
-                : "grid gap-4 lg:grid-cols-[1.6fr_1fr]"
-            }
-          >
+          {/* Hero row — count + KPI strip. Both modes fill 5 columns: full
+              mode shows the decision breakdown; referral mode swaps in
+              triage metrics (those decision counts are meaningless when
+              every row is already a referral). */}
+          <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
             <Card variant="info" pad="md" className="flex items-center gap-4">
               <div className="flex size-14 shrink-0 items-center justify-center rounded-card bg-info-soft text-info-deep dark:text-info">
                 <UserCheck size={28} />
@@ -165,9 +191,35 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
                 <Caption className="mt-1.5 block">{heroCaption}</Caption>
               </div>
             </Card>
-            {/* To-refer/approve/declined are only meaningful in full mode;
-                in referral mode the hero count already covers "to refer". */}
-            {mode === "full" && (
+            {mode === "referral" ? (
+              <>
+                <Card pad="md">
+                  <MiniKpi label="Avg score" value={triage.avgScore} tone="info" />
+                </Card>
+                <Card pad="md">
+                  <Micro>Premium range</Micro>
+                  <div className="mt-2 flex justify-between gap-2">
+                    {[
+                      ["Low", triage.loPrem, "text-ink-soft"],
+                      ["Median", triage.medPrem, "text-ink"],
+                      ["High", triage.hiPrem, "text-ink-soft"],
+                    ].map(([k, v, c]) => (
+                      <div key={k as string} className="min-w-0">
+                        <div className="text-[10px] text-ink-mute">{k}</div>
+                        <div
+                          className={`mt-0.5 whitespace-nowrap font-mono text-[16px] tabular-nums ${c}`}
+                        >
+                          {fmtK(v as number)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+                <Card pad="md">
+                  <MiniKpi label="Oldest waiting" value={triage.oldest} tone="spot" />
+                </Card>
+              </>
+            ) : (
               <>
                 <Card pad="md">
                   <MiniKpi label="To refer" value={counts.referrals} />
@@ -185,42 +237,47 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
             </Card>
           </div>
 
-          {/* Filters */}
+          {/* Filters — search on both modes; decision filter is only
+              meaningful on the full pipeline (every referral-mode row is
+              already a referral). */}
           <div className="flex flex-wrap items-center gap-2">
-            <Micro className="mr-1">Decision:</Micro>
-            {(
-              [
-                ["all", `All (${filtered.length})`],
-                ["refer", `Refer (${counts.referrals})`],
-                ["approve", `Approve (${counts.approvals})`],
-                ["decline", `Decline (${counts.declines})`],
-              ] as [DecisionFilter, string][]
-            ).map(([key, label]) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setDecision(key)}
-                className="focus:outline-none"
-              >
-                <Chip
-                  variant={decision === key ? "info" : "outline"}
-                  className="cursor-pointer"
-                >
-                  {label}
-                </Chip>
-              </button>
-            ))}
-            <span className="flex-1" />
             <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
               <Search size={15} className="text-ink-mute" />
               <input
                 type="search"
-                placeholder="Entity, line, or code…"
+                placeholder="Search entity, broker…"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="h-9 w-56 border-0 bg-transparent text-[13.5px] text-ink placeholder:text-ink-mute focus:outline-none"
               />
             </div>
+            {mode === "full" && (
+              <>
+                <Micro className="ml-2 mr-1">Decision:</Micro>
+                {(
+                  [
+                    ["all", `All (${filtered.length})`],
+                    ["refer", `Refer (${counts.referrals})`],
+                    ["approve", `Approve (${counts.approvals})`],
+                    ["decline", `Decline (${counts.declines})`],
+                  ] as [DecisionFilter, string][]
+                ).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setDecision(key)}
+                    className="focus:outline-none"
+                  >
+                    <Chip
+                      variant={decision === key ? "info" : "outline"}
+                      className="cursor-pointer"
+                    >
+                      {label}
+                    </Chip>
+                  </button>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Table */}
@@ -237,12 +294,18 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
                   <ColHead width="w-[11%]">Premium</ColHead>
                   <ColHead width="w-[11%]">Status</ColHead>
                   <ColHead width="w-[6%]">Age</ColHead>
-                  <ColHead width="w-[4%]">{null}</ColHead>
+                  <ColHead width={mode === "referral" ? "w-[10%]" : "w-[4%]"}>
+                    {mode === "referral" ? "Quick" : null}
+                  </ColHead>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((s) => (
-                  <Row key={s.submission_code} sub={s} />
+                  <Row
+                    key={s.submission_code}
+                    sub={s}
+                    quick={mode === "referral"}
+                  />
                 ))}
               </tbody>
             </table>
@@ -257,7 +320,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
   );
 }
 
-const Row = memo(function Row({ sub }: { sub: ApiRecord }) {
+const Row = memo(function Row({ sub, quick }: { sub: ApiRecord; quick?: boolean }) {
   const decision = decisionOf(sub);
   const decisionTone =
     decision === "approve"
@@ -365,13 +428,40 @@ const Row = memo(function Row({ sub }: { sub: ApiRecord }) {
       <td className="px-5 py-3">
         <Micro>{received ? fmtRelative(String(received)) : "—"}</Micro>
       </td>
-      <td className="px-5 py-3 text-right">
-        <Link
-          href={`/carrier/submissions/${sub.submission_code}`}
-          className="inline-flex items-center text-ink-mute hover:text-ink"
-        >
-          <ChevronRight size={16} />
-        </Link>
+      <td className="px-5 py-3">
+        {quick ? (
+          <div className="flex items-center justify-end gap-1.5">
+            <button
+              type="button"
+              aria-label="Approve"
+              title="Approve"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-pos/40 text-pos hover:bg-pos-soft"
+            >
+              <Check size={14} />
+            </button>
+            <button
+              type="button"
+              aria-label="Decline"
+              title="Decline"
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-neg/40 text-neg hover:bg-neg-soft"
+            >
+              <X size={14} />
+            </button>
+            <Link
+              href={`/carrier/submissions/${sub.submission_code}`}
+              className="ml-0.5 inline-flex items-center text-ink-mute hover:text-ink"
+            >
+              <ChevronRight size={16} />
+            </Link>
+          </div>
+        ) : (
+          <Link
+            href={`/carrier/submissions/${sub.submission_code}`}
+            className="flex items-center justify-end text-ink-mute hover:text-ink"
+          >
+            <ChevronRight size={16} />
+          </Link>
+        )}
       </td>
     </tr>
   );

@@ -13,6 +13,7 @@ import { KpiSnug } from "@/components/ui/kpi-snug";
 import { PageLoading } from "@/components/base/pageStates";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { useEnsureFetched } from "@/store/useEnsureFetched";
+import { SubjectMarker } from "@/components/charts/subject-marker";
 
 /* ============================================================
  * Loss Assessment — mirrors reim_wb_b.jsx WbLoss (section 04).
@@ -306,24 +307,11 @@ function FreqSevScatter({
       })}
 
       {subject && (
-        <>
-          <circle
-            cx={xToPx(subject.x)}
-            cy={yToPx(subject.y)}
-            r={8}
-            fill="var(--color-info)"
-            stroke="var(--color-surface)"
-            strokeWidth={2}
-          />
-          <text
-            x={xToPx(subject.x)}
-            y={yToPx(subject.y) - 14}
-            textAnchor="middle"
-            style={{ font: "600 11px IBM Plex Sans", fill: "var(--color-info)" }}
-          >
-            YOU · {Math.round(subject.x)}/{Math.round(subject.y)}
-          </text>
-        </>
+        <SubjectMarker
+          cx={xToPx(subject.x)}
+          cy={yToPx(subject.y)}
+          label={`YOU · ${Math.round(subject.x)}/${Math.round(subject.y)}`}
+        />
       )}
     </svg>
   );
