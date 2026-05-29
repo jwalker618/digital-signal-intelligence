@@ -1,13 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import {
-  ChevronRight,
-  FileCheck,
-  ShieldCheck,
-  Users,
-  type LucideIcon,
-} from "lucide-react";
+import { ChevronRight, ShieldCheck } from "lucide-react";
+import { lineIcon } from "@/lib/coverageIcon";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
@@ -259,12 +254,4 @@ function fmtDate(iso: string): string {
   return Number.isNaN(d.getTime())
     ? "—"
     : d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
-}
-
-// Per-line header icon (revised pack uses line-specific glyphs).
-function lineIcon(line: string): LucideIcon {
-  const l = line.toLowerCase();
-  if (/pi|professional|e&o|errors/.test(l)) return FileCheck;
-  if (/d&o|directors|management/.test(l)) return Users;
-  return ShieldCheck;
 }

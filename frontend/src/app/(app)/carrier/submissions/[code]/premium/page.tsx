@@ -42,7 +42,6 @@ export default function PremiumAssemblyPage() {
   const offeredPremium = numOrNull(commercial?.offered_premium);
   const discretionPct = pctOrNull(commercial?.offered_premium_discretion);
   const discretionRationale = strOrNull(commercial?.offered_premium_rationale);
-  const totalCommission = numOrNull(commercial?.total_commission);
   const totalTaxes = numOrNull(commercial?.total_taxes);
   const minimumPremium = numOrNull(commercial?.minimum_premium ?? commercial?.minimum_gross);
   const atMinimum = boolOrNull(commercial?.at_minimum_premium);
@@ -180,8 +179,8 @@ export default function PremiumAssemblyPage() {
                 value={discretionRationale ?? "None recorded"}
               />
               <KpiSnug
-                label="Commission total"
-                value={totalCommission != null ? formatCurrency(totalCommission) : "—"}
+                label="Approver"
+                value={strOrNull(commercial?.offered_premium_set_by) ?? "—"}
               />
             </div>
             {totalTaxes != null && (

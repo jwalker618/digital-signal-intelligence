@@ -191,14 +191,15 @@ function Body0({
             ) : (
               <table className="w-full table-fixed text-[12.5px]">
                 <thead>
-                  <tr className="border-b border-rule bg-surface-sunken text-left">
-                    <ColHead width="w-[20%]">Source</ColHead>
-                    <ColHead width="w-[20%]">Target</ColHead>
-                    <ColHead width="w-[12%]">Direction</ColHead>
-                    <ColHead width="w-[9%]">Rho</ColHead>
-                    <ColHead width="w-[10%]">Influence</ColHead>
-                    <ColHead width="w-[11%]">Population</ColHead>
-                    <ColHead width="w-[18%]">Lifecycle</ColHead>
+                  <tr className="border-b border-rule bg-surface-elev text-left">
+                    <ColHead width="w-[19%]">Source</ColHead>
+                    <ColHead width="w-[19%]">Target</ColHead>
+                    <ColHead width="w-[11%]">Direction</ColHead>
+                    <ColHead width="w-[8%]">Rho</ColHead>
+                    <ColHead width="w-[9%]">Influence</ColHead>
+                    <ColHead width="w-[10%]">Population</ColHead>
+                    <ColHead width="w-[14%]">Lifecycle</ColHead>
+                    <ColHead width="w-[10%]">Discovered</ColHead>
                   </tr>
                 </thead>
                 <tbody>
@@ -646,6 +647,9 @@ function RelRow({ rel }: { rel: DiscoveredRelationship }) {
         <Chip variant={lifecycleTone} size="sm">
           {formatText(rel.lifecycle_state, "capitalize")}
         </Chip>
+      </td>
+      <td className="px-5 py-2.5">
+        <Micro>{rel.created_at ? fmtRelative(rel.created_at) : "—"}</Micro>
       </td>
     </tr>
   );

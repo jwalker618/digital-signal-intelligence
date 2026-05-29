@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronRight, ShieldCheck } from "lucide-react";
+import { lineIcon } from "@/lib/coverageIcon";
 import { Topbar } from "@/components/chrome/topbar";
 import {
   Body,
@@ -183,12 +184,14 @@ function CoveragesBody({
             </Card>
           ) : (
             <div className="flex flex-col gap-3.5">
-              {groups.map((g) => (
+              {groups.map((g) => {
+                const GroupIcon = group === "line" ? lineIcon(g.key) : ShieldCheck;
+                return (
                 <Card key={g.key} pad="none" className="overflow-hidden">
                   <header className="flex items-center justify-between border-b border-rule bg-surface-elev px-5 py-3">
                     <div className="flex items-center gap-3">
                       <div className="flex h-8 w-8 items-center justify-center rounded-md border border-rule bg-surface">
-                        <ShieldCheck size={15} className="text-ink-soft" />
+                        <GroupIcon size={15} className="text-ink-soft" />
                       </div>
                       <h2 className="text-[16px] font-semibold text-ink">{g.key}</h2>
                       <Chip variant="mute" size="sm">
@@ -209,7 +212,8 @@ function CoveragesBody({
                     ))}
                   </div>
                 </Card>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
