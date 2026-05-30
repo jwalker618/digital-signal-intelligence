@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import {
+  LogOut,
   PanelLeftClose,
   PanelLeftOpen,
-  UserCircle,
+  Settings,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,8 @@ import {
   ADMIN_CHILDREN,
   type AdminNavLeaf,
 } from "@/components/layout/navConfig";
+import { useAuthStore } from "@/store/authStore";
+import { deriveUserDisplay } from "@/lib/userIdentity";
 
 export type PersonaKey = "client" | "broker" | "carrier" | "admin";
 
@@ -69,7 +72,17 @@ export function PersonaSidebar({
   isActive = defaultIsActive,
 }: PersonaSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const nav = PERSONA_NAV[persona];
+
+  const user = useAuthStore((s) => s.user);
+  const logout = useAuthStore((s) => s.logout);
+  const account = user ? deriveUserDisplay(user) : null;
+
+  const onSignOut = async () => {
+    await logout();
+    router.replace("/login");
+  };
 
   const [pinned, setPinned] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -173,7 +186,7 @@ export function PersonaSidebar({
     >
       {/* Collapsed rail — always visible, lives in the flex layout */}
       <aside
-        className="chrome-sidebar relative z-10 flex h-full w-[72px] shrink-0 flex-col items-center py-[18px]"
+        className="chrome-sidebar relative z-10 flex h-full w-[60px] shrink-0 flex-col items-center py-3.5"
         aria-label={`${persona} navigation`}
       >
         <button
@@ -181,17 +194,11 @@ export function PersonaSidebar({
           onClick={togglePinned}
           aria-label={pinned ? "Collapse sidebar" : "Expand sidebar"}
           aria-expanded={expanded}
-          className="mb-[18px] flex h-9 w-9 items-center justify-center rounded-lg text-white/55 hover:text-white"
+          className="flex h-[38px] w-[38px] items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white"
         >
           {pinned ? <PanelLeftClose size={20} /> : <PanelLeftOpen size={20} />}
         </button>
-        <Link
-          href={nav[0]?.href ?? "/"}
-          className="mb-[16px] flex h-9 w-9 items-center justify-center rounded-lg"
-          aria-label="DSI home"
-        >
-          <span className="dsi-wordmark" aria-hidden />
-        </Link>
+        <span className="mt-2 mb-3 h-px w-6 shrink-0 bg-white/15" aria-hidden />
         <nav className="flex w-full flex-col items-center gap-1">
           {nav.map((n) => {
             const Icon: LucideIcon = n.icon;
@@ -216,6 +223,18 @@ export function PersonaSidebar({
             );
           })}
         </nav>
+        <div className="flex-1" />
+        {/* Quick log-out — Settings stays in the expanded panel only, so it
+            can't be reached from the collapsed rail (matches the design pack). */}
+        <button
+          type="button"
+          onClick={onSignOut}
+          title="Log out"
+          aria-label="Log out"
+          className="flex h-[38px] w-[38px] items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <LogOut size={20} />
+        </button>
       </aside>
 
       {/* Backdrop + expanded overlay — fixed to viewport so it escapes
@@ -228,33 +247,43 @@ export function PersonaSidebar({
             onClick={closeAll}
           />
           <aside
-            className="chrome-sidebar fixed left-0 top-0 z-50 flex h-screen w-[50vw] flex-col py-[18px] pl-5 pr-6"
+            className="chrome-sidebar fixed left-0 top-0 z-50 flex h-screen w-[50vw] min-w-[320px] flex-col px-4 pt-3.5 pb-[18px]"
             aria-label={`${persona} navigation expanded`}
             onMouseEnter={handleEnter}
             onMouseLeave={handleLeave}
           >
-            <button
-              type="button"
-              onClick={togglePinned}
-              aria-label={pinned ? "Collapse sidebar" : "Pin sidebar"}
-              aria-expanded={expanded}
-              className="mb-[18px] flex h-9 w-9 items-center justify-center rounded-lg text-white/55 hover:text-white"
-            >
-              {/* Panel is rendered, so it's open from the user's POV — always
-                  show the "close" affordance regardless of pinned state. */}
-              <PanelLeftClose size={20} />
-            </button>
-            <Link
-              href={nav[0]?.href ?? "/"}
-              className="mb-[22px] flex h-9 items-center gap-2 text-white"
-              aria-label="DSI home"
-            >
-              <span className="dsi-wordmark" aria-hidden />
-              <span className="text-[13px] font-semibold uppercase tracking-[0.12em] text-white/80">
-                DSI
-              </span>
-            </Link>
-            <nav className="flex flex-col gap-1">
+            <div className="flex">
+              <button
+                type="button"
+                onClick={togglePinned}
+                aria-label={pinned ? "Collapse sidebar" : "Pin sidebar"}
+                aria-expanded={expanded}
+                className="flex h-[38px] w-[38px] items-center justify-center rounded-lg text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+              >
+                {/* Panel is rendered, so it's open from the user's POV — always
+                    show the "close" affordance regardless of pinned state. */}
+                <PanelLeftClose size={20} />
+              </button>
+            </div>
+
+            {/* Account — only visible while the sidebar is expanded. */}
+            {account && (
+              <div className="mt-1.5 mb-1.5 flex items-center gap-3 border-b border-white/10 px-2 pt-2.5 pb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info text-[15px] font-semibold text-[#06222f]">
+                  {account.initials}
+                </div>
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold leading-tight text-white">
+                    {account.name}
+                  </div>
+                  <div className="mt-0.5 truncate text-xs text-white/55">
+                    {account.email}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <nav className="mt-2 flex flex-col gap-0.5">
               {nav.map((n) => {
                 const Icon: LucideIcon = n.icon;
                 const active = isActive(n.href, pathname);
@@ -264,7 +293,7 @@ export function PersonaSidebar({
                     href={n.href}
                     aria-current={active ? "page" : undefined}
                     className={cn(
-                      "relative flex h-[38px] items-center gap-3 rounded-lg px-2 text-[13.5px] text-white/65 transition-colors hover:bg-white/5 hover:text-white",
+                      "relative flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[14px] font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white",
                       active && "bg-white/10 text-white",
                     )}
                   >
@@ -277,15 +306,23 @@ export function PersonaSidebar({
                 );
               })}
             </nav>
-            <div className="mt-auto flex flex-col gap-1 border-t border-white/10 pt-3">
+            <div className="mt-auto flex flex-col gap-0.5 border-t border-white/10 pt-2.5">
               <Link
                 href="/profile"
-                aria-label="Account"
-                className="flex h-[38px] items-center gap-3 rounded-lg px-2 text-[13.5px] text-white/65 hover:bg-white/5 hover:text-white"
+                aria-label="Settings"
+                className="flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-[14px] font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
               >
-                <UserCircle size={18} className="shrink-0" />
-                <span>Profile</span>
+                <Settings size={18} className="shrink-0" />
+                <span>Settings</span>
               </Link>
+              <button
+                type="button"
+                onClick={onSignOut}
+                className="flex h-[38px] items-center gap-3 rounded-lg px-2.5 text-left text-[14px] font-medium text-white/70 transition-colors hover:bg-white/[0.08] hover:text-white"
+              >
+                <LogOut size={18} className="shrink-0" />
+                <span>Log out</span>
+              </button>
             </div>
           </aside>
         </>

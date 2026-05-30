@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ThemeBoot } from "@/components/theme-boot";
 import "./globals.css";
 
@@ -6,6 +6,13 @@ export const metadata: Metadata = {
   title: "DSI — Digital Signal Intelligence",
   description:
     "Risk, illuminated by signal. Underwriting, broking, and risk insight for commercial insurance.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  userScalable: false,
 };
 
 /**

@@ -38,6 +38,10 @@ class ClientBookEntry(BaseModel):
     referral_state: Optional[str] = None
     awaiting_party: Optional[str] = None
     updated_at: Optional[datetime] = None
+    # Practice vertical, derived from the submission's NAICS section. Powers
+    # the book-roster quick-filter chips. Null when NAICS is unavailable.
+    vertical: Optional[str] = None        # slug, e.g. "energy-power"
+    vertical_name: Optional[str] = None   # display, e.g. "Energy & Power"
 
 
 class BrokerOverviewResponse(BaseModel):

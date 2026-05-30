@@ -72,12 +72,13 @@ export function SessionGuard({ children }: { children: React.ReactNode }) {
         (home === "/broker"  && isBrokerPath(pathname))  ||
         (home === "/client"  && isClientPath(pathname));
 
-      // Admin tree + the user-account /profile + /login are persona-
-      // agnostic; don't bounce off them.
+      // Admin tree + the user-account /profile + /login + the mobile
+      // companion (/m) are persona-agnostic; don't bounce off them.
       const personaAgnostic =
         !!pathname && (
           pathname === "/profile" || pathname.startsWith("/profile/") ||
-          pathname.startsWith("/admin")
+          pathname.startsWith("/admin") ||
+          pathname === "/m" || pathname.startsWith("/m/")
         );
 
       if (!onOwnTree && !personaAgnostic) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { Building2, Moon, Sun } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { useThemeStore } from "@/store/themeStore";
 
@@ -22,10 +23,16 @@ const PORTAL_CRUMBS = new Set([
 export function Topbar({ crumbs, entity, actions }: TopbarProps) {
   const isDark = useThemeStore((s) => s.isDark);
   const toggle = useThemeStore((s) => s.toggleDark);
+  const pathname = usePathname();
 
   const display = crumbs.length > 0 && PORTAL_CRUMBS.has(crumbs[0]!)
     ? crumbs.slice(1)
     : crumbs;
+
+  // Per the design pack, the org badge is only kept in the admin console
+  // (which spans many orgs). In the client / broker / carrier portals the
+  // badge would just echo the user's own org, which they already know.
+  const showEntity = !!entity && !!pathname?.startsWith("/admin");
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-rule bg-canvas px-8">
@@ -43,7 +50,7 @@ export function Topbar({ crumbs, entity, actions }: TopbarProps) {
       </nav>
       <div className="flex items-center gap-4">
         {actions}
-        {entity && (
+        {showEntity && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-rule bg-surface px-2.5 py-1.5 text-xs text-ink-soft">
             <Building2 size={13} aria-hidden />
             {entity}

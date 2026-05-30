@@ -32,6 +32,7 @@ from infrastructure.db.models import (
 )
 from layers.cohort.queries import fetch_cohort_scores
 
+from .broker_intel_data import get_vertical, vertical_for_naics
 from .dependencies import get_user_record, require_portal_user
 from .schemas import (
     BrokerInfo,
@@ -191,6 +192,13 @@ async def _build_book_entry(
     mv = await _latest_mv_for_submission(submission, db)
     quote = await _latest_quote_for_submission(submission, db)
     referral = await _open_referral_for_submission(submission, db)
+
+    # Practice vertical from NAICS — no extra query, read off submission_data.
+    sd = submission.submission_data or {}
+    naics = sd.get("naics") or sd.get("naics_code")
+    vertical_slug = vertical_for_naics(naics)
+    vertical_dict = get_vertical(vertical_slug) if vertical_slug else None
+
     return ClientBookEntry(
         submission_code=submission.submission_code,
         entity_name=submission.entity_name,
@@ -203,6 +211,8 @@ async def _build_book_entry(
         referral_state=(referral.status.value if referral else None),
         awaiting_party=(referral.awaiting_party if referral else None),
         updated_at=submission.updated_at,
+        vertical=vertical_slug,
+        vertical_name=(vertical_dict["name"] if vertical_dict else None),
     )
 
 
