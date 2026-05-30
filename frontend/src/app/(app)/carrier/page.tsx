@@ -92,9 +92,21 @@ function premiumOf(sub: ApiRecord): number {
 export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
   const [query, setQuery] = useState("");
   const [decision, setDecision] = useState<DecisionFilter>("all");
+  const [lineFilter, setLineFilter] = useState<string>("all");
+
+  // Distinct coverage lines present in the pipeline → quick-filter chips.
+  // Data-driven, so chips only show lines the carrier actually receives.
+  const lines = useMemo(() => {
+    const set = new Set<string>();
+    for (const s of submissions) {
+      const line = (s.coverage as string | undefined)?.trim();
+      if (line) set.add(line);
+    }
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [submissions]);
 
   const filtered = useMemo(() => {
-    return submissions.filter((s) => {
+    const rows = submissions.filter((s) => {
       if (mode === "referral") {
         const dec = decisionOf(s);
         const refState = (s.referral_state ?? "").toLowerCase();
@@ -104,6 +116,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
       if (decision !== "all") {
         if (decisionOf(s) !== decision) return false;
       }
+      if (lineFilter !== "all" && (s.coverage ?? "") !== lineFilter) return false;
       if (!query) return true;
       const q = query.toLowerCase();
       return (
@@ -113,7 +126,12 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
         (s.submission_code ?? "").toLowerCase().includes(q)
       );
     });
-  }, [submissions, query, decision, mode]);
+    // Oldest first — the desk works the queue front-to-back (matches the
+    // "Sort: oldest first" caption + the template's triage ordering).
+    const ts = (s: ApiRecord) =>
+      new Date(String(s.received_at ?? s.created_at ?? 0)).getTime();
+    return rows.sort((a, b) => ts(a) - ts(b));
+  }, [submissions, query, decision, lineFilter, mode]);
 
   const counts: PipelineCounts = useMemo(() => {
     let referrals = 0;
@@ -288,6 +306,39 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
                 ))}
               </>
             )}
+            {lines.length > 1 && (
+              <>
+                <Micro className="ml-2 mr-1">Line:</Micro>
+                <button
+                  type="button"
+                  onClick={() => setLineFilter("all")}
+                  className="focus:outline-none"
+                >
+                  <Chip
+                    variant={lineFilter === "all" ? "info" : "outline"}
+                    className="cursor-pointer"
+                  >
+                    All
+                  </Chip>
+                </button>
+                {lines.map((line) => (
+                  <button
+                    key={line}
+                    type="button"
+                    onClick={() => setLineFilter(line)}
+                    className="focus:outline-none"
+                  >
+                    <Chip
+                      variant={lineFilter === line ? "info" : "outline"}
+                      className="cursor-pointer"
+                    >
+                      {formatText(line, "capitalize")}
+                    </Chip>
+                  </button>
+                ))}
+              </>
+            )}
+            <Caption className="ml-auto">Sort: oldest first</Caption>
           </div>
 
           {/* Table — fixed-px CSS grid columns (matches the template). */}

@@ -87,6 +87,10 @@ export interface ClientBookEntry {
   referral_state?: string | null;
   awaiting_party?: string | null;
   updated_at?: string | null;
+  // Practice vertical, derived from the submission NAICS. Powers the
+  // book-roster quick-filter chips. Null when NAICS is unavailable.
+  vertical?: string | null;
+  vertical_name?: string | null;
 }
 
 export interface ScoreHistoryPoint {

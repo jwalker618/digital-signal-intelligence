@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { PageLoading } from "@/components/base/pageStates";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/store/authStore";
-import type { AuthUser } from "@/types/auth";
+import { deriveUserDisplay } from "@/lib/userIdentity";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
   if (!user) return <PageLoading />;
 
-  const display = deriveDisplay(user);
+  const display = deriveUserDisplay(user);
 
   async function onSignOut() {
     await logout();
@@ -240,32 +240,6 @@ export default function ProfilePage() {
       </div>
     </div>
   );
-}
-
-interface Display {
-  initials: string;
-  name: string;
-  roleLabel: string;
-  tenantLabel: string;
-}
-
-function deriveDisplay(user: AuthUser): Display {
-  const local = user.email?.split("@")[0] ?? "";
-  const parts = local.split(/[._-]/).filter(Boolean);
-  const name = parts.length
-    ? parts
-        .slice(0, 2)
-        .map((p) => p[0].toUpperCase() + p.slice(1))
-        .join(" ")
-    : (user.email ?? "—");
-  const initials =
-    (parts.map((p) => p[0] ?? "").join("").slice(0, 2).toUpperCase() ||
-      user.email?.slice(0, 2).toUpperCase()) ?? "—";
-  const roleLabel = user.role
-    ? user.role.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())
-    : "";
-  const tenantLabel = user.tenant_id;
-  return { initials, name, roleLabel, tenantLabel };
 }
 
 function DetailRow({

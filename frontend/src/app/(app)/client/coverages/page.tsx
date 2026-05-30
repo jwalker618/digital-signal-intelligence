@@ -59,7 +59,13 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
     arr.push(c);
     grouped.set(c.coverage, arr);
   }
-  const groups = Array.from(grouped.entries());
+  // Sort lines by total premium, descending — matches the "Sort: by premium ↓"
+  // label in the design pack.
+  const linePremium = (items: ClientCoverageEntry[]) =>
+    items.reduce((sum, c) => sum + (c.recommended_premium ?? 0), 0);
+  const groups = Array.from(grouped.entries()).sort(
+    (a, b) => linePremium(b[1]) - linePremium(a[1]),
+  );
   const lineCount = groups.length;
 
   return (
@@ -109,7 +115,7 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
               </Chip>
             ))}
             <div className="flex-1" />
-            <Caption>Sort: by premium</Caption>
+            <Caption>Sort: by premium ↓</Caption>
           </div>
 
           {/* ────────── ROW 3 — per-line cards ────────── */}

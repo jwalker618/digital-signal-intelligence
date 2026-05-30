@@ -61,6 +61,7 @@ const MOVE_TEXT: Record<string, string> = {
 
 function BookBody({ data }: { data: BrokerOverviewResponse }) {
   const [query, setQuery] = useState("");
+  const [vFilter, setVFilter] = useState<string>("all");
   const [qFilter, setQFilter] = useState<"open" | "broker" | "client" | "resolved">("open");
   const grouped = useMemo(() => {
     const m = new Map<string, ClientBookEntry[]>();
@@ -72,18 +73,33 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
     return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0]));
   }, [data.clients]);
 
-  // Flattened roster rows + roster search across client / coverage / code.
+  // Practice verticals present in the book → quick-filter chips. Derived
+  // from real data (NAICS-backed), so the chips only show verticals the
+  // broker actually carries. "All" is prepended in the render.
+  const verticals = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of data.clients) {
+      if (c.vertical && c.vertical_name) m.set(c.vertical, c.vertical_name);
+    }
+    return [...m.entries()]
+      .map(([slug, name]) => ({ slug, name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [data.clients]);
+
+  // Flattened roster rows + roster search across client / coverage / code,
+  // intersected with the active vertical chip.
   const visibleRows = useMemo(() => {
     const rows = grouped.flatMap(([client, items]) =>
       items.map((entry) => ({ client, entry })),
     );
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter(({ client, entry }) =>
-      [client, entry.coverage, entry.submission_code]
-        .some((f) => String(f ?? "").toLowerCase().includes(q)),
-    );
-  }, [grouped, query]);
+    return rows.filter(({ client, entry }) => {
+      if (vFilter !== "all" && entry.vertical !== vFilter) return false;
+      if (!q) return true;
+      return [client, entry.coverage, entry.submission_code]
+        .some((f) => String(f ?? "").toLowerCase().includes(q));
+    });
+  }, [grouped, query, vFilter]);
 
   // Open-queries inbox — the book is the broker's comms hub, so it slices
   // the queue by who it's waiting on.
@@ -211,7 +227,7 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             pad="none"
             header={`Book roster`}
             headerRight={
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 <div className="flex items-center gap-2 rounded-btn border border-rule-strong bg-surface px-3">
                   <Search size={14} className="text-ink-mute" />
                   <input
@@ -223,10 +239,27 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
                   />
                 </div>
                 <Chip variant="mute" size="sm">
-                  {query
+                  {query || vFilter !== "all"
                     ? `${visibleRows.length} of ${totalPolicies}`
                     : `${totalPolicies} polic${totalPolicies === 1 ? "y" : "ies"}`}
                 </Chip>
+                {verticals.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <Micro className="mr-0.5">Filter:</Micro>
+                    <VFilterChip active={vFilter === "all"} onClick={() => setVFilter("all")}>
+                      All
+                    </VFilterChip>
+                    {verticals.map((v) => (
+                      <VFilterChip
+                        key={v.slug}
+                        active={vFilter === v.slug}
+                        onClick={() => setVFilter(v.slug)}
+                      >
+                        {v.name}
+                      </VFilterChip>
+                    ))}
+                  </div>
+                )}
               </div>
             }
           >
@@ -257,7 +290,11 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
             )}
             {grouped.length > 0 && visibleRows.length === 0 && (
               <div className="px-5 py-9 text-center">
-                <Body className="italic">No policies match “{query}”.</Body>
+                <Body className="italic">
+                  {query
+                    ? `No policies match “${query}”.`
+                    : "No policies in this vertical."}
+                </Body>
               </div>
             )}
           </Card>
@@ -459,6 +496,32 @@ const BookRow = memo(function BookRow({
     </tr>
   );
 });
+
+function VFilterChip({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "rounded-chip border px-2.5 py-1 text-[11.5px] font-semibold transition-colors",
+        active
+          ? "border-ink bg-ink text-canvas"
+          : "border-rule-strong bg-surface text-ink-soft hover:bg-surface-sunken",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
 
 function ColHead({
   children,
