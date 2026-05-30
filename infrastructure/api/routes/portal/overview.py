@@ -392,7 +392,7 @@ async def _build_coverage_entry(
             submission.entity_name, submission.coverage, tenant_id, db,
         ),
         # Phase F.2: policy facts.
-        limit=(mv.recommended_limit if mv else None),
+        limit=(quote.recommended_limit if quote else None),
         deductible=(risk.deductible_amount if risk else None),
         aggregate_limit=(risk.aggregate_limit if risk else None),
         expires_at=(commercial.earned_end if commercial else None),

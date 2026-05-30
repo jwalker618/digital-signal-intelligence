@@ -688,7 +688,7 @@ async def client_workbench(
                 cohort_size=(mv.peer_cohort_size if mv else None),
                 premium=premium,
                 recommended=premium,
-                limit=(mv.recommended_limit if mv else None),
+                limit=(quote.recommended_limit if quote else None),
                 deductible=(risk.deductible_amount if risk else None),
                 status=status,
                 status_tone=tone,
