@@ -153,7 +153,7 @@ function BookBody({ data }: { data: BrokerOverviewResponse }) {
         entity={data.broker.name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
+        <div className="grid gap-4">
           {/* Hero strip — broker identity + 4 KPIs */}
           <div className="grid gap-4 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
             <Card pad="lg" className="flex items-center gap-4">

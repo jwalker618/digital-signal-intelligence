@@ -101,7 +101,7 @@ function ProfileBody({
         entity={profile.entity_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-4">
+        <div className="grid gap-4">
           {/* ────────── ROW 1 — identity hero + signal apparatus ────────── */}
           <div className="grid gap-4 lg:grid-cols-[1.6fr_1fr]">
             <Card pad="lg" className="flex items-center gap-6">

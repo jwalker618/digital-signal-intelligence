@@ -141,7 +141,7 @@ function DriversBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
+        <div className="grid gap-4">
           {/* ────────── ROW 1 — title strip ────────── */}
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

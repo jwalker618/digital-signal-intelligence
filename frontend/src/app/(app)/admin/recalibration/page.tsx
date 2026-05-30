@@ -180,7 +180,7 @@ function RecalInner() {
     <>
       <Topbar crumbs={["Admin", "Recalibration"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
+        <div className="grid gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
               <Eyebrow>Recalibration</Eyebrow>

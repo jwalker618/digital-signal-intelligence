@@ -132,7 +132,7 @@ function Body0({
   return (
     <>
       <Topbar crumbs={["Carrier Portal", "World Engine"]} />
-      <WorkArea maxWidth={1400} className="gap-4">
+      <WorkArea className="gap-4">
           {/* 1 — World Engine status */}
           {stats && <StatusCard stats={stats} alertCount={alerts.length} />}
 

@@ -75,7 +75,7 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
         entity={data.entity_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-5">
+        <div className="grid gap-5">
           {/* ────────── ROW 1 — title + KPI strip ────────── */}
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-xl">

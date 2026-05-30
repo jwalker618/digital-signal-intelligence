@@ -243,7 +243,7 @@ function DetailBody({
         crumbs={["Admin", "Recalibration", `${data.coverage} · ${data.config_name}`]}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-4">
+        <div className="grid gap-4">
           <Link
             href="/admin/recalibration"
             className="inline-flex items-center gap-1.5 text-[12.5px] font-medium text-ink-soft hover:text-ink"

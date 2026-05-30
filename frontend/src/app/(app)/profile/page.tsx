@@ -51,7 +51,7 @@ export default function ProfilePage() {
     <div className="flex h-full flex-1 flex-col overflow-hidden">
       <Topbar crumbs={["Account", "Your Profile"]} />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-4">
+        <div className="grid gap-4">
           <Card pad="lg" className="flex items-center gap-[18px]">
             <div className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-full bg-ink text-[28px] font-semibold text-canvas">
               {display.initials}

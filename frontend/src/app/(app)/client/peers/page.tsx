@@ -1,21 +1,20 @@
-// No direct design counterpart; adapted from reim_overview.jsx (CohortStandingCard).
+// Mirrors reim_peers (reimagined_b.jsx ReimPeers): header + You/median/top-decile
+// KPIs, a cohort bell-curve with a context aside, and a signal-by-signal grid.
 "use client";
 
 import Link from "next/link";
 import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowDown, ArrowUp, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 import { Topbar } from "@/components/chrome/topbar";
 import { Card } from "@/components/ui/card";
 import { Chip } from "@/components/ui/chip";
 import { Eyebrow, Body, Micro, Caption } from "@/components/ui/typography";
-import { CohortBar } from "@/components/charts/cohort-bar";
 import { BellCurve } from "@/components/charts/bell-curve";
 import { PageError, PageLoading, RoleGate } from "@/components/base/pageStates";
 import { useRoleScopedFetch } from "@/lib/useRoleScopedFetch";
 import { fetchOverview, fetchSubmissionPeers } from "@/lib/portalApi";
 import { useAuthStore } from "@/store/authStore";
-import { peerStandingPositive } from "@/lib/portalTone";
 import { cn } from "@/lib/utils";
 import type {
   OverviewResponse,
@@ -113,8 +112,20 @@ function PeersBody({
     Math.min(1000, Math.max(you, mean + 3 * sd)),
   ];
   const percentile = peers.peer_percentile_rank ?? null;
-  const vsMedian = Math.round(you - median);
+  const cohortSize = peers.cohort_size ?? null;
   const toTopDecile = Math.max(0, Math.round(topDecile - you));
+  const peersAbove =
+    cohortSize != null && percentile != null
+      ? Math.round((cohortSize * (100 - percentile)) / 100)
+      : null;
+  const aheadOfMedian = you >= median;
+
+  // Signal-by-signal: combine strengths + weaknesses, biggest deviation first.
+  const signals: SignalRankEntry[] = peers.signal_ranking
+    ? [...peers.signal_ranking.strengths, ...peers.signal_ranking.weaknesses]
+        .sort((a, b) => Math.abs(b.z_score) - Math.abs(a.z_score))
+        .slice(0, 8)
+    : [];
 
   return (
     <>
@@ -123,113 +134,135 @@ function PeersBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-4">
-          <div>
-            <Eyebrow>Industry benchmarks</Eyebrow>
-            <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-              {peers.coverage}
-            </h1>
-            {peers.cohort_id && (
-              <Micro className="mt-2 block font-mono">
-                cohort {peers.cohort_id}
-              </Micro>
-            )}
+        <div className="grid gap-[18px]">
+          {/* ── Row 1: heading + You / median / top-decile KPIs ── */}
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <Eyebrow>Industry benchmarks</Eyebrow>
+              <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
+                {cohortSize != null
+                  ? `How you compare to ${cohortSize} peers in your cohort`
+                  : "How you compare to your peer cohort"}
+              </h1>
+              <Caption className="mt-1.5 block">
+                {peers.coverage} line
+                {peers.cohort_id ? ` · cohort ${peers.cohort_id}` : ""}
+              </Caption>
+            </div>
+            <div className="flex gap-3">
+              <KpiCard label="You" value={you.toFixed(0)} variant="info" />
+              <KpiCard label="cohort median" value={median.toFixed(0)} />
+              <KpiCard label="top decile" value={topDecile.toFixed(0)} />
+            </div>
           </div>
 
-          {/* hero: cohort standing card */}
-          <Card pad="lg" className="flex flex-col">
-            <div className="flex items-baseline justify-between">
+          {/* ── Row 2: bell-curve distribution + context aside ── */}
+          <Card pad="lg">
+            <div className="grid gap-7 lg:grid-cols-[1.5fr_1fr]">
               <div>
-                <Eyebrow>Cohort standing</Eyebrow>
-                <h3 className="mt-1.5 font-display text-[20px] font-semibold leading-tight text-ink">
-                  You sit at the{" "}
-                  <span className="text-pos">
-                    {percentile != null
-                      ? `${Math.round(percentile)}th percentile`
-                      : peerStandingPositive(percentile)}
-                  </span>
-                </h3>
+                <div className="mb-3 flex items-baseline justify-between">
+                  <h3 className="font-display text-[18px] font-semibold leading-tight text-ink">
+                    Distribution of cohort scores
+                  </h3>
+                  <Caption>{cohortSize ?? 0} peers</Caption>
+                </div>
+                <BellCurve
+                  cohort={{ mean, sd, median, topDecile, range, you }}
+                  height={200}
+                />
+                <Body className="mt-1">
+                  {aheadOfMedian ? (
+                    <>
+                      You&apos;re outperforming the typical peer —{" "}
+                      <span className="font-semibold text-info">
+                        {toTopDecile} points of headroom
+                      </span>{" "}
+                      separate you from the top-decile profile.
+                    </>
+                  ) : (
+                    <>
+                      You sit below the cohort median —{" "}
+                      <span className="font-semibold text-spot-deep dark:text-spot">
+                        {Math.round(median - you)} points
+                      </span>{" "}
+                      would bring you to the typical peer.
+                    </>
+                  )}
+                </Body>
               </div>
-              <Micro>{peers.cohort_size ?? 0} peers</Micro>
-            </div>
-            <div className="my-5 flex flex-1 items-center">
-              <CohortBar
-                value={you}
-                median={median}
-                topDecile={topDecile}
-                range={range}
-                className="w-full"
-              />
-            </div>
-            <div className="grid grid-cols-3 gap-3 border-t border-rule pt-3">
-              <Stat
-                label="vs median"
-                value={`${vsMedian >= 0 ? "+" : ""}${vsMedian}`}
-                tone={vsMedian >= 0 ? "pos" : "neg"}
-                icon={vsMedian >= 0 ? ArrowUp : ArrowDown}
-              />
-              <Stat
-                label="your score"
-                value={you.toFixed(0)}
-                tone="info"
-              />
-              <Stat
-                label="to top decile"
-                value={toTopDecile.toString()}
-              />
+
+              {/* context aside */}
+              <div className="flex flex-col gap-4 border-t border-rule pt-5 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                <div>
+                  <Eyebrow>How to read this</Eyebrow>
+                  <Caption className="mt-1.5 block leading-relaxed">
+                    Each peer in your cohort is one point under the curve. Your
+                    score sits where the teal pin lands; the green band marks
+                    where the top decile begins.
+                  </Caption>
+                </div>
+                <div className="grid grid-cols-2 gap-3 border-t border-rule pt-3">
+                  <ContextStat
+                    label="cohort range"
+                    value={`${Math.round(range[0])}–${Math.round(range[1])}`}
+                  />
+                  <ContextStat label="cohort std dev" value={`${sd} pts`} />
+                  <ContextStat
+                    label="peers above you"
+                    value={
+                      peersAbove != null && cohortSize != null
+                        ? `${peersAbove} of ${cohortSize}`
+                        : "—"
+                    }
+                  />
+                  <ContextStat
+                    label="to top decile"
+                    value={`+${toTopDecile}`}
+                    tone="spot"
+                  />
+                </div>
+                <div className="mt-auto border-t border-rule pt-3">
+                  <Caption className="mb-2 block">
+                    Your action plan can help close that{" "}
+                    {toTopDecile}-point headroom.
+                  </Caption>
+                  <Link
+                    href="/client/actions"
+                    className="inline-flex items-center gap-1.5 rounded-btn bg-spot px-3 py-2 text-[13px] font-semibold text-white transition hover:bg-spot-deep"
+                  >
+                    See action plan <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </div>
             </div>
           </Card>
 
-          {/* distribution */}
-          {peers.entity_score != null && peers.cohort_mean_score != null && (
+          {/* ── Row 3: signal-by-signal ── */}
+          {signals.length > 0 && (
             <Card pad="lg">
-              <div className="mb-4 flex items-baseline justify-between">
+              <div className="mb-3.5 flex items-baseline justify-between">
                 <div>
-                  <Eyebrow>Cohort distribution</Eyebrow>
-                  <h3 className="mt-1.5 font-display text-[17px] font-semibold leading-tight text-ink">
-                    Where you fall on the curve
+                  <h3 className="font-display text-[18px] font-semibold leading-tight text-ink">
+                    Signals that set you apart from your peers
                   </h3>
+                  <Caption className="mt-1 block">
+                    how far each signal sits from the cohort average
+                  </Caption>
                 </div>
-                <Micro>{peers.cohort_size ?? 0} peers</Micro>
+                <Chip variant="spot" size="sm">
+                  opportunities highlighted
+                </Chip>
               </div>
-              <BellCurve
-                cohort={{
-                  mean,
-                  sd,
-                  median,
-                  topDecile,
-                  range,
-                  you,
-                }}
-                height={200}
-              />
+              <div className="grid gap-x-[18px] gap-y-3.5 md:grid-cols-2">
+                {signals.map((s) => (
+                  <PracticeBar key={s.signal_id} entry={s} />
+                ))}
+              </div>
             </Card>
           )}
 
           {peers.note && (
-            <Card variant="aux" pad="md">
-              <Eyebrow className="text-aux">Methodology</Eyebrow>
-              <Body className="mt-1">{peers.note}</Body>
-            </Card>
-          )}
-
-          {peers.signal_ranking && (
-            <div className="grid gap-4 md:grid-cols-2">
-              <SignalRankList
-                title="You out-pace your peers on"
-                accent="pos"
-                items={peers.signal_ranking.strengths}
-                icon={TrendingUp}
-                empty="No standout strengths vs the cohort."
-              />
-              <SignalRankList
-                title="Peers out-pace you on"
-                accent="spot"
-                items={peers.signal_ranking.weaknesses}
-                icon={TrendingDown}
-                empty="No standout weaknesses vs the cohort."
-              />
-            </div>
+            <Caption className="block">{peers.note}</Caption>
           )}
         </div>
       </div>
@@ -237,97 +270,95 @@ function PeersBody({
   );
 }
 
-function Stat({
+function KpiCard({
   label,
   value,
-  tone,
-  icon: Icon,
+  variant,
 }: {
   label: string;
   value: string;
-  tone?: "pos" | "neg" | "info";
-  icon?: typeof ArrowUp;
+  variant?: "info";
 }) {
-  const toneClass =
-    tone === "pos"
-      ? "text-pos"
-      : tone === "neg"
-        ? "text-neg"
-        : tone === "info"
-          ? "text-info"
-          : "text-ink";
+  const info = variant === "info";
+  return (
+    <Card
+      pad="none"
+      variant={info ? "info" : "default"}
+      className="min-w-[100px] px-[18px] py-3.5"
+    >
+      <Eyebrow className={info ? "text-info-deep dark:text-info" : undefined}>
+        {label}
+      </Eyebrow>
+      <p
+        className={cn(
+          "mt-1 font-display text-[24px] font-semibold leading-none tabular-nums",
+          info ? "text-info-deep dark:text-info" : "text-ink",
+        )}
+      >
+        {value}
+      </p>
+    </Card>
+  );
+}
+
+function ContextStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "spot";
+}) {
   return (
     <div>
       <Micro className="block">{label}</Micro>
       <p
         className={cn(
-          "mt-0.5 flex items-center gap-1 text-[18px] font-semibold tabular-nums leading-none",
-          toneClass,
+          "mt-0.5 text-[16px] font-semibold tabular-nums leading-none",
+          tone === "spot" ? "text-spot-deep dark:text-spot" : "text-ink",
         )}
       >
-        {Icon && <Icon size={14} />} {value}
+        {value}
       </p>
     </div>
   );
 }
 
-function SignalRankList({
-  title,
-  accent,
-  items,
-  icon: Icon,
-  empty,
-}: {
-  title: string;
-  accent: "pos" | "spot";
-  items: SignalRankEntry[];
-  icon: typeof TrendingUp;
-  empty: string;
-}) {
-  const sorted = [...items].sort(
-    (a, b) => Math.abs(b.z_score) - Math.abs(a.z_score),
-  );
+/**
+ * One signal row in the practices grid. z_score > 0 → you out-pace the cohort
+ * (green "you"); z_score < 0 → an opportunity (coral). The bar fills by the
+ * deviation magnitude, capped at 3σ.
+ */
+function PracticeBar({ entry }: { entry: SignalRankEntry }) {
+  const ahead = entry.z_score >= 0;
+  const fill = Math.min(100, Math.round((Math.abs(entry.z_score) / 3) * 100));
   return (
-    <Card pad="lg" variant={accent}>
-      <header className="flex items-center justify-between">
-        <Eyebrow
-          className={
-            accent === "pos" ? "text-pos" : "text-spot-deep dark:text-spot"
-          }
-        >
-          {title}
-        </Eyebrow>
-        <Chip variant={accent} size="sm">
-          <Icon size={11} />
-          {items.length} signal{items.length === 1 ? "" : "s"}
-        </Chip>
-      </header>
-      {items.length === 0 ? (
-        <Body className="mt-3 italic">{empty}</Body>
-      ) : (
-        <ul className="mt-3 space-y-2">
-          {sorted.slice(0, 8).map((s) => (
-            <li
-              key={s.signal_id}
-              className="flex items-baseline justify-between gap-3 border-b border-rule/40 pb-2 last:border-0 last:pb-0"
-            >
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-[13.5px] font-medium text-ink">
-                  {s.signal_id}
-                </p>
-                <Caption className="block">
-                  You {s.entity_value.toFixed(1)} · cohort{" "}
-                  {s.cohort_mean.toFixed(1)}
-                </Caption>
-              </div>
-              <Chip variant={accent} size="sm">
-                {s.z_score > 0 ? "+" : ""}
-                {s.z_score.toFixed(1)}σ
-              </Chip>
-            </li>
-          ))}
-        </ul>
-      )}
-    </Card>
+    <div>
+      <div className="mb-1 flex items-baseline justify-between gap-2">
+        <span className="flex min-w-0 items-center gap-1.5 text-[13px]">
+          {ahead ? (
+            <Chip variant="pos" size="sm">
+              <Check size={10} /> you
+            </Chip>
+          ) : (
+            <Chip variant="spot" size="sm">
+              opportunity
+            </Chip>
+          )}
+          <span className="truncate text-ink">{entry.signal_id}</span>
+        </span>
+        <span className="shrink-0 text-[13px] font-semibold tabular-nums text-ink">
+          {entry.z_score > 0 ? "+" : ""}
+          {entry.z_score.toFixed(1)}σ
+        </span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-sm bg-surface-sunken">
+        <div
+          className={cn("h-full", ahead ? "bg-pos" : "bg-spot")}
+          style={{ width: `${Math.max(4, fill)}%` }}
+        />
+      </div>
+    </div>
   );
 }
