@@ -199,7 +199,7 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
           mode === "referral" ? "Referral Pipeline" : "Full Pipeline",
         ]}
       />
-      <WorkArea maxWidth={1400} className="gap-4">
+      <WorkArea className="gap-4">
           {/* Hero row — count + KPI strip. Both modes fill 5 columns: full
               mode shows the decision breakdown; referral mode swaps in
               triage metrics (those decision counts are meaningless when

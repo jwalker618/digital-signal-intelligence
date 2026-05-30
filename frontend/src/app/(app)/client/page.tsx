@@ -87,7 +87,7 @@ function OverviewBody({ data }: { data: ClientOverviewResponse }) {
         entity={data.entity_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1400px] gap-4">
+        <div className="grid gap-4">
           {/* ────────── ROW 1 — hero strip ────────── */}
           <div className="grid gap-4 lg:grid-cols-[1.25fr_1fr_1.1fr]">
             <ScoreCard hero={hero} />

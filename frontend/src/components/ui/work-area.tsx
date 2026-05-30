@@ -3,10 +3,11 @@ import { cn } from "@/lib/utils";
 /**
  * Standard page-content wrapper used by every persona/workbench page.
  *
- * Locks the three things the design-pack treats as page-level invariants:
- *   - outer padding (24px)        — `padding: 24` on the templates' .work area
- *   - gap between sections (14px) — gap: 14 between page-level cards/blocks
- *   - max content width (1280px)  — visual centre line for the page grid
+ * Matches the design-pack `.work` area:
+ *   - outer padding 28px 36px (`py-7 px-9`)
+ *   - gap between sections (14px default; pages override via className)
+ *   - content fills the available width (no max-width / centring) so the
+ *     left and right margins are uniform and the page fills the screen
  *
  * Use this in place of bespoke `<div className="flex-1 overflow-y-auto px-9 py-7">`
  * wrappers so spacing stays uniform across pages.
@@ -14,17 +15,17 @@ import { cn } from "@/lib/utils";
 export function WorkArea({
   children,
   className,
-  maxWidth = 1280,
+  maxWidth = null,
 }: {
   children: React.ReactNode;
   className?: string;
-  /** Override the max content width (defaults to 1280). Pass `null` to disable. */
+  /** Optional max content width. Defaults to null — content fills the width. */
   maxWidth?: number | null;
 }) {
   return (
-    <div className="flex-1 overflow-y-auto p-6">
+    <div className="flex-1 overflow-y-auto px-9 py-7">
       <div
-        className={cn("mx-auto grid gap-3.5", className)}
+        className={cn("grid gap-3.5", maxWidth && "mx-auto", className)}
         style={maxWidth ? { maxWidth: `${maxWidth}px` } : undefined}
       >
         {children}

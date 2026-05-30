@@ -239,7 +239,7 @@ function ScenariosBody({
         entity={entityName}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1280px] gap-4">
+        <div className="grid gap-4">
           <div>
             <Eyebrow>Scenarios</Eyebrow>
             <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">

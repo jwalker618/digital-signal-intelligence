@@ -71,7 +71,7 @@ function ThreadBody({
         entity={data.entity_name}
       />
       <div className="flex-1 overflow-y-auto px-9 py-7">
-        <div className="mx-auto grid max-w-[1100px] gap-4">
+        <div className="grid gap-4">
           {/* ────────── breadcrumb + header ────────── */}
           <div>
             <div className="flex items-center gap-2">

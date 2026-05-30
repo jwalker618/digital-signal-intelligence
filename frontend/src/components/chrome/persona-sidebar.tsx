@@ -19,7 +19,6 @@ import {
   type AdminNavLeaf,
 } from "@/components/layout/navConfig";
 import { useAuthStore } from "@/store/authStore";
-import { deriveUserDisplay } from "@/lib/userIdentity";
 
 export type PersonaKey = "client" | "broker" | "carrier" | "admin";
 
@@ -75,9 +74,7 @@ export function PersonaSidebar({
   const router = useRouter();
   const nav = PERSONA_NAV[persona];
 
-  const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
-  const account = user ? deriveUserDisplay(user) : null;
 
   const onSignOut = async () => {
     await logout();
@@ -252,7 +249,7 @@ export function PersonaSidebar({
             onMouseEnter={handleEnter}
             onMouseLeave={handleLeave}
           >
-            <div className="flex">
+            <div className="mb-2 flex">
               <button
                 type="button"
                 onClick={togglePinned}
@@ -266,24 +263,7 @@ export function PersonaSidebar({
               </button>
             </div>
 
-            {/* Account — only visible while the sidebar is expanded. */}
-            {account && (
-              <div className="mt-1.5 mb-1.5 flex items-center gap-3 border-b border-white/10 px-2 pt-2.5 pb-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info text-[15px] font-semibold text-[#06222f]">
-                  {account.initials}
-                </div>
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold leading-tight text-white">
-                    {account.name}
-                  </div>
-                  <div className="mt-0.5 truncate text-xs text-white/55">
-                    {account.email}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <nav className="mt-2 flex flex-col gap-0.5">
+            <nav className="flex flex-col gap-0.5">
               {nav.map((n) => {
                 const Icon: LucideIcon = n.icon;
                 const active = isActive(n.href, pathname);
