@@ -209,7 +209,6 @@ function UsersInner() {
         <div className="grid gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
-              <Eyebrow>Users & roles</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
                 Identity + access
               </h1>

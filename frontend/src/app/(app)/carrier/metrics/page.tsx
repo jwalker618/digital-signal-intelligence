@@ -185,10 +185,7 @@ function MetricsBody({ submissions }: { submissions: ApiRecord[] }) {
         <div className="grid gap-4">
           <header>
             <Eyebrow>Underwriting</Eyebrow>
-            <h1 className="mt-1 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
-              Performance Metrics
-            </h1>
-            <Body className="mt-2">
+            <Body className="mt-2 max-w-2xl text-[15px] leading-relaxed">
               Engine throughput, decision mix, and premium under management.
             </Body>
           </header>

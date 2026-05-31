@@ -145,7 +145,6 @@ function HealthBody({
         <div className="grid gap-4">
           <header className="flex items-end justify-between gap-6">
             <div>
-              <Eyebrow>System health</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
                 {overallLabel}
               </h1>

@@ -182,12 +182,6 @@ export default function WorkbenchLayout({
       active={active}
       backLabel="Pipeline"
       backHref="/carrier"
-      account={{
-        initials: "JR",
-        name: "Jordan Reyes",
-        email: "jordan.reyes@hartfordmutual.com",
-      }}
-      scope={{ label: "Submission", lines: [`${code} · ${entity}`] }}
       lead={lead}
       contextStats={[
         {

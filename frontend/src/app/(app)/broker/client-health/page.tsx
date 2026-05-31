@@ -86,7 +86,6 @@ function Inner({ data }: { data: ClientHealthResponse }) {
         <div className="grid gap-4">
           {/* Hero */}
           <header>
-            <Eyebrow>Client health</Eyebrow>
             <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
               Engagement, opportunities, risks across your book
             </h1>

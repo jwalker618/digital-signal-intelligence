@@ -63,7 +63,6 @@ function AggBody({ data }: { data: AggregationResponse }) {
           {/* Title + KPIs */}
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Risk aggregation</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
                 Where your book concentrates
               </h1>

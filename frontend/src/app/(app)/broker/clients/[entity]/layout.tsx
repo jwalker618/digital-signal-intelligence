@@ -129,20 +129,6 @@ export default function ClientWorkbenchLayout({
       active={active}
       backLabel="Book"
       backHref="/broker"
-      account={{
-        initials: "SA",
-        name: "Sasha Alvarez",
-        email: "sasha.alvarez@marsh.com",
-      }}
-      scope={{
-        label: "Client",
-        lines: [
-          entityName,
-          data
-            ? `${data.coverages.length} coverages · ${formatCurrency(data.total_premium)} premium`
-            : "",
-        ],
-      }}
       lead={lead}
       contextStats={[
         {

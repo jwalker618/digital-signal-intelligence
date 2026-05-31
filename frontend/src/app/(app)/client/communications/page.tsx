@@ -73,7 +73,6 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
           {/* ────────── title + KPI strip ────────── */}
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Communications</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
                 Queries from your carriers + broker
               </h1>

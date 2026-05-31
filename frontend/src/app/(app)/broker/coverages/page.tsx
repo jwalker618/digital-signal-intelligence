@@ -118,7 +118,6 @@ function CoveragesBody({
           {/* Title + KPIs */}
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Coverages</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
                 Your book, grouped by line
               </h1>

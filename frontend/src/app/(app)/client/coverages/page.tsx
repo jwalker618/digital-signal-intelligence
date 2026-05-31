@@ -79,7 +79,6 @@ function CoveragesBody({ data }: { data: ClientOverviewResponse }) {
           {/* ────────── ROW 1 — title + KPI strip ────────── */}
           <div className="flex flex-wrap items-end justify-between gap-6">
             <div className="max-w-xl">
-              <Eyebrow>Coverages</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-none tracking-tight text-ink">
                 Your active book at a glance
               </h1>

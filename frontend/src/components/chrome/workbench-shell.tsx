@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   LogOut,
@@ -13,23 +14,30 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/store/authStore";
 import { useThemeStore } from "@/store/themeStore";
+
+// Mirror the persona sidebar's hover timing so the two surfaces feel
+// identical to the user (the docx explicitly calls out the inconsistency).
+const HOVER_OPEN_MS = 150;
+const HOVER_CLOSE_MS = 300;
 
 /* ============================================================
  * Shared workbench shell — the unified drill-down chrome from
- * the revised design pack (primitives.jsx WorkbenchShell +
- * WorkbenchSidebar). Powers BOTH the carrier submission
+ * the revised design pack. Powers BOTH the carrier submission
  * workbench and the broker client workbench.
  *
  *   - 60px collapsed rail: expand toggle, top-level tab icons
- *     (active = spot left-bar), logout
- *   - click-toggle 50% overlay: account block, scope block,
- *     full drill-down tab tree, settings/logout footer
+ *     (active = spot left-bar), logout pinned to bottom
+ *   - hover-open 50% overlay: full drill-down tab tree +
+ *     settings/logout footer (NO account or scope blocks —
+ *     workbench sidebar is icons-only navigation, identity
+ *     lives on the topbar lead)
  *   - context topbar: back link, identity lead, context stats
  *     (deep tabs only), dark toggle pinned furthest-right
  *
- * The shell stays dark in both light + dark mode (the nav is
- * structural chrome, not body surface).
+ * Behaviour mirrors the persona sidebar: hover-only open with
+ * the same 150/300ms timings, no inner scrollbar.
  * ============================================================ */
 
 export type WbNavLeaf = {
@@ -77,8 +85,11 @@ interface WorkbenchShellProps {
   nav: WbNavItem[];
   /** The active tab's display name (matches a leaf or a group child). */
   active: string;
-  account: WbAccount;
-  scope: WbScope;
+  /** @deprecated kept for source compatibility; not rendered (the
+   *  workbench sidebar is now icons-only, identity is on the topbar). */
+  account?: WbAccount;
+  /** @deprecated kept for source compatibility; not rendered. */
+  scope?: WbScope;
   backLabel: string;
   backHref: string;
   /** Breadcrumb / identity cluster rendered after the back link. */
@@ -90,8 +101,6 @@ interface WorkbenchShellProps {
 export function WorkbenchShell({
   nav,
   active,
-  account,
-  scope,
   backLabel,
   backHref,
   lead,
@@ -101,24 +110,53 @@ export function WorkbenchShell({
   const [expanded, setExpanded] = useState(false);
   const isDark = useThemeStore((s) => s.isDark);
   const toggleDark = useThemeStore((s) => s.toggleDark);
+  const router = useRouter();
+  const logout = useAuthStore((s) => s.logout);
+  const onSignOut = async () => {
+    await logout();
+    router.replace("/login");
+  };
 
   const activeGroup = nav.find(
     (n) => n.kind === "group" && n.children.some((c) => c.name === active),
   )?.name;
   const isSummary = active === "Summary";
 
+  // Hover open/close timers — identical to PersonaSidebar.
+  const openTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const clearTimers = () => {
+    if (openTimer.current) { clearTimeout(openTimer.current); openTimer.current = null; }
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+  };
+  const close = () => { clearTimers(); setExpanded(false); };
+  const handleEnter = () => {
+    if (closeTimer.current) { clearTimeout(closeTimer.current); closeTimer.current = null; }
+    if (expanded) return;
+    openTimer.current = setTimeout(() => { setExpanded(true); openTimer.current = null; }, HOVER_OPEN_MS);
+  };
+  const handleLeave = () => {
+    if (openTimer.current) { clearTimeout(openTimer.current); openTimer.current = null; }
+    closeTimer.current = setTimeout(() => { setExpanded(false); closeTimer.current = null; }, HOVER_CLOSE_MS);
+  };
+
   // Escape closes the overlay.
   useEffect(() => {
     if (!expanded) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExpanded(false);
+      if (e.key === "Escape") close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [expanded]);
+  useEffect(() => () => clearTimers(), []);
 
   return (
-    <div className="relative flex h-full w-full">
+    <div
+      className="relative flex h-full w-full"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
       {/* ── Collapsed rail ───────────────────────────────── */}
       <aside
         className="relative z-10 flex h-full w-[60px] shrink-0 flex-col items-center bg-[#0b2237] py-3.5 text-white/60 dark:bg-[#051322]"
@@ -129,7 +167,7 @@ export function WorkbenchShell({
           label="Expand menu"
           onClick={() => setExpanded(true)}
         />
-        <div className="my-2 mb-3 h-px w-6 shrink-0 bg-white/15" />
+        <div className="mt-2 mb-3 h-px w-6 shrink-0 bg-white/15" />
         {nav.map((n) => {
           const act = n.kind === "leaf" ? n.name === active : activeGroup === n.name;
           const href = n.kind === "leaf" ? n.href : n.children[0]!.href;
@@ -145,69 +183,44 @@ export function WorkbenchShell({
               )}
             >
               {act && (
-                <span className="absolute -left-[18px] top-2 bottom-2 w-[3px] rounded-sm bg-spot" />
+                <span className="absolute -left-[11px] top-2 bottom-2 w-[3px] rounded-sm bg-spot" />
               )}
               <n.icon size={20} />
             </Link>
           );
         })}
         <div className="flex-1" />
-        <RailButton icon={LogOut} label="Log out" onClick={() => undefined} />
+        <RailButton icon={LogOut} label="Log out" onClick={onSignOut} />
       </aside>
 
-      {/* ── Expanded overlay ─────────────────────────────── */}
+      {/* ── Expanded overlay ─────────────────────────────── *
+       * No account / scope blocks (the workbench sidebar is icons-only
+       * for navigation; identity stays on the topbar lead). Structure
+       * mirrors the persona sidebar so the two surfaces feel identical.
+       */}
       {expanded && (
         <>
           <div
             className="absolute inset-0 z-40 bg-[#050c12]/40"
             aria-hidden
-            onClick={() => setExpanded(false)}
+            onClick={close}
           />
-          <aside className="absolute left-0 top-0 bottom-0 z-50 flex w-1/2 min-w-[320px] flex-col bg-[#0b2237] px-4 pb-[18px] pt-3.5 text-white/85 shadow-[24px_0_60px_rgba(5,12,18,0.32)] dark:bg-[#051322]">
-            <div className="flex">
-              <RailButton
-                icon={PanelLeftClose}
-                label="Close menu"
-                onClick={() => setExpanded(false)}
-              />
-            </div>
+          <aside className="absolute left-0 top-0 bottom-0 z-50 flex w-1/2 min-w-[320px] flex-col bg-[#0b2237] py-3.5 pl-[11px] pr-4 text-white/85 shadow-[24px_0_60px_rgba(5,12,18,0.32)] dark:bg-[#051322]">
+            <RailButton
+              icon={PanelLeftClose}
+              label="Close menu"
+              onClick={close}
+            />
+            <span
+              className="mt-2 mb-3 h-px w-6 shrink-0 bg-white/15"
+              style={{ marginLeft: 7 }}
+              aria-hidden
+            />
 
-            {/* Account */}
-            <div className="my-1.5 flex items-center gap-3 border-b border-white/10 px-2 pb-4 pt-2.5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-info text-[15px] font-semibold text-[#06222f]">
-                {account.initials}
-              </div>
-              <div className="min-w-0">
-                <div className="text-[14px] font-semibold leading-tight text-white">
-                  {account.name}
-                </div>
-                <div className="mt-0.5 truncate text-[12px] text-white/55">
-                  {account.email}
-                </div>
-              </div>
-            </div>
-
-            {/* Scope */}
-            <div className="border-b border-white/10 px-2.5 pb-3 pt-2.5">
-              <div className="text-[10px] uppercase tracking-wider text-white/50">
-                {scope.label}
-              </div>
-              {scope.lines.map((ln, i) => (
-                <div
-                  key={i}
-                  className={
-                    i === 0
-                      ? "mt-1 text-[13px] font-semibold text-white"
-                      : "mt-0.5 text-[11px] text-white/50"
-                  }
-                >
-                  {ln}
-                </div>
-              ))}
-            </div>
-
-            {/* Drill-down tree */}
-            <nav className="mt-2 flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto">
+            {/* Drill-down tree — NO overflow-y-auto. If nav exceeds the
+                viewport on small screens that's a separate issue to fix
+                with a denser tree, not by adding a scrollbar to the chrome. */}
+            <nav className="flex min-h-0 flex-1 flex-col gap-0.5">
               {nav.map((n) =>
                 n.kind === "leaf" ? (
                   <OverlayItem
@@ -216,12 +229,14 @@ export function WorkbenchShell({
                     name={n.name}
                     href={n.href}
                     active={n.name === active}
-                    onNavigate={() => setExpanded(false)}
+                    onNavigate={close}
                   />
                 ) : (
                   <div key={n.name}>
                     <div className="flex items-center gap-2.5 px-2.5 pb-1.5 pt-3 text-[10.5px] font-bold uppercase tracking-wider text-white/45">
-                      <n.icon size={13} />
+                      <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+                        <n.icon size={13} />
+                      </span>
                       <span>{n.name}</span>
                     </div>
                     {n.children.map((c) => (
@@ -232,7 +247,7 @@ export function WorkbenchShell({
                         href={c.href}
                         active={c.name === active}
                         sub
-                        onNavigate={() => setExpanded(false)}
+                        onNavigate={close}
                       />
                     ))}
                   </div>
@@ -242,8 +257,8 @@ export function WorkbenchShell({
 
             {/* Footer */}
             <div className="flex flex-col gap-0.5 border-t border-white/10 pt-2.5">
-              <OverlayItem icon={Settings} name="Settings" href="#" onNavigate={() => undefined} />
-              <OverlayItem icon={LogOut} name="Log out" href="#" onNavigate={() => undefined} />
+              <OverlayItem icon={Settings} name="Settings" href="/profile" onNavigate={close} />
+              <OverlayItemButton icon={LogOut} name="Log out" onClick={() => { close(); void onSignOut(); }} />
             </div>
           </aside>
         </>
@@ -336,13 +351,44 @@ function OverlayItem({
       href={href}
       onClick={onNavigate}
       className={cn(
-        "flex items-center gap-3 rounded-lg px-2.5 py-2.5 text-[14px] font-medium text-white/72 hover:bg-white/[0.08] hover:text-white",
-        sub && "pl-[30px] font-normal",
+        "relative flex h-[38px] items-center gap-3 rounded-lg pl-0 pr-2.5 text-[14px] font-medium text-white/72 hover:bg-white/[0.08] hover:text-white",
+        sub && "pl-[38px] font-normal",
         active && "bg-white/10 text-white",
       )}
     >
-      <Icon size={sub ? 16 : 18} />
+      {active && (
+        <span className="absolute -left-[11px] top-2 bottom-2 w-[3px] rounded-sm bg-spot" />
+      )}
+      {!sub && (
+        <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+          <Icon size={20} />
+        </span>
+      )}
+      {sub && <Icon size={14} className="shrink-0" />}
       <span>{name}</span>
     </Link>
+  );
+}
+
+function OverlayItemButton({
+  icon: Icon,
+  name,
+  onClick,
+}: {
+  icon: LucideIcon;
+  name: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex h-[38px] items-center gap-3 rounded-lg pl-0 pr-2.5 text-left text-[14px] font-medium text-white/72 hover:bg-white/[0.08] hover:text-white"
+    >
+      <span className="flex h-[38px] w-[38px] shrink-0 items-center justify-center">
+        <Icon size={20} />
+      </span>
+      <span>{name}</span>
+    </button>
   );
 }

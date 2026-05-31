@@ -92,7 +92,6 @@ function CommsBody({ data }: { data: CommunicationsListResponse }) {
         <div className="grid gap-4">
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Communications</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
                 Queries across your client book
               </h1>

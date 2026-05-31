@@ -83,7 +83,6 @@ function HealthBody({ data }: { data: BookHealthResponse }) {
           {/* Title + KPIs */}
           <header className="flex flex-wrap items-end justify-between gap-6">
             <div>
-              <Eyebrow>Book health</Eyebrow>
               <h1 className="mt-1.5 font-display text-[32px] font-semibold leading-tight tracking-tight text-ink">
                 Retention, depth, profitability
               </h1>

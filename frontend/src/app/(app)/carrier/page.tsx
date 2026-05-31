@@ -15,6 +15,7 @@ import { PageLoading, PageError, RoleGate } from "@/components/base/pageStates";
 import { useAuthStore } from "@/store/authStore";
 import { useDsiStore, type ApiRecord } from "@/store/dsiStore";
 import { formatCurrency, formatText } from "@/lib/format";
+import { compactCurrency } from "@/lib/coerce";
 import { fmtRelative } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { TIER_CHIP, tierToneOf } from "@/lib/tier";
@@ -186,7 +187,10 @@ export function PipelineBody({ submissions, mode }: PipelineBodyProps) {
     mode === "referral"
       ? "submissions awaiting decision"
       : "submissions in the pipeline";
-  const fmtK = (v: number) => `$${Math.round(v / 1000)}k`;
+  // Pipeline premium range can span $5k → $14M+. compactCurrency picks
+  // $k below $1M and $M above, so "$14M" / "$185k" / "$940" all read cleanly
+  // (replaces the older fmtK which produced "$14448k" for high values).
+  const fmtK = (v: number) => compactCurrency(v);
   // Pipeline table grid — fixed-px columns per the template; last column
   // widens in referral mode to hold the quick approve/decline actions.
   const cols = mode === "referral" ? PIPELINE_COLS_REFERRAL : PIPELINE_COLS_FULL;
